@@ -4,12 +4,19 @@ import jdk.jshell.Snippet;
 import lombok.*;
 import model.entity.enums.Role;
 
+
 import java.time.LocalDateTime;
+@Builder
 @NoArgsConstructor
 @Setter
 @Getter
 @AllArgsConstructor
 @ToString
+
+
+
+
+
 
 public class User {
     private Long id;
@@ -22,6 +29,7 @@ public class User {
     private boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
 
 
 }
