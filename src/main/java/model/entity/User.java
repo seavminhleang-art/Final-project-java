@@ -19,7 +19,6 @@ import java.time.LocalDateTime;
 
 
 public class User {
-
     private Long id;
     private String username;
     private String passwordHash;
@@ -30,6 +29,7 @@ public class User {
     private boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
 
 
 
