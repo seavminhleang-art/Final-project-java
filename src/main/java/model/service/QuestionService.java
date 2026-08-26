@@ -1,4 +1,4 @@
-package service;
+package model.service;
 
 import model.entity.enums.Difficulty;
 import model.entity.Question;
