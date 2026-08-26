@@ -1,4 +1,4 @@
-package view;
+package db;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -8,7 +8,7 @@ import java.util.Base64;
 public class PasswordUtils {
     private static final SecureRandom RANDOM = new SecureRandom();
 
-    private  void PasswordUtil() {
+    private PasswordUtils() {
     }
 
     public static String generateSalt() {
