@@ -5,8 +5,8 @@ import model.entity.User;
 import model.entity.enums.Role;
 import model.repository.UserRepo;
 import model.service.UserService;
-import org.postgresql.util.PasswordUtil;
-import view.PasswordUtils;
+
+import db.PasswordUtils;
 
 import java.util.List;
 
