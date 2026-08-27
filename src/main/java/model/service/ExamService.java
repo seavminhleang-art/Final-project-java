@@ -1,4 +1,4 @@
-package service;
+package model.service;
 
 import model.entity.Attempt;
 import model.entity.AttemptAnswer;
