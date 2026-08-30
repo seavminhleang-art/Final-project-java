@@ -6,6 +6,8 @@ import model.entity.enums.Role;
 
 import java.util.List;
 
+
+
 public interface UserService {
     User create(User user, String rawPassword);
     User update(User user);
