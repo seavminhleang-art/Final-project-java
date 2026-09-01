@@ -36,10 +36,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void delete(Long id) {
-        get(id);
-        userRepo.delete(id);
+    public User setActive(Long id, boolean active) {
+        User user = get(id);
+        user.setActive(active);
+        return userRepo.update(user);
     }
+
 
     @Override
     public User get(Long id) {
@@ -64,6 +66,10 @@ public class UserServiceImpl implements UserService {
         String hash = PasswordUtils.hash(newRawPassword, salt);
         userRepo.updatePassword(userId, hash, salt);
     }
+
+
+
+
 
 
 }
