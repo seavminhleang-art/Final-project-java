@@ -15,5 +15,5 @@ public interface UserRepo {
     User update(User user);
     boolean updatePassword(Long userId, String newHash, String newSalt);
     boolean delete(Long id);
-public class UserRepo {
+
 }
