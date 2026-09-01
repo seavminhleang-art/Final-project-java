@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="certificate" pageWidth="842" pageHeight="595" orientation="Landscape"
+              columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20">
+
+    <parameter name="studentName" class="java.lang.String"/>
+    <parameter name="quizTitle" class="java.lang.String"/>
+    <parameter name="scoreText" class="java.lang.String"/>
+    <parameter name="percentageText" class="java.lang.String"/>
+    <parameter name="dateText" class="java.lang.String"/>
+    <parameter name="certificateId" class="java.lang.String"/>
+
+    <title>
+        <band height="555">
+            <rectangle>
+                <reportElement x="0" y="0" width="802" height="555"/>
+                <graphicElement>
+                    <pen lineWidth="3.0" lineColor="#2C3E50"/>
+                </graphicElement>
+            </rectangle>
+            <rectangle>
+                <reportElement x="10" y="10" width="782" height="535"/>
+                <graphicElement>
+                    <pen lineWidth="0.5" lineColor="#2C3E50"/>
+                </graphicElement>
+            </rectangle>
+
+            <staticText>
+                <reportElement x="0" y="60" width="802" height="50"/>
+                <textElement textAlignment="Center">
+                    <font size="28" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Certificate of Achievement]]></text>
+            </staticText>
+
+            <staticText>
+                <reportElement x="0" y="140" width="802" height="30"/>
+                <textElement textAlignment="Center">
+                    <font size="14"/>
+                </textElement>
+                <text><![CDATA[This certifies that]]></text>
+            </staticText>
+
+            <textField>
+                <reportElement x="0" y="175" width="802" height="45"/>
+                <textElement textAlignment="Center">
+                    <font size="26" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{studentName}]]></textFieldExpression>
+            </textField>
+
+            <staticText>
+                <reportElement x="0" y="230" width="802" height="30"/>
+                <textElement textAlignment="Center">
+                    <font size="14"/>
+                </textElement>
+                <text><![CDATA[has successfully passed]]></text>
+            </staticText>
+
+            <textField>
+                <reportElement x="0" y="262" width="802" height="35"/>
+                <textElement textAlignment="Center">
+                    <font size="20" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{quizTitle}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="0" y="310" width="802" height="25"/>
+                <textElement textAlignment="Center">
+                    <font size="13"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Score: " + $P{scoreText} + "  (" + $P{percentageText} + "%)"]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="40" y="470" width="300" height="20"/>
+                <textElement textAlignment="Left">
+                    <font size="10"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Certificate ID: " + $P{certificateId}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="462" y="470" width="300" height="20"/>
+                <textElement textAlignment="Right">
+                    <font size="10"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Issued: " + $P{dateText}]]></textFieldExpression>
+            </textField>
+        </band>
+    </title>
+</jasperReport>
