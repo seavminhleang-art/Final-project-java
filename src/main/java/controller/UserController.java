@@ -31,7 +31,8 @@ public class UserController {
                 case "3" -> search();
                 case "4" -> update();
                 case "5" -> resetPassword();
-                case "6" -> delete();
+                case "6" -> disable();
+                case "7" -> enable();
                 case "0" -> back = true;
                 default -> ConsoleUI.error("Invalid choice.");
             }
@@ -100,15 +101,35 @@ public class UserController {
         }
     }
 
-    private void delete() {
-        Long id = ConsoleUI.promptLong("User ID to delete");
-        if (ConsoleUI.promptYesNo("Are you sure?")) {
-            try {
-                userService.delete(id);
-                ConsoleUI.success("User deleted.");
-            } catch (RuntimeException e) {
-                ConsoleUI.error(e.getMessage());
-            }
+//    private void delete() {
+//        Long id = ConsoleUI.promptLong("User ID to delete");
+//        if (ConsoleUI.promptYesNo("Are you sure?")) {
+//            try {
+//                userService.delete(id);
+//                ConsoleUI.success("User deleted.");
+//            } catch (RuntimeException e) {
+//                ConsoleUI.error(e.getMessage());
+//            }
+//        }
+//    }
+private void disable() {
+    Long id = ConsoleUI.promptLong("User ID to disable");
+    if (ConsoleUI.promptYesNo("Disable this account? (it will be hidden from login, not deleted)")) {
+        try {
+            userService.disable(id);
+            ConsoleUI.success("User disabled.");
+        } catch (RuntimeException e) {
+            ConsoleUI.error(e.getMessage());
+        }
+    }
+}
+    private void enable() {
+        Long id = ConsoleUI.promptLong("User ID to enable");
+        try {
+            userService.enable(id);
+            ConsoleUI.success("User enabled.");
+        } catch (RuntimeException e) {
+            ConsoleUI.error(e.getMessage());
         }
     }
 
