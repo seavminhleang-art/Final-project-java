@@ -1,5 +1,7 @@
 package controller;
 
+import model.entity.Question;
+import model.entity.Quiz;
 import service.ExamService;
 import service.QuizService;
 import view.ConsoleUI;
