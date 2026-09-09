@@ -12,7 +12,6 @@ public interface QuestionRepoService {
     List<Question> findBySubject(Long subjectId);
     List<Question> filter(Long subjectId, Difficulty difficulty, String keyword);
 
-    List<Question> filter(Long subjectId, Difficulty difficulty, String keyword);
 
     List<Question> findRandomBySubject(Long subjectId, int count);
     Question update(Question question);

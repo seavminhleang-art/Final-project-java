@@ -1,5 +1,6 @@
 package model.entity;
 
+import jdk.jshell.Snippet;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -8,7 +9,7 @@ import model.entity.enums.AnnouncementType;
 import model.entity.enums.Role;
 
 import java.time.LocalDateTime;
-@Builder
+@Builder(toBuilder = true)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -24,4 +25,5 @@ public class Announcement {
     private Long postedBy;
     private boolean read;
     private LocalDateTime createdAt;
+
 }

@@ -1,4 +1,4 @@
-package service;
+package model.service;
 
 import model.entity.Attempt;
 import model.entity.AttemptAnswer;
@@ -33,4 +33,6 @@ public interface ExamService {
 
     /** How many finished (submitted/auto-submitted) attempts this student has used on this quiz. */
     int attemptsUsed(Long quizId, Long studentId);
+
+    boolean canReview(Long attemptId, Long studentId);
 }

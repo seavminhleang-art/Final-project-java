@@ -52,7 +52,7 @@ public class AuthServiceImpl implements AuthService {
                 .role(role)
                 .active(true)
                 .build();
-        return userRepo.create(user);
+        return userRepo.save(user);
     }
 
     @Override

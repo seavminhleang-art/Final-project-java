@@ -1,10 +1,11 @@
-package service.impl;
+package model.service.impl;
 
-import repository.QuestionDao;
+import model.repository.impl.QuestionRepo;
+
 import exception.NotFoundException;
 import model.entity.enums.Difficulty;
 import model.entity.Question;
-import service.QuestionService;
+import model.service.QuestionService;
 
 import java.util.List;
 

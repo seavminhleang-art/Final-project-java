@@ -5,8 +5,6 @@ import model.entity.User;
 import model.entity.enums.Role;
 import model.repository.UserRepo;
 import model.service.UserService;
-import org.postgresql.util.PasswordUtil;
-import view.PasswordUtils;
 
 import db.PasswordUtils;
 
@@ -19,17 +17,6 @@ public class UserServiceImpl implements UserService {
         this.userRepo = userRepo;
     }
 
-    @Override
-    public User create(User user, String rawPassword) {
-        userRepo.findByUsername(user.getUsername()).ifPresent(u -> {
-            throw new IllegalArgumentException("Username already taken.");
-        });
-        String salt = PasswordUtils.generateSalt();
-        user.setSalt(salt);
-        user.setPasswordHash(PasswordUtils.hash(rawPassword, salt));
-        user.setActive(true);
-        return userRepo.create(user);
-    }
 
     @Override
     public User update(User user) {
@@ -69,9 +56,15 @@ public class UserServiceImpl implements UserService {
         userRepo.updatePassword(userId, hash, salt);
     }
 
+        @Override
+        public void disable(Long id) {
+            setActive(id, false);
+        }
 
-
-
+        @Override
+        public void enable(Long id) {
+            setActive(id, true);
+        }
 
 
 }

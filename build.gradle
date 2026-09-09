@@ -19,6 +19,9 @@ dependencies {
 
     // ========= PostgreSQL Driver
     implementation 'org.postgresql:postgresql:42.7.13'
+    implementation 'net.sf.jasperreports:jasperreports:6.21.3'
+    // ... your other existing dependencies
+
 
 }
 

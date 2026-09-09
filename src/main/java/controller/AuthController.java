@@ -31,8 +31,8 @@ public class AuthController {
                 return login();
             }
             case "2" -> {
-                 registerStudent();
-                 return false;
+                register();
+                return false;
             }
             case "0" -> {
                 System.exit(0);
@@ -58,23 +58,38 @@ public class AuthController {
             return false;
         }
     }
-    private void registerStudent() {
-        ConsoleUI.banner("Student Registration");
+
+    private void register() {
+        ConsoleUI.banner("Registration");
         String username = ConsoleUI.prompt("Choose a username");
         String password = ConsoleUI.promptPassword("Choose a password");
         String confirm = ConsoleUI.promptPassword("Confirm password");
         String fullName = ConsoleUI.prompt("Full name");
         String email = ConsoleUI.prompt("Email");
+        Role role = promptRole();
 
         if (!password.equals(confirm)) {
             ConsoleUI.error("Passwords do not match.");
             return;
         }
         try {
-            authService.register(username, password, fullName, email, Role.STUDENT);
+            authService.register(username, password, fullName, email, role);
             ConsoleUI.success("Account created. You can now log in.");
         } catch (RuntimeException e) {
             ConsoleUI.error(e.getMessage());
         }
+    }
+
+    /**
+     * ADMIN is deliberately excluded here — self-registration can only produce
+     * a STUDENT or TEACHER account. Admin accounts must be created by an existing
+     * admin through User Management.
+     */
+    private Role promptRole() {
+        ConsoleUI.println("Register as: 1=Student 2=Teacher");
+        return switch (ConsoleUI.prompt("Choose")) {
+            case "2" -> Role.TEACHER;
+            default -> Role.STUDENT;
+        };
     }
 }

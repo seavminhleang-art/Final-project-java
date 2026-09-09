@@ -1,4 +1,4 @@
-package service.impl;
+package model.service.impl;
 
 import repository.SubjectDao;
 import exception.NotFoundException;

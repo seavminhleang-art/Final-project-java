@@ -2,7 +2,8 @@ package controller;
 
 import model.entity.Question;
 import model.entity.Quiz;
-import service.QuestionService;
+import model.service.QuestionService;
+import model.service.QuestionService;
 import service.QuizService;
 import service.SubjectService;
 import view.ConsoleUI;
@@ -23,6 +24,7 @@ public class QuizController {
         this.subjectService = subjectService;
         this.questionService = questionService;
     }
+
 
     public void menu() {
         boolean back = false;

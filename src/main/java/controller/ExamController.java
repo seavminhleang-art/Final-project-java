@@ -1,8 +1,12 @@
 package controller;
 
+import model.entity.Attempt;
+import model.entity.AttemptAnswer;
 import model.entity.Question;
 import model.entity.Quiz;
-import service.ExamService;
+import model.entity.enums.AttemptStatus;
+import model.service.impl.ExamServiceImpl;
+import model.service.ExamService;
 import service.QuizService;
 import view.ConsoleUI;
 import db.Session;
@@ -21,7 +25,7 @@ public class ExamController {
     private final ExamService examService;
     private final QuizService quizService;
 
-    public ExamController(ExamService examService, QuizService quizService) {
+    public ExamController(ExamServiceImpl examService, QuizService quizService) {
         this.examService = examService;
         this.quizService = quizService;
     }

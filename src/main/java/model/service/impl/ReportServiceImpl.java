@@ -1,8 +1,12 @@
 package model.service.impl;
 
+import model.entity.Attempt;
 import model.entity.User;
+import model.entity.enums.AttemptStatus;
 import model.entity.enums.Role;
+import model.repository.AttemptDao;
 import model.repository.UserRepo;
+import model.repository.impl.QuestionRepo;
 import model.service.ReportService;
 
 import java.math.BigDecimal;
@@ -15,18 +19,20 @@ import java.util.stream.Collectors;
 public class ReportServiceImpl implements ReportService {
     private final AttemptDao attemptDao;
     private final UserRepo userRepo;
-    private final SubjectDao subjectDao;
-    private final QuestionDao questionDao;
-    private final QuizDao quizDao;
+    private final repository.SubjectDao subjectDao;
+    private final QuestionRepo questionDao;
+    private final repository.QuizDao quizDao;
 
-    public ReportServiceImpl(AttemptDao attemptDao, UserRepo userRepo, SubjectDao subjectDao,
-                             QuestionDao questionDao, QuizDao quizDao) {
+    public ReportServiceImpl(AttemptDao attemptDao, UserRepo userRepo, repository.SubjectDao subjectDao,
+                             QuestionRepo questionDao, repository.QuizDao quizDao) {
         this.attemptDao = attemptDao;
         this.userRepo = userRepo;
         this.subjectDao = subjectDao;
         this.questionDao = questionDao;
         this.quizDao = quizDao;
     }
+
+
 
     @Override
     public QuizStats statsForQuiz(Long quizId) {

@@ -1,26 +1,42 @@
 package model.service.impl;
 
+import model.entity.Attempt;
+import model.entity.Quiz;
+import model.entity.User;
 import model.service.CertificateService;
+import model.service.ExamService;
+import model.service.UserService;
+import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.JasperCompileManager;
+import net.sf.jasperreports.engine.JasperExportManager;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.JasperReport;
+import net.sf.jasperreports.engine.JREmptyDataSource;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-public class CertificateServiceImpl implements CertificateService {
+public class CertificateServiceImpl<JasperReport> implements CertificateService {
     private static final String TEMPLATE_RESOURCE = "/certificate.jrxml";
     private static final Path OUTPUT_DIR = Path.of("certificates");
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("MMMM d, yyyy");
 
     private final ExamService examService;
-    private final QuizService quizService;
+    private final service.QuizService quizService;
     private final UserService userService;
 
     // Compiling a JRXML is relatively expensive; the compiled report is immutable, so cache it.
     private JasperReport compiledTemplate;
 
-    public CertificateServiceImpl(ExamService examService, QuizService quizService, UserService userService) {
+    public CertificateServiceImpl(ExamService examService, service.QuizService quizService, UserService userService) {
         this.examService = examService;
         this.quizService = quizService;
         this.userService = userService;
@@ -46,7 +62,7 @@ public class CertificateServiceImpl implements CertificateService {
 
         try {
             JasperReport report = compiledReport();
-            JasperPrint print = JasperFillManager.fillReport(report, params, new JREmptyDataSource());
+            JasperPrint print = JasperFillManager.fillReport((String) report, params, new JREmptyDataSource());
             Files.createDirectories(OUTPUT_DIR);
             Path outputPath = OUTPUT_DIR.resolve("certificate_attempt_" + attemptId + ".pdf");
             JasperExportManager.exportReportToPdfFile(print, outputPath.toString());
@@ -73,7 +89,7 @@ public class CertificateServiceImpl implements CertificateService {
                 if (in == null) {
                     throw new IllegalStateException("Certificate template not found on classpath: " + TEMPLATE_RESOURCE);
                 }
-                compiledTemplate = JasperCompileManager.compileReport(in);
+                compiledTemplate = (JasperReport) JasperCompileManager.compileReport(in);
             } catch (IOException e) {
                 throw new IllegalStateException("Failed to read certificate template", e);
             }

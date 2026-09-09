@@ -14,25 +14,25 @@ public class UserController {
         this.userService = userService;
     }
 
+
     public void menu() {
         boolean back = false;
         while (!back) {
             ConsoleUI.banner("User Management");
             ConsoleUI.println("1. List all users");
-            ConsoleUI.println("2. Create user");
-            ConsoleUI.println("3. Search users");
-            ConsoleUI.println("4. Update user");
-            ConsoleUI.println("5. Reset a user's password");
-            ConsoleUI.println("6. Deactivate/Delete user");
+            ConsoleUI.println("2. Search users");
+            ConsoleUI.println("3. Update user");
+            ConsoleUI.println("4. Reset a user's password");
+            ConsoleUI.println("5. Disable user");
+            ConsoleUI.println("6. Enable user");
             ConsoleUI.println("0. Back");
             switch (ConsoleUI.prompt("Choose")) {
                 case "1" -> listAll();
-                case "2" -> create();
-                case "3" -> search();
-                case "4" -> update();
-                case "5" -> resetPassword();
-                case "6" -> disable();
-                case "7" -> enable();
+                case "2" -> search();
+                case "3" -> update();
+                case "4" -> resetPassword();
+                case "5" -> disable();
+                case "6" -> enable();
                 case "0" -> back = true;
                 default -> ConsoleUI.error("Invalid choice.");
             }
@@ -44,21 +44,7 @@ public class UserController {
         print(users);
     }
 
-    private void create() {
-        ConsoleUI.banner("Create User");
-        String username = ConsoleUI.prompt("Username");
-        String password = ConsoleUI.promptPassword("Temporary password");
-        String fullName = ConsoleUI.prompt("Full name");
-        String email = ConsoleUI.prompt("Email");
-        Role role = promptRole();
-        try {
-            User user = User.builder().username(username).fullName(fullName).email(email).role(role).build();
-            userService.create(user, password);
-            ConsoleUI.success("User created.");
-        } catch (RuntimeException e) {
-            ConsoleUI.error(e.getMessage());
-        }
-    }
+
 
     private void search() {
         String keyword = ConsoleUI.prompt("Search keyword (username/name/email, blank = all)");

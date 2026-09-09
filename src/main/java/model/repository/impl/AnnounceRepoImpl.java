@@ -15,24 +15,30 @@ private final DbConnection dbConnection = DbConnection.getInstance();
     @Override
     public Announcement create(Announcement announcement) {
         String sql = """
-            SELECT * FROM announcements
-            WHERE user_id = ?
-               OR (user_id IS NULL AND (role_target IS NULL OR role_target = ?))
-            ORDER BY created_at DESC
-            """;
+        INSERT INTO announcements
+            (user_id, role_target, quiz_id, attempt_id, message, type, posted_by, is_read, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, FALSE, ?)
+        """;
         Connection conn = dbConnection.borrow();
-        List<Announcement> list = new ArrayList<>();
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setObject(1, announcement.getUserId());
+            ps.setString(2, announcement.getRoleTarget() == null ? null : announcement.getRoleTarget().name());
+            ps.setObject(3, announcement.getQuizId());
+            ps.setObject(4, announcement.getAttemptId());
+            ps.setString(5, announcement.getMessage());
+            ps.setString(6, announcement.getType().name());
+            ps.setObject(7, announcement.getPostedBy());
+            ps.setTimestamp(8, Timestamp.valueOf(java.time.LocalDateTime.now()));
 
-            ps.setLong(1, userId);
-            ps.setString(2, role.name());
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) list.add(map(rs));
+            ps.executeUpdate();
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                if (keys.next()) {
+                    return announcement.toBuilder().id(keys.getLong(1)).build();
+                }
             }
-
-            return (Announcement) list;
+            return announcement;
         } catch (SQLException e) {
-            throw new IllegalStateException("Failed to fetch announcements", e);
+            throw new IllegalStateException("Failed to create announcement", e);
         } finally {
             dbConnection.release(conn);
         }
@@ -40,18 +46,23 @@ private final DbConnection dbConnection = DbConnection.getInstance();
 
     @Override
     public List<Announcement> findForUser(Long userId, Role role) {
-        String sql = "SELECT * FROM announcements WHERE posted_by = ? ORDER BY created_at DESC";
+        String sql = """
+        SELECT * FROM announcements
+        WHERE user_id = ?
+           OR (user_id IS NULL AND (role_target IS NULL OR role_target = ?))
+        ORDER BY created_at DESC
+        """;
         Connection conn = dbConnection.borrow();
         List<Announcement> list = new ArrayList<>();
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setLong(1, postedBy);
+            ps.setLong(1, userId);
+            ps.setString(2, role.name());
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) list.add(map(rs));
             }
             return list;
         } catch (SQLException e) {
-            throw new IllegalStateException("Failed to fetch posted announcements", e);
+            throw new IllegalStateException("Failed to fetch announcements", e);
         } finally {
             dbConnection.release(conn);
         }

@@ -1,6 +1,9 @@
 package model.service;
 
+import model.entity.Attempt;
+
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 
 public interface ReportService {
@@ -10,7 +13,9 @@ public interface ReportService {
     /** Aggregate counts across the whole platform (admin view). */
     PlatformStats platformStats();
 
-    /** Top attempts for a quiz, best score first (student leaderboard). */
+    /**
+     * Top attempts for a quiz, best score first (student leaderboard).
+     */
     List<Attempt> leaderboard(Long quizId, int limit);
 
     record QuizStats(long attemptCount, long passCount, long failCount,

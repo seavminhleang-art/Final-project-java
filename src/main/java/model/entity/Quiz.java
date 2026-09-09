@@ -27,4 +27,6 @@ public class Quiz {
     private LocalDateTime examCloseAt;
     private Long createdBy;
     private LocalDateTime createdAt;
+    private   boolean reviewAllowed;
+
 }

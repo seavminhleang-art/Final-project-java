@@ -1,17 +1,19 @@
 package controller;
 
+import model.entity.Attempt;
+import model.service.CertificateService;
 import model.service.ReportService;
 import view.ConsoleUI;
 
 import java.util.List;
+import java.util.Map;
 
 public class ReportController {
     private final ReportService reportService;
-    private final CertificateService certificateService;
+    private CertificateService certificateService ;
 
-    public ReportController(ReportService reportService, CertificateService certificateService) {
+    public ReportController(ReportService reportService) {
         this.reportService = reportService;
-        this.certificateService = certificateService;
     }
 
     public void menu() {

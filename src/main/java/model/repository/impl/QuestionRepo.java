@@ -31,7 +31,7 @@ public class QuestionRepo implements QuestionRepoService {
         } catch (SQLException e) {
             throw new IllegalStateException("Failed to create question", e);
         } finally {
-            pool.release(conn);
+            dbConnection.release(conn);
         }
     }
 
@@ -50,7 +50,7 @@ public class QuestionRepo implements QuestionRepoService {
     @Override
     public Optional<Question> findById(Long id) {
         String sql = "SELECT * FROM questions WHERE id = ?";
-        Connection conn = pool.borrow();
+        Connection conn = dbConnection.borrow();
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, id);
             try (ResultSet rs = ps.executeQuery()) {
@@ -59,7 +59,7 @@ public class QuestionRepo implements QuestionRepoService {
         } catch (SQLException e) {
             throw new IllegalStateException("Failed to find question", e);
         } finally {
-            pool.release(conn);
+            dbConnection.release(conn);
         }
     }
 
@@ -86,7 +86,7 @@ public class QuestionRepo implements QuestionRepoService {
         }
         sql.append(" ORDER BY id");
 
-        Connection conn = pool.borrow();
+        Connection conn = dbConnection.borrow();
         List<Question> list = new ArrayList<>();
         try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {
@@ -99,14 +99,14 @@ public class QuestionRepo implements QuestionRepoService {
         } catch (SQLException e) {
             throw new IllegalStateException("Failed to filter questions", e);
         } finally {
-            pool.release(conn);
+            dbConnection.release(conn);
         }
     }
 
     @Override
     public List<Question> findRandomBySubject(Long subjectId, int count) {
         String sql = "SELECT * FROM questions WHERE subject_id = ? ORDER BY RANDOM() LIMIT ?";
-        Connection conn = pool.borrow();
+        Connection conn = dbConnection.borrow();
         List<Question> list = new ArrayList<>();
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, subjectId);
@@ -118,7 +118,7 @@ public class QuestionRepo implements QuestionRepoService {
         } catch (SQLException e) {
             throw new IllegalStateException("Failed to fetch random questions", e);
         } finally {
-            pool.release(conn);
+            dbConnection.release(conn);
         }
     }
 
@@ -129,7 +129,7 @@ public class QuestionRepo implements QuestionRepoService {
                                   correct_option = ?, difficulty = ?, subject_id = ?
             WHERE id = ?
             """;
-        Connection conn = pool.borrow();
+        Connection conn = dbConnection.borrow();
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, q.getQuestionText());
             ps.setString(2, q.getOptionA());
@@ -145,21 +145,21 @@ public class QuestionRepo implements QuestionRepoService {
         } catch (SQLException e) {
             throw new IllegalStateException("Failed to update question", e);
         } finally {
-            pool.release(conn);
+            dbConnection.release(conn);
         }
     }
 
     @Override
     public boolean delete(Long id) {
         String sql = "DELETE FROM questions WHERE id = ?";
-        Connection conn = pool.borrow();
+        Connection conn = dbConnection.borrow();
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, id);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new IllegalStateException("Failed to delete question", e);
         } finally {
-            pool.release(conn);
+            dbConnection.release(conn);
         }
     }
 

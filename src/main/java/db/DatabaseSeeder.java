@@ -28,7 +28,7 @@ public class DatabaseSeeder {
                 .role(Role.ADMIN)
                 .active(true)
                 .build();
-        userRepo.create(admin);
+        userRepo.save(admin);
         ConsoleUI.println("First run detected: created default admin account (username: admin / password: Admin@123).");
         ConsoleUI.println("Please log in and change this password immediately.");
     }

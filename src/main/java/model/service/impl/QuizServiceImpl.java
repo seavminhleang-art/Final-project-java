@@ -1,4 +1,4 @@
-package service.impl;
+package model.service.impl;
 
 import repository.QuizDao;
 import exception.NotFoundException;

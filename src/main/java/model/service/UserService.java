@@ -9,7 +9,7 @@ import java.util.List;
 
 
 public interface UserService {
-    User create(User user, String rawPassword);
+
     User update(User user);
 
     User setActive(Long id, boolean active);
@@ -19,5 +19,7 @@ public interface UserService {
     void resetPassword(Long userId, String newRawPassword);
 
 
+    void disable(Long id);
 
+    void enable(Long id);
 }

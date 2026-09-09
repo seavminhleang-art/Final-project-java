@@ -1,22 +1,25 @@
+import controller.*;
 import db.DatabaseSeeder;
+import db.DbConnection;
+import db.Session;
+import model.repository.AnnounceRepo;
+import model.repository.AttemptDao;
 import model.repository.UserRepo;
-import model.service.AuthService;
-import model.service.ReportService;
-import model.service.UserService;
-import model.service.impl.AuthServiceImpl;
-import model.service.impl.ReportServiceImpl;
-import model.service.impl.UserServiceImpl;
+import model.repository.impl.*;
+import model.service.*;
+import model.service.impl.*;
+
 import view.ConsoleUI;
 
 public class Main {
     public static void main(String[] args) {
         // DAOs
-        UserRepo userRepo = new UserDaoImpl();
-        SubjectDao subjectDao = new SubjectDaoImpl();
-        QuestionDao questionDao = new QuestionDaoImpl();
-        QuizDao quizDao = new QuizDaoImpl();
+        UserRepo userRepo = new UserRepoImpl();
+        repository.SubjectDao subjectDao = new SubjectDaoImpl();
+        QuestionRepo questionDao = new QuestionRepo();
+        repository.QuizDao quizDao = new QuizDaoImpl();
         AttemptDao attemptDao = new AttemptDaoImpl();
-        AnnouncementDao announcementDao = new AnnouncementDaoImpl();
+        AnnounceRepo announcementDao = new AnnounceRepoImpl();
 
         try {
             DatabaseSeeder.ensureAdminExists(userRepo);
@@ -30,12 +33,12 @@ public class Main {
         // Services
         AuthService authService = new AuthServiceImpl(userRepo);
         UserService userService = new UserServiceImpl(userRepo);
-        SubjectService subjectService = new SubjectServiceImpl(subjectDao);
-        QuestionService questionService = new QuestionServiceImpl(questionDao);
-        QuizService quizService = new QuizServiceImpl(quizDao);
-        AnnouncementService announcementService = new AnnouncementServiceImpl(announcementDao);
-        ExamService examService = new ExamServiceImpl(attemptDao, quizDao, announcementService);
-        ReportService reportService = new ReportServiceImpl(attemptDao, userDao, subjectDao, questionDao, quizDao);
+        SubjectServiceImpl subjectService = new SubjectServiceImpl(subjectDao);
+        model.service.QuestionService questionService = new QuestionServiceImpl(questionDao);
+        QuizServiceImpl quizService = new QuizServiceImpl(quizDao);
+        model.service.AnnouncementService announcementService = new AnnouncementServiceImpl(announcementDao);
+        ExamServiceImpl examService = new ExamServiceImpl(attemptDao, quizDao, announcementService);
+        model.service.ReportService reportService = new ReportServiceImpl(attemptDao, userRepo, subjectDao, questionDao, quizDao);
 
         // Controllers
         AuthController authController = new AuthController(authService);
@@ -53,7 +56,7 @@ public class Main {
                 userController, subjectController, questionController, quizController,
                 examController, studentPortalController, reportController, announcementController);
 
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> ConnectionPool.getInstance().shutdown()));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> DbConnection.getInstance().shutdown()));
 
         ConsoleUI.println("Welcome to Proctor - Terminal-Based Examination Platform");
         while (true) {
@@ -64,4 +67,7 @@ public class Main {
             mainMenu.run();
         }
     }
-}
+
+
+    }
+

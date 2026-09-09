@@ -16,7 +16,7 @@ public class UserRepoImpl implements UserRepo {
     private final DbConnection pool = DbConnection.getInstance();
 
     @Override
-    public User create(User user) {
+    public User save(User user) {
         String sql = """
             INSERT INTO users (username, password_hash, salt, full_name, email, role, active, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
@@ -43,6 +43,7 @@ public class UserRepoImpl implements UserRepo {
             pool.release(conn);
         }
     }
+
 
     @Override
     public Optional<User> findById(Long id) {

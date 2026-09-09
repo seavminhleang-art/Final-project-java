@@ -2,7 +2,7 @@ package controller;
 
 import model.entity.enums.Difficulty;
 import model.entity.Question;
-import service.QuestionService;
+import model.service.QuestionService;
 import service.SubjectService;
 import view.ConsoleUI;
 import db.Session;
