@@ -1,0 +1,17 @@
+# Database Configuration
+db.url=jdbc:postgresql://localhost:5432/proctor_db
+db.username=postgres
+db.password=postgres
+
+# Default Admin Seed
+admin.username=admin
+admin.password=admin123
+admin.fullname=System Administrator
+
+# Ollama AI Configuration
+ollama.url=http://localhost:11434
+ollama.model=llama3.2:3b
+ollama.timeout_seconds=120
+
+# Reports
+reports.output_dir=./reports/output

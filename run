@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -e
+
+# If the binary does not exist, build it first
+if [ ! -f "./build/install/proctor/bin/proctor" ]; then
+    ./gradlew -q installDist
+fi
+
+# Detect and export live terminal width & height for dynamic auto-centering
+COLS=$(tput cols 2>/dev/null || stty size 2>/dev/null | awk '{print $2}' || echo 100)
+ROWS=$(tput lines 2>/dev/null || stty size 2>/dev/null | awk '{print $1}' || echo 30)
+export COLUMNS=${COLS:-100}
+export LINES=${ROWS:-30}
+
+# Execute native binary directly with full TTY access
+exec ./build/install/proctor/bin/proctor "$@"

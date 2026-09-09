@@ -1,0 +1,47 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'com.proctor'
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+
+    implementation 'com.williamcallahan:tui4j:0.3.3'
+    implementation 'org.jline:jline:3.26.1'
+    implementation 'org.jline:jline-terminal-jna:3.26.1'
+    implementation 'net.java.dev.jna:jna:5.14.0'
+
+    implementation 'org.postgresql:postgresql:42.7.3'
+    implementation 'com.zaxxer:HikariCP:5.1.0'
+
+    implementation 'at.favre.lib:bcrypt:0.10.2'
+
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.2'
+
+    implementation 'net.sf.jasperreports:jasperreports:6.21.3'
+
+    implementation 'org.slf4j:slf4j-simple:2.0.13'
+
+    compileOnly 'org.projectlombok:lombok:1.18.34'
+    annotationProcessor 'org.projectlombok:lombok:1.18.34'
+}
+
+application {
+    mainClass = 'com.proctor.Main'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += ['-Xlint:all', '-Xlint:-processing', '-Werror']
+}
