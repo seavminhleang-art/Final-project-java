@@ -167,6 +167,24 @@ public class TuiHelper {
         "╚═╝  ╚═╝╚═╝╚══════╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝   ╚═╝   "
     };
 
+    private static final String[] ASCII_LOGIN = new String[]{
+        "██╗      ██████╗  ██████╗     ██╗███╗   ██╗",
+        "██║     ██╔═══██╗██╔════╝     ██║████╗  ██║",
+        "██║     ██║   ██║██║  ███╗    ██║██╔██╗ ██║",
+        "██║     ██║   ██║██║   ██║    ██║██║╚██╗██║",
+        "███████╗╚██████╔╝╚██████╔╝    ██║██║ ╚████║",
+        "╚══════╝ ╚═════╝  ╚═════╝     ╚═╝╚═╝  ╚═══╝"
+    };
+
+    private static final String[] ASCII_REGISTER = new String[]{
+        "██████╗ ███████╗ ██████╗ ██╗███████╗████████╗███████╗██████╗ ",
+        "██╔══██╗██╔════╝██╔════╝ ██║██╔════╝╚══██╔══╝██╔════╝██╔══██╗",
+        "██████╔╝█████╗  ██║  ███╗██║███████╗   ██║   █████╗  ██████╔╝",
+        "██╔══██╗██╔══╝  ██║   ██║██║╚════██║   ██║   ██╔══╝  ██╔══██╗",
+        "██║  ██║███████╗╚██████╔╝██║███████║   ██║   ███████╗██║  ██║",
+        "╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝╚══════╝   ╚═╝   ╚══════╝╚═╝  ╚═╝"
+    };
+
     public static String asciiBannerBox(String[] asciiLines, String subtitle) {
         StringBuilder sb = new StringBuilder();
         sb.append(HEADER_START).append(CLEAR_EOL).append("\n");
@@ -205,6 +223,14 @@ public class TuiHelper {
 
         if (upper.equals("PROCTOR")) {
             return asciiBannerBox(ASCII_PROCTOR, subtitle);
+        }
+        if (upper.equals("LOG IN") || upper.equals("LOGIN") || upper.equals("SIGN IN")) {
+            String sub = (subtitle != null && !subtitle.isBlank()) ? subtitle : "Sign In to Your Account";
+            return asciiBannerBox(ASCII_LOGIN, sub);
+        }
+        if (upper.equals("REGISTER") || upper.contains("SIGN UP") || upper.contains("CREATE ACCOUNT")) {
+            String sub = (subtitle != null && !subtitle.isBlank()) ? subtitle : "Create a New Account";
+            return asciiBannerBox(ASCII_REGISTER, sub);
         }
         if (upper.contains("DASHBOARD") || upper.contains("PORTAL")) {
             String sub = subtitle;
@@ -715,7 +741,7 @@ private static String stripAnsi(String str) {
                 String stripped = cleanLine.replaceAll("\u001B\\[[;?0-9]*[a-zA-Z]", "");
 
                 boolean isButtonRow = (stripped.contains("[ ▶ ") || stripped.contains("[   "))
-                        && (stripped.contains("Sign In") || stripped.contains("Sign Up") || stripped.contains("Submit")
+                        && (stripped.contains("Sign In") || stripped.contains("Log In") || stripped.contains("Sign Up") || stripped.contains("Submit")
                         || stripped.contains("Cancel") || stripped.contains("Register") || stripped.contains("Approve")
                         || stripped.contains("Reject") || stripped.contains("Generate") || stripped.contains("Exit")
                         || stripped.contains("Back") || stripped.contains("Forgot Password"));

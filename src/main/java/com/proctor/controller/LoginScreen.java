@@ -77,9 +77,7 @@ public class LoginScreen implements Screen {
             }
 
             if (KeyUtil.isEsc(k)) {
-                showQuitModal = true;
-                quitConfirmFocused = false;
-                return ScreenResult.stay(this);
+                return ScreenResult.navigate(new StartupScreen(authService));
             }
 
             if (KeyUtil.isTab(k) || KeyUtil.isDown(k)) {
@@ -109,9 +107,7 @@ public class LoginScreen implements Screen {
                     forgotMessage = "";
                     return ScreenResult.stay(this);
                 } else if (focusedField == 5) {
-                    showQuitModal = true;
-                    quitConfirmFocused = false;
-                    return ScreenResult.stay(this);
+                    return ScreenResult.navigate(new StartupScreen(authService));
                 }
             }
 

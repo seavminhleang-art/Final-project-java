@@ -44,7 +44,7 @@ public class RegisterScreen implements Screen {
     public ScreenResult update(Message msg) {
         if (msg instanceof KeyPressMessage k) {
             if (KeyUtil.isEsc(k)) {
-                return ScreenResult.navigate(new LoginScreen(authService));
+                return ScreenResult.navigate(new StartupScreen(authService));
             }
 
             if (KeyUtil.isTab(k) || KeyUtil.isDown(k)) {
@@ -64,7 +64,7 @@ public class RegisterScreen implements Screen {
                 } else if (focusedField == 6 || focusedField == 7) {
                     return attemptRegister();
                 } else if (focusedField == 8) {
-                    return ScreenResult.navigate(new LoginScreen(authService));
+                    return ScreenResult.navigate(new StartupScreen(authService));
                 }
             }
 

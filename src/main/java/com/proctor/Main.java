@@ -6,7 +6,7 @@ import com.proctor.model.service.SeedService;
 import com.proctor.config.DatabaseConnection;
 import com.proctor.config.SchemaInitializer;
 import com.proctor.controller.AppModel;
-import com.proctor.controller.LoginScreen;
+import com.proctor.controller.StartupScreen;
 import com.williamcallahan.tui4j.compat.bubbletea.Program;
 
 import java.io.OutputStream;
@@ -32,8 +32,8 @@ public class Main {
 
             AuthService authService = new AuthService(userRepository);
 
-            LoginScreen loginScreen = new LoginScreen(authService);
-            new Program(new AppModel(loginScreen)).withAltScreen().run();
+            StartupScreen startupScreen = new StartupScreen(authService);
+            new Program(new AppModel(startupScreen)).withAltScreen().run();
         } catch (Throwable t) {
             System.setErr(originalErr);
             System.out.println("\n\u001B[1;31m[PROCTOR ERROR] Application error:\u001B[0m");
