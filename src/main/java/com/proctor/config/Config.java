@@ -32,10 +32,14 @@ public class Config {
     }
 
     public static String get(String key, String defaultValue) {
+        String sys = System.getProperty(key);
+        if (sys != null && !sys.isBlank()) return sys;
         return props.getProperty(key, defaultValue);
     }
 
     public static String get(String key) {
+        String sys = System.getProperty(key);
+        if (sys != null && !sys.isBlank()) return sys;
         return props.getProperty(key);
     }
 
