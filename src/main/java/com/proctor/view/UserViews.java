@@ -4,9 +4,12 @@ import com.proctor.model.entity.User;
 import com.proctor.model.enums.Role;
 import com.proctor.util.TuiHelper;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class UserViews {
+
+    private static final DateTimeFormatter DISPLAY_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public static String renderUserList(List<User> users, int selectedIndex, Role filterRole,
                                        String searchBuffer, boolean searchMode, String bannerMessage) {
@@ -20,7 +23,8 @@ public class UserViews {
         } else if (!searchBuffer.isEmpty()) {
             sb.append("  Search: [ ").append(searchBuffer).append(" ] (Press '/' to edit)\n\n");
         }
-        sb.append(String.format("  %-4s  %-16s  %-26s  %-22s  %-9s  %-9s%n", "ID", "USERNAME", "EMAIL", "FULL NAME", "ROLE", "STATUS")).append("\n");
+        sb.append(String.format("  %-4s  %-16s  %-18s  %-16s  %-9s  %-10s  %-9s%n",
+                "ID", "USERNAME", "EMAIL", "FULL NAME", "ROLE", "BIRTHDAY", "STATUS")).append("\n");
         sb.append("  " + "─".repeat(96) + "\n\n");
 
         if (users.isEmpty()) {
@@ -34,13 +38,15 @@ public class UserViews {
                 User u = users.get(i);
                 String cursor = (i == selectedIndex) ? TuiHelper.cyan("▶ ") : "  ";
                 String status = u.isEnabled() ? TuiHelper.green("Enabled") : TuiHelper.red("Disabled");
+                String dobStr = (u.getDateOfBirth() != null) ? u.getDateOfBirth().format(DISPLAY_FMT) : "-";
 
-                String line = String.format("%-4d  %-16s  %-26s  %-22s  %-9s  %-9s",
+                String line = String.format("%-4d  %-16s  %-18s  %-16s  %-9s  %-10s  %-9s",
                         u.getId(),
                         truncate("@" + u.getUsername(), 16),
-                        truncate(u.getEmail() != null ? u.getEmail() : "-", 26),
-                        truncate(u.getFullName(), 22),
+                        truncate(u.getEmail() != null ? u.getEmail() : "-", 18),
+                        truncate(u.getFullName(), 16),
                         u.getRole().name(),
+                        dobStr,
                         status);
 
                 if (i == selectedIndex) {
@@ -83,22 +89,28 @@ public class UserViews {
     }
 
     public static String renderUserForm(boolean isEditMode, User userToEdit, String email, String username,
-                                        String password, String fullName, Role selectedRole, boolean enabledStatus,
-                                        int focusedField, int saveBtnIndex, int cancelBtnIndex, String errorMessage) {
+                                        String password, String fullName, String birthday, Role selectedRole,
+                                        boolean enabledStatus, int focusedField, int saveBtnIndex,
+                                        int cancelBtnIndex, String errorMessage) {
         StringBuilder sb = new StringBuilder();
         String title = isEditMode ? "EDIT USER: @" + userToEdit.getUsername() : "CREATE NEW USER";
         sb.append(TuiHelper.header(title, "Fill in user credentials and role"));
         sb.append("\n");
 
         if (isEditMode) {
+            // Edit: 0=fullName, 1=birthday, 2=role, 3=status
             sb.append(TuiHelper.inputBox("Full Name", fullName, focusedField == 0, 86, false, "enter full name"));
             sb.append("\n");
-            sb.append(TuiHelper.selectBox("Role", selectedRole.name(), focusedField == 1, 86, "Space to cycle"));
+            String bdDisplay = TuiHelper.birthdayMask(birthday, focusedField == 1);
+            sb.append(TuiHelper.inputBox("Date of Birth", bdDisplay, focusedField == 1, 86, false, "DD - MM - YYYY"));
+            sb.append("\n");
+            sb.append(TuiHelper.selectBox("Role", selectedRole.name(), focusedField == 2, 86, "Space to cycle"));
             sb.append("\n");
             String statusText = enabledStatus ? "Enabled" : "Disabled";
-            sb.append(TuiHelper.selectBox("Account Status", statusText, focusedField == 2, 86, "Space to toggle (Enabled/Disabled)"));
+            sb.append(TuiHelper.selectBox("Account Status", statusText, focusedField == 3, 86, "Space to toggle (Enabled/Disabled)"));
             sb.append("\n");
         } else {
+            // Create: 0=email, 1=username, 2=password, 3=fullName, 4=birthday, 5=role
             sb.append(TuiHelper.inputBox("Email Address", email, focusedField == 0, 86, false, "e.g. user@proctor.edu"));
             sb.append("\n");
             sb.append(TuiHelper.inputBox("Username", username, focusedField == 1, 86, false, "e.g. jdoe"));
@@ -107,7 +119,10 @@ public class UserViews {
             sb.append("\n");
             sb.append(TuiHelper.inputBox("Full Name", fullName, focusedField == 3, 86, false, "enter full name"));
             sb.append("\n");
-            sb.append(TuiHelper.selectBox("Role", selectedRole.name(), focusedField == 4, 86, "Space to cycle"));
+            String bdDisplay = TuiHelper.birthdayMask(birthday, focusedField == 4);
+            sb.append(TuiHelper.inputBox("Date of Birth", bdDisplay, focusedField == 4, 86, false, "DD - MM - YYYY"));
+            sb.append("\n");
+            sb.append(TuiHelper.selectBox("Role", selectedRole.name(), focusedField == 5, 86, "Space to cycle"));
             sb.append("\n");
         }
 

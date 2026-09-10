@@ -46,7 +46,7 @@ public class AuthViews {
         return sb.toString();
     }
 
-    public static String renderRegister(String fullName, String email, String username, String password, String confirmPassword, Role selectedRole, int focusedField, String errorMessage) {
+    public static String renderRegister(String fullName, String email, String username, String password, String confirmPassword, String birthday, Role selectedRole, int focusedField, String errorMessage) {
         StringBuilder sb = new StringBuilder();
         sb.append(TuiHelper.header("PROCTOR", "Create a New Account"));
         sb.append("\n");
@@ -68,11 +68,16 @@ public class AuthViews {
         sb.append(TuiHelper.inputBox("Confirm Password", confirmPassword, focusedField == 4, 86, true, "re-enter your password"));
         sb.append("\n");
 
+        // Birthday masked input — show DD - MM - YYYY template with typed digits filled in
+        String birthdayDisplay = TuiHelper.birthdayMask(birthday, focusedField == 5);
+        sb.append(TuiHelper.inputBox("Date of Birth", birthdayDisplay, focusedField == 5, 86, false, "DD - MM - YYYY"));
+        sb.append("\n");
+
         String roleHelp = "Press Space or ←/→ to switch";
-        sb.append(TuiHelper.selectBox("Account Role", selectedRole == Role.STUDENT ? "Student" : "Teacher", focusedField == 5, 86, roleHelp));
+        sb.append(TuiHelper.selectBox("Account Role", selectedRole == Role.STUDENT ? "Student" : "Teacher", focusedField == 6, 86, roleHelp));
         sb.append("\n\n");
 
-        sb.append(TuiHelper.buttonRow("Register", focusedField == 6, "Back to Login", focusedField == 7)).append("\n\n");
+        sb.append(TuiHelper.buttonRow("Register", focusedField == 7, "Back to Login", focusedField == 8)).append("\n\n");
 
         if (!errorMessage.isBlank()) {
             sb.append("  ").append(TuiHelper.red("✖ " + errorMessage)).append("\n\n");

@@ -12,6 +12,8 @@ import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
 import com.williamcallahan.tui4j.compat.bubbletea.Message;
 import com.williamcallahan.tui4j.compat.bubbletea.input.key.KeyType;
 
+import java.time.LocalDate;
+
 public class UserFormScreen implements Screen {
     private final UserService userService;
     private final AuthService authService;
@@ -21,6 +23,8 @@ public class UserFormScreen implements Screen {
     private final StringBuilder username = new StringBuilder();
     private final StringBuilder password = new StringBuilder();
     private final StringBuilder fullName = new StringBuilder();
+    // raw digit characters DDMMYYYY, max 8
+    private final StringBuilder birthday = new StringBuilder();
     private Role selectedRole = Role.STUDENT;
     private boolean enabledStatus = true;
 
@@ -36,6 +40,11 @@ public class UserFormScreen implements Screen {
             if (userToEdit.getEmail() != null) this.email.append(userToEdit.getEmail());
             if (userToEdit.getUsername() != null) this.username.append(userToEdit.getUsername());
             if (userToEdit.getFullName() != null) this.fullName.append(userToEdit.getFullName());
+            if (userToEdit.getDateOfBirth() != null) {
+                LocalDate dob = userToEdit.getDateOfBirth();
+                this.birthday.append(String.format("%02d%02d%04d",
+                        dob.getDayOfMonth(), dob.getMonthValue(), dob.getYear()));
+            }
             this.selectedRole = userToEdit.getRole();
             this.enabledStatus = userToEdit.isEnabled();
         }
@@ -45,8 +54,10 @@ public class UserFormScreen implements Screen {
         return userToEdit != null;
     }
 
+    // Create: 0=email, 1=username, 2=password, 3=fullName, 4=birthday, 5=role  → 6 input fields
+    // Edit:   0=fullName, 1=birthday, 2=role, 3=status                          → 4 input fields
     private int getNumInputFields() {
-        return isEditMode() ? 3 : 5;
+        return isEditMode() ? 4 : 6;
     }
 
     private int getFieldCount() {
@@ -106,7 +117,38 @@ public class UserFormScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // birthday field index in create mode is 4; in edit mode is 1
+    private int birthdayFieldIndex() {
+        return isEditMode() ? 1 : 4;
+    }
+
+    private void handleBirthdayInput(KeyPressMessage k) {
+        if (KeyUtil.isBackspace(k)) {
+            if (!birthday.isEmpty()) birthday.deleteCharAt(birthday.length() - 1);
+            errorMessage = "";
+        } else if (birthday.length() < 8) {
+            char c = extractChar(k);
+            if (Character.isDigit(c)) {
+                birthday.append(c);
+                errorMessage = "";
+            }
+        }
+    }
+
     private void handleCreateModeInput(KeyPressMessage k) {
+        if (focusedField == 4) {
+            handleBirthdayInput(k);
+            return;
+        }
+        if (focusedField == 5) {
+            // role
+            if (KeyUtil.isLeft(k)) {
+                cycleRole(false);
+            } else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) {
+                cycleRole(true);
+            }
+            return;
+        }
         if (focusedField >= 0 && focusedField <= 3) {
             StringBuilder focusedBuffer = switch (focusedField) {
                 case 0 -> email;
@@ -126,17 +168,12 @@ public class UserFormScreen implements Screen {
                 focusedBuffer.append(k.key());
                 errorMessage = "";
             }
-        } else if (focusedField == 4) {
-            if (KeyUtil.isLeft(k)) {
-                cycleRole(false);
-            } else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) {
-                cycleRole(true);
-            }
         }
     }
 
     private void handleEditModeInput(KeyPressMessage k) {
         if (focusedField == 0) {
+            // fullName
             if (KeyUtil.isBackspace(k)) {
                 if (!fullName.isEmpty()) fullName.deleteCharAt(fullName.length() - 1);
             } else if (k.type() == KeyType.KeyRunes && k.runes() != null) {
@@ -149,16 +186,28 @@ public class UserFormScreen implements Screen {
                 errorMessage = "";
             }
         } else if (focusedField == 1) {
+            handleBirthdayInput(k);
+        } else if (focusedField == 2) {
             if (KeyUtil.isLeft(k)) {
                 cycleRole(false);
             } else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) {
                 cycleRole(true);
             }
-        } else if (focusedField == 2) {
+        } else if (focusedField == 3) {
             if (KeyUtil.isLeft(k) || KeyUtil.isRight(k) || KeyUtil.isSpace(k)) {
                 enabledStatus = !enabledStatus;
             }
         }
+    }
+
+    private char extractChar(KeyPressMessage k) {
+        if (k.type() == KeyType.KeyRunes && k.runes() != null && k.runes().length > 0) {
+            return k.runes()[0];
+        }
+        if (k.key() != null && k.key().length() == 1) {
+            return k.key().charAt(0);
+        }
+        return '\0';
     }
 
     private void cycleRole(boolean forward) {
@@ -173,12 +222,29 @@ public class UserFormScreen implements Screen {
         }
     }
 
+    private LocalDate parseBirthday() {
+        String digits = birthday.toString();
+        if (digits.length() != 8) {
+            throw new ValidationException("Date of birth is required (DD - MM - YYYY).");
+        }
+        try {
+            int day   = Integer.parseInt(digits.substring(0, 2));
+            int month = Integer.parseInt(digits.substring(2, 4));
+            int year  = Integer.parseInt(digits.substring(4, 8));
+            return LocalDate.of(year, month, day);
+        } catch (IllegalArgumentException e) {
+            throw new ValidationException("Invalid date of birth — please check day, month and year.");
+        }
+    }
+
     private ScreenResult handleSave() {
         try {
+            LocalDate dob = parseBirthday();
             if (isEditMode()) {
-                userService.updateUser(userToEdit.getId(), fullName.toString(), selectedRole, enabledStatus);
+                userService.updateUser(userToEdit.getId(), fullName.toString(), selectedRole, enabledStatus, dob);
             } else {
-                userService.createUser(email.toString().trim(), username.toString().trim(), password.toString(), fullName.toString().trim(), selectedRole);
+                userService.createUser(email.toString().trim(), username.toString().trim(),
+                        password.toString(), fullName.toString().trim(), selectedRole, dob);
             }
             return ScreenResult.navigate(new UserListScreen(userService, authService));
         } catch (ValidationException e) {
@@ -199,6 +265,7 @@ public class UserFormScreen implements Screen {
                 username.toString(),
                 password.toString(),
                 fullName.toString(),
+                birthday.toString(),
                 selectedRole,
                 enabledStatus,
                 focusedField,

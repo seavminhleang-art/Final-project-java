@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
+import java.time.LocalDate;
 
 @Data
 @Builder
@@ -18,6 +19,7 @@ public class User {
     private String username;
     private String passwordHash;
     private String fullName;
+    private LocalDate dateOfBirth;
     private Role role;
     private boolean enabled;
     private Timestamp createdAt;

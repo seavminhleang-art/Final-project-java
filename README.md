@@ -62,7 +62,7 @@ db.password=postgres
 
 On **Linux / macOS**:
 ```bash
-chmod +x gradlew run proctor
+chmod +x gradlew run
 ./run
 ```
 *(Or run directly with `./gradlew run`)*

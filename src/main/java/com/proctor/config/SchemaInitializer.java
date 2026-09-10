@@ -64,6 +64,7 @@ public class SchemaInitializer {
                 stmt.execute("ALTER TABLE quizzes ALTER COLUMN pass_score SET DEFAULT 50;");
                 stmt.execute("ALTER TABLE quizzes ALTER COLUMN randomize_questions SET DEFAULT TRUE;");
                 stmt.execute("ALTER TABLE quizzes ALTER COLUMN randomize_answers SET DEFAULT TRUE;");
+                stmt.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS date_of_birth DATE;");
             }
         } catch (Exception e) {
             System.err.println("Database schema initialization error: " + e.getMessage());

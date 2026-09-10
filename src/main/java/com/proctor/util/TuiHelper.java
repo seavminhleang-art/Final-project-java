@@ -292,6 +292,25 @@ public class TuiHelper {
         return String.format("  %s   %s  %s   %s%n%n", prevLabel, pageInfo, countInfo, nextLabel);
     }
 
+    /**
+     * Renders a masked date input in "DD - MM - YYYY" format.
+     * {@code digits} contains the raw digit characters typed so far (0–8 chars).
+     * When {@code focused} the next empty slot shows an underscore cursor.
+     */
+    public static String birthdayMask(String digits, boolean focused) {
+        char[] tpl = "DD - MM - YYYY".toCharArray();
+        // positions of the 8 digit slots within the template
+        int[] slots = {0, 1, 5, 6, 10, 11, 12, 13};
+        int len = (digits == null) ? 0 : Math.min(digits.length(), 8);
+        for (int i = 0; i < len; i++) {
+            tpl[slots[i]] = digits.charAt(i);
+        }
+        if (focused && len < 8) {
+            tpl[slots[len]] = '_';
+        }
+        return new String(tpl);
+    }
+
     public static String inputBox(String label, String value, boolean focused, int width, boolean masked, String placeholder) {
         StringBuilder sb = new StringBuilder();
         String borderCol = focused ? NAVY_BLUE : DIM;

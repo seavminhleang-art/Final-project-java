@@ -7,6 +7,7 @@ import com.proctor.exception.ValidationException;
 import com.proctor.util.PasswordUtils;
 
 import java.security.SecureRandom;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -28,6 +29,7 @@ public class UserService {
         return userRepository.findById(id);
     }
 
+    /** Convenience overload used by SeedService and admin quick-create (no birthday). */
     public User createUser(String emailOrUsername, String rawPassword, String fullName, Role role) {
         if (emailOrUsername == null || emailOrUsername.isBlank()) {
             throw new ValidationException("Email or username is required.");
@@ -42,10 +44,15 @@ public class UserService {
             username = clean;
             email = clean + "@proctor.edu";
         }
-        return createUser(email, username, rawPassword, fullName, role);
+        return createUser(email, username, rawPassword, fullName, role, null);
     }
 
+    /** Overload without birthday — delegates to the main overload with null birthday. */
     public User createUser(String email, String username, String rawPassword, String fullName, Role role) {
+        return createUser(email, username, rawPassword, fullName, role, null);
+    }
+
+    public User createUser(String email, String username, String rawPassword, String fullName, Role role, LocalDate dateOfBirth) {
         if (email == null || email.isBlank() || username == null || username.isBlank() ||
                 rawPassword == null || rawPassword.isBlank() || fullName == null || fullName.isBlank()) {
             throw new ValidationException("All fields are required.");
@@ -77,6 +84,7 @@ public class UserService {
                 .username(cleanUsername)
                 .passwordHash(PasswordUtils.hash(rawPassword))
                 .fullName(fullName.trim())
+                .dateOfBirth(dateOfBirth)
                 .role(role != null ? role : Role.STUDENT)
                 .enabled(true)
                 .build();
@@ -88,7 +96,7 @@ public class UserService {
         return user;
     }
 
-    public User updateUser(int id, String fullName, Role role, boolean enabled) {
+    public User updateUser(int id, String fullName, Role role, boolean enabled, LocalDate dateOfBirth) {
         if (fullName == null || fullName.isBlank()) {
             throw new ValidationException("Full name cannot be blank.");
         }
@@ -100,6 +108,7 @@ public class UserService {
 
         User user = existing.get();
         user.setFullName(fullName.trim());
+        user.setDateOfBirth(dateOfBirth);
         if (SeedService.ADMIN_USERNAME.equalsIgnoreCase(user.getUsername())) {
             role = Role.ADMIN;
             enabled = true;
