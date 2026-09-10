@@ -167,13 +167,10 @@ public class AIQuestionGeneratorScreen implements Screen {
             }
 
             if (KeyUtil.isEnter(k)) {
-                if (focusedField == getGenerateButtonIndex()) {
+                if (focusedField == getGenerateButtonIndex() || focusedField == getNumInputFields() - 1) {
                     return startAsyncGeneration();
                 } else if (focusedField == getCancelButtonIndex()) {
                     return returnToPreviousScreen();
-                } else if (focusedField == getNumInputFields() - 1) {
-                    focusedField = getGenerateButtonIndex();
-                    return ScreenResult.stay(this);
                 } else {
                     focusedField = (focusedField + 1) % getFieldCount();
                     return ScreenResult.stay(this);

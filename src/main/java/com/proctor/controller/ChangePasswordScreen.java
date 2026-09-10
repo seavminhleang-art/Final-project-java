@@ -60,13 +60,10 @@ public class ChangePasswordScreen implements Screen {
                 } else if (focusedField == 1) {
                     focusedField = 2;
                     return ScreenResult.stay(this);
-                } else if (focusedField == 2) {
-                    focusedField = 3;
-                    return ScreenResult.stay(this);
+                } else if (focusedField == 2 || focusedField == 3) {
+                    return handleSave();
                 } else if (focusedField == 4) {
                     return ScreenResult.navigate(returnScreen);
-                } else if (focusedField == 3) {
-                    return handleSave();
                 }
             }
 

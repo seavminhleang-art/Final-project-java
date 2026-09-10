@@ -132,13 +132,10 @@ public class AIQuizGeneratorScreen implements Screen {
             }
 
             if (KeyUtil.isEnter(k)) {
-                if (focusedField == getGenerateButtonIndex()) {
+                if (focusedField == getGenerateButtonIndex() || focusedField == getNumInputFields() - 1) {
                     return startAsyncQuizGeneration();
                 } else if (focusedField == getCancelButtonIndex()) {
                     return ScreenResult.navigate(new QuizListScreen(quizService, questionService, subjectService, authService, assessmentType));
-                } else if (focusedField == getNumInputFields() - 1) {
-                    focusedField = getGenerateButtonIndex();
-                    return ScreenResult.stay(this);
                 } else {
                     focusedField = (focusedField + 1) % getFieldCount();
                     return ScreenResult.stay(this);

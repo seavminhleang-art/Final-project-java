@@ -127,7 +127,7 @@ public class InboxDetailScreen implements Screen {
                 errorMessage = "";
             }
             if (KeyUtil.isEnter(k)) {
-                focusedField = 1;
+                return executeAdminPasswordResetApprove();
             }
         } else {
             if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {

@@ -56,10 +56,7 @@ public class RegisterScreen implements Screen {
                 if (focusedField >= 0 && focusedField <= 4) {
                     focusedField++;
                     return ScreenResult.stay(this);
-                } else if (focusedField == 5) {
-                    focusedField = 6;
-                    return ScreenResult.stay(this);
-                } else if (focusedField == 6) {
+                } else if (focusedField == 5 || focusedField == 6) {
                     return attemptRegister();
                 } else if (focusedField == 7) {
                     return ScreenResult.navigate(new LoginScreen(authService));

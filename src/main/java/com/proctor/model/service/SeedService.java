@@ -38,8 +38,5 @@ public class SeedService {
             admin.setRole(Role.ADMIN);
             userRepository.update(admin);
         }
-
-        userRepository.findByUsername("teacher").ifPresent(u -> userRepository.delete(u.getId()));
-        userRepository.findByUsername("student").ifPresent(u -> userRepository.delete(u.getId()));
     }
 }

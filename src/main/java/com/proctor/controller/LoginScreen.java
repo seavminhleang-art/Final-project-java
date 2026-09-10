@@ -96,10 +96,7 @@ public class LoginScreen implements Screen {
                 if (focusedField == 0) {
                     focusedField = 1;
                     return ScreenResult.stay(this);
-                } else if (focusedField == 1) {
-                    focusedField = 2;
-                    return ScreenResult.stay(this);
-                } else if (focusedField == 2) {
+                } else if (focusedField == 1 || focusedField == 2) {
                     return attemptLogin();
                 } else if (focusedField == 3) {
                     return ScreenResult.navigate(new RegisterScreen(authService, new UserService(new UserRepository())));
@@ -181,9 +178,6 @@ public class LoginScreen implements Screen {
                 return ScreenResult.stay(this);
             } else if (forgotFocusIndex == 1) {
                 forgotFocusIndex = 2;
-                return ScreenResult.stay(this);
-            } else if (forgotFocusIndex == 2) {
-                forgotFocusIndex = 3;
                 return ScreenResult.stay(this);
             } else if (forgotFocusIndex == 4) {
                 forgotPasswordMode = false;

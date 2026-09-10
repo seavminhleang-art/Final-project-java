@@ -154,13 +154,10 @@ public class QuestionFormScreen implements Screen {
             }
 
             if (KeyUtil.isEnter(k)) {
-                if (focusedField == getSaveButtonIndex()) {
+                if (focusedField == getSaveButtonIndex() || focusedField == getNumInputFields() - 1) {
                     return handleSave();
                 } else if (focusedField == getCancelButtonIndex()) {
                     return returnToPreviousScreen();
-                } else if (focusedField == getNumInputFields() - 1) {
-                    focusedField = getSaveButtonIndex();
-                    return ScreenResult.stay(this);
                 } else {
                     focusedField = (focusedField + 1) % getFieldCount();
                     return ScreenResult.stay(this);

@@ -198,11 +198,6 @@ public class AvailableQuizzesScreen implements Screen {
         }
 
         if (KeyUtil.isEnter(k)) {
-            if (examReasonFocusIndex == 0) {
-                examReasonFocusIndex = 1;
-                return ScreenResult.stay(this);
-            }
-
             if (examReasonFocusIndex == 2) {
                 requestingExamReason = false;
                 bannerMessage = TuiHelper.yellow("Makeup request cancelled.");
