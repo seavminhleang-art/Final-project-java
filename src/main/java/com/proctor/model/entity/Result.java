@@ -1,5 +1,6 @@
 package com.proctor.model.entity;
 
+import com.proctor.model.enums.AssessmentType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,6 +19,7 @@ public class Result {
     private String studentName;
     private Integer quizId;
     private String quizTitle;
+    private AssessmentType assessmentType;
     private double totalPoints;
     private double maxPoints;
     private double percentage;

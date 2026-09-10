@@ -2,6 +2,7 @@ package com.proctor.model.repository;
 
 import com.proctor.config.DatabaseConnection;
 import com.proctor.model.entity.Result;
+import com.proctor.model.enums.AssessmentType;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -43,7 +44,7 @@ public class ResultRepository {
 
     public Optional<Result> findByAttemptId(int attemptId) {
         String sql = "SELECT r.id, r.attempt_id, r.student_id, u.full_name AS student_name, " +
-                     "r.quiz_id, q.title AS quiz_title, r.total_points, r.max_points, r.percentage, r.passed, r.graded_at " +
+                     "r.quiz_id, q.title AS quiz_title, q.assessment_type, r.total_points, r.max_points, r.percentage, r.passed, r.graded_at " +
                      "FROM results r " +
                      "LEFT JOIN users u ON r.student_id = u.id " +
                      "LEFT JOIN quizzes q ON r.quiz_id = q.id " +
@@ -65,7 +66,7 @@ public class ResultRepository {
     public List<Result> findByStudent(int studentId) {
         List<Result> list = new ArrayList<>();
         String sql = "SELECT r.id, r.attempt_id, r.student_id, u.full_name AS student_name, " +
-                     "r.quiz_id, q.title AS quiz_title, r.total_points, r.max_points, r.percentage, r.passed, r.graded_at " +
+                     "r.quiz_id, q.title AS quiz_title, q.assessment_type, r.total_points, r.max_points, r.percentage, r.passed, r.graded_at " +
                      "FROM results r " +
                      "LEFT JOIN users u ON r.student_id = u.id " +
                      "LEFT JOIN quizzes q ON r.quiz_id = q.id " +
@@ -87,7 +88,7 @@ public class ResultRepository {
     public List<Result> findByQuiz(int quizId) {
         List<Result> list = new ArrayList<>();
         String sql = "SELECT r.id, r.attempt_id, r.student_id, u.full_name AS student_name, " +
-                     "r.quiz_id, q.title AS quiz_title, r.total_points, r.max_points, r.percentage, r.passed, r.graded_at " +
+                     "r.quiz_id, q.title AS quiz_title, q.assessment_type, r.total_points, r.max_points, r.percentage, r.passed, r.graded_at " +
                      "FROM results r " +
                      "LEFT JOIN users u ON r.student_id = u.id " +
                      "LEFT JOIN quizzes q ON r.quiz_id = q.id " +
@@ -107,6 +108,17 @@ public class ResultRepository {
     }
 
     private Result mapRow(ResultSet rs) throws SQLException {
+        String typeStr = null;
+        try {
+            typeStr = rs.getString("assessment_type");
+        } catch (SQLException ignored) {}
+        AssessmentType type = AssessmentType.QUIZ;
+        if (typeStr != null) {
+            try {
+                type = AssessmentType.valueOf(typeStr.trim().toUpperCase());
+            } catch (IllegalArgumentException ignored) {}
+        }
+
         return Result.builder()
                 .id(rs.getInt("id"))
                 .attemptId(rs.getInt("attempt_id"))
@@ -114,6 +126,7 @@ public class ResultRepository {
                 .studentName(rs.getString("student_name"))
                 .quizId(rs.getInt("quiz_id"))
                 .quizTitle(rs.getString("quiz_title"))
+                .assessmentType(type)
                 .totalPoints(rs.getDouble("total_points"))
                 .maxPoints(rs.getDouble("max_points"))
                 .percentage(rs.getDouble("percentage"))
