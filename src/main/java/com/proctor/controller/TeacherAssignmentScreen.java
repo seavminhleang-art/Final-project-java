@@ -64,6 +64,23 @@ public class TeacherAssignmentScreen implements Screen {
                 if (!allTeachers.isEmpty()) {
                     selectedIndex = (selectedIndex + 1) % allTeachers.size();
                 }
+            } else if (KeyUtil.isLeft(k)) {
+                if (!allTeachers.isEmpty()) {
+                    int pageSize = 5;
+                    int currentPage = selectedIndex / pageSize;
+                    if (currentPage > 0) {
+                        selectedIndex = (currentPage - 1) * pageSize;
+                    }
+                }
+            } else if (KeyUtil.isRight(k)) {
+                if (!allTeachers.isEmpty()) {
+                    int pageSize = 5;
+                    int totalPages = Math.max(1, (int) Math.ceil((double) allTeachers.size() / pageSize));
+                    int currentPage = selectedIndex / pageSize;
+                    if (currentPage < totalPages - 1) {
+                        selectedIndex = Math.min(allTeachers.size() - 1, (currentPage + 1) * pageSize);
+                    }
+                }
             } else if (KeyUtil.isEnter(k) || " ".equals(k.key())) {
                 toggleSelectedTeacher();
             }

@@ -26,13 +26,9 @@ public class UserViews {
         if (users.isEmpty()) {
             sb.append("  ").append(TuiHelper.dim("No users found matching search/filter criteria.")).append("\n");
         } else {
-            int windowSize = 5;
-            int startRow = Math.max(0, Math.min(selectedIndex - 2, users.size() - windowSize));
-            int endRow = Math.min(users.size(), startRow + windowSize);
-
-            if (startRow > 0) {
-                sb.append(TuiHelper.dim(String.format("  ▲ %d more users above (Press ↑ to scroll)", startRow))).append("\n\n");
-            }
+            int pageSize = 5;
+            int startRow = (selectedIndex / pageSize) * pageSize;
+            int endRow = Math.min(users.size(), startRow + pageSize);
 
             for (int i = startRow; i < endRow; i++) {
                 User u = users.get(i);
@@ -56,13 +52,16 @@ public class UserViews {
                     sb.append("\n");
                 }
             }
-
-            if (endRow < users.size()) {
-                sb.append("\n").append(TuiHelper.dim(String.format("  ▼ %d more users below (Press ↓ to scroll)", users.size() - endRow))).append("\n");
-            }
         }
 
         sb.append("\n  " + "─".repeat(96) + "\n\n");
+
+        if (!users.isEmpty()) {
+            int pageSize = 5;
+            int totalPages = Math.max(1, (int) Math.ceil((double) users.size() / pageSize));
+            int currentPage = selectedIndex / pageSize;
+            sb.append(TuiHelper.paginationBar(currentPage, totalPages, users.size()));
+        }
 
         if (!bannerMessage.isBlank()) {
             sb.append("  ").append(bannerMessage).append("\n\n");
@@ -70,6 +69,7 @@ public class UserViews {
 
         List<String> hints = List.of(
                 "[↑/↓] Move",
+                "[←/→] Page",
                 "[Enter] Edit",
                 "[Space] Toggle Enabled",
                 "[n] New",

@@ -55,6 +55,23 @@ public class StudentHistoryScreen implements Screen {
                 if (!historyList.isEmpty()) {
                     selectedIndex = (selectedIndex + 1) % historyList.size();
                 }
+            } else if (KeyUtil.isLeft(k)) {
+                if (!historyList.isEmpty()) {
+                    int pageSize = 5;
+                    int currentPage = selectedIndex / pageSize;
+                    if (currentPage > 0) {
+                        selectedIndex = (currentPage - 1) * pageSize;
+                    }
+                }
+            } else if (KeyUtil.isRight(k)) {
+                if (!historyList.isEmpty()) {
+                    int pageSize = 5;
+                    int totalPages = Math.max(1, (int) Math.ceil((double) historyList.size() / pageSize));
+                    int currentPage = selectedIndex / pageSize;
+                    if (currentPage < totalPages - 1) {
+                        selectedIndex = Math.min(historyList.size() - 1, (currentPage + 1) * pageSize);
+                    }
+                }
             } else if (KeyUtil.isEnter(k)) {
                 if (!historyList.isEmpty()) {
                     Result r = historyList.get(selectedIndex);

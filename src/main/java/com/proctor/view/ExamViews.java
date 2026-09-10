@@ -26,7 +26,7 @@ public class ExamViews {
                                                String bannerMessage) {
         StringBuilder sb = new StringBuilder();
         String typeLabel = (assessmentType == AssessmentType.EXAM) ? "EXAMS" : "QUIZZES";
-        sb.append(TuiHelper.header("AVAILABLE " + typeLabel, String.format("Total: %d  •  Scroll with [↑/↓]", quizzes.size())));
+        sb.append(TuiHelper.header("AVAILABLE " + typeLabel, String.format("Total: %d", quizzes.size())));
         sb.append("\n");
 
         sb.append(String.format("  %-4s  %-14s  %-40s  %-10s  %-6s  %-12s%n",
@@ -36,18 +36,16 @@ public class ExamViews {
         if (quizzes.isEmpty()) {
             sb.append("  ").append(TuiHelper.dim("No " + typeLabel.toLowerCase() + " currently available.")).append("\n");
         } else {
-            int windowSize = 5;
-            int startRow = Math.max(0, Math.min(selectedIndex - 2, quizzes.size() - windowSize));
-            int endRow = Math.min(quizzes.size(), startRow + windowSize);
-
-            if (startRow > 0) {
-                sb.append(TuiHelper.dim(String.format("  ▲ %d more quizzes above (Press ↑ to scroll)", startRow))).append("\n\n");
-            }
+            int pageSize = 5;
+            int totalPages = Math.max(1, (int) Math.ceil((double) quizzes.size() / pageSize));
+            int currentPage = selectedIndex / pageSize;
+            int startRow = currentPage * pageSize;
+            int endRow = Math.min(quizzes.size(), startRow + pageSize);
 
             for (int i = startRow; i < endRow; i++) {
                 Quiz q = quizzes.get(i);
                 String cursor = (i == selectedIndex) ? TuiHelper.cyan("▶ ") : "  ";
-                String subj = subjectNames.getOrDefault(q.getSubjectId(), "-");
+                String subj = (q.getSubjectId() != null) ? subjectNames.getOrDefault(q.getSubjectId(), "-") : "-";
                 String time = (q.getTimeLimitMins() != null && q.getTimeLimitMins() > 0) ? q.getTimeLimitMins() + "m" : "Untimed";
 
                 Attempt att = studentAttempts.get(q.getId());
@@ -79,19 +77,21 @@ public class ExamViews {
                     sb.append("\n");
                 }
             }
-
-            if (endRow < quizzes.size()) {
-                sb.append("\n").append(TuiHelper.dim(String.format("  ▼ %d more quizzes below (Press ↓ to scroll)", quizzes.size() - endRow))).append("\n");
-            }
         }
 
         sb.append("\n  " + "─".repeat(95) + "\n\n");
+        if (!quizzes.isEmpty()) {
+            int pageSize = 5;
+            int totalPages = Math.max(1, (int) Math.ceil((double) quizzes.size() / pageSize));
+            int currentPage = selectedIndex / pageSize;
+            sb.append(TuiHelper.paginationBar(currentPage, totalPages, quizzes.size()));
+        }
 
         if (!bannerMessage.isBlank()) {
             sb.append("  ").append(bannerMessage).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [Enter] Start / View Result  •  [r] Request Retake  •  [Esc] Back\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [Enter] Start / View Result  •  [r] Request Retake  •  [Esc] Back\n"));
         return sb.toString();
     }
 
@@ -154,7 +154,8 @@ public class ExamViews {
 
     public static String renderExamResult(Result result, ExamSession session, boolean hasReturnScreen) {
         StringBuilder sb = new StringBuilder();
-        sb.append(TuiHelper.header("QUIZ RESULTS", result.getQuizTitle()));
+        String typeLabel = (result != null && result.getAssessmentType() == AssessmentType.EXAM) ? "EXAM" : "QUIZ";
+        sb.append(TuiHelper.header(typeLabel + " RESULTS", result != null ? result.getQuizTitle() : ""));
         sb.append("\n");
 
         String badge = result.isPassed()
@@ -204,33 +205,33 @@ public class ExamViews {
 
     public static String renderStudentHistory(List<Result> historyList, int selectedIndex, SimpleDateFormat dateFormat) {
         StringBuilder sb = new StringBuilder();
-        sb.append(TuiHelper.header("MY QUIZ HISTORY", String.format("Total: %d  •  Scroll with [↑/↓]", historyList.size())));
+        sb.append(TuiHelper.header("ASSESSMENT HISTORY", String.format("Total: %d", historyList.size())));
         sb.append("\n");
 
-        sb.append(String.format("  %-8s  %-34s  %-12s  %-8s  %-8s  %-16s%n",
-                "ATTEMPT", "QUIZ TITLE", "SCORE", "PCT", "STATUS", "DATE")).append("\n");
+        sb.append(String.format("  %-8s  %-6s  %-28s  %-11s  %-7s  %-8s  %-16s%n",
+                "ATTEMPT", "TYPE", "TITLE", "SCORE", "PCT", "STATUS", "DATE")).append("\n");
         sb.append("  " + "─".repeat(95) + "\n\n");
 
         if (historyList.isEmpty()) {
-            sb.append("  ").append(TuiHelper.dim("No past quiz attempts found.")).append("\n");
+            sb.append("  ").append(TuiHelper.dim("No past assessment attempts found.")).append("\n");
         } else {
-            int windowSize = 5;
-            int startRow = Math.max(0, Math.min(selectedIndex - 2, historyList.size() - windowSize));
-            int endRow = Math.min(historyList.size(), startRow + windowSize);
-
-            if (startRow > 0) {
-                sb.append(TuiHelper.dim(String.format("  ▲ %d more records above (Press ↑ to scroll)", startRow))).append("\n\n");
-            }
+            int pageSize = 5;
+            int totalPages = Math.max(1, (int) Math.ceil((double) historyList.size() / pageSize));
+            int currentPage = selectedIndex / pageSize;
+            int startRow = currentPage * pageSize;
+            int endRow = Math.min(historyList.size(), startRow + pageSize);
 
             for (int i = startRow; i < endRow; i++) {
                 Result r = historyList.get(i);
                 String cursor = (i == selectedIndex) ? TuiHelper.cyan("▶ ") : "  ";
                 String status = r.isPassed() ? TuiHelper.green(String.format("%-8s", "PASSED")) : TuiHelper.red(String.format("%-8s", "FAILED"));
                 String dateStr = r.getGradedAt() != null ? dateFormat.format(r.getGradedAt()) : "-";
+                String typeStr = (r.getAssessmentType() == AssessmentType.EXAM) ? "EXAM" : "QUIZ";
 
-                String line = String.format("#%-7d  %-34s  %-12s  %-8s  %s  %-16s",
+                String line = String.format("#%-7d  %-6s  %-28s  %-11s  %-7s  %s  %-16s",
                         r.getAttemptId(),
-                        truncate(r.getQuizTitle(), 34),
+                        typeStr,
+                        truncate(r.getQuizTitle(), 28),
                         String.format("%.1f/%.1f", r.getTotalPoints(), r.getMaxPoints()),
                         String.format("%.1f%%", r.getPercentage()),
                         status,
@@ -245,14 +246,17 @@ public class ExamViews {
                     sb.append("\n");
                 }
             }
-
-            if (endRow < historyList.size()) {
-                sb.append("\n").append(TuiHelper.dim(String.format("  ▼ %d more records below (Press ↓ to scroll)", historyList.size() - endRow))).append("\n");
-            }
         }
 
         sb.append("\n  " + "─".repeat(95) + "\n\n");
-        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [Enter] View Result  •  [Esc] Back\n"));
+        if (!historyList.isEmpty()) {
+            int pageSize = 5;
+            int totalPages = Math.max(1, (int) Math.ceil((double) historyList.size() / pageSize));
+            int currentPage = selectedIndex / pageSize;
+            sb.append(TuiHelper.paginationBar(currentPage, totalPages, historyList.size()));
+        }
+
+        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [Enter] View Result  •  [Esc] Back\n"));
         return sb.toString();
     }
 

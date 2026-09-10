@@ -99,6 +99,29 @@ public class InboxListScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
+            if (KeyUtil.isLeft(k)) {
+                if (!messages.isEmpty()) {
+                    int pageSize = 5;
+                    int currentPage = selectedIndex / pageSize;
+                    if (currentPage > 0) {
+                        selectedIndex = (currentPage - 1) * pageSize;
+                    }
+                }
+                return ScreenResult.stay(this);
+            }
+
+            if (KeyUtil.isRight(k)) {
+                if (!messages.isEmpty()) {
+                    int pageSize = 5;
+                    int totalPages = Math.max(1, (int) Math.ceil((double) messages.size() / pageSize));
+                    int currentPage = selectedIndex / pageSize;
+                    if (currentPage < totalPages - 1) {
+                        selectedIndex = Math.min(messages.size() - 1, (currentPage + 1) * pageSize);
+                    }
+                }
+                return ScreenResult.stay(this);
+            }
+
             if (KeyUtil.isEnter(k)) {
                 if (!messages.isEmpty()) {
                     InboxMessage target = messages.get(selectedIndex);

@@ -99,6 +99,23 @@ public class AvailableQuizzesScreen implements Screen {
                 if (!quizzes.isEmpty()) {
                     selectedIndex = (selectedIndex + 1) % quizzes.size();
                 }
+            } else if (KeyUtil.isLeft(k)) {
+                if (!quizzes.isEmpty()) {
+                    int pageSize = 5;
+                    int currentPage = selectedIndex / pageSize;
+                    if (currentPage > 0) {
+                        selectedIndex = (currentPage - 1) * pageSize;
+                    }
+                }
+            } else if (KeyUtil.isRight(k)) {
+                if (!quizzes.isEmpty()) {
+                    int pageSize = 5;
+                    int totalPages = Math.max(1, (int) Math.ceil((double) quizzes.size() / pageSize));
+                    int currentPage = selectedIndex / pageSize;
+                    if (currentPage < totalPages - 1) {
+                        selectedIndex = Math.min(quizzes.size() - 1, (currentPage + 1) * pageSize);
+                    }
+                }
             } else if ("r".equalsIgnoreCase(k.key())) {
                 return handleRetakeRequest();
             } else if (KeyUtil.isEnter(k) || "s".equalsIgnoreCase(k.key())) {

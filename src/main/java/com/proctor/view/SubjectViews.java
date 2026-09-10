@@ -12,7 +12,7 @@ public class SubjectViews {
     public static String renderSubjectList(List<Subject> subjects, int selectedIndex,
                                           String searchBuffer, boolean searchMode, String bannerMessage) {
         StringBuilder sb = new StringBuilder();
-        sb.append(TuiHelper.header("PROCTOR - SUBJECT MANAGEMENT", String.format("Total: %d  •  Scroll with [↑/↓]", subjects.size())));
+        sb.append(TuiHelper.header("PROCTOR - SUBJECT MANAGEMENT", String.format("Total: %d", subjects.size())));
         sb.append("\n");
 
         if (searchMode) {
@@ -26,13 +26,9 @@ public class SubjectViews {
         if (subjects.isEmpty()) {
             sb.append("  ").append(TuiHelper.dim("No subjects found.")).append("\n");
         } else {
-            int windowSize = 5;
-            int startRow = Math.max(0, Math.min(selectedIndex - 2, subjects.size() - windowSize));
-            int endRow = Math.min(subjects.size(), startRow + windowSize);
-
-            if (startRow > 0) {
-                sb.append(TuiHelper.dim(String.format("  ▲ %d more subjects above (Press ↑ to scroll)", startRow))).append("\n\n");
-            }
+            int pageSize = 5;
+            int startRow = (selectedIndex / pageSize) * pageSize;
+            int endRow = Math.min(subjects.size(), startRow + pageSize);
 
             for (int i = startRow; i < endRow; i++) {
                 Subject s = subjects.get(i);
@@ -54,13 +50,16 @@ public class SubjectViews {
                     sb.append("\n");
                 }
             }
-
-            if (endRow < subjects.size()) {
-                sb.append("\n").append(TuiHelper.dim(String.format("  ▼ %d more subjects below (Press ↓ to scroll)", subjects.size() - endRow))).append("\n");
-            }
         }
 
         sb.append("\n  " + "─".repeat(95) + "\n\n");
+
+        if (!subjects.isEmpty()) {
+            int pageSize = 5;
+            int totalPages = Math.max(1, (int) Math.ceil((double) subjects.size() / pageSize));
+            int currentPage = selectedIndex / pageSize;
+            sb.append(TuiHelper.paginationBar(currentPage, totalPages, subjects.size()));
+        }
 
         if (!bannerMessage.isBlank()) {
             sb.append("  ").append(bannerMessage).append("\n\n");
@@ -68,6 +67,7 @@ public class SubjectViews {
 
         List<String> hints = List.of(
                 "[↑/↓] Move",
+                "[←/→] Page",
                 "[Enter] Edit",
                 "[Space] Toggle Enabled",
                 "[a] Assign Teachers",
@@ -127,7 +127,11 @@ public class SubjectViews {
             sb.append("   " + TuiHelper.bold("Assigned Teachers for this Subject:") + "\n\n");
             sb.append("  " + "─".repeat(95) + "\n\n");
 
-            for (int i = 0; i < allTeachers.size(); i++) {
+            int pageSize = 5;
+            int startRow = (selectedIndex / pageSize) * pageSize;
+            int endRow = Math.min(allTeachers.size(), startRow + pageSize);
+
+            for (int i = startRow; i < endRow; i++) {
                 User t = allTeachers.get(i);
                 boolean isAssigned = assignedTeacherIds.contains(t.getId());
                 String checkbox = isAssigned ? TuiHelper.green("[✔] Assigned  ") : TuiHelper.dim("[ ] Unassigned");
@@ -139,18 +143,22 @@ public class SubjectViews {
                 } else {
                     sb.append(cursor).append(line).append("\n");
                 }
-                if (i < allTeachers.size() - 1) {
+                if (i < endRow - 1) {
                     sb.append("\n");
                 }
             }
             sb.append("\n  " + "─".repeat(95) + "\n\n");
+
+            int totalPages = Math.max(1, (int) Math.ceil((double) allTeachers.size() / pageSize));
+            int currentPage = selectedIndex / pageSize;
+            sb.append(TuiHelper.paginationBar(currentPage, totalPages, allTeachers.size()));
         }
 
         if (!bannerMessage.isBlank()) {
             sb.append("  ").append(bannerMessage).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [Space/Enter] Toggle Assignment  •  [Esc] Back\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [Space/Enter] Toggle Assignment  •  [Esc] Back\n"));
         return sb.toString();
     }
 

@@ -57,6 +57,23 @@ public class GlobalLeaderboardScreen implements Screen {
                 if (!leaderboard.isEmpty()) {
                     selectedIndex = (selectedIndex + 1) % leaderboard.size();
                 }
+            } else if (KeyUtil.isLeft(k)) {
+                if (!leaderboard.isEmpty()) {
+                    int pageSize = 5;
+                    int currentPage = selectedIndex / pageSize;
+                    if (currentPage > 0) {
+                        selectedIndex = (currentPage - 1) * pageSize;
+                    }
+                }
+            } else if (KeyUtil.isRight(k)) {
+                if (!leaderboard.isEmpty()) {
+                    int pageSize = 5;
+                    int totalPages = Math.max(1, (int) Math.ceil((double) leaderboard.size() / pageSize));
+                    int currentPage = selectedIndex / pageSize;
+                    if (currentPage < totalPages - 1) {
+                        selectedIndex = Math.min(leaderboard.size() - 1, (currentPage + 1) * pageSize);
+                    }
+                }
             } else if ("r".equalsIgnoreCase(k.key())) {
                 refreshLeaderboard();
                 return ScreenResult.stay(this);

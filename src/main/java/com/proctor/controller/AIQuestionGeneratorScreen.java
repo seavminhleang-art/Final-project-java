@@ -146,6 +146,23 @@ public class AIQuestionGeneratorScreen implements Screen {
                     if (!generatedDrafts.isEmpty()) {
                         selectedDraftIndex = (selectedDraftIndex + 1) % generatedDrafts.size();
                     }
+                } else if (KeyUtil.isLeft(k)) {
+                    if (!generatedDrafts.isEmpty()) {
+                        int pageSize = 3;
+                        int currentPage = selectedDraftIndex / pageSize;
+                        if (currentPage > 0) {
+                            selectedDraftIndex = (currentPage - 1) * pageSize;
+                        }
+                    }
+                } else if (KeyUtil.isRight(k)) {
+                    if (!generatedDrafts.isEmpty()) {
+                        int pageSize = 3;
+                        int totalPages = Math.max(1, (int) Math.ceil((double) generatedDrafts.size() / pageSize));
+                        int currentPage = selectedDraftIndex / pageSize;
+                        if (currentPage < totalPages - 1) {
+                            selectedDraftIndex = Math.min(generatedDrafts.size() - 1, (currentPage + 1) * pageSize);
+                        }
+                    }
                 } else if ("s".equalsIgnoreCase(k.key()) || KeyUtil.isEnter(k)) {
                     try {
                         saveAllDrafts();

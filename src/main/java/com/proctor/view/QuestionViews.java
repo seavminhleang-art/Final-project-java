@@ -18,7 +18,7 @@ public class QuestionViews {
         StringBuilder sb = new StringBuilder();
         String tf = (typeFilter == null) ? "ALL" : typeFilter.name();
         String df = (diffFilter == null) ? "ALL" : diffFilter.name();
-        sb.append(TuiHelper.header("PROCTOR - QUESTION BANK", String.format("Type: [%s] • Diff: [%s] • Total: %d • Scroll with [↑/↓]", tf, df, questions.size())));
+        sb.append(TuiHelper.header("PROCTOR - QUESTION BANK", String.format("Type: [%s]  •  Diff: [%s]  •  Total: %d", tf, df, questions.size())));
         sb.append("\n");
 
         if (searchMode) {
@@ -34,13 +34,9 @@ public class QuestionViews {
         if (questions.isEmpty()) {
             sb.append("  ").append(TuiHelper.dim("No questions found matching criteria.")).append("\n");
         } else {
-            int windowSize = 5;
-            int startRow = Math.max(0, Math.min(selectedIndex - 2, questions.size() - windowSize));
-            int endRow = Math.min(questions.size(), startRow + windowSize);
-
-            if (startRow > 0) {
-                sb.append(TuiHelper.dim(String.format("  ▲ %d more questions above (Press ↑ to scroll)", startRow))).append("\n\n");
-            }
+            int pageSize = 5;
+            int startRow = (selectedIndex / pageSize) * pageSize;
+            int endRow = Math.min(questions.size(), startRow + pageSize);
 
             for (int i = startRow; i < endRow; i++) {
                 Question q = questions.get(i);
@@ -66,13 +62,16 @@ public class QuestionViews {
                     sb.append("\n");
                 }
             }
-
-            if (endRow < questions.size()) {
-                sb.append("\n").append(TuiHelper.dim(String.format("  ▼ %d more questions below (Press ↓ to scroll)", questions.size() - endRow))).append("\n");
-            }
         }
 
         sb.append("\n  " + "─".repeat(95) + "\n\n");
+
+        if (!questions.isEmpty()) {
+            int pageSize = 5;
+            int totalPages = Math.max(1, (int) Math.ceil((double) questions.size() / pageSize));
+            int currentPage = selectedIndex / pageSize;
+            sb.append(TuiHelper.paginationBar(currentPage, totalPages, questions.size()));
+        }
 
         if (!bannerMessage.isBlank()) {
             sb.append("  ").append(bannerMessage).append("\n\n");
@@ -80,6 +79,7 @@ public class QuestionViews {
 
         List<String> hints = List.of(
                 "[↑/↓] Move",
+                "[←/→] Page",
                 "[Enter] View",
                 "[Space] Toggle Enabled",
                 "[n] New",
@@ -299,20 +299,18 @@ public class QuestionViews {
 
     public static String renderAIQuestionReview(List<AIQuestionDraft> generatedDrafts, int selectedDraftIndex, String targetStr, String bannerMessage) {
         StringBuilder sb = new StringBuilder();
-        sb.append(TuiHelper.header("AI GENERATED QUESTIONS REVIEW", String.format("Drafts: %d  •  Target: %s  •  Scroll with [↑/↓]", generatedDrafts.size(), targetStr)));
+        sb.append(TuiHelper.header("AI GENERATED QUESTIONS REVIEW", String.format("Drafts: %d  •  Target: %s", generatedDrafts.size(), targetStr)));
         sb.append("\n");
 
         if (bannerMessage != null && !bannerMessage.isBlank()) {
             sb.append("  ").append(bannerMessage).append("\n\n");
         }
 
-        int windowSize = 3;
-        int start = Math.max(0, Math.min(selectedDraftIndex - 1, generatedDrafts.size() - windowSize));
-        int end = Math.min(generatedDrafts.size(), start + windowSize);
-
-        if (start > 0) {
-            sb.append(TuiHelper.dim(String.format("  ▲ %d more drafts above (Press ↑ to scroll)", start))).append("\n");
-        }
+        int pageSize = 3;
+        int totalPages = Math.max(1, (int) Math.ceil((double) generatedDrafts.size() / pageSize));
+        int currentPage = selectedDraftIndex / pageSize;
+        int start = currentPage * pageSize;
+        int end = Math.min(generatedDrafts.size(), start + pageSize);
 
         for (int i = start; i < end; i++) {
             AIQuestionDraft d = generatedDrafts.get(i);
@@ -334,14 +332,15 @@ public class QuestionViews {
             sb.append("\n");
         }
 
-        if (end < generatedDrafts.size()) {
-            sb.append(TuiHelper.dim(String.format("  ▼ %d more drafts below (Press ↓ to scroll)", generatedDrafts.size() - end))).append("\n");
+        sb.append("  " + "─".repeat(95) + "\n\n");
+
+        if (!generatedDrafts.isEmpty()) {
+            sb.append(TuiHelper.paginationBar(currentPage, totalPages, generatedDrafts.size()));
         }
 
-        sb.append("\n  " + "─".repeat(95) + "\n\n");
         String dest = "Save Drafts";
         sb.append(TuiHelper.buttonRow(dest, false, "Cancel", false)).append("\n\n");
-        sb.append(TuiHelper.dim("  [↑/↓] Inspect Drafts  •  [Enter / s] Save to Quiz  •  [Esc] Cancel\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [Enter / s] Save to Quiz  •  [Esc] Cancel\n"));
         return sb.toString();
     }
 

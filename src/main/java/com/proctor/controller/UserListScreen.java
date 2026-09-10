@@ -74,6 +74,23 @@ public class UserListScreen implements Screen {
                 if (!users.isEmpty()) {
                     selectedIndex = (selectedIndex + 1) % users.size();
                 }
+            } else if (KeyUtil.isLeft(k)) {
+                if (!users.isEmpty()) {
+                    int pageSize = 5;
+                    int currentPage = selectedIndex / pageSize;
+                    if (currentPage > 0) {
+                        selectedIndex = (currentPage - 1) * pageSize;
+                    }
+                }
+            } else if (KeyUtil.isRight(k)) {
+                if (!users.isEmpty()) {
+                    int pageSize = 5;
+                    int totalPages = Math.max(1, (int) Math.ceil((double) users.size() / pageSize));
+                    int currentPage = selectedIndex / pageSize;
+                    if (currentPage < totalPages - 1) {
+                        selectedIndex = Math.min(users.size() - 1, (currentPage + 1) * pageSize);
+                    }
+                }
             } else if ("n".equalsIgnoreCase(k.key())) {
                 return ScreenResult.navigate(new UserFormScreen(userService, authService, null));
             } else if ("e".equalsIgnoreCase(k.key()) || KeyUtil.isEnter(k)) {

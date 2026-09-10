@@ -3,19 +3,21 @@ package com.proctor.util;
 import java.util.List;
 
 public class TuiHelper {
-    public static final String RESET = "[0m";
-    public static final String BOLD = "[1m";
-    public static final String DIM = "[90m";
-    public static final String RED = "[31m";
-    public static final String GREEN = "[32m";
-    public static final String YELLOW = "[33m";
-    public static final String BLUE = "[34m";
-    public static final String MAGENTA = "[35m";
-    public static final String NAVY_BLUE = "[38;2;30;58;138m";
+    public static final String RESET = "\u001B[0m";
+    public static final String BOLD = "\u001B[1m";
+    public static final String DIM = "\u001B[90m";
+    public static final String RED = "\u001B[31m";
+    public static final String GREEN = "\u001B[32m";
+    public static final String YELLOW = "\u001B[33m";
+    public static final String BLUE = "\u001B[34m";
+    public static final String MAGENTA = "\u001B[35m";
+    public static final String NAVY_BLUE = "\u001B[38;2;30;58;138m";
     public static final String PURPLE = NAVY_BLUE;
     public static final String CYAN = NAVY_BLUE;
-    public static final String WHITE = "[37m";
-    public static final String CLEAR_EOL = "[K";
+    public static final String WHITE = "\u001B[37m";
+    public static final String CLEAR_EOL = "\u001B[K";
+    public static final String HEADER_START = "\u001B[?9901h";
+    public static final String HEADER_END = "\u001B[?9901l";
 
     private static Integer cachedTermWidth = null;
     private static Integer cachedTermHeight = null;
@@ -156,30 +158,30 @@ public class TuiHelper {
         "╚══════╝ ╚═════╝ ╚═════╝  ╚════╝ ╚══════╝ ╚═════╝   ╚═╝   ╚══════╝"
     };
 
+    private static final String[] ASCII_HISTORY = new String[]{
+        "██╗  ██╗██╗███████╗████████╗ ██████╗ ██████╗ ██╗   ██╗",
+        "██║  ██║██║██╔════╝╚══██╔══╝██╔═══██╗██╔══██╗╚██╗ ██╔╝",
+        "███████║██║███████╗   ██║   ██║   ██║██████╔╝ ╚████╔╝ ",
+        "██╔══██║██║╚════██║   ██║   ██║   ██║██╔══██╗  ╚██╔╝  ",
+        "██║  ██║██║███████║   ██║   ╚██████╔╝██║  ██║   ██║   ",
+        "╚═╝  ╚═╝╚═╝╚══════╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝   ╚═╝   "
+    };
+
     public static String asciiBannerBox(String[] asciiLines, String subtitle) {
         StringBuilder sb = new StringBuilder();
-        int boxInnerWidth = 98;
-        sb.append(NAVY_BLUE).append("┏").append("━".repeat(boxInnerWidth)).append("┓").append(RESET).append(CLEAR_EOL).append("\n");
-        sb.append(NAVY_BLUE).append("┃").append(" ".repeat(boxInnerWidth)).append("┃").append(RESET).append(CLEAR_EOL).append("\n");
+        sb.append(HEADER_START).append(CLEAR_EOL).append("\n");
         for (String line : asciiLines) {
-            sb.append(NAVY_BLUE).append("┃").append(RESET)
-              .append(NAVY_BLUE).append(padCenter(line, boxInnerWidth)).append(RESET)
-              .append(NAVY_BLUE).append("┃").append(RESET)
-              .append(CLEAR_EOL).append("\n");
+            sb.append(NAVY_BLUE).append(line).append(RESET).append(CLEAR_EOL).append("\n");
         }
-        sb.append(NAVY_BLUE).append("┃").append(" ".repeat(boxInnerWidth)).append("┃").append(RESET).append(CLEAR_EOL).append("\n");
         if (subtitle != null && !subtitle.isBlank()) {
-            String cleanSub = subtitle;
-            if (visibleLength(cleanSub) > boxInnerWidth - 4) {
-                cleanSub = cleanSub.substring(0, boxInnerWidth - 5) + "…";
+            String cleanSub = subtitle.trim();
+            if (visibleLength(cleanSub) > 94) {
+                cleanSub = cleanSub.substring(0, 93) + "…";
             }
-            sb.append(NAVY_BLUE).append("┃").append(RESET)
-              .append(DIM).append(padCenter(cleanSub, boxInnerWidth)).append(RESET)
-              .append(NAVY_BLUE).append("┃").append(RESET)
-              .append(CLEAR_EOL).append("\n");
-            sb.append(NAVY_BLUE).append("┃").append(" ".repeat(boxInnerWidth)).append("┃").append(RESET).append(CLEAR_EOL).append("\n");
+            sb.append(CLEAR_EOL).append("\n");
+            sb.append(DIM).append(cleanSub).append(RESET).append(CLEAR_EOL).append("\n");
         }
-        sb.append(NAVY_BLUE).append("┗").append("━".repeat(boxInnerWidth)).append("┛").append(RESET).append(CLEAR_EOL).append("\n");
+        sb.append(HEADER_END).append(CLEAR_EOL).append("\n");
         return sb.toString();
     }
 
@@ -214,6 +216,10 @@ public class TuiHelper {
                 sub = (sub != null && !sub.isBlank()) ? "Student Portal  •  " + sub : "Student Portal";
             }
             return asciiBannerBox(ASCII_DASHBOARD, sub);
+        }
+        if (upper.contains("HISTORY")) {
+            String sub = formatSubHeader(title, subtitle, "HISTORY");
+            return asciiBannerBox(ASCII_HISTORY, sub);
         }
         if (upper.contains("EXAM")) {
             String sub = formatSubHeader(title, subtitle, "EXAMS");
@@ -257,22 +263,33 @@ public class TuiHelper {
         }
 
         StringBuilder sb = new StringBuilder();
-        sb.append(NAVY_BLUE).append("┏").append("━".repeat(98)).append("┓").append(RESET).append(CLEAR_EOL).append("\n");
-        sb.append(NAVY_BLUE).append("┃").append(" ".repeat(98)).append("┃").append(RESET).append(CLEAR_EOL).append("\n");
-        sb.append(NAVY_BLUE).append("┃").append(RESET).append("  ").append(bold(NAVY_BLUE + padCenter(title, 94))).append("  ").append(NAVY_BLUE).append("┃").append(RESET).append(CLEAR_EOL).append("\n");
+        sb.append(HEADER_START).append(CLEAR_EOL).append("\n");
+        sb.append(bold(NAVY_BLUE + title.trim())).append(RESET).append(CLEAR_EOL).append("\n");
         if (subtitle != null && !subtitle.isBlank()) {
-            sb.append(NAVY_BLUE).append("┃").append(" ".repeat(98)).append("┃").append(RESET).append(CLEAR_EOL).append("\n");
-            sb.append(NAVY_BLUE).append("┃").append(RESET).append("  ").append(DIM).append(padCenter(subtitle, 94)).append(RESET).append("  ").append(NAVY_BLUE).append("┃").append(RESET).append(CLEAR_EOL).append("\n");
+            sb.append(CLEAR_EOL).append("\n");
+            sb.append(DIM).append(subtitle.trim()).append(RESET).append(CLEAR_EOL).append("\n");
         }
-        sb.append(NAVY_BLUE).append("┃").append(" ".repeat(98)).append("┃").append(RESET).append(CLEAR_EOL).append("\n");
-        sb.append(NAVY_BLUE).append("┗").append("━".repeat(98)).append("┛").append(RESET).append(CLEAR_EOL).append("\n");
+        sb.append(HEADER_END).append(CLEAR_EOL).append("\n");
         return sb.toString();
     }
 
     public static String banner(String text) {
-        return navyBlue("┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓") + CLEAR_EOL + "\n"
-             + navyBlue("┃ ") + bold(navyBlue(padCenter(text, 54))) + navyBlue(" ┃") + CLEAR_EOL + "\n"
-             + navyBlue("┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛") + CLEAR_EOL + "\n";
+        return bold(navyBlue(padCenter(text, 54))) + CLEAR_EOL + "\n";
+    }
+
+    public static String paginationBar(int currentPage, int totalPages, int totalItems) {
+        if (totalItems <= 0) {
+            return "";
+        }
+        if (totalPages <= 1) {
+            return dim(String.format("  Page 1 of 1  •  %d %s", totalItems, totalItems == 1 ? "item" : "items")) + "\n\n";
+        }
+        String prevLabel = (currentPage > 0) ? cyan("◀ [←] Prev") : dim("  [←] Prev");
+        String nextLabel = (currentPage < totalPages - 1) ? cyan("[→] Next ▶") : dim("[→] Next  ");
+        String pageInfo = bold(String.format("Page %d of %d", currentPage + 1, totalPages));
+        String countInfo = dim(String.format("(%d %s)", totalItems, totalItems == 1 ? "item" : "items"));
+
+        return String.format("  %s   %s  %s   %s%n%n", prevLabel, pageInfo, countInfo, nextLabel);
     }
 
     public static String inputBox(String label, String value, boolean focused, int width, boolean masked, String placeholder) {
@@ -496,27 +513,76 @@ private static String stripAnsi(String str) {
         }
         if (lastNonBlank < 0) return "";
 
-        int topBoxStart = -1;
-        int topBoxEnd = -1;
+        int topHeaderStart = -1;
+        int topHeaderEnd = -1;
         for (int i = 0; i <= lastNonBlank; i++) {
-            String stripped = stripAnsi(rawLines[i]);
-            if (stripped.startsWith("┏") || stripped.startsWith("╔")) {
-                topBoxStart = i;
+            if (rawLines[i].contains(HEADER_START)) {
+                topHeaderStart = i;
+            }
+            if (rawLines[i].contains(HEADER_END)) {
+                topHeaderEnd = i;
                 break;
             }
         }
-        if (topBoxStart != -1) {
-            for (int i = topBoxStart; i <= lastNonBlank; i++) {
+        boolean isMarkedHeader = (topHeaderStart != -1 && topHeaderEnd != -1);
+        if (!isMarkedHeader) {
+            int topBoxStart = -1;
+            int topBoxEnd = -1;
+            for (int i = 0; i <= lastNonBlank; i++) {
                 String stripped = stripAnsi(rawLines[i]);
-                if (stripped.startsWith("┗") || stripped.startsWith("╚")) {
-                    topBoxEnd = i;
+                if (stripped.startsWith("┏━") || stripped.startsWith("╔═")) {
+                    topBoxStart = i;
                     break;
                 }
             }
+            if (topBoxStart != -1) {
+                for (int i = topBoxStart; i <= lastNonBlank; i++) {
+                    String stripped = stripAnsi(rawLines[i]);
+                    if (stripped.startsWith("┗━") || stripped.startsWith("╚═")) {
+                        topBoxEnd = i;
+                        break;
+                    }
+                }
+            }
+            if (topBoxStart != -1 && topBoxEnd != -1 && topBoxEnd >= topBoxStart) {
+                topHeaderStart = topBoxStart;
+                topHeaderEnd = topBoxEnd;
+            }
         }
 
-        boolean hasHeader = (topBoxStart != -1 && topBoxEnd != -1 && topBoxEnd >= topBoxStart);
-        int startBody = hasHeader ? (topBoxEnd + 1) : 0;
+        boolean hasHeader = (topHeaderStart != -1 && topHeaderEnd != -1 && topHeaderEnd >= topHeaderStart);
+        java.util.List<String> headerLines = new java.util.ArrayList<>();
+        if (hasHeader) {
+            for (int i = topHeaderStart; i <= topHeaderEnd; i++) {
+                String raw = rawLines[i].replace(CLEAR_EOL, "");
+                if (raw.contains(HEADER_START) || raw.contains(HEADER_END)) {
+                    continue;
+                }
+                String stripped = stripAnsi(raw);
+                if (!isMarkedHeader) {
+                    if (stripped.startsWith("┏━") || stripped.startsWith("╔═")
+                            || stripped.startsWith("┗━") || stripped.startsWith("╚═")) {
+                        continue;
+                    }
+                    if (stripped.startsWith("┃") && stripped.endsWith("┃") && stripped.length() > 2) {
+                        int firstPipe = raw.indexOf('┃');
+                        int lastPipe = raw.lastIndexOf('┃');
+                        if (firstPipe != -1 && lastPipe > firstPipe) {
+                            raw = raw.substring(firstPipe + 1, lastPipe).stripTrailing();
+                        }
+                    }
+                }
+                headerLines.add(raw);
+            }
+            while (!headerLines.isEmpty() && stripAnsi(headerLines.get(0)).isEmpty()) {
+                headerLines.remove(0);
+            }
+            while (!headerLines.isEmpty() && stripAnsi(headerLines.get(headerLines.size() - 1)).isEmpty()) {
+                headerLines.remove(headerLines.size() - 1);
+            }
+        }
+
+        int startBody = hasHeader ? (topHeaderEnd + 1) : 0;
         while (startBody <= lastNonBlank && stripAnsi(rawLines[startBody]).isEmpty()) {
             startBody++;
         }
@@ -577,11 +643,11 @@ private static String stripAnsi(String str) {
         int leftMargin = Math.max(0, (termWidth - boxWidth) / 2);
         String indent = (leftMargin > 0) ? " ".repeat(leftMargin) : "";
 
-        int headerRows = hasHeader ? (topBoxEnd - topBoxStart + 1) : 0;
+        int headerRows = headerLines.size();
         int bodyRows = (endBody >= startBody) ? (endBody - startBody + 1) : 0;
         int hintRows = hintIndices.size();
 
-        int totalHeight = (hasHeader ? (headerRows + 1) : 0)
+        int totalHeight = (headerRows > 0 ? (headerRows + 1) : 0)
                 + (bodyRows > 0 ? (bodyRows + 4 + (hintRows > 0 ? 1 : 0)) : 0)
                 + (hintRows > 0 ? (hintRows + 2) : 0);
         int topMargin = Math.max(0, (termHeight - totalHeight) / 2);
@@ -594,34 +660,18 @@ private static String stripAnsi(String str) {
             sb.append(CLEAR_EOL).append("\n");
         }
 
-        if (hasHeader) {
-            for (int i = topBoxStart; i <= topBoxEnd; i++) {
-                String cleanLine = rawLines[i].replace(CLEAR_EOL, "");
-                String stripped = stripAnsi(cleanLine);
-                if (stripped.startsWith("┏") || stripped.startsWith("╔")) {
-                    sb.append(indent).append(borderCol).append("┏").append("━".repeat(targetInnerWidth)).append("┓").append(RESET).append(CLEAR_EOL).append("\n");
-                } else if (stripped.startsWith("┗") || stripped.startsWith("╚")) {
-                    sb.append(indent).append(borderCol).append("┗").append("━".repeat(targetInnerWidth)).append("┛").append(RESET).append(CLEAR_EOL).append("\n");
+        if (!headerLines.isEmpty()) {
+            for (String hLine : headerLines) {
+                String cleanHLine = hLine.replace(CLEAR_EOL, "");
+                int visLen = visibleLength(cleanHLine);
+                if (visLen == 0) {
+                    sb.append(CLEAR_EOL).append("\n");
                 } else {
-                    int firstPipe = cleanLine.indexOf('┃');
-                    if (firstPipe == -1) firstPipe = cleanLine.indexOf('║');
-                    int lastPipe = cleanLine.lastIndexOf('┃');
-                    if (lastPipe == -1) lastPipe = cleanLine.lastIndexOf('║');
-                    if (firstPipe != -1 && lastPipe > firstPipe) {
-                        String inner = cleanLine.substring(firstPipe + 1, lastPipe);
-                        int visInner = visibleLength(inner);
-                        int leftPad = Math.max(0, (targetInnerWidth - visInner) / 2);
-                        int rightPad = Math.max(0, targetInnerWidth - (leftPad + visInner));
-                        sb.append(indent)
-                          .append(borderCol).append("┃").append(RESET)
-                          .append(" ".repeat(leftPad))
-                          .append(inner)
-                          .append(" ".repeat(rightPad))
-                          .append(borderCol).append("┃").append(RESET)
-                          .append(CLEAR_EOL).append("\n");
-                    } else {
-                        sb.append(indent).append(cleanLine).append(CLEAR_EOL).append("\n");
-                    }
+                    int pad = Math.max(0, (boxWidth - visLen) / 2);
+                    sb.append(indent)
+                      .append(" ".repeat(pad))
+                      .append(cleanHLine)
+                      .append(CLEAR_EOL).append("\n");
                 }
             }
             if (bodyRows > 0 || hintRows > 0) {

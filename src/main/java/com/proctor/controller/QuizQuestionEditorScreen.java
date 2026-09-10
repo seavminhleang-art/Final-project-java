@@ -114,6 +114,23 @@ public class QuizQuestionEditorScreen implements Screen {
                 if (!questions.isEmpty()) {
                     selectedIndex = (selectedIndex + 1) % questions.size();
                 }
+            } else if (KeyUtil.isLeft(k)) {
+                if (!questions.isEmpty()) {
+                    int pageSize = 5;
+                    int currentPage = selectedIndex / pageSize;
+                    if (currentPage > 0) {
+                        selectedIndex = (currentPage - 1) * pageSize;
+                    }
+                }
+            } else if (KeyUtil.isRight(k)) {
+                if (!questions.isEmpty()) {
+                    int pageSize = 5;
+                    int totalPages = Math.max(1, (int) Math.ceil((double) questions.size() / pageSize));
+                    int currentPage = selectedIndex / pageSize;
+                    if (currentPage < totalPages - 1) {
+                        selectedIndex = Math.min(questions.size() - 1, (currentPage + 1) * pageSize);
+                    }
+                }
             } else if ("n".equalsIgnoreCase(k.key()) || "a".equalsIgnoreCase(k.key())) {
                 return ScreenResult.navigate(new QuestionFormScreen(questionService, subjectService, authService, null, quiz));
             } else if ("e".equalsIgnoreCase(k.key()) || KeyUtil.isEnter(k)) {

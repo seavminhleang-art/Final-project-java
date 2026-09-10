@@ -68,11 +68,11 @@ public class TeacherSubmissionScreen implements Screen {
                 if (KeyUtil.isEsc(k)) {
                     inspectingAnswerSheet = false;
                     return ScreenResult.stay(this);
-                } else if (KeyUtil.isUp(k)) {
+                } else if (KeyUtil.isUp(k) || KeyUtil.isLeft(k)) {
                     if (!questions.isEmpty()) {
                         inspectingAnswerIndex = (inspectingAnswerIndex - 1 + questions.size()) % questions.size();
                     }
-                } else if (KeyUtil.isDown(k)) {
+                } else if (KeyUtil.isDown(k) || KeyUtil.isRight(k)) {
                     if (!questions.isEmpty()) {
                         inspectingAnswerIndex = (inspectingAnswerIndex + 1) % questions.size();
                     }
@@ -114,6 +114,23 @@ public class TeacherSubmissionScreen implements Screen {
             } else if (KeyUtil.isDown(k)) {
                 if (!submissions.isEmpty()) {
                     selectedIndex = (selectedIndex + 1) % submissions.size();
+                }
+            } else if (KeyUtil.isLeft(k)) {
+                if (!submissions.isEmpty()) {
+                    int pageSize = 5;
+                    int currentPage = selectedIndex / pageSize;
+                    if (currentPage > 0) {
+                        selectedIndex = (currentPage - 1) * pageSize;
+                    }
+                }
+            } else if (KeyUtil.isRight(k)) {
+                if (!submissions.isEmpty()) {
+                    int pageSize = 5;
+                    int totalPages = Math.max(1, (int) Math.ceil((double) submissions.size() / pageSize));
+                    int currentPage = selectedIndex / pageSize;
+                    if (currentPage < totalPages - 1) {
+                        selectedIndex = Math.min(submissions.size() - 1, (currentPage + 1) * pageSize);
+                    }
                 }
             } else if (KeyUtil.isEnter(k)) {
                 if (!submissions.isEmpty()) {

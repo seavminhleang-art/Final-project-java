@@ -71,6 +71,23 @@ public class QuizQuestionAssignmentScreen implements Screen {
                 if (!bankQuestions.isEmpty()) {
                     selectedIndex = (selectedIndex + 1) % bankQuestions.size();
                 }
+            } else if (KeyUtil.isLeft(k)) {
+                if (!bankQuestions.isEmpty()) {
+                    int pageSize = 5;
+                    int currentPage = selectedIndex / pageSize;
+                    if (currentPage > 0) {
+                        selectedIndex = (currentPage - 1) * pageSize;
+                    }
+                }
+            } else if (KeyUtil.isRight(k)) {
+                if (!bankQuestions.isEmpty()) {
+                    int pageSize = 5;
+                    int totalPages = Math.max(1, (int) Math.ceil((double) bankQuestions.size() / pageSize));
+                    int currentPage = selectedIndex / pageSize;
+                    if (currentPage < totalPages - 1) {
+                        selectedIndex = Math.min(bankQuestions.size() - 1, (currentPage + 1) * pageSize);
+                    }
+                }
             } else if (KeyUtil.isEnter(k) || " ".equals(k.key())) {
                 toggleSelectedQuestion();
             }

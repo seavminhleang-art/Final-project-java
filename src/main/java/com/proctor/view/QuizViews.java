@@ -24,8 +24,8 @@ public class QuizViews {
         StringBuilder sb = new StringBuilder();
         String itemType = (assessmentType == AssessmentType.EXAM) ? "EXAMS" : "QUIZZES";
         String scopeLabel = isMyQuizzesScope
-                ? "Scope: [ MY " + itemType + " ]  •  Press 'f' for All Global"
-                : "Scope: [ ALL GLOBAL " + itemType + " ]  •  Press 'f' for My " + itemType;
+                ? "Scope: [ MY " + itemType + " ]"
+                : "Scope: [ ALL GLOBAL " + itemType + " ]";
 
         sb.append(TuiHelper.header(itemType, String.format("%s  •  Total: %d", scopeLabel, quizzes.size())));
         sb.append("\n");
@@ -44,13 +44,9 @@ public class QuizViews {
             String emptyLabel = (assessmentType == AssessmentType.EXAM) ? "exams" : "quizzes";
             sb.append("  ").append(TuiHelper.dim("No " + emptyLabel + " found. Press 'n' to create your first one!")).append("\n");
         } else {
-            int windowSize = 5;
-            int startRow = Math.max(0, Math.min(selectedIndex - 2, quizzes.size() - windowSize));
-            int endRow = Math.min(quizzes.size(), startRow + windowSize);
-
-            if (startRow > 0) {
-                sb.append(TuiHelper.dim(String.format("  ▲ %d more %s above (Press ↑ to scroll)", startRow, itemType.toLowerCase()))).append("\n\n");
-            }
+            int pageSize = 5;
+            int startRow = (selectedIndex / pageSize) * pageSize;
+            int endRow = Math.min(quizzes.size(), startRow + pageSize);
 
             for (int i = startRow; i < endRow; i++) {
                 Quiz q = quizzes.get(i);
@@ -81,13 +77,16 @@ public class QuizViews {
                     sb.append("\n");
                 }
             }
-
-            if (endRow < quizzes.size()) {
-                sb.append("\n").append(TuiHelper.dim(String.format("  ▼ %d more %s below (Press ↓ to scroll)", quizzes.size() - endRow, itemType.toLowerCase()))).append("\n");
-            }
         }
 
         sb.append("\n  " + "─".repeat(95) + "\n\n");
+
+        if (!quizzes.isEmpty()) {
+            int pageSize = 5;
+            int totalPages = Math.max(1, (int) Math.ceil((double) quizzes.size() / pageSize));
+            int currentPage = selectedIndex / pageSize;
+            sb.append(TuiHelper.paginationBar(currentPage, totalPages, quizzes.size()));
+        }
 
         if (!bannerMessage.isBlank()) {
             sb.append("  ").append(bannerMessage).append("\n\n");
@@ -96,8 +95,10 @@ public class QuizViews {
         String aiHint = (assessmentType == AssessmentType.EXAM) ? "[g] AI Exam" : "[g] AI Quiz";
         List<String> hints = List.of(
                 "[↑/↓] Move",
+                "[←/→] Page",
                 "[Enter] Builder",
                 "[Space] Publish",
+                "[f] Scope",
                 "[n] New",
                 aiHint,
                 "[e] Edit",
@@ -125,7 +126,7 @@ public class QuizViews {
         String itemType = (assessmentType == AssessmentType.EXAM) ? "EXAM" : "QUIZ";
         String headerTitle = isEditMode ? "EDIT " + itemType : "CREATE NEW " + itemType;
         int activeFieldDisplay = Math.min(10, focusedField + 1);
-        sb.append(TuiHelper.header(headerTitle, String.format("Field %d of 10  •  Scroll with [Tab/↑/↓]", activeFieldDisplay)));
+        sb.append(TuiHelper.header(headerTitle, String.format("Field %d of 10", activeFieldDisplay)));
         sb.append("\n");
 
         int numInputFields = 10;
@@ -206,13 +207,9 @@ public class QuizViews {
         if (questions.isEmpty()) {
             sb.append("  ").append(TuiHelper.dim("No questions in this quiz yet. Press 'n' to add or 'g' to generate with AI.")).append("\n");
         } else {
-            int windowSize = 5;
-            int startRow = Math.max(0, Math.min(selectedIndex - 2, questions.size() - windowSize));
-            int endRow = Math.min(questions.size(), startRow + windowSize);
-
-            if (startRow > 0) {
-                sb.append(TuiHelper.dim(String.format("  ▲ %d more questions above (Press ↑ to scroll)", startRow))).append("\n\n");
-            }
+            int pageSize = 5;
+            int startRow = (selectedIndex / pageSize) * pageSize;
+            int endRow = Math.min(questions.size(), startRow + pageSize);
 
             for (int i = startRow; i < endRow; i++) {
                 Question q = questions.get(i);
@@ -233,13 +230,16 @@ public class QuizViews {
                     sb.append("\n");
                 }
             }
-
-            if (endRow < questions.size()) {
-                sb.append("\n").append(TuiHelper.dim(String.format("  ▼ %d more questions below (Press ↓ to scroll)", questions.size() - endRow))).append("\n");
-            }
         }
 
         sb.append("\n  " + "─".repeat(95) + "\n\n");
+
+        if (!questions.isEmpty()) {
+            int pageSize = 5;
+            int totalPages = Math.max(1, (int) Math.ceil((double) questions.size() / pageSize));
+            int currentPage = selectedIndex / pageSize;
+            sb.append(TuiHelper.paginationBar(currentPage, totalPages, questions.size()));
+        }
 
         if (!bannerMessage.isBlank()) {
             sb.append("  ").append(bannerMessage).append("\n\n");
@@ -247,6 +247,7 @@ public class QuizViews {
 
         List<String> hints = List.of(
                 "[↑/↓] Move",
+                "[←/→] Page",
                 "[Enter/e] Edit",
                 "[n] Add Question",
                 "[g] AI Generate",
@@ -278,11 +279,11 @@ public class QuizViews {
         sb.append("  " + "─".repeat(95) + "\n\n");
 
         if (bankQuestions.isEmpty()) {
-            sb.append("  ").append(TuiHelper.dim("No questions available for this subject. Create questions first in Question Bank.")).append("\n\n");
+            sb.append("  ").append(TuiHelper.dim("No questions available for this subject. Create questions first in Question Bank.")).append("\n");
         } else {
-            int windowSize = 5;
-            int startRow = Math.max(0, Math.min(selectedIndex - 2, bankQuestions.size() - windowSize));
-            int endRow = Math.min(bankQuestions.size(), startRow + windowSize);
+            int pageSize = 5;
+            int startRow = (selectedIndex / pageSize) * pageSize;
+            int endRow = Math.min(bankQuestions.size(), startRow + pageSize);
 
             for (int i = startRow; i < endRow; i++) {
                 Question q = bankQuestions.get(i);
@@ -307,17 +308,22 @@ public class QuizViews {
                     sb.append("\n");
                 }
             }
-            if (endRow < bankQuestions.size()) {
-                sb.append("\n").append(TuiHelper.dim(String.format("  ▼ %d more questions below (Press ↓ to scroll)", bankQuestions.size() - endRow))).append("\n");
-            }
-            sb.append("\n  " + "─".repeat(95) + "\n\n");
+        }
+
+        sb.append("\n  " + "─".repeat(95) + "\n\n");
+
+        if (!bankQuestions.isEmpty()) {
+            int pageSize = 5;
+            int totalPages = Math.max(1, (int) Math.ceil((double) bankQuestions.size() / pageSize));
+            int currentPage = selectedIndex / pageSize;
+            sb.append(TuiHelper.paginationBar(currentPage, totalPages, bankQuestions.size()));
         }
 
         if (!bannerMessage.isBlank()) {
             sb.append("  ").append(bannerMessage).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [Space/Enter] Toggle Question  •  [Esc] Back\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [Space/Enter] Toggle Question  •  [Esc] Back\n"));
         return sb.toString();
     }
 
@@ -387,7 +393,7 @@ public class QuizViews {
 
         int numInputFields = fieldWidgets.size();
         int activeFieldDisplay = Math.min(numInputFields, focusedField + 1);
-        sb.append(TuiHelper.header("AI " + itemType + " GENERATOR", String.format("Field %d of %d  •  Scroll with [Tab/↑/↓]", activeFieldDisplay, numInputFields)));
+        sb.append(TuiHelper.header("AI " + itemType + " GENERATOR", String.format("Field %d of %d", activeFieldDisplay, numInputFields)));
         sb.append("\n");
 
         int windowSize = 4;

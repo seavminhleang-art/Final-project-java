@@ -22,7 +22,7 @@ public class TeacherSubmissionViews {
                 ? "SUBMISSIONS: " + specificQuiz.getTitle()
                 : "STUDENT SUBMISSIONS & GRADING";
 
-        sb.append(TuiHelper.header(title, String.format("Total Submissions: %d  •  Scroll with [↑/↓]", submissions.size())));
+        sb.append(TuiHelper.header(title, String.format("Total Submissions: %d", submissions.size())));
         sb.append("\n");
 
         sb.append(String.format("  %-8s  %-34s  %-24s  %-22s%n",
@@ -32,13 +32,9 @@ public class TeacherSubmissionViews {
         if (submissions.isEmpty()) {
             sb.append("  ").append(TuiHelper.dim("No student submissions found for this assessment.")).append("\n");
         } else {
-            int windowSize = 5;
-            int startRow = Math.max(0, Math.min(selectedIndex - 2, submissions.size() - windowSize));
-            int endRow = Math.min(submissions.size(), startRow + windowSize);
-
-            if (startRow > 0) {
-                sb.append(TuiHelper.dim(String.format("  ▲ %d more submissions above (Press ↑ to scroll)", startRow))).append("\n\n");
-            }
+            int pageSize = 5;
+            int startRow = (selectedIndex / pageSize) * pageSize;
+            int endRow = Math.min(submissions.size(), startRow + pageSize);
 
             for (int i = startRow; i < endRow; i++) {
                 Attempt a = submissions.get(i);
@@ -71,19 +67,22 @@ public class TeacherSubmissionViews {
                     sb.append("\n");
                 }
             }
-
-            if (endRow < submissions.size()) {
-                sb.append("\n").append(TuiHelper.dim(String.format("  ▼ %d more submissions below (Press ↓ to scroll)", submissions.size() - endRow))).append("\n");
-            }
         }
 
         sb.append("\n  " + "─".repeat(95) + "\n\n");
+
+        if (!submissions.isEmpty()) {
+            int pageSize = 5;
+            int totalPages = Math.max(1, (int) Math.ceil((double) submissions.size() / pageSize));
+            int currentPage = selectedIndex / pageSize;
+            sb.append(TuiHelper.paginationBar(currentPage, totalPages, submissions.size()));
+        }
 
         if (!bannerMessage.isBlank()) {
             sb.append("  ").append(bannerMessage).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [Enter] Inspect  •  [g] AI Grade  •  [r] Return Grade  •  [Esc] Back\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [Enter] Inspect  •  [g] AI Grade  •  [r] Return Grade  •  [Esc] Back\n"));
         return sb.toString();
     }
 
@@ -92,7 +91,7 @@ public class TeacherSubmissionViews {
                                            int inspectingAnswerIndex, String bannerMessage) {
         StringBuilder sb = new StringBuilder();
         List<Question> questions = (specificQuiz != null) ? specificQuiz.getQuestions() : List.of();
-        String subtitle = String.format("Student #%d  •  Status: %s  •  Question %d of %d (Scroll with [↑/↓])",
+        String subtitle = String.format("Student #%d  •  Status: %s  •  Question %d of %d",
                 attempt.getStudentId(), attempt.getStatus().name(),
                 questions.isEmpty() ? 0 : inspectingAnswerIndex + 1, questions.size());
 
@@ -102,62 +101,51 @@ public class TeacherSubmissionViews {
         if (questions.isEmpty()) {
             sb.append("  ").append(TuiHelper.dim("No questions attached to this quiz assessment.")).append("\n");
         } else {
-            int windowSize = 2;
-            int startQ = Math.max(0, Math.min(inspectingAnswerIndex, questions.size() - windowSize));
-            int endQ = Math.min(questions.size(), startQ + windowSize);
+            int currentPage = Math.max(0, Math.min(inspectingAnswerIndex, questions.size() - 1));
+            Question q = questions.get(currentPage);
+            AttemptAnswer ans = answerMap.get(q.getId());
 
-            if (startQ > 0) {
-                sb.append(TuiHelper.dim(String.format("  ▲ %d questions above (Press ↑ to scroll)", startQ))).append("\n");
-            }
+            sb.append(TuiHelper.cyan("▶ ")).append(TuiHelper.bold(String.format("Q%d. %s [%s, %.1f pts]", currentPage + 1, q.getQuestionText(), q.getDifficulty().name(), q.getPoints()))).append("\n\n");
 
-            for (int i = startQ; i < endQ; i++) {
-                Question q = questions.get(i);
-                AttemptAnswer ans = answerMap.get(q.getId());
-
-                String cursor = (i == inspectingAnswerIndex) ? TuiHelper.cyan("▶ ") : "  ";
-                sb.append(cursor).append(TuiHelper.bold(String.format("Q%d. %s [%s, %.1f pts]", i + 1, q.getQuestionText(), q.getDifficulty().name(), q.getPoints()))).append("\n");
-
-                if (q.getQuestionType() == com.proctor.model.enums.QuestionType.MCQ || q.getQuestionType() == com.proctor.model.enums.QuestionType.TRUE_FALSE) {
-                    Integer chosenOptId = (ans != null) ? ans.getSelectedOptionId() : null;
-                    if (q.getOptions() != null) {
-                        for (QuestionOption opt : q.getOptions()) {
-                            boolean isChosen = chosenOptId != null && chosenOptId.equals(opt.getId());
-                            if (opt.isCorrect()) {
-                                sb.append("     ").append(TuiHelper.green("✔ [Model Answer] " + opt.getOptionText() + (isChosen ? " (Student Choice)" : ""))).append("\n");
-                            } else if (isChosen) {
-                                sb.append("     ").append(TuiHelper.red("✖ [Student Choice] " + opt.getOptionText())).append("\n");
-                            } else {
-                                sb.append("     ").append(TuiHelper.dim("• " + opt.getOptionText())).append("\n");
-                            }
+            if (q.getQuestionType() == com.proctor.model.enums.QuestionType.MCQ || q.getQuestionType() == com.proctor.model.enums.QuestionType.TRUE_FALSE) {
+                Integer chosenOptId = (ans != null) ? ans.getSelectedOptionId() : null;
+                if (q.getOptions() != null) {
+                    for (QuestionOption opt : q.getOptions()) {
+                        boolean isChosen = chosenOptId != null && chosenOptId.equals(opt.getId());
+                        if (opt.isCorrect()) {
+                            sb.append("     ").append(TuiHelper.green("✔ [Model Answer] " + opt.getOptionText() + (isChosen ? " (Student Choice)" : ""))).append("\n");
+                        } else if (isChosen) {
+                            sb.append("     ").append(TuiHelper.red("✖ [Student Choice] " + opt.getOptionText())).append("\n");
+                        } else {
+                            sb.append("     ").append(TuiHelper.dim("• " + opt.getOptionText())).append("\n");
                         }
                     }
-                } else {
-                    String textAns = (ans != null && ans.getTextAnswer() != null) ? ans.getTextAnswer() : "(No answer provided)";
-                    sb.append("     ").append(TuiHelper.cyan("Student Answer: ")).append(textAns).append("\n");
-                    if (q.getExplanation() != null && !q.getExplanation().isBlank()) {
-                        sb.append("     ").append(TuiHelper.dim("Grading Context: " + q.getExplanation())).append("\n");
-                    }
                 }
-
-                if (ans != null) {
-                    String feedback = ans.getAiFeedback() != null ? " - " + ans.getAiFeedback() : "";
-                    sb.append("     ").append(TuiHelper.bold(TuiHelper.green(String.format("Score: %.1f / %.1f pts%s", ans.getPointsAwarded(), q.getPoints(), feedback)))).append("\n");
+            } else {
+                String textAns = (ans != null && ans.getTextAnswer() != null) ? ans.getTextAnswer() : "(No answer provided)";
+                sb.append("     ").append(TuiHelper.cyan("Student Answer: ")).append(textAns).append("\n");
+                if (q.getExplanation() != null && !q.getExplanation().isBlank()) {
+                    sb.append("     ").append(TuiHelper.dim("Grading Context: " + q.getExplanation())).append("\n");
                 }
-                sb.append("\n");
             }
 
-            if (endQ < questions.size()) {
-                sb.append(TuiHelper.dim(String.format("  ▼ %d questions below (Press ↓ to scroll)", questions.size() - endQ))).append("\n");
+            if (ans != null) {
+                String feedback = ans.getAiFeedback() != null ? " - " + ans.getAiFeedback() : "";
+                sb.append("\n     ").append(TuiHelper.bold(TuiHelper.green(String.format("Score: %.1f / %.1f pts%s", ans.getPointsAwarded(), q.getPoints(), feedback)))).append("\n");
             }
         }
 
         sb.append("\n  " + "─".repeat(95) + "\n\n");
 
+        if (!questions.isEmpty()) {
+            sb.append(TuiHelper.paginationBar(inspectingAnswerIndex, questions.size(), questions.size()));
+        }
+
         if (!bannerMessage.isBlank()) {
             sb.append("  ").append(bannerMessage).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓] Scroll  •  [g] AI Grade  •  [r] Return Grade  •  [Esc] Back\n"));
+        sb.append(TuiHelper.dim("  [↑/↓/←/→] Navigate  •  [g] AI Grade  •  [r] Return Grade  •  [Esc] Back\n"));
         return sb.toString();
     }
 

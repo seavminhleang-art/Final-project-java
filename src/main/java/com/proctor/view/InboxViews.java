@@ -26,13 +26,9 @@ public class InboxViews {
         if (messages.isEmpty()) {
             sb.append("  ").append(TuiHelper.dim("Your inbox is empty.")).append("\n");
         } else {
-            int windowSize = 5;
-            int startRow = Math.max(0, Math.min(selectedIndex - 2, messages.size() - windowSize));
-            int endRow = Math.min(messages.size(), startRow + windowSize);
-
-            if (startRow > 0) {
-                sb.append(TuiHelper.dim(String.format("  ▲ %d more messages above (Press ↑ to scroll)", startRow))).append("\n\n");
-            }
+            int pageSize = 5;
+            int startRow = (selectedIndex / pageSize) * pageSize;
+            int endRow = Math.min(messages.size(), startRow + pageSize);
 
             for (int i = startRow; i < endRow; i++) {
                 InboxMessage msg = messages.get(i);
@@ -61,19 +57,22 @@ public class InboxViews {
                     sb.append("\n");
                 }
             }
-
-            if (endRow < messages.size()) {
-                sb.append("\n").append(TuiHelper.dim(String.format("  ▼ %d more messages below (Press ↓ to scroll)", messages.size() - endRow))).append("\n");
-            }
         }
 
         sb.append("\n  " + "─".repeat(96) + "\n\n");
+
+        if (!messages.isEmpty()) {
+            int pageSize = 5;
+            int totalPages = Math.max(1, (int) Math.ceil((double) messages.size() / pageSize));
+            int currentPage = selectedIndex / pageSize;
+            sb.append(TuiHelper.paginationBar(currentPage, totalPages, messages.size()));
+        }
 
         if (!bannerMessage.isBlank()) {
             sb.append("  ").append(bannerMessage).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [Enter] Open  •  [d] Delete  •  [m] Mark All Read  •  [Esc] Back\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [Enter] Open  •  [d] Delete  •  [m] Mark All Read  •  [Esc] Back\n"));
 
         if (showDeleteModal) {
             sb.append("\n");
