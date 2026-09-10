@@ -68,7 +68,8 @@ public class AppModel implements Model {
             return TuiHelper.centerLayout(rendered);
         } catch (Throwable t) {
             return TuiHelper.centerLayout(
-                    TuiHelper.header("APPLICATION ERROR", "An unexpected error occurred") + "\n\n"
+                    TuiHelper.header("APPLICATION ERROR") + "\n"
+                    + TuiHelper.boxTitle("An unexpected error occurred") + "\n\n"
                     + TuiHelper.red("✖ " + (t.getMessage() != null ? t.getMessage() : t.getClass().getName())) + "\n\n"
                     + TuiHelper.dim("Press [Esc] to return or [Ctrl+C] to quit.")
             );

@@ -157,8 +157,9 @@ public class ChangePasswordScreen implements Screen {
     @Override
     public String view() {
         StringBuilder sb = new StringBuilder();
-        sb.append(TuiHelper.header("ACCOUNT SECURITY", "Change Password"));
+        sb.append(TuiHelper.header("ACCOUNT SECURITY"));
         sb.append("\n");
+        sb.append(TuiHelper.boxTitle("Change Account Password")).append("\n\n");
         sb.append(TuiHelper.inputBox("Current Password", currentPassword.toString(), focusedField == 0, 86, true, "Enter current password"));
         sb.append("\n");
         sb.append(TuiHelper.inputBox("New Password", newPassword.toString(), focusedField == 1, 86, true, "Min 8 chars, mix of upper/lower/numbers"));

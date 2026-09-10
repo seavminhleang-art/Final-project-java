@@ -9,8 +9,9 @@ public class PortalViews {
 
     public static String renderGlobalLeaderboard(List<LeaderboardEntry> leaderboard, int selectedIndex) {
         StringBuilder sb = new StringBuilder();
-        sb.append(TuiHelper.header("GLOBAL LEADERBOARD", String.format("Top Performers (%d ranked)", leaderboard.size())));
+        sb.append(TuiHelper.header("LEADERBOARD"));
         sb.append("\n");
+        sb.append(TuiHelper.boxTitle("Global Leaderboard", String.format("Top Performers (%d ranked)", leaderboard.size()))).append("\n\n");
 
         sb.append(String.format("  %-6s  %-30s  %-20s  %-10s  %-12s  %-8s%n",
                 "RANK", "STUDENT NAME", "USERNAME", "QUIZZES", "TOTAL PTS", "AVG %")).append("\n");

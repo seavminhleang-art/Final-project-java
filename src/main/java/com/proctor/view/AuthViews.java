@@ -7,8 +7,10 @@ public class AuthViews {
 
     public static String renderStartup(int focusedButton) {
         StringBuilder sb = new StringBuilder();
-        sb.append(TuiHelper.header("PROCTOR", "Digital Assessment Platform"));
-        sb.append("\n\n");
+        sb.append(TuiHelper.header("PROCTOR"));
+        sb.append("\n");
+
+        sb.append(TuiHelper.boxTitle("Digital Assessment Platform")).append("\n\n");
 
         String btnLogin = (focusedButton == 0)
                 ? TuiHelper.bold(TuiHelper.NAVY_BLUE + "[ ▶ Log In ]")
@@ -44,10 +46,10 @@ public class AuthViews {
 
     public static String renderLogin(String identifier, String password, int focusedField, String errorMessage, String infoBanner) {
         StringBuilder sb = new StringBuilder();
-        sb.append(TuiHelper.header("LOG IN", "Enter your credentials to continue"));
+        sb.append(TuiHelper.header("LOG IN"));
         sb.append("\n");
 
-        sb.append("  ").append(TuiHelper.bold("Sign In to Your Account")).append("\n\n");
+        sb.append(TuiHelper.boxTitle("Sign In to Your Account")).append("\n\n");
 
         sb.append(TuiHelper.inputBox("Email or Username", identifier, focusedField == 0, 86, false, "e.g. user@proctor.edu or username"));
         sb.append("\n");
@@ -56,16 +58,14 @@ public class AuthViews {
         sb.append("\n\n");
 
         String btnSignIn = (focusedField == 2) ? TuiHelper.bold(TuiHelper.NAVY_BLUE + "[ ▶ Log In ]") : TuiHelper.dim("[   Log In   ]");
-        String btnSignUp = (focusedField == 3) ? TuiHelper.bold(TuiHelper.NAVY_BLUE + "[ ▶ Register ]") : TuiHelper.dim("[   Register   ]");
-        String btnForgot = (focusedField == 4) ? TuiHelper.bold(TuiHelper.NAVY_BLUE + "[ ▶ Forgot Password ]") : TuiHelper.dim("[   Forgot Password   ]");
-        String btnExit = (focusedField == 5) ? TuiHelper.bold(TuiHelper.RED + "[ ▶ Back ]") : TuiHelper.dim("[   Back   ]");
+        String btnForgot = (focusedField == 3) ? TuiHelper.bold(TuiHelper.NAVY_BLUE + "[ ▶ Forgot Password ]") : TuiHelper.dim("[   Forgot Password   ]");
+        String btnExit = (focusedField == 4) ? TuiHelper.bold(TuiHelper.RED + "[ ▶ Back ]") : TuiHelper.dim("[   Back   ]");
 
         int totalBtnsWidth = TuiHelper.visibleLength(btnSignIn) + 2
-                           + TuiHelper.visibleLength(btnSignUp) + 2
                            + TuiHelper.visibleLength(btnForgot) + 2
                            + TuiHelper.visibleLength(btnExit);
         int btnPad = Math.max(0, (100 - totalBtnsWidth) / 2);
-        sb.append(" ".repeat(btnPad)).append(btnSignIn).append("  ").append(btnSignUp).append("  ").append(btnForgot).append("  ").append(btnExit).append("\n\n");
+        sb.append(" ".repeat(btnPad)).append(btnSignIn).append("  ").append(btnForgot).append("  ").append(btnExit).append("\n\n");
 
         if (infoBanner != null && !infoBanner.isBlank()) {
             sb.append("  ").append(infoBanner).append("\n\n");
@@ -79,35 +79,76 @@ public class AuthViews {
         return sb.toString();
     }
 
-    public static String renderRegister(String fullName, String email, String username, String password, String confirmPassword, String birthday, Role selectedRole, int focusedField, String errorMessage) {
+    public static String renderRegisterRole(int focusedButton) {
         StringBuilder sb = new StringBuilder();
-        sb.append(TuiHelper.header("REGISTER", "Create a New Account"));
+        sb.append(TuiHelper.header("REGISTER"));
         sb.append("\n");
 
-        sb.append("  ").append(TuiHelper.bold("Join as a Student or Teacher")).append("\n\n");
+        sb.append(TuiHelper.boxTitle("Choose Account Type")).append("\n\n");
+
+        String btnStudent = (focusedButton == 0)
+                ? TuiHelper.bold(TuiHelper.NAVY_BLUE + "[ ▶ Student ]")
+                : TuiHelper.dim("[   Student   ]");
+        String btnTeacher = (focusedButton == 1)
+                ? TuiHelper.bold(TuiHelper.NAVY_BLUE + "[ ▶ Teacher ]")
+                : TuiHelper.dim("[   Teacher   ]");
+        String btnBack = (focusedButton == 2)
+                ? TuiHelper.bold(TuiHelper.RED + "[ ▶ Back ]")
+                : TuiHelper.dim("[   Back   ]");
+
+        int midWidth = TuiHelper.visibleLength(btnStudent) + 12 + TuiHelper.visibleLength(btnTeacher);
+        int midPad = Math.max(0, (100 - midWidth) / 2);
+        sb.append(" ".repeat(midPad))
+          .append(btnStudent)
+          .append("            ")
+          .append(btnTeacher)
+          .append("\n\n\n");
+
+        int backWidth = TuiHelper.visibleLength(btnBack);
+        int backPad = Math.max(0, (100 - backWidth) / 2);
+        sb.append(" ".repeat(backPad))
+          .append(btnBack)
+          .append("\n\n");
+
+        sb.append(TuiHelper.dim("  [←/→] Select  •  [Tab/↑/↓] Move  •  [Enter] Confirm  •  [Esc] Back\n"));
+        return sb.toString();
+    }
+
+    public static String renderRegister(String fullName, String email, String username, String password, String confirmPassword, String birthday, Role selectedRole, int focusedField, String errorMessage) {
+        return renderRegister(selectedRole != null ? selectedRole : Role.STUDENT, fullName, email, username, password, confirmPassword, birthday, "Male", focusedField, errorMessage);
+    }
+
+    public static String renderRegister(Role targetRole, String fullName, String email, String username, String password, String confirmPassword, String birthday, String gender, int focusedField, String errorMessage) {
+        StringBuilder sb = new StringBuilder();
+        String roleLabel = (targetRole == Role.TEACHER) ? "Teacher" : "Student";
+        sb.append(TuiHelper.header("REGISTER"));
+        sb.append("\n");
+
+        sb.append(TuiHelper.boxTitle(roleLabel + " Registration")).append("\n\n");
 
         sb.append(TuiHelper.inputBox("Full Name", fullName, focusedField == 0, 86, false, "e.g. Jane Doe"));
         sb.append("\n");
 
-        sb.append(TuiHelper.inputBox("Email Address", email, focusedField == 1, 86, false, "e.g. jane@proctor.edu"));
-        sb.append("\n");
-
-        sb.append(TuiHelper.inputBox("Username", username, focusedField == 2, 86, false, "e.g. janedoe"));
-        sb.append("\n");
-
-        sb.append(TuiHelper.inputBox("Password", password, focusedField == 3, 86, true, "create a secure password"));
-        sb.append("\n");
-
-        sb.append(TuiHelper.inputBox("Confirm Password", confirmPassword, focusedField == 4, 86, true, "re-enter your password"));
+        String genderVal = (gender != null && !gender.isBlank()) ? gender : "Male";
+        String genderHelp = "Press Space or ←/→ to switch";
+        sb.append(TuiHelper.selectBox("Gender", genderVal, focusedField == 1, 86, genderHelp));
         sb.append("\n");
 
         // Birthday masked input — show DD - MM - YYYY template with typed digits filled in
-        String birthdayDisplay = TuiHelper.birthdayMask(birthday, focusedField == 5);
-        sb.append(TuiHelper.inputBox("Date of Birth", birthdayDisplay, focusedField == 5, 86, false, "DD - MM - YYYY"));
+        String birthdayDisplay = TuiHelper.birthdayMask(birthday, focusedField == 2);
+        sb.append(TuiHelper.inputBox("Date of Birth", birthdayDisplay, focusedField == 2, 86, false, "DD - MM - YYYY"));
         sb.append("\n");
 
-        String roleHelp = "Press Space or ←/→ to switch";
-        sb.append(TuiHelper.selectBox("Account Role", selectedRole == Role.STUDENT ? "Student" : "Teacher", focusedField == 6, 86, roleHelp));
+        sb.append(TuiHelper.inputBox("Email Address", email, focusedField == 3, 86, false, "e.g. jane@proctor.edu"));
+        sb.append("\n");
+
+        sb.append(TuiHelper.inputBox("Username", username, focusedField == 4, 86, false, "e.g. janedoe"));
+        sb.append("\n");
+
+        sb.append(TuiHelper.inputBox("Password", password, focusedField == 5, 86, true, "create a secure password"));
+        sb.append("\n");
+
+        sb.append(TuiHelper.inputBox("Confirm Password", confirmPassword, focusedField == 6, 86, true, "re-enter your password"));
         sb.append("\n\n");
 
         sb.append(TuiHelper.buttonRow("Register", focusedField == 7, "Back", focusedField == 8)).append("\n\n");

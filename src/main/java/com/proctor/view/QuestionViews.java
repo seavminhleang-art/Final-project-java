@@ -18,8 +18,9 @@ public class QuestionViews {
         StringBuilder sb = new StringBuilder();
         String tf = (typeFilter == null) ? "ALL" : typeFilter.name();
         String df = (diffFilter == null) ? "ALL" : diffFilter.name();
-        sb.append(TuiHelper.header("PROCTOR - QUESTION BANK", String.format("Type: [%s]  •  Diff: [%s]  •  Total: %d", tf, df, questions.size())));
+        sb.append(TuiHelper.header("QUESTIONS"));
         sb.append("\n");
+        sb.append(TuiHelper.boxTitle("Question Bank", String.format("Type: [%s]  •  Diff: [%s]  •  Total: %d", tf, df, questions.size()))).append("\n\n");
 
         if (searchMode) {
             sb.append("  Search: [ ").append(TuiHelper.cyan(searchBuffer + "_")).append(" ] (Press Enter to finish)\n\n");
@@ -100,10 +101,11 @@ public class QuestionViews {
                                             String explanation, int focusedField, int totalFields,
                                             int saveBtnIndex, int cancelBtnIndex, String errorMessage) {
         StringBuilder sb = new StringBuilder();
-        String title = isEditMode ? "EDIT QUESTION" : "CREATE NEW QUESTION";
+        String title = isEditMode ? "Edit Question" : "Create New Question";
         String subtitle = isPinnedQuiz ? "Pinned to: " + pinnedQuizTitle : "Question Bank";
-        sb.append(TuiHelper.header(title, subtitle));
+        sb.append(TuiHelper.header("QUESTIONS"));
         sb.append("\n");
+        sb.append(TuiHelper.boxTitle(title, subtitle)).append("\n\n");
 
         if (isPinnedQuiz) {
             sb.append("  ").append(TuiHelper.cyan("[Pinned to Quiz: ")).append(TuiHelper.bold(pinnedQuizTitle)).append(TuiHelper.cyan("]"))
@@ -189,8 +191,9 @@ public class QuestionViews {
     public static String renderQuestionView(Question question) {
         StringBuilder sb = new StringBuilder();
         String subj = question.getSubjectCode() != null ? question.getSubjectCode() : "No Subject";
-        sb.append(TuiHelper.header("QUESTION DETAILS #" + question.getId(), "Subject: " + subj));
+        sb.append(TuiHelper.header("QUESTIONS"));
         sb.append("\n");
+        sb.append(TuiHelper.boxTitle("Question Details #" + question.getId(), "Subject: " + subj)).append("\n\n");
 
         sb.append("  " + TuiHelper.bold("Type:") + "       " + question.getQuestionType().name());
         sb.append("   " + TuiHelper.bold("Difficulty:") + " " + question.getDifficulty().name());
@@ -224,8 +227,9 @@ public class QuestionViews {
 
     public static String renderAIQuestionLoading(String topic, int spinnerTick) {
         StringBuilder sb = new StringBuilder();
-        sb.append(TuiHelper.header("AI QUESTION GENERATOR", "Generating with Local Ollama LLM"));
-        sb.append("\n\n");
+        sb.append(TuiHelper.header("AI QUESTION GENERATOR"));
+        sb.append("\n");
+        sb.append(TuiHelper.boxTitle("AI Question Generator", "Generating with Local Ollama LLM")).append("\n\n");
 
         String[] spinners = {"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"};
         String icon = spinners[spinnerTick % spinners.length];
@@ -242,10 +246,10 @@ public class QuestionViews {
                                              int focusedField, int generateBtnIndex, int cancelBtnIndex,
                                              String bannerMessage) {
         StringBuilder sb = new StringBuilder();
-        String title = "AI QUESTION GENERATOR";
         String subtitle = isPinnedQuiz ? "Pinned to: " + pinnedQuizTitle : "Powered by Local Ollama LLM";
-        sb.append(TuiHelper.header(title, subtitle));
+        sb.append(TuiHelper.header("AI QUESTION GENERATOR"));
         sb.append("\n");
+        sb.append(TuiHelper.boxTitle("AI Question Generator", subtitle)).append("\n\n");
 
         if (isPinnedQuiz) {
             sb.append("  ").append(TuiHelper.cyan("[Pinned to Quiz: ")).append(TuiHelper.bold(pinnedQuizTitle)).append(TuiHelper.cyan("]"))
@@ -299,8 +303,9 @@ public class QuestionViews {
 
     public static String renderAIQuestionReview(List<AIQuestionDraft> generatedDrafts, int selectedDraftIndex, String targetStr, String bannerMessage) {
         StringBuilder sb = new StringBuilder();
-        sb.append(TuiHelper.header("AI GENERATED QUESTIONS REVIEW", String.format("Drafts: %d  •  Target: %s", generatedDrafts.size(), targetStr)));
+        sb.append(TuiHelper.header("AI QUESTION GENERATOR"));
         sb.append("\n");
+        sb.append(TuiHelper.boxTitle("AI Generated Questions Review", String.format("Drafts: %d  •  Target: %s", generatedDrafts.size(), targetStr))).append("\n\n");
 
         if (bannerMessage != null && !bannerMessage.isBlank()) {
             sb.append("  ").append(bannerMessage).append("\n\n");

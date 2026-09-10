@@ -26,8 +26,9 @@ public class ExamViews {
                                                String bannerMessage) {
         StringBuilder sb = new StringBuilder();
         String typeLabel = (assessmentType == AssessmentType.EXAM) ? "EXAMS" : "QUIZZES";
-        sb.append(TuiHelper.header("AVAILABLE " + typeLabel, String.format("Total: %d", quizzes.size())));
+        sb.append(TuiHelper.header("AVAILABLE " + typeLabel));
         sb.append("\n");
+        sb.append(TuiHelper.boxTitle("Available " + (assessmentType == AssessmentType.EXAM ? "Exams" : "Quizzes"), String.format("Total: %d", quizzes.size()))).append("\n\n");
 
         sb.append(String.format("  %-4s  %-14s  %-40s  %-10s  %-6s  %-12s%n",
                 "ID", "SUBJ", "TITLE", "TIME", "PTS", "STATUS")).append("\n");
@@ -116,9 +117,9 @@ public class ExamViews {
                 ? String.format("Time Remaining: %02d:%02d", session.getRemainingSeconds() / 60, session.getRemainingSeconds() % 60)
                 : "Untimed Exam";
 
-        sb.append(TuiHelper.header("ASSESSMENT: " + session.getQuiz().getTitle(),
-                String.format("Question %d of %d  •  %s", curQNum, totalQ, timerInfo)));
+        sb.append(TuiHelper.header("ASSESSMENT"));
         sb.append("\n");
+        sb.append(TuiHelper.boxTitle(session.getQuiz().getTitle(), String.format("Question %d of %d  •  %s", curQNum, totalQ, timerInfo))).append("\n\n");
 
         Question q = session.getQuestions().get(currentQuestionIndex);
 
@@ -155,8 +156,12 @@ public class ExamViews {
     public static String renderExamResult(Result result, ExamSession session, boolean hasReturnScreen) {
         StringBuilder sb = new StringBuilder();
         String typeLabel = (result != null && result.getAssessmentType() == AssessmentType.EXAM) ? "EXAM" : "QUIZ";
-        sb.append(TuiHelper.header(typeLabel + " RESULTS", result != null ? result.getQuizTitle() : ""));
+        sb.append(TuiHelper.header(typeLabel + " RESULTS"));
         sb.append("\n");
+
+        String titleStr = (result != null && result.getQuizTitle() != null && !result.getQuizTitle().isBlank())
+                ? result.getQuizTitle() : (typeLabel + " Results");
+        sb.append(TuiHelper.boxTitle(titleStr)).append("\n\n");
 
         String badge = result.isPassed()
                 ? TuiHelper.green(TuiHelper.bold("  ✔ PASSED  "))
@@ -205,8 +210,9 @@ public class ExamViews {
 
     public static String renderStudentHistory(List<Result> historyList, int selectedIndex, SimpleDateFormat dateFormat) {
         StringBuilder sb = new StringBuilder();
-        sb.append(TuiHelper.header("ASSESSMENT HISTORY", String.format("Total: %d", historyList.size())));
+        sb.append(TuiHelper.header("ASSESSMENT HISTORY"));
         sb.append("\n");
+        sb.append(TuiHelper.boxTitle("Past Assessment Attempts", String.format("Total: %d", historyList.size()))).append("\n\n");
 
         sb.append(String.format("  %-8s  %-6s  %-28s  %-11s  %-7s  %-8s  %-16s%n",
                 "ATTEMPT", "TYPE", "TITLE", "SCORE", "PCT", "STATUS", "DATE")).append("\n");

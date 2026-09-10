@@ -27,8 +27,9 @@ public class QuizViews {
                 ? "Scope: [ MY " + itemType + " ]"
                 : "Scope: [ ALL GLOBAL " + itemType + " ]";
 
-        sb.append(TuiHelper.header(itemType, String.format("%s  •  Total: %d", scopeLabel, quizzes.size())));
+        sb.append(TuiHelper.header(itemType));
         sb.append("\n");
+        sb.append(TuiHelper.boxTitle(scopeLabel, String.format("Total: %d", quizzes.size()))).append("\n\n");
 
         if (searchMode) {
             sb.append("  Search: [ ").append(TuiHelper.cyan(searchBuffer + "_")).append(" ] (Press Enter to finish)\n\n");
@@ -126,8 +127,10 @@ public class QuizViews {
         String itemType = (assessmentType == AssessmentType.EXAM) ? "EXAM" : "QUIZ";
         String headerTitle = isEditMode ? "EDIT " + itemType : "CREATE NEW " + itemType;
         int activeFieldDisplay = Math.min(10, focusedField + 1);
-        sb.append(TuiHelper.header(headerTitle, String.format("Field %d of 10", activeFieldDisplay)));
+        sb.append(TuiHelper.header(headerTitle));
         sb.append("\n");
+        String formSub = isEditMode ? "Edit " + itemType + " Settings" : "Create New " + itemType;
+        sb.append(TuiHelper.boxTitle(formSub, String.format("Field %d of 10", activeFieldDisplay))).append("\n\n");
 
         int numInputFields = 10;
         int windowSize = 4;
@@ -196,9 +199,10 @@ public class QuizViews {
                 subjectText, questions.size(), totalPoints,
                 quiz.isPublished() ? TuiHelper.green("PUBLISHED") : TuiHelper.dim("DRAFT"));
 
-        String builderTitle = (quiz.getAssessmentType() == AssessmentType.EXAM ? "EXAM BUILDER: " : "QUIZ BUILDER: ") + quiz.getTitle();
-        sb.append(TuiHelper.header(builderTitle, subtitle));
+        String builderHeader = (quiz.getAssessmentType() == AssessmentType.EXAM ? "EXAMS" : "QUIZZES");
+        sb.append(TuiHelper.header(builderHeader));
         sb.append("\n");
+        sb.append(TuiHelper.boxTitle(quiz.getTitle(), subtitle)).append("\n\n");
 
         sb.append(String.format("  %-4s  %-12s  %-10s  %-6s  %-54s%n",
                 "ID", "TYPE", "DIFF", "PTS", "QUESTION TEXT")).append("\n");
@@ -271,8 +275,9 @@ public class QuizViews {
 
         String subtitle = String.format("Assigned: %d Questions (%.1f pts)  •  Bank: %d Available",
                 assignedIds.size(), totalPts, bankQuestions.size());
-        sb.append(TuiHelper.header("MANAGE QUESTIONS: " + quiz.getTitle(), subtitle));
+        sb.append(TuiHelper.header("QUIZZES"));
         sb.append("\n");
+        sb.append(TuiHelper.boxTitle(quiz.getTitle(), subtitle)).append("\n\n");
 
         sb.append(String.format("  %-4s  %-14s  %-12s  %-10s  %-6s  %-40s%n",
                 "SEL", "ID", "TYPE", "DIFF", "PTS", "QUESTION TEXT")).append("\n");
@@ -331,8 +336,9 @@ public class QuizViews {
         StringBuilder sb = new StringBuilder();
         String itemType = (assessmentType == AssessmentType.EXAM) ? "EXAM" : "QUIZ";
         String itemLabel = (assessmentType == AssessmentType.EXAM) ? "Exam" : "Quiz";
-        sb.append(TuiHelper.header("GENERATING " + itemType + ": " + title.toUpperCase(), "Local Ollama LLM is assembling questions..."));
-        sb.append("\n\n");
+        sb.append(TuiHelper.header(itemType));
+        sb.append("\n");
+        sb.append(TuiHelper.boxTitle("Generating " + itemLabel + ": " + title, "Local Ollama LLM is assembling questions...")).append("\n\n");
 
         String[] spinnerFrames = {"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"};
         String spinner = spinnerFrames[Math.abs(tick) % spinnerFrames.length];
@@ -393,8 +399,9 @@ public class QuizViews {
 
         int numInputFields = fieldWidgets.size();
         int activeFieldDisplay = Math.min(numInputFields, focusedField + 1);
-        sb.append(TuiHelper.header("AI " + itemType + " GENERATOR", String.format("Field %d of %d", activeFieldDisplay, numInputFields)));
+        sb.append(TuiHelper.header("AI " + itemType + " GENERATOR"));
         sb.append("\n");
+        sb.append(TuiHelper.boxTitle("AI " + itemLabel + " Generator", String.format("Field %d of %d", activeFieldDisplay, numInputFields))).append("\n\n");
 
         int windowSize = 4;
         int startField = Math.max(0, Math.min(Math.min(focusedField, numInputFields - 1) - 1, numInputFields - windowSize));

@@ -20,6 +20,7 @@ public class User {
     private String passwordHash;
     private String fullName;
     private LocalDate dateOfBirth;
+    private String gender;
     private Role role;
     private boolean enabled;
     private Timestamp createdAt;

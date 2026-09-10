@@ -6,8 +6,9 @@ public class ReportViews {
 
     public static String renderReportMenu(String[] reports, int selectedIndex, String bannerMessage) {
         StringBuilder sb = new StringBuilder();
-        sb.append(TuiHelper.header("REPORTS & ANALYTICS", "Export assessment data to PDF via JasperReports"));
+        sb.append(TuiHelper.header("REPORTS"));
         sb.append("\n");
+        sb.append(TuiHelper.boxTitle("Reports & Analytics", "Export assessment data to PDF via JasperReports")).append("\n\n");
 
         for (int i = 0; i < reports.length; i++) {
             if (i == selectedIndex) {

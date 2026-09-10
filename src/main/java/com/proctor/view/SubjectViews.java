@@ -12,8 +12,9 @@ public class SubjectViews {
     public static String renderSubjectList(List<Subject> subjects, int selectedIndex,
                                           String searchBuffer, boolean searchMode, String bannerMessage) {
         StringBuilder sb = new StringBuilder();
-        sb.append(TuiHelper.header("PROCTOR - SUBJECT MANAGEMENT", String.format("Total: %d", subjects.size())));
+        sb.append(TuiHelper.header("SUBJECTS"));
         sb.append("\n");
+        sb.append(TuiHelper.boxTitle("Subject Management", String.format("Total: %d", subjects.size()))).append("\n\n");
 
         if (searchMode) {
             sb.append("  Search: [ ").append(TuiHelper.cyan(searchBuffer + "_")).append(" ] (Press Enter to finish)\n\n");
@@ -83,9 +84,10 @@ public class SubjectViews {
                                            boolean enabledStatus, int focusedField, int saveBtnIndex, int cancelBtnIndex,
                                            String errorMessage) {
         StringBuilder sb = new StringBuilder();
-        String title = isEditMode ? "EDIT SUBJECT: " + subjectCode : "CREATE NEW SUBJECT";
-        sb.append(TuiHelper.header(title, "Configure subject details"));
+        String formTitle = isEditMode ? "Edit Subject: " + subjectCode : "Create New Subject";
+        sb.append(TuiHelper.header("SUBJECTS"));
         sb.append("\n");
+        sb.append(TuiHelper.boxTitle(formTitle, "Configure subject details")).append("\n\n");
 
         if (isEditMode) {
             sb.append(TuiHelper.inputBox("Subject Name", name, focusedField == 0, 86, false, "enter subject name"));
@@ -118,8 +120,9 @@ public class SubjectViews {
                                                  Set<Integer> assignedTeacherIds, int selectedIndex,
                                                  String bannerMessage) {
         StringBuilder sb = new StringBuilder();
-        sb.append(TuiHelper.header("TEACHER ASSIGNMENT: " + subject.getCode(), subject.getName()));
+        sb.append(TuiHelper.header("SUBJECTS"));
         sb.append("\n");
+        sb.append(TuiHelper.boxTitle("Teacher Assignment", subject.getCode() + " - " + subject.getName())).append("\n\n");
 
         if (allTeachers.isEmpty()) {
             sb.append("  ").append(TuiHelper.dim("No teachers found in the system. Create teacher accounts first in User Management.")).append("\n\n");

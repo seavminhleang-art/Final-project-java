@@ -315,8 +315,9 @@ public class AvailableQuizzesScreen implements Screen {
         if (requestingExamReason && !quizzes.isEmpty()) {
             Quiz q = quizzes.get(selectedIndex);
             StringBuilder sb = new StringBuilder();
-            sb.append(TuiHelper.header("REQUEST EXAM MAKEUP", q.getTitle()));
+            sb.append(TuiHelper.header("EXAMS"));
             sb.append("\n");
+            sb.append(TuiHelper.boxTitle("Request Exam Makeup", q.getTitle())).append("\n\n");
             sb.append("  ").append(TuiHelper.bold("Justification Reason (Required for Instructor Review):")).append("\n\n");
             sb.append(TuiHelper.inputBox("Reason", examReasonBuffer.toString(), examReasonFocusIndex == 0, 72, false, "e.g. Illness, technical malfunction, etc."));
             sb.append("\n");

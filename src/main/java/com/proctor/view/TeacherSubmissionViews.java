@@ -19,11 +19,12 @@ public class TeacherSubmissionViews {
                                              SimpleDateFormat dateFormat, String bannerMessage) {
         StringBuilder sb = new StringBuilder();
         String title = (specificQuiz != null)
-                ? "SUBMISSIONS: " + specificQuiz.getTitle()
-                : "STUDENT SUBMISSIONS & GRADING";
+                ? "Quiz: " + specificQuiz.getTitle()
+                : "Student Submissions & Grading";
 
-        sb.append(TuiHelper.header(title, String.format("Total Submissions: %d", submissions.size())));
+        sb.append(TuiHelper.header("SUBMISSIONS"));
         sb.append("\n");
+        sb.append(TuiHelper.boxTitle(title, String.format("Total Submissions: %d", submissions.size()))).append("\n\n");
 
         sb.append(String.format("  %-8s  %-34s  %-24s  %-22s%n",
                 "ID", "STUDENT", "STATUS", "SUBMITTED AT")).append("\n");
@@ -95,8 +96,9 @@ public class TeacherSubmissionViews {
                 attempt.getStudentId(), attempt.getStatus().name(),
                 questions.isEmpty() ? 0 : inspectingAnswerIndex + 1, questions.size());
 
-        sb.append(TuiHelper.header("STUDENT ANSWER SHEET: ATTEMPT #" + attempt.getId(), subtitle));
+        sb.append(TuiHelper.header("SUBMISSIONS"));
         sb.append("\n");
+        sb.append(TuiHelper.boxTitle("Student Answer Sheet: Attempt #" + attempt.getId(), subtitle)).append("\n\n");
 
         if (questions.isEmpty()) {
             sb.append("  ").append(TuiHelper.dim("No questions attached to this quiz assessment.")).append("\n");

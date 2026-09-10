@@ -16,8 +16,9 @@ public class InboxViews {
                                          String bannerMessage, boolean showDeleteModal, boolean deleteConfirmFocused) {
         StringBuilder sb = new StringBuilder();
         String subtitle = String.format("Total: %d  •  Unread: %d", messages.size(), unreadCount);
-        sb.append(TuiHelper.header("INBOX & NOTIFICATIONS", subtitle));
+        sb.append(TuiHelper.header("INBOX"));
         sb.append("\n");
+        sb.append(TuiHelper.boxTitle("Inbox & Notifications", subtitle)).append("\n\n");
 
         sb.append(String.format("    %-14s  %-16s  %-18s  %-26s  %-16s%n",
                 "STATUS", "TYPE", "FROM", "SUBJECT", "RECEIVED")).append("\n");
@@ -93,8 +94,9 @@ public class InboxViews {
                                            boolean showAdminResetInput, String tempPasswordInput, boolean inputFocused,
                                            int focusedActionBtn, String errorMessage, String bannerMessage) {
         StringBuilder sb = new StringBuilder();
-        sb.append(TuiHelper.header("MESSAGE DETAILS", "Type: " + msg.getType().name()));
+        sb.append(TuiHelper.header("INBOX"));
         sb.append("\n");
+        sb.append(TuiHelper.boxTitle("Message Details", "Type: " + msg.getType().name())).append("\n\n");
 
         String sender = msg.getSenderName() != null ? msg.getSenderName() : "System";
         String dateStr = msg.getCreatedAt() != null ? DATE_FMT.format(msg.getCreatedAt()) : "-";

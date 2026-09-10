@@ -15,16 +15,17 @@ public class UserViews {
                                        String searchBuffer, boolean searchMode, String bannerMessage) {
         StringBuilder sb = new StringBuilder();
         String roleLabel = (filterRole == null) ? "ALL ROLES" : filterRole.name();
-        sb.append(TuiHelper.header("USER MANAGEMENT", String.format("Filter: [ %s ]  •  Total Users: %d", roleLabel, users.size())));
+        sb.append(TuiHelper.header("USERS"));
         sb.append("\n");
+        sb.append(TuiHelper.boxTitle("User Management", String.format("Filter: [ %s ]  •  Total Users: %d", roleLabel, users.size()))).append("\n\n");
 
         if (searchMode) {
             sb.append("  Search: [ ").append(TuiHelper.cyan(searchBuffer + "_")).append(" ] (Press Enter to finish)\n\n");
         } else if (!searchBuffer.isEmpty()) {
             sb.append("  Search: [ ").append(searchBuffer).append(" ] (Press '/' to edit)\n\n");
         }
-        sb.append(String.format("  %-4s  %-16s  %-18s  %-16s  %-9s  %-10s  %-9s%n",
-                "ID", "USERNAME", "EMAIL", "FULL NAME", "ROLE", "BIRTHDAY", "STATUS")).append("\n");
+        sb.append(String.format("  %-4s  %-14s  %-16s  %-14s  %-7s  %-10s  %-8s  %-8s%n",
+                "ID", "USERNAME", "EMAIL", "FULL NAME", "GENDER", "BIRTHDAY", "ROLE", "STATUS")).append("\n");
         sb.append("  " + "─".repeat(96) + "\n\n");
 
         if (users.isEmpty()) {
@@ -39,14 +40,16 @@ public class UserViews {
                 String cursor = (i == selectedIndex) ? TuiHelper.cyan("▶ ") : "  ";
                 String status = u.isEnabled() ? TuiHelper.green("Enabled") : TuiHelper.red("Disabled");
                 String dobStr = (u.getDateOfBirth() != null) ? u.getDateOfBirth().format(DISPLAY_FMT) : "-";
+                String genderStr = (u.getGender() != null && !u.getGender().isBlank()) ? u.getGender() : "-";
 
-                String line = String.format("%-4d  %-16s  %-18s  %-16s  %-9s  %-10s  %-9s",
+                String line = String.format("%-4d  %-14s  %-16s  %-14s  %-7s  %-10s  %-8s  %-8s",
                         u.getId(),
-                        truncate("@" + u.getUsername(), 16),
-                        truncate(u.getEmail() != null ? u.getEmail() : "-", 18),
-                        truncate(u.getFullName(), 16),
-                        u.getRole().name(),
+                        truncate("@" + u.getUsername(), 14),
+                        truncate(u.getEmail() != null ? u.getEmail() : "-", 16),
+                        truncate(u.getFullName(), 14),
+                        truncate(genderStr, 7),
                         dobStr,
+                        u.getRole().name(),
                         status);
 
                 if (i == selectedIndex) {
@@ -89,40 +92,48 @@ public class UserViews {
     }
 
     public static String renderUserForm(boolean isEditMode, User userToEdit, String email, String username,
-                                        String password, String fullName, String birthday, Role selectedRole,
-                                        boolean enabledStatus, int focusedField, int saveBtnIndex,
-                                        int cancelBtnIndex, String errorMessage) {
+                                        String password, String fullName, String birthday, String gender,
+                                        Role selectedRole, boolean enabledStatus, int focusedField,
+                                        int saveBtnIndex, int cancelBtnIndex, String errorMessage) {
         StringBuilder sb = new StringBuilder();
-        String title = isEditMode ? "EDIT USER: @" + userToEdit.getUsername() : "CREATE NEW USER";
-        sb.append(TuiHelper.header(title, "Fill in user credentials and role"));
+        String boxSub = isEditMode ? "Update user account" : "Create user account";
+        String formTitle = isEditMode ? "Edit User: @" + userToEdit.getUsername() : "Create New User";
+        sb.append(TuiHelper.header("USERS"));
         sb.append("\n");
+        sb.append(TuiHelper.boxTitle(formTitle, boxSub)).append("\n\n");
+
+        String genderVal = (gender != null && !gender.isBlank()) ? gender : "Male";
 
         if (isEditMode) {
-            // Edit: 0=fullName, 1=birthday, 2=role, 3=status
+            // Edit: 0=fullName, 1=gender, 2=birthday, 3=role, 4=status
             sb.append(TuiHelper.inputBox("Full Name", fullName, focusedField == 0, 86, false, "enter full name"));
             sb.append("\n");
-            String bdDisplay = TuiHelper.birthdayMask(birthday, focusedField == 1);
-            sb.append(TuiHelper.inputBox("Date of Birth", bdDisplay, focusedField == 1, 86, false, "DD - MM - YYYY"));
+            sb.append(TuiHelper.selectBox("Gender", genderVal, focusedField == 1, 86, "Space to cycle"));
             sb.append("\n");
-            sb.append(TuiHelper.selectBox("Role", selectedRole.name(), focusedField == 2, 86, "Space to cycle"));
+            String bdDisplay = TuiHelper.birthdayMask(birthday, focusedField == 2);
+            sb.append(TuiHelper.inputBox("Date of Birth", bdDisplay, focusedField == 2, 86, false, "DD - MM - YYYY"));
+            sb.append("\n");
+            sb.append(TuiHelper.selectBox("Role", selectedRole.name(), focusedField == 3, 86, "Space to cycle"));
             sb.append("\n");
             String statusText = enabledStatus ? "Enabled" : "Disabled";
-            sb.append(TuiHelper.selectBox("Account Status", statusText, focusedField == 3, 86, "Space to toggle (Enabled/Disabled)"));
+            sb.append(TuiHelper.selectBox("Account Status", statusText, focusedField == 4, 86, "Space to toggle (Enabled/Disabled)"));
             sb.append("\n");
         } else {
-            // Create: 0=email, 1=username, 2=password, 3=fullName, 4=birthday, 5=role
-            sb.append(TuiHelper.inputBox("Email Address", email, focusedField == 0, 86, false, "e.g. user@proctor.edu"));
+            // Create: 0=fullName, 1=gender, 2=birthday, 3=email, 4=username, 5=password, 6=role
+            sb.append(TuiHelper.inputBox("Full Name", fullName, focusedField == 0, 86, false, "enter full name"));
             sb.append("\n");
-            sb.append(TuiHelper.inputBox("Username", username, focusedField == 1, 86, false, "e.g. jdoe"));
+            sb.append(TuiHelper.selectBox("Gender", genderVal, focusedField == 1, 86, "Space to cycle"));
             sb.append("\n");
-            sb.append(TuiHelper.inputBox("Password", password, focusedField == 2, 86, true, "enter password"));
+            String bdDisplay = TuiHelper.birthdayMask(birthday, focusedField == 2);
+            sb.append(TuiHelper.inputBox("Date of Birth", bdDisplay, focusedField == 2, 86, false, "DD - MM - YYYY"));
             sb.append("\n");
-            sb.append(TuiHelper.inputBox("Full Name", fullName, focusedField == 3, 86, false, "enter full name"));
+            sb.append(TuiHelper.inputBox("Email Address", email, focusedField == 3, 86, false, "e.g. user@proctor.edu"));
             sb.append("\n");
-            String bdDisplay = TuiHelper.birthdayMask(birthday, focusedField == 4);
-            sb.append(TuiHelper.inputBox("Date of Birth", bdDisplay, focusedField == 4, 86, false, "DD - MM - YYYY"));
+            sb.append(TuiHelper.inputBox("Username", username, focusedField == 4, 86, false, "e.g. jdoe"));
             sb.append("\n");
-            sb.append(TuiHelper.selectBox("Role", selectedRole.name(), focusedField == 5, 86, "Space to cycle"));
+            sb.append(TuiHelper.inputBox("Password", password, focusedField == 5, 86, true, "enter password"));
+            sb.append("\n");
+            sb.append(TuiHelper.selectBox("Role", selectedRole.name(), focusedField == 6, 86, "Space to cycle"));
             sb.append("\n");
         }
 

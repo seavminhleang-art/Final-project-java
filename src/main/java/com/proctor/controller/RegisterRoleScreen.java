@@ -4,48 +4,23 @@ import com.proctor.model.repository.UserRepository;
 import com.proctor.model.service.AuthService;
 import com.proctor.model.service.UserService;
 import com.proctor.util.KeyUtil;
-import com.proctor.util.TuiHelper;
 import com.proctor.view.AuthViews;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
 import com.williamcallahan.tui4j.compat.bubbletea.Message;
 
-public class StartupScreen implements Screen {
+public class RegisterRoleScreen implements Screen {
     private final AuthService authService;
-    private int focusedButton = 0; // 0 = Log In, 1 = Register, 2 = Exit
-    private boolean showQuitModal = false;
-    private boolean quitConfirmFocused = false;
+    private int focusedButton = 0; // 0 = Student, 1 = Teacher, 2 = Back
 
-    public StartupScreen(AuthService authService) {
+    public RegisterRoleScreen(AuthService authService) {
         this.authService = authService;
     }
 
     @Override
     public ScreenResult update(Message msg) {
         if (msg instanceof KeyPressMessage k) {
-            if (showQuitModal) {
-                if (KeyUtil.isLeft(k) || KeyUtil.isRight(k) || KeyUtil.isTab(k)) {
-                    quitConfirmFocused = !quitConfirmFocused;
-                    return ScreenResult.stay(this);
-                }
-                if (KeyUtil.isEnter(k)) {
-                    if (quitConfirmFocused) {
-                        return ScreenResult.quit();
-                    } else {
-                        showQuitModal = false;
-                        return ScreenResult.stay(this);
-                    }
-                }
-                if (KeyUtil.isEsc(k)) {
-                    showQuitModal = false;
-                    return ScreenResult.stay(this);
-                }
-                return ScreenResult.stay(this);
-            }
-
             if (KeyUtil.isEsc(k)) {
-                showQuitModal = true;
-                quitConfirmFocused = false;
-                return ScreenResult.stay(this);
+                return ScreenResult.navigate(new StartupScreen(authService));
             }
 
             if (KeyUtil.isLeft(k)) {
@@ -85,14 +60,13 @@ public class StartupScreen implements Screen {
             }
 
             if (KeyUtil.isEnter(k)) {
+                UserService userService = new UserService(new UserRepository());
                 if (focusedButton == 0) {
-                    return ScreenResult.navigate(new LoginScreen(authService));
+                    return ScreenResult.navigate(new StudentRegisterScreen(authService, userService));
                 } else if (focusedButton == 1) {
-                    return ScreenResult.navigate(new RegisterRoleScreen(authService));
+                    return ScreenResult.navigate(new TeacherRegisterScreen(authService, userService));
                 } else if (focusedButton == 2) {
-                    showQuitModal = true;
-                    quitConfirmFocused = false;
-                    return ScreenResult.stay(this);
+                    return ScreenResult.navigate(new StartupScreen(authService));
                 }
             }
         }
@@ -101,16 +75,6 @@ public class StartupScreen implements Screen {
 
     @Override
     public String view() {
-        if (showQuitModal) {
-            return TuiHelper.confirmationModal(
-                    "QUIT APPLICATION",
-                    "Are you sure you want to quit Proctor?",
-                    "",
-                    "Quit",
-                    "Cancel",
-                    quitConfirmFocused
-            );
-        }
-        return AuthViews.renderStartup(focusedButton);
+        return AuthViews.renderRegisterRole(focusedButton);
     }
 }

@@ -33,9 +33,6 @@ public class LoginScreen implements Screen {
     private int forgotFocusIndex = 0;
     private String forgotMessage = "";
 
-    private boolean showQuitModal = false;
-    private boolean quitConfirmFocused = false;
-
     public LoginScreen(AuthService authService) {
         this(authService, new InboxService(new InboxRepository(), new UserRepository()));
     }
@@ -46,32 +43,12 @@ public class LoginScreen implements Screen {
     }
 
     private int getFieldCount() {
-        return 6;
+        return 5;
     }
 
     @Override
     public ScreenResult update(Message msg) {
         if (msg instanceof KeyPressMessage k) {
-            if (showQuitModal) {
-                if (KeyUtil.isLeft(k) || KeyUtil.isRight(k) || KeyUtil.isTab(k)) {
-                    quitConfirmFocused = !quitConfirmFocused;
-                    return ScreenResult.stay(this);
-                }
-                if (KeyUtil.isEnter(k)) {
-                    if (quitConfirmFocused) {
-                        return ScreenResult.quit();
-                    } else {
-                        showQuitModal = false;
-                        return ScreenResult.stay(this);
-                    }
-                }
-                if (KeyUtil.isEsc(k)) {
-                    showQuitModal = false;
-                    return ScreenResult.stay(this);
-                }
-                return ScreenResult.stay(this);
-            }
-
             if (forgotPasswordMode) {
                 return handleForgotPasswordInput(k);
             }
@@ -97,8 +74,6 @@ public class LoginScreen implements Screen {
                 } else if (focusedField == 1 || focusedField == 2) {
                     return attemptLogin();
                 } else if (focusedField == 3) {
-                    return ScreenResult.navigate(new RegisterScreen(authService, new UserService(new UserRepository())));
-                } else if (focusedField == 4) {
                     forgotPasswordMode = true;
                     forgotIdentifier.setLength(0);
                     forgotNewPassword.setLength(0);
@@ -106,17 +81,17 @@ public class LoginScreen implements Screen {
                     forgotFocusIndex = 0;
                     forgotMessage = "";
                     return ScreenResult.stay(this);
-                } else if (focusedField == 5) {
+                } else if (focusedField == 4) {
                     return ScreenResult.navigate(new StartupScreen(authService));
                 }
             }
 
-            if (focusedField >= 2 && focusedField <= 5) {
+            if (focusedField >= 2 && focusedField <= 4) {
                 if (KeyUtil.isLeft(k)) {
-                    focusedField = (focusedField == 2) ? 5 : focusedField - 1;
+                    focusedField = (focusedField == 2) ? 4 : focusedField - 1;
                     return ScreenResult.stay(this);
                 } else if (KeyUtil.isRight(k)) {
-                    focusedField = (focusedField == 5) ? 2 : focusedField + 1;
+                    focusedField = (focusedField == 4) ? 2 : focusedField + 1;
                     return ScreenResult.stay(this);
                 }
             }
@@ -262,22 +237,11 @@ public class LoginScreen implements Screen {
 
     @Override
     public String view() {
-        if (showQuitModal) {
-            return TuiHelper.confirmationModal(
-                    "QUIT APPLICATION",
-                    "Are you sure you want to quit?",
-                    "Any unsaved input will be lost.",
-                    "Quit",
-                    "Cancel",
-                    quitConfirmFocused
-            );
-        }
-
         if (forgotPasswordMode) {
             StringBuilder sb = new StringBuilder();
-            sb.append(TuiHelper.header("PROCTOR", "Password Recovery"));
+            sb.append(TuiHelper.header("PROCTOR"));
             sb.append("\n");
-            sb.append("  ").append(TuiHelper.bold("Forgot Your Password?")).append("\n\n");
+            sb.append(TuiHelper.boxTitle("Password Recovery")).append("\n\n");
             sb.append("  ").append(TuiHelper.dim("Submit your registered email or username and choose your new password.\n"));
             sb.append("  ").append(TuiHelper.dim("An administrator will review and activate your new password.\n\n"));
             sb.append(TuiHelper.inputBox("Email or Username", forgotIdentifier.toString(), forgotFocusIndex == 0, 86, false, "e.g. user@proctor.edu or username"));

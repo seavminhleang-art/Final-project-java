@@ -162,7 +162,8 @@ public class QuizQuestionEditorScreen implements Screen {
     @Override
     public String view() {
         if (quiz == null) {
-            return TuiHelper.header("QUIZZES", "Assessment Error") + "\n\n"
+            return TuiHelper.header("QUIZZES") + "\n"
+                    + TuiHelper.boxTitle("Assessment Error") + "\n\n"
                     + (bannerMessage.isEmpty() ? TuiHelper.red("✖ Assessment not found or failed to load.") : bannerMessage)
                     + "\n\n" + TuiHelper.wrapHints(List.of("[Esc] Back to list"));
         }

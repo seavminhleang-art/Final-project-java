@@ -5,7 +5,6 @@ import com.proctor.model.service.AuthService;
 import com.proctor.model.enums.Role;
 import com.proctor.exception.ValidationException;
 import com.proctor.util.KeyUtil;
-import com.proctor.util.TuiHelper;
 import com.proctor.view.UserViews;
 import com.proctor.model.service.UserService;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
@@ -19,12 +18,12 @@ public class UserFormScreen implements Screen {
     private final AuthService authService;
     private final User userToEdit;
 
+    private final StringBuilder fullName = new StringBuilder();
+    private String selectedGender = "Male";
+    private final StringBuilder birthday = new StringBuilder();
     private final StringBuilder email = new StringBuilder();
     private final StringBuilder username = new StringBuilder();
     private final StringBuilder password = new StringBuilder();
-    private final StringBuilder fullName = new StringBuilder();
-    // raw digit characters DDMMYYYY, max 8
-    private final StringBuilder birthday = new StringBuilder();
     private Role selectedRole = Role.STUDENT;
     private boolean enabledStatus = true;
 
@@ -37,14 +36,17 @@ public class UserFormScreen implements Screen {
         this.userToEdit = userToEdit;
 
         if (userToEdit != null) {
-            if (userToEdit.getEmail() != null) this.email.append(userToEdit.getEmail());
-            if (userToEdit.getUsername() != null) this.username.append(userToEdit.getUsername());
             if (userToEdit.getFullName() != null) this.fullName.append(userToEdit.getFullName());
+            if (userToEdit.getGender() != null && !userToEdit.getGender().isBlank()) {
+                this.selectedGender = userToEdit.getGender();
+            }
             if (userToEdit.getDateOfBirth() != null) {
                 LocalDate dob = userToEdit.getDateOfBirth();
                 this.birthday.append(String.format("%02d%02d%04d",
                         dob.getDayOfMonth(), dob.getMonthValue(), dob.getYear()));
             }
+            if (userToEdit.getEmail() != null) this.email.append(userToEdit.getEmail());
+            if (userToEdit.getUsername() != null) this.username.append(userToEdit.getUsername());
             this.selectedRole = userToEdit.getRole();
             this.enabledStatus = userToEdit.isEnabled();
         }
@@ -54,10 +56,10 @@ public class UserFormScreen implements Screen {
         return userToEdit != null;
     }
 
-    // Create: 0=email, 1=username, 2=password, 3=fullName, 4=birthday, 5=role  → 6 input fields
-    // Edit:   0=fullName, 1=birthday, 2=role, 3=status                          → 4 input fields
+    // Create: 0=fullName, 1=gender, 2=birthday, 3=email, 4=username, 5=password, 6=role  → 7 input fields
+    // Edit:   0=fullName, 1=gender, 2=birthday, 3=role, 4=status                          → 5 input fields
     private int getNumInputFields() {
-        return isEditMode() ? 4 : 6;
+        return isEditMode() ? 5 : 7;
     }
 
     private int getFieldCount() {
@@ -117,11 +119,6 @@ public class UserFormScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
-    // birthday field index in create mode is 4; in edit mode is 1
-    private int birthdayFieldIndex() {
-        return isEditMode() ? 1 : 4;
-    }
-
     private void handleBirthdayInput(KeyPressMessage k) {
         if (KeyUtil.isBackspace(k)) {
             if (!birthday.isEmpty()) birthday.deleteCharAt(birthday.length() - 1);
@@ -135,13 +132,30 @@ public class UserFormScreen implements Screen {
         }
     }
 
+    private void cycleGender(boolean forward) {
+        if ("Male".equalsIgnoreCase(selectedGender)) {
+            selectedGender = forward ? "Female" : "Other";
+        } else if ("Female".equalsIgnoreCase(selectedGender)) {
+            selectedGender = forward ? "Other" : "Male";
+        } else {
+            selectedGender = forward ? "Male" : "Female";
+        }
+    }
+
     private void handleCreateModeInput(KeyPressMessage k) {
-        if (focusedField == 4) {
+        if (focusedField == 1) {
+            if (KeyUtil.isLeft(k)) {
+                cycleGender(false);
+            } else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) {
+                cycleGender(true);
+            }
+            return;
+        }
+        if (focusedField == 2) {
             handleBirthdayInput(k);
             return;
         }
-        if (focusedField == 5) {
-            // role
+        if (focusedField == 6) {
             if (KeyUtil.isLeft(k)) {
                 cycleRole(false);
             } else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) {
@@ -149,12 +163,12 @@ public class UserFormScreen implements Screen {
             }
             return;
         }
-        if (focusedField >= 0 && focusedField <= 3) {
+        if (focusedField == 0 || (focusedField >= 3 && focusedField <= 5)) {
             StringBuilder focusedBuffer = switch (focusedField) {
-                case 0 -> email;
-                case 1 -> username;
-                case 2 -> password;
-                default -> fullName;
+                case 0 -> fullName;
+                case 3 -> email;
+                case 4 -> username;
+                default -> password;
             };
 
             if (KeyUtil.isBackspace(k)) {
@@ -173,7 +187,6 @@ public class UserFormScreen implements Screen {
 
     private void handleEditModeInput(KeyPressMessage k) {
         if (focusedField == 0) {
-            // fullName
             if (KeyUtil.isBackspace(k)) {
                 if (!fullName.isEmpty()) fullName.deleteCharAt(fullName.length() - 1);
             } else if (k.type() == KeyType.KeyRunes && k.runes() != null) {
@@ -186,14 +199,20 @@ public class UserFormScreen implements Screen {
                 errorMessage = "";
             }
         } else if (focusedField == 1) {
-            handleBirthdayInput(k);
+            if (KeyUtil.isLeft(k)) {
+                cycleGender(false);
+            } else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) {
+                cycleGender(true);
+            }
         } else if (focusedField == 2) {
+            handleBirthdayInput(k);
+        } else if (focusedField == 3) {
             if (KeyUtil.isLeft(k)) {
                 cycleRole(false);
             } else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) {
                 cycleRole(true);
             }
-        } else if (focusedField == 3) {
+        } else if (focusedField == 4) {
             if (KeyUtil.isLeft(k) || KeyUtil.isRight(k) || KeyUtil.isSpace(k)) {
                 enabledStatus = !enabledStatus;
             }
@@ -241,10 +260,10 @@ public class UserFormScreen implements Screen {
         try {
             LocalDate dob = parseBirthday();
             if (isEditMode()) {
-                userService.updateUser(userToEdit.getId(), fullName.toString(), selectedRole, enabledStatus, dob);
+                userService.updateUser(userToEdit.getId(), fullName.toString(), selectedRole, enabledStatus, dob, selectedGender);
             } else {
                 userService.createUser(email.toString().trim(), username.toString().trim(),
-                        password.toString(), fullName.toString().trim(), selectedRole, dob);
+                        password.toString(), fullName.toString().trim(), selectedRole, dob, selectedGender);
             }
             return ScreenResult.navigate(new UserListScreen(userService, authService));
         } catch (ValidationException e) {
@@ -266,6 +285,7 @@ public class UserFormScreen implements Screen {
                 password.toString(),
                 fullName.toString(),
                 birthday.toString(),
+                selectedGender,
                 selectedRole,
                 enabledStatus,
                 focusedField,

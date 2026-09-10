@@ -29,7 +29,7 @@ public class UserService {
         return userRepository.findById(id);
     }
 
-    /** Convenience overload used by SeedService and admin quick-create (no birthday). */
+    /** Convenience overload used by SeedService and admin quick-create (no birthday/gender). */
     public User createUser(String emailOrUsername, String rawPassword, String fullName, Role role) {
         if (emailOrUsername == null || emailOrUsername.isBlank()) {
             throw new ValidationException("Email or username is required.");
@@ -44,18 +44,25 @@ public class UserService {
             username = clean;
             email = clean + "@proctor.edu";
         }
-        return createUser(email, username, rawPassword, fullName, role, null);
+        return createUser(email, username, rawPassword, fullName, role, null, "Other");
     }
 
-    /** Overload without birthday — delegates to the main overload with null birthday. */
+    /** Overload without birthday or gender — delegates to the main overload. */
     public User createUser(String email, String username, String rawPassword, String fullName, Role role) {
-        return createUser(email, username, rawPassword, fullName, role, null);
+        return createUser(email, username, rawPassword, fullName, role, null, "Other");
     }
 
     public User createUser(String email, String username, String rawPassword, String fullName, Role role, LocalDate dateOfBirth) {
+        return createUser(email, username, rawPassword, fullName, role, dateOfBirth, "Other");
+    }
+
+    public User createUser(String email, String username, String rawPassword, String fullName, Role role, LocalDate dateOfBirth, String gender) {
         if (email == null || email.isBlank() || username == null || username.isBlank() ||
                 rawPassword == null || rawPassword.isBlank() || fullName == null || fullName.isBlank()) {
             throw new ValidationException("All fields are required.");
+        }
+        if (gender == null || gender.trim().isBlank()) {
+            throw new ValidationException("Gender is required.");
         }
 
         PasswordUtils.validatePassword(rawPassword);
@@ -85,6 +92,7 @@ public class UserService {
                 .passwordHash(PasswordUtils.hash(rawPassword))
                 .fullName(fullName.trim())
                 .dateOfBirth(dateOfBirth)
+                .gender(gender.trim())
                 .role(role != null ? role : Role.STUDENT)
                 .enabled(true)
                 .build();
@@ -97,8 +105,17 @@ public class UserService {
     }
 
     public User updateUser(int id, String fullName, Role role, boolean enabled, LocalDate dateOfBirth) {
+        Optional<User> existing = userRepository.findById(id);
+        String gender = existing.map(User::getGender).orElse("Other");
+        return updateUser(id, fullName, role, enabled, dateOfBirth, gender);
+    }
+
+    public User updateUser(int id, String fullName, Role role, boolean enabled, LocalDate dateOfBirth, String gender) {
         if (fullName == null || fullName.isBlank()) {
             throw new ValidationException("Full name cannot be blank.");
+        }
+        if (gender == null || gender.trim().isBlank()) {
+            throw new ValidationException("Gender is required.");
         }
 
         Optional<User> existing = userRepository.findById(id);
@@ -109,6 +126,7 @@ public class UserService {
         User user = existing.get();
         user.setFullName(fullName.trim());
         user.setDateOfBirth(dateOfBirth);
+        user.setGender(gender.trim());
         if (SeedService.ADMIN_USERNAME.equalsIgnoreCase(user.getUsername())) {
             role = Role.ADMIN;
             enabled = true;

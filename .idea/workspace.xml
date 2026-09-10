@@ -6,6 +6,17 @@
   <component name="ChangeListManager">
     <list default="true" id="c05deeaa-fc82-4d29-9b43-ab8bc6abc8c2" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/config/SchemaInitializer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/config/SchemaInitializer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/LoginScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/LoginScreen.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/StartupScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/StartupScreen.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/UserFormScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/UserFormScreen.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/model/entity/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/model/entity/User.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/model/repository/UserRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/model/repository/UserRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/model/service/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/model/service/UserService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/util/TuiHelper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/util/TuiHelper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/view/AuthViews.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/view/AuthViews.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/view/UserViews.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/view/UserViews.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/schema.sql" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/schema.sql" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
     role VARCHAR(20) NOT NULL CHECK (role IN ('ADMIN', 'TEACHER', 'STUDENT')),
     is_enabled BOOLEAN DEFAULT TRUE,
     date_of_birth DATE,
+    gender VARCHAR(20),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

@@ -185,116 +185,99 @@ public class TuiHelper {
         "╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝╚══════╝   ╚═╝   ╚══════╝╚═╝  ╚═╝"
     };
 
-    public static String asciiBannerBox(String[] asciiLines, String subtitle) {
+    public static final String BOX_TITLE_MARKER = "\u001B[8888m";
+
+    public static String boxTitle(String title) {
+        if (title == null || title.isBlank()) {
+            return "";
+        }
+        return BOX_TITLE_MARKER + bold(title.trim()) + RESET;
+    }
+
+    public static String boxTitle(String title, String subtitle) {
+        if (title == null || title.isBlank()) {
+            return boxTitle(subtitle);
+        }
+        if (subtitle == null || subtitle.isBlank()) {
+            return boxTitle(title);
+        }
+        return BOX_TITLE_MARKER + bold(title.trim()) + dim("  •  " + subtitle.trim()) + RESET;
+    }
+
+    public static String asciiBannerBox(String[] asciiLines) {
         StringBuilder sb = new StringBuilder();
         sb.append(HEADER_START).append(CLEAR_EOL).append("\n");
         for (String line : asciiLines) {
             sb.append(NAVY_BLUE).append(line).append(RESET).append(CLEAR_EOL).append("\n");
         }
-        if (subtitle != null && !subtitle.isBlank()) {
-            String cleanSub = subtitle.trim();
-            if (visibleLength(cleanSub) > 94) {
-                cleanSub = cleanSub.substring(0, 93) + "…";
-            }
-            sb.append(CLEAR_EOL).append("\n");
-            sb.append(DIM).append(cleanSub).append(RESET).append(CLEAR_EOL).append("\n");
-        }
         sb.append(HEADER_END).append(CLEAR_EOL).append("\n");
         return sb.toString();
     }
 
-    private static String formatSubHeader(String title, String subtitle, String defaultKeyword) {
-        if (title == null || title.isBlank() || title.equalsIgnoreCase(defaultKeyword)) {
-            return subtitle;
-        }
-        String cleanTitle = title.trim();
-        if (subtitle == null || subtitle.isBlank()) {
-            return cleanTitle;
-        }
-        return cleanTitle + "  •  " + subtitle;
+    public static String asciiBannerBox(String[] asciiLines, String subtitle) {
+        return asciiBannerBox(asciiLines);
     }
 
     public static String proctorAsciiBanner(String subtitle) {
-        return asciiBannerBox(ASCII_PROCTOR, subtitle);
+        return asciiBannerBox(ASCII_PROCTOR);
+    }
+
+    public static String header(String title) {
+        return header(title, null);
     }
 
     public static String header(String title, String subtitle) {
         String upper = (title != null) ? title.toUpperCase() : "";
 
         if (upper.equals("PROCTOR")) {
-            return asciiBannerBox(ASCII_PROCTOR, subtitle);
+            return asciiBannerBox(ASCII_PROCTOR);
         }
         if (upper.equals("LOG IN") || upper.equals("LOGIN") || upper.equals("SIGN IN")) {
-            String sub = (subtitle != null && !subtitle.isBlank()) ? subtitle : "Sign In to Your Account";
-            return asciiBannerBox(ASCII_LOGIN, sub);
+            return asciiBannerBox(ASCII_LOGIN);
         }
         if (upper.equals("REGISTER") || upper.contains("SIGN UP") || upper.contains("CREATE ACCOUNT")) {
-            String sub = (subtitle != null && !subtitle.isBlank()) ? subtitle : "Create a New Account";
-            return asciiBannerBox(ASCII_REGISTER, sub);
+            return asciiBannerBox(ASCII_REGISTER);
         }
         if (upper.contains("DASHBOARD") || upper.contains("PORTAL")) {
-            String sub = subtitle;
-            if (upper.contains("ADMIN")) {
-                sub = (sub != null && !sub.isBlank()) ? "Admin Portal  •  " + sub : "Admin Portal";
-            } else if (upper.contains("TEACHER")) {
-                sub = (sub != null && !sub.isBlank()) ? "Teacher Portal  •  " + sub : "Teacher Portal";
-            } else if (upper.contains("STUDENT")) {
-                sub = (sub != null && !sub.isBlank()) ? "Student Portal  •  " + sub : "Student Portal";
-            }
-            return asciiBannerBox(ASCII_DASHBOARD, sub);
+            return asciiBannerBox(ASCII_DASHBOARD);
         }
         if (upper.contains("HISTORY")) {
-            String sub = formatSubHeader(title, subtitle, "HISTORY");
-            return asciiBannerBox(ASCII_HISTORY, sub);
+            return asciiBannerBox(ASCII_HISTORY);
         }
         if (upper.contains("EXAM")) {
-            String sub = formatSubHeader(title, subtitle, "EXAMS");
-            return asciiBannerBox(ASCII_EXAMS, sub);
+            return asciiBannerBox(ASCII_EXAMS);
         }
         if (upper.contains("QUIZ")) {
-            String sub = formatSubHeader(title, subtitle, "QUIZZES");
-            return asciiBannerBox(ASCII_QUIZZES, sub);
+            return asciiBannerBox(ASCII_QUIZZES);
         }
         if (upper.contains("INBOX") || upper.contains("NOTIFICATION") || upper.contains("MESSAGE")) {
-            String sub = formatSubHeader(title, subtitle, "INBOX");
-            return asciiBannerBox(ASCII_INBOX, sub);
+            return asciiBannerBox(ASCII_INBOX);
         }
         if (upper.contains("USER")) {
-            String sub = formatSubHeader(title, subtitle, "USERS");
-            return asciiBannerBox(ASCII_USERS, sub);
+            return asciiBannerBox(ASCII_USERS);
         }
         if (upper.contains("REPORT")) {
-            String sub = formatSubHeader(title, subtitle, "REPORTS");
-            return asciiBannerBox(ASCII_REPORTS, sub);
+            return asciiBannerBox(ASCII_REPORTS);
         }
         if (upper.contains("LEADERBOARD")) {
-            String sub = formatSubHeader(title, subtitle, "LEADERBOARD");
-            return asciiBannerBox(ASCII_LEADERBOARD, sub);
+            return asciiBannerBox(ASCII_LEADERBOARD);
         }
         if (upper.contains("SUBMISSION") || upper.contains("ANSWER SHEET") || upper.contains("ATTEMPT")) {
-            String sub = formatSubHeader(title, subtitle, "SUBMISSIONS");
-            return asciiBannerBox(ASCII_SUBMISSIONS, sub);
+            return asciiBannerBox(ASCII_SUBMISSIONS);
         }
         if (upper.contains("QUESTION")) {
-            String sub = formatSubHeader(title, subtitle, "QUESTIONS");
-            return asciiBannerBox(ASCII_QUESTIONS, sub);
+            return asciiBannerBox(ASCII_QUESTIONS);
         }
         if (upper.contains("SUBJECT") || upper.contains("TEACHER ASSIGNMENT")) {
-            String sub = formatSubHeader(title, subtitle, "SUBJECTS");
-            return asciiBannerBox(ASCII_SUBJECTS, sub);
+            return asciiBannerBox(ASCII_SUBJECTS);
         }
         if (upper.contains("ASSESSMENT")) {
-            String sub = formatSubHeader(title, subtitle, "ASSESSMENT");
-            return asciiBannerBox(ASCII_EXAMS, sub);
+            return asciiBannerBox(ASCII_EXAMS);
         }
 
         StringBuilder sb = new StringBuilder();
         sb.append(HEADER_START).append(CLEAR_EOL).append("\n");
         sb.append(bold(NAVY_BLUE + title.trim())).append(RESET).append(CLEAR_EOL).append("\n");
-        if (subtitle != null && !subtitle.isBlank()) {
-            sb.append(CLEAR_EOL).append("\n");
-            sb.append(DIM).append(subtitle.trim()).append(RESET).append(CLEAR_EOL).append("\n");
-        }
         sb.append(HEADER_END).append(CLEAR_EOL).append("\n");
         return sb.toString();
     }
@@ -387,7 +370,7 @@ public class TuiHelper {
         String labelCol = focused ? bold(NAVY_BLUE + "▶ " + label) : dim("  " + label);
 
         String valDisplay = focused ? navyBlue("< " + value + " >") + (helpText != null ? dim(" (" + helpText + ")") : "") : value;
-        String rawLenText = "< " + value + " >" + (helpText != null ? " (" + helpText + ")" : "");
+        String rawLenText = focused ? ("< " + value + " >" + (helpText != null ? " (" + helpText + ")" : "")) : (value != null ? value : "");
         int padLen = Math.max(0, (width - 4) - rawLenText.length());
 
         sb.append("  ").append(labelCol).append(CLEAR_EOL).append("\n");
@@ -411,8 +394,9 @@ public class TuiHelper {
 
     public static String confirmationModal(String title, String message, String warningDetail, String confirmLabel, String cancelLabel, boolean confirmFocused) {
         StringBuilder sb = new StringBuilder();
-        sb.append(header("CONFIRM ACTION", title));
+        sb.append(header("CONFIRM ACTION"));
         sb.append("\n");
+        sb.append(boxTitle(title)).append("\n\n");
         sb.append(bold(padCenter(message, 100))).append(CLEAR_EOL).append("\n\n");
         if (warningDetail != null && !warningDetail.isBlank()) {
             sb.append(dim(padCenter(warningDetail, 100))).append(CLEAR_EOL).append("\n\n");
@@ -740,16 +724,18 @@ private static String stripAnsi(String str) {
                 int visLen = visibleLength(cleanLine);
                 String stripped = cleanLine.replaceAll("\u001B\\[[;?0-9]*[a-zA-Z]", "");
 
+                boolean isBoxTitle = cleanLine.contains(BOX_TITLE_MARKER);
                 boolean isButtonRow = (stripped.contains("[ ▶ ") || stripped.contains("[   "))
                         && (stripped.contains("Sign In") || stripped.contains("Log In") || stripped.contains("Sign Up") || stripped.contains("Submit")
                         || stripped.contains("Cancel") || stripped.contains("Register") || stripped.contains("Approve")
                         || stripped.contains("Reject") || stripped.contains("Generate") || stripped.contains("Exit")
-                        || stripped.contains("Back") || stripped.contains("Forgot Password"));
+                        || stripped.contains("Back") || stripped.contains("Forgot Password")
+                        || stripped.contains("Student") || stripped.contains("Teacher"));
 
                 int leftPad;
                 int rightPad;
-                if (isButtonRow) {
-                    String trimmedClean = stripSpaces(cleanLine);
+                if (isButtonRow || isBoxTitle) {
+                    String trimmedClean = stripSpaces(cleanLine.replace(BOX_TITLE_MARKER, ""));
                     int trimmedVisLen = visibleLength(trimmedClean);
                     leftPad = Math.max(0, (innerWidth - trimmedVisLen) / 2);
                     rightPad = Math.max(0, innerWidth - (leftPad + trimmedVisLen));

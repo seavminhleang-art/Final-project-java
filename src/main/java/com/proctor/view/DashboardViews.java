@@ -6,8 +6,13 @@ public class DashboardViews {
 
     public static String renderDashboard(String headerTitle, String userFullName, String userIdentifier, String[] menuItems, int selectedIndex) {
         StringBuilder sb = new StringBuilder();
-        sb.append(TuiHelper.header(headerTitle, "Logged in as: " + userFullName + " (" + userIdentifier + ")"));
+        sb.append(TuiHelper.header(headerTitle));
         sb.append("\n");
+
+        String portalRole = headerTitle.toUpperCase().contains("ADMIN") ? "Admin Portal"
+                : (headerTitle.toUpperCase().contains("TEACHER") ? "Teacher Portal" : "Student Portal");
+        String userInfo = "Logged in as: " + userFullName + " (" + userIdentifier + ")";
+        sb.append(TuiHelper.boxTitle(portalRole, userInfo)).append("\n\n");
 
         for (int i = 0; i < menuItems.length; i++) {
             if (i == selectedIndex) {
