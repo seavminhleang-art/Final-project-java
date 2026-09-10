@@ -294,7 +294,7 @@ public class LoginScreen implements Screen {
             if (!forgotMessage.isBlank()) {
                 sb.append("  ").append(forgotMessage).append("\n\n");
             }
-            sb.append(TuiHelper.dim("  [Type] Enter info  •  [Tab] Next Field  •  [Enter] Confirm  •  [Esc] Cancel\n"));
+            sb.append(TuiHelper.dim("  [Tab/↑/↓] Switch Field  •  [Enter] Confirm  •  [Esc] Cancel\n"));
             return sb.toString();
         }
 

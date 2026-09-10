@@ -34,6 +34,7 @@ public class AIQuestionGeneratorScreen implements Screen {
 
     private final StringBuilder subjectName = new StringBuilder();
     private final StringBuilder topicBuffer = new StringBuilder();
+    private final StringBuilder customPromptBuffer = new StringBuilder();
     private final StringBuilder countBuffer = new StringBuilder("3");
     private QuestionType selectedType = QuestionType.MCQ;
     private Difficulty selectedDifficulty = Difficulty.MEDIUM;
@@ -81,7 +82,7 @@ public class AIQuestionGeneratorScreen implements Screen {
     }
 
     private int getNumInputFields() {
-        int base = isPinnedQuiz() ? 4 : 5;
+        int base = isPinnedQuiz() ? 5 : 6;
         return selectedType == QuestionType.MCQ ? base + 1 : base;
     }
 
@@ -201,8 +202,9 @@ public class AIQuestionGeneratorScreen implements Screen {
 
         switch (idx) {
             case 0 -> handleTextInput(topicBuffer, k);
-            case 1 -> handleTextInput(countBuffer, k);
-            case 2 -> {
+            case 1 -> handleTextInput(customPromptBuffer, k);
+            case 2 -> handleTextInput(countBuffer, k);
+            case 3 -> {
                 if (KeyUtil.isLeft(k)) {
                     if (selectedType == QuestionType.MCQ) selectedType = QuestionType.SHORT_ANSWER;
                     else if (selectedType == QuestionType.SHORT_ANSWER) selectedType = QuestionType.TRUE_FALSE;
@@ -213,7 +215,7 @@ public class AIQuestionGeneratorScreen implements Screen {
                     else selectedType = QuestionType.MCQ;
                 }
             }
-            case 3 -> {
+            case 4 -> {
                 if (KeyUtil.isLeft(k)) {
                     if (selectedDifficulty == Difficulty.EASY) selectedDifficulty = Difficulty.HARD;
                     else if (selectedDifficulty == Difficulty.HARD) selectedDifficulty = Difficulty.MEDIUM;
@@ -224,7 +226,7 @@ public class AIQuestionGeneratorScreen implements Screen {
                     else selectedDifficulty = Difficulty.EASY;
                 }
             }
-            case 4 -> {
+            case 5 -> {
                 if (selectedType == QuestionType.MCQ) {
                     if (KeyUtil.isLeft(k)) {
                         if (mcqOptionCount == 2) mcqOptionCount = 4;
@@ -271,6 +273,7 @@ public class AIQuestionGeneratorScreen implements Screen {
 
         final int finalCount = count;
         final String topic = topicBuffer.toString().trim();
+        final String customPrompt = customPromptBuffer.toString().trim();
         final QuestionType type = selectedType;
         final Difficulty diff = selectedDifficulty;
         final int optsPerMcq = mcqOptionCount;
@@ -279,7 +282,7 @@ public class AIQuestionGeneratorScreen implements Screen {
 
         return ScreenResult.stay(this, () -> {
             try {
-                List<AIQuestionDraft> drafts = aiService.generateQuestions(fullTopic, finalCount, type, diff, optsPerMcq);
+                List<AIQuestionDraft> drafts = aiService.generateQuestions(fullTopic, finalCount, type, diff, optsPerMcq, customPrompt);
                 return new AIQuestionsGeneratedMessage(drafts, null);
             } catch (Exception e) {
                 Throwable cause = e.getCause() != null ? e.getCause() : e;
@@ -334,6 +337,7 @@ public class AIQuestionGeneratorScreen implements Screen {
                 isPinnedQuiz() ? quizContext.getTitle() : "",
                 subjectName.toString(),
                 topicBuffer.toString(),
+                customPromptBuffer.toString(),
                 countBuffer.toString(),
                 selectedType,
                 selectedDifficulty,

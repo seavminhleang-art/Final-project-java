@@ -96,9 +96,6 @@ public class AdminDashboardScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
-            if ("i".equalsIgnoreCase(k.key())) {
-                return ScreenResult.navigate(new InboxListScreen(inboxService, userService, authService, this));
-            }
             if (KeyUtil.isUp(k)) {
                 selectedIndex = (selectedIndex - 1 + menuItems.length) % menuItems.length;
             } else if (KeyUtil.isDown(k)) {

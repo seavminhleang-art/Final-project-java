@@ -26,17 +26,21 @@ public class AIService {
     }
 
     public List<AIQuestionDraft> generateQuestions(String topic, int count, QuestionType type, Difficulty difficulty) {
-        return generateQuestions(topic, count, type, difficulty, 4);
+        return generateQuestions(topic, count, type, difficulty, 4, null);
     }
 
     public List<AIQuestionDraft> generateQuestions(String topic, int count, QuestionType type, Difficulty difficulty, int mcqOptionCount) {
+        return generateQuestions(topic, count, type, difficulty, mcqOptionCount, null);
+    }
+
+    public List<AIQuestionDraft> generateQuestions(String topic, int count, QuestionType type, Difficulty difficulty, int mcqOptionCount, String customInstructions) {
         List<AIQuestionDraft> accumulated = new ArrayList<>();
         int attempts = 0;
         int maxAttempts = 3;
         while (accumulated.size() < count && attempts < maxAttempts) {
             attempts++;
             int needed = count - accumulated.size();
-            String prompt = buildGenerationPrompt(topic, needed, type, difficulty, mcqOptionCount);
+            String prompt = buildGenerationPrompt(topic, needed, type, difficulty, mcqOptionCount, customInstructions);
             String rawJson = ollamaClient.generateJson(prompt);
             List<AIQuestionDraft> batch = parseGeneratedQuestions(rawJson, type, difficulty, mcqOptionCount);
             if (batch.isEmpty()) {
@@ -51,22 +55,30 @@ public class AIService {
     }
 
     public List<AIQuestionDraft> generateMixedQuestions(String topic, int totalCount, Difficulty difficulty, int mcqOptionCount) {
+        return generateMixedQuestions(topic, totalCount, difficulty, mcqOptionCount, null);
+    }
+
+    public List<AIQuestionDraft> generateMixedQuestions(String topic, int totalCount, Difficulty difficulty, int mcqOptionCount, String customInstructions) {
         int mcqCount = Math.max(1, totalCount / 2);
         int tfCount = Math.max(1, (totalCount - mcqCount) / 2);
         int saCount = Math.max(1, totalCount - mcqCount - tfCount);
-        return generateMixedQuestions(topic, mcqCount, tfCount, saCount, difficulty, mcqOptionCount);
+        return generateMixedQuestions(topic, mcqCount, tfCount, saCount, difficulty, mcqOptionCount, customInstructions);
     }
 
     public List<AIQuestionDraft> generateMixedQuestions(String topic, int mcqCount, int tfCount, int saCount, Difficulty difficulty, int mcqOptionCount) {
+        return generateMixedQuestions(topic, mcqCount, tfCount, saCount, difficulty, mcqOptionCount, null);
+    }
+
+    public List<AIQuestionDraft> generateMixedQuestions(String topic, int mcqCount, int tfCount, int saCount, Difficulty difficulty, int mcqOptionCount, String customInstructions) {
         List<AIQuestionDraft> allDrafts = new ArrayList<>();
         if (mcqCount > 0) {
-            allDrafts.addAll(generateQuestions(topic, mcqCount, QuestionType.MCQ, difficulty, mcqOptionCount));
+            allDrafts.addAll(generateQuestions(topic, mcqCount, QuestionType.MCQ, difficulty, mcqOptionCount, customInstructions));
         }
         if (tfCount > 0) {
-            allDrafts.addAll(generateQuestions(topic, tfCount, QuestionType.TRUE_FALSE, difficulty, mcqOptionCount));
+            allDrafts.addAll(generateQuestions(topic, tfCount, QuestionType.TRUE_FALSE, difficulty, mcqOptionCount, customInstructions));
         }
         if (saCount > 0) {
-            allDrafts.addAll(generateQuestions(topic, saCount, QuestionType.SHORT_ANSWER, difficulty, mcqOptionCount));
+            allDrafts.addAll(generateQuestions(topic, saCount, QuestionType.SHORT_ANSWER, difficulty, mcqOptionCount, customInstructions));
         }
         return allDrafts;
     }
@@ -77,10 +89,18 @@ public class AIService {
         return parseGradingResult(rawJson);
     }
 
-    private String buildGenerationPrompt(String topic, int count, QuestionType type, Difficulty difficulty, int mcqOptionCount) {
+    private String buildGenerationPrompt(String topic, int count, QuestionType type, Difficulty difficulty, int mcqOptionCount, String customInstructions) {
         int opts = Math.max(2, Math.min(4, mcqOptionCount));
+        String customBlock = "";
+        if (customInstructions != null && !customInstructions.isBlank()) {
+            customBlock = "TEACHER CUSTOM INSTRUCTIONS & CONSTRAINTS:\n" +
+                          "\"" + customInstructions.trim() + "\"\n" +
+                          "You MUST strictly follow and incorporate these instructions into the questions and answers.\n\n";
+        }
+
         if (type == QuestionType.TRUE_FALSE) {
-            return "You are an expert academic examiner. Generate EXACTLY " + count + " distinct " + difficulty.name() + " TRUE_FALSE questions on the topic: \"" + topic + "\".\n" +
+            return "You are an expert academic examiner. Generate EXACTLY " + count + " distinct " + difficulty.name() + " TRUE_FALSE questions on the topic: \"" + topic + "\".\n\n" +
+                   customBlock +
                    "CRITICAL INSTRUCTIONS FOR TRUE_FALSE:\n" +
                    "1. You MUST generate EXACTLY " + count + " distinct questions in the 'questions' JSON array. Not 1 question, but all " + count + " questions.\n" +
                    "2. Every question MUST be a clear declarative factual statement that is either True or False.\n" +
@@ -101,7 +121,8 @@ public class AIService {
                    "  ]\n" +
                    "}";
         } else if (type == QuestionType.SHORT_ANSWER) {
-            return "You are an expert academic examiner. Generate EXACTLY " + count + " distinct " + difficulty.name() + " SHORT_ANSWER questions on the topic: \"" + topic + "\".\n" +
+            return "You are an expert academic examiner. Generate EXACTLY " + count + " distinct " + difficulty.name() + " SHORT_ANSWER questions on the topic: \"" + topic + "\".\n\n" +
+                   customBlock +
                    "CRITICAL INSTRUCTIONS FOR SHORT_ANSWER:\n" +
                    "1. You MUST generate EXACTLY " + count + " distinct questions in the 'questions' JSON array. Not 1 question, but all " + count + " questions.\n" +
                    "2. Every question MUST be an open-ended conceptual or analytical question requiring a concise written response.\n" +
@@ -120,7 +141,8 @@ public class AIService {
                    "  ]\n" +
                    "}";
         } else {
-            return "You are an expert academic examiner. Generate EXACTLY " + count + " distinct " + difficulty.name() + " Multiple Choice (MCQ) questions on the topic: \"" + topic + "\".\n" +
+            return "You are an expert academic examiner. Generate EXACTLY " + count + " distinct " + difficulty.name() + " Multiple Choice (MCQ) questions on the topic: \"" + topic + "\".\n\n" +
+                   customBlock +
                    "CRITICAL INSTRUCTIONS FOR MCQ:\n" +
                    "1. You MUST generate EXACTLY " + count + " distinct questions in the 'questions' JSON array. Not 1 question, but all " + count + " questions.\n" +
                    "2. Every question MUST be a multiple choice question with exactly " + opts + " distinct options.\n" +

@@ -33,6 +33,7 @@ public class AIQuizGeneratorScreen implements Screen {
 
     private final StringBuilder subjectName = new StringBuilder();
     private final StringBuilder titleBuffer = new StringBuilder();
+    private final StringBuilder customPromptBuffer = new StringBuilder();
     private final StringBuilder countBuffer = new StringBuilder("5");
     private final StringBuilder mcqCountBuffer = new StringBuilder("2");
     private final StringBuilder tfCountBuffer = new StringBuilder("2");
@@ -79,9 +80,9 @@ public class AIQuizGeneratorScreen implements Screen {
 
     private int getNumInputFields() {
         if (assessmentType == AssessmentType.EXAM && isExamMixed) {
-            return isMcqApplicable() ? 14 : 13;
+            return isMcqApplicable() ? 15 : 14;
         }
-        return isMcqApplicable() ? 12 : 11;
+        return isMcqApplicable() ? 13 : 12;
     }
 
     private int getFieldCount() {
@@ -164,6 +165,10 @@ public class AIQuizGeneratorScreen implements Screen {
             return;
         }
         if (focusedField == 2) {
+            handleTextInput(customPromptBuffer, k);
+            return;
+        }
+        if (focusedField == 3) {
             if (assessmentType == AssessmentType.EXAM) {
                 int cur = isExamMixed ? 0 : (selectedType == QuestionType.MCQ ? 1 : (selectedType == QuestionType.TRUE_FALSE ? 2 : 3));
                 int next = (KeyUtil.isLeft(k)) ? (cur - 1 + 4) % 4 : (cur + 1) % 4;
@@ -193,7 +198,7 @@ public class AIQuizGeneratorScreen implements Screen {
             return;
         }
 
-        int current = 3;
+        int current = 4;
         if (assessmentType == AssessmentType.EXAM && isExamMixed) {
             if (focusedField == current++) {
                 handleTextInput(mcqCountBuffer, k);
@@ -328,6 +333,7 @@ public class AIQuizGeneratorScreen implements Screen {
         final int finalScore = score;
         final String subjStr = subjectName.toString().trim();
         final String titleTopic = titleBuffer.toString().trim();
+        final String customPrompt = customPromptBuffer.toString().trim();
         final QuestionType type = selectedType;
         final boolean mixed = isExamMixed;
         final Difficulty diff = selectedDifficulty;
@@ -363,9 +369,9 @@ public class AIQuizGeneratorScreen implements Screen {
                 String fullPromptTopic = subjStr + ": " + titleTopic;
                 List<AIQuestionDraft> drafts;
                 if (assessmentType == AssessmentType.EXAM && mixed) {
-                    drafts = aiService.generateMixedQuestions(fullPromptTopic, finalMcqCount, finalTfCount, finalSaCount, diff, optsPerMcq);
+                    drafts = aiService.generateMixedQuestions(fullPromptTopic, finalMcqCount, finalTfCount, finalSaCount, diff, optsPerMcq, customPrompt);
                 } else {
-                    drafts = aiService.generateQuestions(fullPromptTopic, finalSingleCount, type, diff, optsPerMcq);
+                    drafts = aiService.generateQuestions(fullPromptTopic, finalSingleCount, type, diff, optsPerMcq, customPrompt);
                 }
 
                 if (drafts.isEmpty()) {
@@ -412,6 +418,7 @@ public class AIQuizGeneratorScreen implements Screen {
                 assessmentType,
                 subjectName.toString(),
                 titleBuffer.toString(),
+                customPromptBuffer.toString(),
                 countBuffer.toString(),
                 mcqCountBuffer.toString(),
                 tfCountBuffer.toString(),

@@ -304,7 +304,7 @@ public class AvailableQuizzesScreen implements Screen {
             if (!bannerMessage.isBlank()) {
                 sb.append("  ").append(bannerMessage).append("\n\n");
             }
-            sb.append(TuiHelper.dim("  [Type] Enter reason  •  [Tab/←/→] Switch Button  •  [Enter] Confirm  •  [Esc] Cancel\n"));
+            sb.append(TuiHelper.dim("  [Tab/↑/↓] Switch Field  •  [Enter] Confirm  •  [Esc] Cancel\n"));
             return sb.toString();
         }
 

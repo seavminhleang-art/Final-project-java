@@ -18,7 +18,7 @@ public class DashboardViews {
         }
 
         sb.append("\n");
-        sb.append(TuiHelper.dim("  [↑/↓] Navigate  •  [Enter] Select  •  [i] Open Inbox  •  [Esc] Exit\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Navigate  •  [Enter] Select  •  [Esc] Exit\n"));
         return sb.toString();
     }
 }

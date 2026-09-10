@@ -160,7 +160,7 @@ public class ChangePasswordScreen implements Screen {
             sb.append("  ").append(successBanner).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [Type] Enter info  •  [Tab] Next Field  •  [Enter] Confirm  •  [Esc] Back\n"));
+        sb.append(TuiHelper.dim("  [Tab/↑/↓] Switch Field  •  [Enter] Confirm  •  [Esc] Back\n"));
         return sb.toString();
     }
 }

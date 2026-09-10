@@ -7,6 +7,7 @@ import com.proctor.model.entity.Question;
 import com.proctor.model.entity.QuestionOption;
 import com.proctor.util.TuiHelper;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class QuestionViews {
@@ -236,7 +237,7 @@ public class QuestionViews {
     }
 
     public static String renderAIQuestionForm(boolean isPinnedQuiz, String pinnedQuizTitle, String subjectName,
-                                             String topicBuffer, String countBuffer, QuestionType selectedType,
+                                             String topicBuffer, String customPrompt, String countBuffer, QuestionType selectedType,
                                              Difficulty selectedDifficulty, int mcqOptionCount,
                                              int focusedField, int generateBtnIndex, int cancelBtnIndex,
                                              String bannerMessage) {
@@ -251,30 +252,41 @@ public class QuestionViews {
               .append(" • Subject: ").append(subjectName.isEmpty() ? "General" : subjectName).append("\n\n");
         }
 
+        List<String> fieldWidgets = new ArrayList<>();
         int actualField = 0;
         if (!isPinnedQuiz) {
-            sb.append(TuiHelper.inputBox("Subject (Required)", subjectName, focusedField == actualField++, 86, false, "e.g. Java, Python, English, Math"));
-            sb.append("\n");
+            fieldWidgets.add(TuiHelper.inputBox("Subject (Required)", subjectName, focusedField == actualField++, 86, false, "e.g. Java, Python, English, Math"));
         }
 
-        sb.append(TuiHelper.inputBox("Topic / Prompt", topicBuffer, focusedField == actualField++, 86, false, "e.g. Dynamic Programming or Recursion"));
-        sb.append("\n");
-
-        sb.append(TuiHelper.inputBox("Question Count (1-10)", countBuffer, focusedField == actualField++, 86, false, "e.g. 3"));
-        sb.append("\n");
-
-        sb.append(TuiHelper.selectBox("Question Type", selectedType.name(), focusedField == actualField++, 86, "Space to cycle"));
-        sb.append("\n");
-
-        sb.append(TuiHelper.selectBox("Difficulty", selectedDifficulty.name(), focusedField == actualField++, 86, "Space to cycle"));
-        sb.append("\n");
+        fieldWidgets.add(TuiHelper.inputBox("Topic / Focus Area (Required)", topicBuffer, focusedField == actualField++, 86, false, "e.g. Dynamic Programming or Recursion"));
+        fieldWidgets.add(TuiHelper.inputBox("Custom Prompt / Instructions (Optional)", customPrompt, focusedField == actualField++, 86, false, "e.g. Focus on memoization, ask conceptual scenarios"));
+        fieldWidgets.add(TuiHelper.inputBox("Question Count (1-10)", countBuffer, focusedField == actualField++, 86, false, "e.g. 3"));
+        fieldWidgets.add(TuiHelper.selectBox("Question Type", selectedType.name(), focusedField == actualField++, 86, "Space to cycle"));
+        fieldWidgets.add(TuiHelper.selectBox("Difficulty", selectedDifficulty.name(), focusedField == actualField++, 86, "Space to cycle"));
 
         if (selectedType == QuestionType.MCQ) {
             String optLabel = mcqOptionCount + " Options per Question";
-            sb.append(TuiHelper.selectBox("MCQ Option Count", optLabel, focusedField == actualField++, 86, "Space to cycle (2, 3, 4)"));
-            sb.append("\n");
+            fieldWidgets.add(TuiHelper.selectBox("MCQ Option Count", optLabel, focusedField == actualField++, 86, "Space to cycle (2, 3, 4)"));
         }
 
+        int numInputFields = fieldWidgets.size();
+        int windowSize = 4;
+        int startField = Math.max(0, Math.min(Math.min(focusedField, numInputFields - 1) - 1, numInputFields - windowSize));
+        int endField = Math.min(numInputFields, startField + windowSize);
+
+        if (startField > 0) {
+            sb.append(TuiHelper.dim(String.format("  ▲ %d more fields above (Press ↑ to scroll)", startField))).append("\n");
+        }
+
+        for (int f = startField; f < endField; f++) {
+            sb.append(fieldWidgets.get(f)).append("\n");
+        }
+
+        if (endField < numInputFields) {
+            sb.append(TuiHelper.dim(String.format("  ▼ %d more fields below (Press Tab/↓ to scroll)", numInputFields - endField))).append("\n");
+        }
+
+        sb.append("\n");
         sb.append(TuiHelper.buttonRow("Generate Questions", focusedField == generateBtnIndex, "Cancel", focusedField == cancelBtnIndex)).append("\n\n");
 
         if (!bannerMessage.isBlank()) {

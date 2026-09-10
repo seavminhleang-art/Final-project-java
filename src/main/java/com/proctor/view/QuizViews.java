@@ -338,7 +338,7 @@ public class QuizViews {
         return sb.toString();
     }
 
-    public static String renderAIQuizForm(AssessmentType assessmentType, String subjectName, String titleBuffer, String countBuffer,
+    public static String renderAIQuizForm(AssessmentType assessmentType, String subjectName, String titleBuffer, String customPrompt, String countBuffer,
                                          String mcqCountBuffer, String tfCountBuffer, String saCountBuffer,
                                          String questionTypeLabel, Difficulty selectedDifficulty, int mcqOptionCount,
                                          String timeLimitBuffer, String activeHours, String passScore,
@@ -352,9 +352,10 @@ public class QuizViews {
         List<String> fieldWidgets = new ArrayList<>();
         fieldWidgets.add(TuiHelper.inputBox("Subject (Required)", subjectName, focusedField == 0, 86, false, "e.g. Java, Python, English, Math"));
         fieldWidgets.add(TuiHelper.inputBox(itemLabel + " Title / Topic (Required)", titleBuffer, focusedField == 1, 86, false, "e.g. Basic HTML, OOP Concepts"));
-        fieldWidgets.add(TuiHelper.selectBox("Question Type", questionTypeLabel, focusedField == 2, 86, "Space or ←/→ to cycle"));
+        fieldWidgets.add(TuiHelper.inputBox("Custom Prompt / Instructions (Optional)", customPrompt, focusedField == 2, 86, false, "e.g. Focus on edge cases, avoid multi-threading, include code snippets"));
+        fieldWidgets.add(TuiHelper.selectBox("Question Type", questionTypeLabel, focusedField == 3, 86, "Space or ←/→ to cycle"));
 
-        int curIdx = 3;
+        int curIdx = 4;
         if (isMixed) {
             fieldWidgets.add(TuiHelper.inputBox("MCQ Question Count (0-10)", mcqCountBuffer, focusedField == curIdx++, 86, false, "e.g. 2"));
             fieldWidgets.add(TuiHelper.inputBox("True/False Question Count (0-10)", tfCountBuffer, focusedField == curIdx++, 86, false, "e.g. 2"));
