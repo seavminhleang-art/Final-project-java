@@ -287,6 +287,9 @@ public class AvailableQuizzesScreen implements Screen {
         } catch (ValidationException e) {
             bannerMessage = TuiHelper.red("✖ " + e.getMessage());
             return ScreenResult.stay(this);
+        } catch (Exception e) {
+            bannerMessage = TuiHelper.red("✖ Failed to start assessment: " + e.getMessage());
+            return ScreenResult.stay(this);
         }
     }
 

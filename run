@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 set -e
 
-# If the binary does not exist, build it first
-if [ ! -f "./build/install/proctor/bin/proctor" ]; then
-    ./gradlew -q installDist
-fi
+# Ensure the installed binary matches the latest source code
+./gradlew -q installDist
+
 
 # Detect and export live terminal width & height for dynamic auto-centering
 COLS=$(tput cols 2>/dev/null || stty size 2>/dev/null | awk '{print $2}' || echo 100)

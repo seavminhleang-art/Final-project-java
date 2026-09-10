@@ -36,8 +36,8 @@ public class Main {
             new Program(new AppModel(loginScreen)).withAltScreen().run();
         } catch (Throwable t) {
             System.setErr(originalErr);
-            System.out.println("\n\u001B[1;31m[PROCTOR ERROR] Application failed to start:\u001B[0m");
-            System.out.println("\u001B[31m✖ " + t.getMessage() + "\u001B[0m");
+            System.out.println("\n\u001B[1;31m[PROCTOR ERROR] Application error:\u001B[0m");
+            System.out.println("\u001B[31m✖ " + (t.getMessage() != null ? t.getMessage() : t.getClass().getSimpleName()) + "\u001B[0m");
             Throwable cause = t.getCause();
             while (cause != null) {
                 if (cause.getMessage() != null && !cause.getMessage().isBlank()) {

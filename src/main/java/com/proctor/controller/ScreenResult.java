@@ -12,6 +12,9 @@ public record ScreenResult(Screen nextScreen, Command command, boolean shouldQui
     }
 
     public static ScreenResult navigate(Screen newScreen) {
+        if (newScreen == null) {
+            return new ScreenResult(null, null, false);
+        }
         return new ScreenResult(newScreen, newScreen.init(), false);
     }
 

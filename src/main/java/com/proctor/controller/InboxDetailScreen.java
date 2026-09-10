@@ -198,36 +198,48 @@ public class InboxDetailScreen implements Screen {
     }
 
     private ScreenResult executeStandardApprove() {
-        if (message.getType() == InboxMessageType.QUIZ_RETAKE) {
-            inboxService.approveQuizRetake(message.getId());
-            message.setStatus(InboxStatus.APPROVED);
-        } else if (message.getType() == InboxMessageType.EXAM_RETAKE) {
-            inboxService.approveExamRetake(message.getId());
-            message.setStatus(InboxStatus.APPROVED);
-        } else if (message.getType() == InboxMessageType.PASSWORD_RESET) {
-            inboxService.approvePasswordReset(message.getId());
-            message.setStatus(InboxStatus.RESOLVED);
-        } else {
-            inboxService.updateStatus(message.getId(), InboxStatus.APPROVED);
-            if (message.getSenderId() != null) {
-                inboxService.sendNotification(
-                        message.getSenderId(),
-                        "Request Approved",
-                        "Your request for " + message.getTitle() + " has been approved."
-                );
+        try {
+            if (message.getType() == InboxMessageType.QUIZ_RETAKE) {
+                inboxService.approveQuizRetake(message.getId());
+                message.setStatus(InboxStatus.APPROVED);
+            } else if (message.getType() == InboxMessageType.EXAM_RETAKE) {
+                inboxService.approveExamRetake(message.getId());
+                message.setStatus(InboxStatus.APPROVED);
+            } else if (message.getType() == InboxMessageType.PASSWORD_RESET) {
+                inboxService.approvePasswordReset(message.getId());
+                message.setStatus(InboxStatus.RESOLVED);
+            } else {
+                inboxService.updateStatus(message.getId(), InboxStatus.APPROVED);
+                if (message.getSenderId() != null) {
+                    inboxService.sendNotification(
+                            message.getSenderId(),
+                            "Request Approved",
+                            "Your request for " + message.getTitle() + " has been approved."
+                    );
+                }
+                message.setStatus(InboxStatus.APPROVED);
             }
-            message.setStatus(InboxStatus.APPROVED);
+            bannerMessage = TuiHelper.green("✔ Request approved.");
+            errorMessage = "";
+        } catch (com.proctor.exception.ValidationException e) {
+            errorMessage = e.getMessage();
+        } catch (Exception e) {
+            errorMessage = "Action failed: " + e.getMessage();
         }
-        bannerMessage = TuiHelper.green("✔ Request approved.");
-        errorMessage = "";
         return ScreenResult.stay(this);
     }
 
     private ScreenResult executeReject() {
-        inboxService.rejectRequest(message.getId(), "Instructor has rejected this request.");
-        message.setStatus(InboxStatus.REJECTED);
-        bannerMessage = TuiHelper.red("✖ Request rejected.");
-        errorMessage = "";
+        try {
+            inboxService.rejectRequest(message.getId(), "Instructor has rejected this request.");
+            message.setStatus(InboxStatus.REJECTED);
+            bannerMessage = TuiHelper.red("✖ Request rejected.");
+            errorMessage = "";
+        } catch (com.proctor.exception.ValidationException e) {
+            errorMessage = e.getMessage();
+        } catch (Exception e) {
+            errorMessage = "Action failed: " + e.getMessage();
+        }
         return ScreenResult.stay(this);
     }
 

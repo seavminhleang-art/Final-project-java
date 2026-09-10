@@ -5,6 +5,7 @@ import com.williamcallahan.tui4j.compat.bubbletea.*;
 
 public class AppModel implements Model {
     private Screen currentScreen;
+    private String runtimeError = null;
 
     public AppModel(Screen initialScreen) {
         this.currentScreen = initialScreen;
@@ -12,7 +13,12 @@ public class AppModel implements Model {
 
     @Override
     public Command init() {
-        return currentScreen != null ? currentScreen.init() : null;
+        try {
+            return currentScreen != null ? currentScreen.init() : null;
+        } catch (Throwable t) {
+            runtimeError = t.getMessage() != null ? t.getMessage() : t.getClass().getSimpleName();
+            return null;
+        }
     }
 
     @Override
@@ -26,14 +32,24 @@ public class AppModel implements Model {
         }
 
         if (currentScreen != null) {
-            ScreenResult result = currentScreen.update(msg);
-            if (result.shouldQuit()) {
-                return new UpdateResult<>(this, QuitMessage::new);
+            try {
+                ScreenResult result = currentScreen.update(msg);
+                if (result == null) {
+                    return new UpdateResult<>(this, null);
+                }
+                if (result.shouldQuit()) {
+                    return new UpdateResult<>(this, QuitMessage::new);
+                }
+                if (result.nextScreen() != null) {
+                    this.currentScreen = result.nextScreen();
+                    this.runtimeError = null;
+                }
+                return new UpdateResult<>(this, result.command());
+            } catch (Throwable t) {
+                // Safeguard against unhandled runtime errors: keep application running!
+                this.runtimeError = t.getMessage() != null ? t.getMessage() : t.getClass().getSimpleName();
+                return new UpdateResult<>(this, null);
             }
-            if (result.nextScreen() != null) {
-                this.currentScreen = result.nextScreen();
-            }
-            return new UpdateResult<>(this, result.command());
         }
 
         return new UpdateResult<>(this, null);
@@ -41,6 +57,21 @@ public class AppModel implements Model {
 
     @Override
     public String view() {
-        return currentScreen != null ? TuiHelper.centerLayout(currentScreen.view()) : "";
+        if (currentScreen == null) {
+            return "";
+        }
+        try {
+            String rendered = currentScreen.view();
+            if (runtimeError != null) {
+                rendered = TuiHelper.red("✖ System Error: " + runtimeError) + "\n\n" + rendered;
+            }
+            return TuiHelper.centerLayout(rendered);
+        } catch (Throwable t) {
+            return TuiHelper.centerLayout(
+                    TuiHelper.header("APPLICATION ERROR", "An unexpected error occurred") + "\n\n"
+                    + TuiHelper.red("✖ " + (t.getMessage() != null ? t.getMessage() : t.getClass().getName())) + "\n\n"
+                    + TuiHelper.dim("Press [Esc] to return or [Ctrl+C] to quit.")
+            );
+        }
     }
 }

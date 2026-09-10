@@ -35,7 +35,7 @@ public class ChangePasswordScreen implements Screen {
     public ScreenResult update(Message msg) {
         if (msg instanceof KeyPressMessage k) {
             if (KeyUtil.isEsc(k)) {
-                return ScreenResult.navigate(returnScreen);
+                return navigateBack();
             }
 
             if (KeyUtil.isTab(k) || KeyUtil.isDown(k)) {
@@ -63,7 +63,7 @@ public class ChangePasswordScreen implements Screen {
                 } else if (focusedField == 2 || focusedField == 3) {
                     return handleSave();
                 } else if (focusedField == 4) {
-                    return ScreenResult.navigate(returnScreen);
+                    return navigateBack();
                 }
             }
 
@@ -138,6 +138,20 @@ public class ChangePasswordScreen implements Screen {
         }
 
         return ScreenResult.stay(this);
+    }
+
+    private ScreenResult navigateBack() {
+        if (returnScreen != null) {
+            return ScreenResult.navigate(returnScreen);
+        }
+        com.proctor.model.entity.User u = Session.getCurrentUser().orElse(null);
+        if (u != null && u.getRole() == com.proctor.model.enums.Role.ADMIN) {
+            return ScreenResult.navigate(new AdminDashboardScreen(authService));
+        } else if (u != null && u.getRole() == com.proctor.model.enums.Role.TEACHER) {
+            return ScreenResult.navigate(new TeacherDashboardScreen(authService));
+        } else {
+            return ScreenResult.navigate(new StudentDashboardScreen(authService));
+        }
     }
 
     @Override
