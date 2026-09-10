@@ -36,7 +36,12 @@ public class QuizQuestionEditorScreen implements Screen {
         this.questionService = questionService;
         this.subjectService = subjectService;
         this.authService = authService;
-        refreshList();
+        if (quiz != null && quiz.getId() != null) {
+            refreshList();
+        } else {
+            this.questions = new java.util.ArrayList<>();
+            this.bannerMessage = TuiHelper.red("✖ Assessment not found or failed to load.");
+        }
     }
 
     private void refreshList() {
@@ -54,6 +59,15 @@ public class QuizQuestionEditorScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        if (quiz == null) {
+            if (msg instanceof KeyPressMessage k && KeyUtil.isEsc(k)) {
+                if (quizService != null) {
+                    return ScreenResult.navigate(new QuizListScreen(quizService, questionService, subjectService, authService, com.proctor.model.enums.AssessmentType.QUIZ));
+                }
+            }
+            return ScreenResult.stay(this);
+        }
+
         if (msg instanceof KeyPressMessage k) {
             if (confirmingDelete) {
                 if (KeyUtil.isLeft(k) || KeyUtil.isRight(k) || KeyUtil.isTab(k) || "shift+tab".equalsIgnoreCase(k.key())) {
@@ -130,6 +144,12 @@ public class QuizQuestionEditorScreen implements Screen {
 
     @Override
     public String view() {
+        if (quiz == null) {
+            return TuiHelper.header("QUIZZES", "Assessment Error") + "\n\n"
+                    + (bannerMessage.isEmpty() ? TuiHelper.red("✖ Assessment not found or failed to load.") : bannerMessage)
+                    + "\n\n" + TuiHelper.wrapHints(List.of("[Esc] Back to list"));
+        }
+
         if (confirmingDelete && pendingDeleteQuestion != null) {
             return TuiHelper.confirmationModal(
                     "Question #" + pendingDeleteQuestion.getId(),

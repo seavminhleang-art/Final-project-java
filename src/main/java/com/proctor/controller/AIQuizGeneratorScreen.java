@@ -101,8 +101,11 @@ public class AIQuizGeneratorScreen implements Screen {
     public ScreenResult update(Message msg) {
         if (msg instanceof AIQuizGeneratedMessage m) {
             isGenerating = false;
-            if (m.errorMessage() != null) {
-                bannerMessage = TuiHelper.red("✖ " + m.errorMessage());
+            if (m.errorMessage() != null || m.createdQuiz() == null) {
+                String err = (m.errorMessage() != null && !m.errorMessage().isBlank())
+                        ? m.errorMessage()
+                        : "Failed to generate assessment. Please ensure Ollama is running ('ollama serve') and try again.";
+                bannerMessage = TuiHelper.red("✖ " + err);
                 return ScreenResult.stay(this);
             }
             return ScreenResult.navigate(new QuizQuestionEditorScreen(m.createdQuiz(), quizService, questionService, subjectService, authService));
@@ -401,8 +404,16 @@ public class AIQuizGeneratorScreen implements Screen {
                 if (createdQuiz != null) {
                     try { quizService.deleteQuiz(createdQuiz.getId(), teacher); } catch (Exception ignored) {}
                 }
-                Throwable cause = e.getCause() != null ? e.getCause() : e;
-                return new AIQuizGeneratedMessage(null, null, cause.getMessage());
+                String err = e.getMessage();
+                if (err == null || err.isBlank()) {
+                    Throwable cause = e.getCause();
+                    if (cause != null && cause.getMessage() != null && !cause.getMessage().isBlank()) {
+                        err = cause.getMessage();
+                    } else {
+                        err = "Failed to generate assessment with AI model: " + e.getClass().getSimpleName();
+                    }
+                }
+                return new AIQuizGeneratedMessage(null, null, err);
             }
         });
     }

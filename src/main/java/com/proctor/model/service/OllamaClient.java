@@ -76,8 +76,19 @@ public class OllamaClient {
             }
         } catch (Exception e) {
             if (e instanceof AIException ai) throw ai;
-            String msg = e.getMessage() != null ? e.getMessage() : "";
-            if (msg.contains("Connection refused") || msg.contains("Failed to connect")) {
+            Throwable rootCause = e;
+            while (rootCause.getCause() != null && rootCause.getCause() != rootCause) {
+                rootCause = rootCause.getCause();
+            }
+            if (e instanceof java.net.ConnectException || rootCause instanceof java.net.ConnectException) {
+                throw new AIException("Cannot connect to Ollama at " + baseUrl + ". Please ensure Ollama is running ('ollama serve').", e);
+            }
+            if (e instanceof java.net.http.HttpConnectTimeoutException || e instanceof java.net.http.HttpTimeoutException
+                    || rootCause instanceof java.net.SocketTimeoutException) {
+                throw new AIException("Ollama request timed out after " + timeoutSeconds + "s. Model '" + model + "' may be loading into memory.", e);
+            }
+            String msg = e.getMessage() != null ? e.getMessage() : (rootCause.getMessage() != null ? rootCause.getMessage() : rootCause.getClass().getSimpleName());
+            if (msg.contains("Connection refused") || msg.contains("Failed to connect") || msg.contains("ConnectException")) {
                 throw new AIException("Cannot connect to Ollama at " + baseUrl + ". Please ensure Ollama is running ('ollama serve').", e);
             }
             if (msg.contains("timed out") || msg.contains("Timeout")) {

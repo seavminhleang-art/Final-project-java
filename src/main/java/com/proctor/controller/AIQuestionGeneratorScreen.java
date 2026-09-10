@@ -147,8 +147,13 @@ public class AIQuestionGeneratorScreen implements Screen {
                         selectedDraftIndex = (selectedDraftIndex + 1) % generatedDrafts.size();
                     }
                 } else if ("s".equalsIgnoreCase(k.key()) || KeyUtil.isEnter(k)) {
-                    saveAllDrafts();
-                    return returnToPreviousScreen();
+                    try {
+                        saveAllDrafts();
+                        return returnToPreviousScreen();
+                    } catch (Exception ex) {
+                        bannerMessage = TuiHelper.red("✖ Failed to save questions: " + ex.getMessage());
+                        return ScreenResult.stay(this);
+                    }
                 }
                 return ScreenResult.stay(this);
             }
@@ -285,8 +290,16 @@ public class AIQuestionGeneratorScreen implements Screen {
                 List<AIQuestionDraft> drafts = aiService.generateQuestions(fullTopic, finalCount, type, diff, optsPerMcq, customPrompt);
                 return new AIQuestionsGeneratedMessage(drafts, null);
             } catch (Exception e) {
-                Throwable cause = e.getCause() != null ? e.getCause() : e;
-                return new AIQuestionsGeneratedMessage(null, cause.getMessage());
+                String err = e.getMessage();
+                if (err == null || err.isBlank()) {
+                    Throwable cause = e.getCause();
+                    if (cause != null && cause.getMessage() != null && !cause.getMessage().isBlank()) {
+                        err = cause.getMessage();
+                    } else {
+                        err = "Failed to generate questions with AI model: " + e.getClass().getSimpleName();
+                    }
+                }
+                return new AIQuestionsGeneratedMessage(null, err);
             }
         });
     }
@@ -330,7 +343,7 @@ public class AIQuestionGeneratorScreen implements Screen {
         }
         if (reviewingDrafts) {
             String targetStr = quizContext != null ? "Quiz: " + quizContext.getTitle() : "Question Bank";
-            return QuestionViews.renderAIQuestionReview(generatedDrafts, selectedDraftIndex, targetStr);
+            return QuestionViews.renderAIQuestionReview(generatedDrafts, selectedDraftIndex, targetStr, bannerMessage);
         }
         return QuestionViews.renderAIQuestionForm(
                 isPinnedQuiz(),

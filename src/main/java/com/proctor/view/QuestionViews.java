@@ -297,10 +297,14 @@ public class QuestionViews {
         return sb.toString();
     }
 
-    public static String renderAIQuestionReview(List<AIQuestionDraft> generatedDrafts, int selectedDraftIndex, String targetStr) {
+    public static String renderAIQuestionReview(List<AIQuestionDraft> generatedDrafts, int selectedDraftIndex, String targetStr, String bannerMessage) {
         StringBuilder sb = new StringBuilder();
         sb.append(TuiHelper.header("AI GENERATED QUESTIONS REVIEW", String.format("Drafts: %d  •  Target: %s  •  Scroll with [↑/↓]", generatedDrafts.size(), targetStr)));
         sb.append("\n");
+
+        if (bannerMessage != null && !bannerMessage.isBlank()) {
+            sb.append("  ").append(bannerMessage).append("\n\n");
+        }
 
         int windowSize = 3;
         int start = Math.max(0, Math.min(selectedDraftIndex - 1, generatedDrafts.size() - windowSize));
