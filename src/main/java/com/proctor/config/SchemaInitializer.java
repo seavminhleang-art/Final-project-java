@@ -66,6 +66,10 @@ public class SchemaInitializer {
                 stmt.execute("ALTER TABLE quizzes ALTER COLUMN randomize_answers SET DEFAULT TRUE;");
                 stmt.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS date_of_birth DATE;");
                 stmt.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS gender VARCHAR(20);");
+                stmt.execute("UPDATE subjects SET code = 'C++' WHERE id = 3 AND code = 'C' AND name = 'C++';");
+                stmt.execute("UPDATE quizzes SET subject_id = 3 WHERE subject_id = 4;");
+                stmt.execute("DELETE FROM subjects WHERE id = 4 AND code = 'CPP';");
+                stmt.execute("DELETE FROM subjects WHERE code IN ('SDJFSDF', 'FRONTED');");
             }
         } catch (Exception e) {
             System.err.println("Database schema initialization error: " + e.getMessage());

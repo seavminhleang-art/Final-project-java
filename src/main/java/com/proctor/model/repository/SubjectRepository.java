@@ -74,6 +74,22 @@ public class SubjectRepository {
         return Optional.empty();
     }
 
+    public Optional<Subject> findByName(String name) {
+        String sql = "SELECT id, code, name, description, is_enabled, created_at FROM subjects WHERE LOWER(name) = LOWER(?)";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, name);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapRow(rs));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error finding subject by name: " + e.getMessage());
+        }
+        return Optional.empty();
+    }
+
     public boolean create(Subject subject) {
         String sql = "INSERT INTO subjects (code, name, description, is_enabled) VALUES (?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -99,13 +115,14 @@ public class SubjectRepository {
     }
 
     public boolean update(Subject subject) {
-        String sql = "UPDATE subjects SET name = ?, description = ?, is_enabled = ? WHERE id = ?";
+        String sql = "UPDATE subjects SET code = ?, name = ?, description = ?, is_enabled = ? WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, subject.getName().trim());
-            stmt.setString(2, subject.getDescription());
-            stmt.setBoolean(3, subject.isEnabled());
-            stmt.setInt(4, subject.getId());
+            stmt.setString(1, subject.getCode().toUpperCase().trim());
+            stmt.setString(2, subject.getName().trim());
+            stmt.setString(3, subject.getDescription());
+            stmt.setBoolean(4, subject.isEnabled());
+            stmt.setInt(5, subject.getId());
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             System.err.println("Error updating subject: " + e.getMessage());

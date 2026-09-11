@@ -5,10 +5,22 @@ import com.proctor.exception.ValidationException;
 import com.proctor.model.entity.Subject;
 import com.proctor.model.repository.SubjectRepository;
 
+import com.proctor.model.enums.PredefinedSubject;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class SubjectService {
+    private static final Map<String, Integer> PREDEFINED_ORDER = new HashMap<>();
+    static {
+        PredefinedSubject[] values = PredefinedSubject.values();
+        for (int i = 0; i < values.length; i++) {
+            PREDEFINED_ORDER.put(values[i].getCode().toUpperCase(), i);
+        }
+    }
+
     private final SubjectRepository subjectRepository;
 
     public SubjectService(SubjectRepository subjectRepository) {
@@ -16,11 +28,30 @@ public class SubjectService {
     }
 
     public List<Subject> getSubjects(String search) {
-        return subjectRepository.findAll(search);
+        List<Subject> list = subjectRepository.findAll(search);
+        list.sort((a, b) -> {
+            Integer orderA = PREDEFINED_ORDER.get(a.getCode().toUpperCase());
+            Integer orderB = PREDEFINED_ORDER.get(b.getCode().toUpperCase());
+            if (orderA != null && orderB != null) {
+                return Integer.compare(orderA, orderB);
+            }
+            if (orderA != null) return -1;
+            if (orderB != null) return 1;
+            return a.getName().compareToIgnoreCase(b.getName());
+        });
+        return list;
     }
 
     public Optional<Subject> getSubjectById(int id) {
         return subjectRepository.findById(id);
+    }
+
+    public Optional<Subject> getSubjectByCode(String code) {
+        return subjectRepository.findByCode(code);
+    }
+
+    public Optional<Subject> getSubjectByName(String name) {
+        return subjectRepository.findByName(name);
     }
 
 
