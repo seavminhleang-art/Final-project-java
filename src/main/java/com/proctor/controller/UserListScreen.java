@@ -104,16 +104,6 @@ public class UserListScreen implements Screen {
                     u.setEnabled(!u.isEnabled());
                     bannerMessage = "Updated status for @" + u.getUsername() + " to " + (u.isEnabled() ? TuiHelper.green("Enabled") : TuiHelper.red("Disabled"));
                 }
-            } else if ("r".equalsIgnoreCase(k.key())) {
-                if (!users.isEmpty()) {
-                    User u = users.get(selectedIndex);
-                    try {
-                        String tempPass = userService.resetPassword(u.getId());
-                        bannerMessage = TuiHelper.green("Password reset for @" + u.getUsername() + "! Temp Password: " + tempPass);
-                    } catch (ValidationException e) {
-                        bannerMessage = TuiHelper.red("✖ " + e.getMessage());
-                    }
-                }
             } else if ("f".equalsIgnoreCase(k.key())) {
                 cycleFilterRole();
             } else if ("/".equals(k.key())) {

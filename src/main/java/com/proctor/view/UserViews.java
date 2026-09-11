@@ -82,7 +82,6 @@ public class UserViews {
                 "[Enter] Edit",
                 "[Space] Toggle Enabled",
                 "[n] New",
-                "[r] Reset Pass",
                 "[f] Filter",
                 "[/] Search",
                 "[Esc] Back"

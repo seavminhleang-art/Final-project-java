@@ -18,6 +18,8 @@ import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
 import com.williamcallahan.tui4j.compat.bubbletea.Message;
 import com.williamcallahan.tui4j.compat.bubbletea.input.key.KeyType;
 
+import java.util.List;
+
 public class QuizFormScreen implements Screen {
     private final QuizService quizService;
     private final QuestionService questionService;
@@ -26,7 +28,8 @@ public class QuizFormScreen implements Screen {
     private final Quiz quizToEdit;
     private final AssessmentType assessmentType;
 
-    private final StringBuilder subjectName = new StringBuilder();
+    private final List<Subject> subjects;
+    private int selectedSubjectIndex = 0;
     private final StringBuilder title = new StringBuilder();
     private QuestionType quizQuestionType = QuestionType.MCQ;
     private final StringBuilder description = new StringBuilder();
@@ -53,12 +56,17 @@ public class QuizFormScreen implements Screen {
         this.authService = authService;
         this.quizToEdit = quizToEdit;
         this.assessmentType = assessmentType != null ? assessmentType : AssessmentType.QUIZ;
+        this.subjects = subjectService.getSubjects(null);
 
         if (quizToEdit != null) {
             if (quizToEdit.getSubjectId() != null) {
-                subjectService.getSubjectById(quizToEdit.getSubjectId()).ifPresent(s -> {
-                    this.subjectName.append(s.getCode()).append(" - ").append(s.getName());
-                });
+                final Integer sid = quizToEdit.getSubjectId();
+                for (int i = 0; i < this.subjects.size(); i++) {
+                    if (this.subjects.get(i).getId().equals(sid)) {
+                        this.selectedSubjectIndex = i + 1;
+                        break;
+                    }
+                }
             }
             this.title.append(quizToEdit.getTitle());
             if (quizToEdit.getQuizQuestionType() != null) {
@@ -121,7 +129,11 @@ public class QuizFormScreen implements Screen {
 
     private void handleFieldInput(KeyPressMessage k) {
         switch (focusedField) {
-            case 0 -> handleTextInput(subjectName, k);
+            case 0 -> {
+                int size = subjects.size() + 1;
+                if (KeyUtil.isLeft(k)) selectedSubjectIndex = (selectedSubjectIndex - 1 + size) % size;
+                else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) selectedSubjectIndex = (selectedSubjectIndex + 1) % size;
+            }
             case 1 -> handleTextInput(title, k);
             case 2 -> {
                 if (assessmentType == AssessmentType.QUIZ) {
@@ -171,14 +183,14 @@ public class QuizFormScreen implements Screen {
 
     private ScreenResult handleSave() {
         try {
-            if (subjectName.toString().trim().isBlank()) {
+            if (selectedSubjectIndex == 0) {
                 throw new ValidationException("Subject is required.");
             }
             if (title.toString().trim().isBlank()) {
                 throw new ValidationException((assessmentType == AssessmentType.EXAM ? "Exam" : "Quiz") + " title is required.");
             }
 
-            Subject subj = subjectService.getOrCreateSubject(subjectName.toString());
+            Subject subj = subjects.get(selectedSubjectIndex - 1);
 
             int mins = 0;
             try { mins = Integer.parseInt(timeLimit.toString().trim()); } catch (Exception ignored) {}
@@ -228,11 +240,14 @@ public class QuizFormScreen implements Screen {
 
     @Override
     public String view() {
+        String subjectDisplay = (subjects.isEmpty() || selectedSubjectIndex == 0)
+                ? "(No Subject)"
+                : subjects.get(selectedSubjectIndex - 1).getCode() + " - " + subjects.get(selectedSubjectIndex - 1).getName();
         return QuizViews.renderQuizForm(
                 assessmentType,
                 quizQuestionType,
                 quizToEdit != null,
-                subjectName.toString(),
+                subjectDisplay,
                 title.toString(),
                 description.toString(),
                 timeLimit.toString(),

@@ -143,7 +143,7 @@ public class QuizViews {
 
         for (int f = startField; f < endField; f++) {
             switch (f) {
-                case 0 -> sb.append(TuiHelper.inputBox("Subject (Required)", subjectName, focusedField == 0, 102, false, "e.g. Java, Python, English, Math"));
+                case 0 -> sb.append(TuiHelper.selectBox("Subject (Required)", subjectName, focusedField == 0, 102, "Space or ←/→ to cycle"));
                 case 1 -> sb.append(TuiHelper.inputBox(itemType + " Title (Required)", title, focusedField == 1, 102, false, "e.g. Midterm Assessment"));
                 case 2 -> {
                     if (assessmentType == AssessmentType.QUIZ) {
@@ -362,7 +362,7 @@ public class QuizViews {
         boolean isMixed = questionTypeLabel.contains("MIXED");
 
         List<String> fieldWidgets = new ArrayList<>();
-        fieldWidgets.add(TuiHelper.inputBox("Subject (Required)", subjectName, focusedField == 0, 102, false, "e.g. Java, Python, English, Math"));
+        fieldWidgets.add(TuiHelper.selectBox("Subject (Required)", subjectName, focusedField == 0, 102, "Space or ←/→ to cycle"));
         fieldWidgets.add(TuiHelper.inputBox(itemLabel + " Title / Topic (Required)", titleBuffer, focusedField == 1, 102, false, "e.g. Basic HTML, OOP Concepts"));
         fieldWidgets.add(TuiHelper.inputBox("Custom Prompt / Instructions (Optional)", customPrompt, focusedField == 2, 102, false, "e.g. Focus on edge cases, avoid multi-threading, include code snippets"));
         fieldWidgets.add(TuiHelper.selectBox("Question Type", questionTypeLabel, focusedField == 3, 102, "Space or ←/→ to cycle"));

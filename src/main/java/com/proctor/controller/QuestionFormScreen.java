@@ -31,7 +31,8 @@ public class QuestionFormScreen implements Screen {
     private final Question questionToEdit;
     private final Quiz quizContext;
 
-    private final StringBuilder subjectName = new StringBuilder();
+    private final List<Subject> subjects;
+    private int selectedSubjectIndex = 0;
     private QuestionType selectedType = QuestionType.MCQ;
     private Difficulty selectedDifficulty = Difficulty.MEDIUM;
     private final StringBuilder pointsBuffer = new StringBuilder("1.0");
@@ -59,15 +60,24 @@ public class QuestionFormScreen implements Screen {
         this.authService = authService;
         this.questionToEdit = questionToEdit;
         this.quizContext = quizContext;
+        this.subjects = subjectService.getSubjects(null);
 
         if (quizContext != null && quizContext.getSubjectId() != null) {
-            subjectService.getSubjectById(quizContext.getSubjectId()).ifPresent(s -> {
-                this.subjectName.append(s.getCode()).append(" - ").append(s.getName());
-            });
+            final Integer sid = quizContext.getSubjectId();
+            for (int i = 0; i < this.subjects.size(); i++) {
+                if (this.subjects.get(i).getId().equals(sid)) {
+                    this.selectedSubjectIndex = i + 1;
+                    break;
+                }
+            }
         } else if (questionToEdit != null && questionToEdit.getSubjectId() != null) {
-            subjectService.getSubjectById(questionToEdit.getSubjectId()).ifPresent(s -> {
-                this.subjectName.append(s.getCode()).append(" - ").append(s.getName());
-            });
+            final Integer sid = questionToEdit.getSubjectId();
+            for (int i = 0; i < this.subjects.size(); i++) {
+                if (this.subjects.get(i).getId().equals(sid)) {
+                    this.selectedSubjectIndex = i + 1;
+                    break;
+                }
+            }
         }
 
         if (questionToEdit != null) {
@@ -133,7 +143,7 @@ public class QuestionFormScreen implements Screen {
         if (quizContext != null) {
             return ScreenResult.navigate(new QuizQuestionEditorScreen(quizContext, new QuizService(new QuizRepository()), questionService, subjectService, authService));
         }
-        return ScreenResult.navigate(new QuestionListScreen(questionService, subjectService, authService));
+        return ScreenResult.navigate(new QuestionBankScreen(questionService, subjectService, authService));
     }
 
     @Override
@@ -180,7 +190,9 @@ public class QuestionFormScreen implements Screen {
         int idx = focusedField;
         if (!isPinnedQuiz()) {
             if (idx == 0) {
-                handleTextInput(subjectName, k);
+                int size = subjects.size() + 1;
+                if (KeyUtil.isLeft(k)) selectedSubjectIndex = (selectedSubjectIndex - 1 + size) % size;
+                else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) selectedSubjectIndex = (selectedSubjectIndex + 1) % size;
                 return;
             }
             idx -= 1;
@@ -281,11 +293,10 @@ public class QuestionFormScreen implements Screen {
             if (quizContext != null) {
                 subjId = quizContext.getSubjectId();
             } else {
-                if (subjectName.toString().trim().isBlank()) {
+                if (selectedSubjectIndex == 0) {
                     throw new ValidationException("Subject is required.");
                 }
-                Subject s = subjectService.getOrCreateSubject(subjectName.toString());
-                subjId = s.getId();
+                subjId = subjects.get(selectedSubjectIndex - 1).getId();
             }
 
             double pts = 1.0;
@@ -340,13 +351,16 @@ public class QuestionFormScreen implements Screen {
 
     @Override
     public String view() {
+        String subjectDisplay = (subjects.isEmpty() || selectedSubjectIndex == 0)
+                ? "(No Subject)"
+                : subjects.get(selectedSubjectIndex - 1).getCode() + " - " + subjects.get(selectedSubjectIndex - 1).getName();
         List<StringBuilder> options = List.of(optionA, optionB, optionC, optionD);
         int correctIdx = (selectedType == QuestionType.TRUE_FALSE) ? (tfCorrectIsTrue ? 0 : 1) : correctMcqIndex;
         return QuestionViews.renderQuestionForm(
                 questionToEdit != null,
                 isPinnedQuiz(),
                 isPinnedQuiz() ? quizContext.getTitle() : "",
-                subjectName.toString(),
+                subjectDisplay,
                 questionText.toString(),
                 selectedType,
                 selectedDifficulty,

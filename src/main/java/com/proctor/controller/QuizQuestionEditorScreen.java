@@ -53,6 +53,11 @@ public class QuizQuestionEditorScreen implements Screen {
         }
     }
 
+    /** Called by QuestionBankPickerScreen to display an import success message. */
+    public void setBannerMessage(String message) {
+        this.bannerMessage = message;
+    }
+
     private double calculateTotalPoints() {
         return questions.stream().mapToDouble(Question::getPoints).sum();
     }

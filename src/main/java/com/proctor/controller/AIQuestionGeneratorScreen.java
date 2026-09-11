@@ -32,7 +32,8 @@ public class AIQuestionGeneratorScreen implements Screen {
     private final AuthService authService;
     private final Quiz quizContext;
 
-    private final StringBuilder subjectName = new StringBuilder();
+    private final List<Subject> subjects;
+    private int selectedSubjectIndex = 0;
     private final StringBuilder topicBuffer = new StringBuilder();
     private final StringBuilder customPromptBuffer = new StringBuilder();
     private final StringBuilder countBuffer = new StringBuilder("3");
@@ -60,6 +61,7 @@ public class AIQuestionGeneratorScreen implements Screen {
         this.subjectService = subjectService;
         this.authService = authService;
         this.quizContext = quizContext;
+        this.subjects = subjectService.getSubjects(null);
 
         if (quizContext != null) {
             String initialTopic = (quizContext.getTopic() != null && !quizContext.getTopic().isBlank())
@@ -67,12 +69,15 @@ public class AIQuestionGeneratorScreen implements Screen {
             this.topicBuffer.append(initialTopic);
 
             if (quizContext.getSubjectId() != null) {
-                subjectService.getSubjectById(quizContext.getSubjectId()).ifPresent(s -> {
-                    this.subjectName.append(s.getCode()).append(" - ").append(s.getName());
-                });
+                final Integer sid = quizContext.getSubjectId();
+                for (int i = 0; i < this.subjects.size(); i++) {
+                    if (this.subjects.get(i).getId().equals(sid)) {
+                        this.selectedSubjectIndex = i + 1;
+                        break;
+                    }
+                }
             }
         } else {
-            this.subjectName.append("General");
             this.topicBuffer.append("General Assessment");
         }
     }
@@ -102,7 +107,7 @@ public class AIQuestionGeneratorScreen implements Screen {
         if (quizContext != null) {
             return ScreenResult.navigate(new QuizQuestionEditorScreen(quizContext, new QuizService(new QuizRepository()), questionService, subjectService, authService));
         }
-        return ScreenResult.navigate(new TeacherDashboardScreen(authService, questionService, subjectService));
+        return ScreenResult.navigate(new QuestionBankScreen(questionService, subjectService, authService));
     }
 
     @Override
@@ -216,7 +221,9 @@ public class AIQuestionGeneratorScreen implements Screen {
         int idx = focusedField;
         if (!isPinnedQuiz()) {
             if (idx == 0) {
-                handleTextInput(subjectName, k);
+                int size = subjects.size() + 1;
+                if (KeyUtil.isLeft(k)) selectedSubjectIndex = (selectedSubjectIndex - 1 + size) % size;
+                else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) selectedSubjectIndex = (selectedSubjectIndex + 1) % size;
                 return;
             }
             idx -= 1;
@@ -281,7 +288,7 @@ public class AIQuestionGeneratorScreen implements Screen {
             bannerMessage = TuiHelper.red("✖ Topic cannot be blank.");
             return ScreenResult.stay(this);
         }
-        if (!isPinnedQuiz() && subjectName.toString().trim().isBlank()) {
+        if (!isPinnedQuiz() && selectedSubjectIndex == 0) {
             bannerMessage = TuiHelper.red("✖ Subject is required.");
             return ScreenResult.stay(this);
         }
@@ -299,7 +306,9 @@ public class AIQuestionGeneratorScreen implements Screen {
         final QuestionType type = selectedType;
         final Difficulty diff = selectedDifficulty;
         final int optsPerMcq = mcqOptionCount;
-        final String subj = subjectName.toString().trim();
+        final String subj = (selectedSubjectIndex > 0 && selectedSubjectIndex <= subjects.size())
+                ? subjects.get(selectedSubjectIndex - 1).getCode() + " - " + subjects.get(selectedSubjectIndex - 1).getName()
+                : "";
         final String fullTopic = !subj.isBlank() ? (subj + ": " + topic) : topic;
 
         return ScreenResult.stay(this, () -> {
@@ -329,8 +338,8 @@ public class AIQuestionGeneratorScreen implements Screen {
         if (quizContext != null) {
             subjId = quizContext.getSubjectId();
         } else {
-            Subject s = subjectService.getOrCreateSubject(subjectName.toString());
-            subjId = s.getId();
+            subjId = (selectedSubjectIndex > 0 && selectedSubjectIndex <= subjects.size())
+                    ? subjects.get(selectedSubjectIndex - 1).getId() : null;
         }
 
         Integer quizId = quizContext != null ? quizContext.getId() : null;
@@ -362,10 +371,13 @@ public class AIQuestionGeneratorScreen implements Screen {
             String targetStr = quizContext != null ? "Quiz: " + quizContext.getTitle() : "Question Bank";
             return QuestionViews.renderAIQuestionReview(generatedDrafts, selectedDraftIndex, targetStr, bannerMessage);
         }
+        String subjectDisplay = (subjects.isEmpty() || selectedSubjectIndex == 0)
+                ? "(No Subject)"
+                : subjects.get(selectedSubjectIndex - 1).getCode() + " - " + subjects.get(selectedSubjectIndex - 1).getName();
         return QuestionViews.renderAIQuestionForm(
                 isPinnedQuiz(),
                 isPinnedQuiz() ? quizContext.getTitle() : "",
-                subjectName.toString(),
+                subjectDisplay,
                 topicBuffer.toString(),
                 customPromptBuffer.toString(),
                 countBuffer.toString(),

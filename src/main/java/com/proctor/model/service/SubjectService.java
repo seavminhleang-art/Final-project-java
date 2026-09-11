@@ -23,34 +23,7 @@ public class SubjectService {
         return subjectRepository.findById(id);
     }
 
-    public Subject getOrCreateSubject(String nameOrCode) {
-        if (nameOrCode == null || nameOrCode.isBlank()) {
-            throw new ValidationException("Subject is required.");
-        }
-        String clean = nameOrCode.trim();
-        List<Subject> all = subjectRepository.findAll(null);
-        for (Subject s : all) {
-            if (s.getCode().equalsIgnoreCase(clean) || s.getName().equalsIgnoreCase(clean)) {
-                return s;
-            }
-        }
 
-        String generatedCode = clean.replaceAll("[^a-zA-Z0-9]", "").toUpperCase();
-        if (generatedCode.length() > 8) {
-            generatedCode = generatedCode.substring(0, 8);
-        }
-        if (generatedCode.isBlank()) {
-            generatedCode = "SUBJ" + (all.size() + 1);
-        }
-
-        String finalCode = generatedCode;
-        int suffix = 1;
-        while (subjectRepository.findByCode(finalCode).isPresent()) {
-            finalCode = (generatedCode.length() > 6 ? generatedCode.substring(0, 6) : generatedCode) + suffix++;
-        }
-
-        return createSubject(finalCode, clean, "Auto-created subject for " + clean);
-    }
 
     public Subject createSubject(String code, String name, String description) {
         if (code == null || code.isBlank() || name == null || name.isBlank()) {

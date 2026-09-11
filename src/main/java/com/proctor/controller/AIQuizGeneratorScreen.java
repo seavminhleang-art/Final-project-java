@@ -31,7 +31,8 @@ public class AIQuizGeneratorScreen implements Screen {
     private final AuthService authService;
     private final AssessmentType assessmentType;
 
-    private final StringBuilder subjectName = new StringBuilder();
+    private final List<Subject> subjects;
+    private int selectedSubjectIndex = 0;
     private final StringBuilder titleBuffer = new StringBuilder();
     private final StringBuilder customPromptBuffer = new StringBuilder();
     private final StringBuilder countBuffer = new StringBuilder("5");
@@ -69,6 +70,7 @@ public class AIQuizGeneratorScreen implements Screen {
         this.authService = authService;
         this.assessmentType = assessmentType != null ? assessmentType : AssessmentType.QUIZ;
         this.isExamMixed = (this.assessmentType == AssessmentType.EXAM);
+        this.subjects = subjectService.getSubjects(null);
     }
 
     private boolean isMcqApplicable() {
@@ -160,7 +162,9 @@ public class AIQuizGeneratorScreen implements Screen {
 
     private void handleFormInput(KeyPressMessage k) {
         if (focusedField == 0) {
-            handleTextInput(subjectName, k);
+            int size = subjects.size() + 1;
+            if (KeyUtil.isLeft(k)) selectedSubjectIndex = (selectedSubjectIndex - 1 + size) % size;
+            else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) selectedSubjectIndex = (selectedSubjectIndex + 1) % size;
             return;
         }
         if (focusedField == 1) {
@@ -289,7 +293,7 @@ public class AIQuizGeneratorScreen implements Screen {
     }
 
     private ScreenResult startAsyncQuizGeneration() {
-        if (subjectName.toString().trim().isBlank()) {
+        if (selectedSubjectIndex == 0) {
             bannerMessage = TuiHelper.red("✖ Subject is required.");
             return ScreenResult.stay(this);
         }
@@ -334,7 +338,8 @@ public class AIQuizGeneratorScreen implements Screen {
         final int finalMins = timeLimit;
         final int finalHours = hours;
         final int finalScore = score;
-        final String subjStr = subjectName.toString().trim();
+        final Subject selectedSubj = subjects.get(selectedSubjectIndex - 1);
+        final String subjStr = selectedSubj.getCode() + " - " + selectedSubj.getName();
         final String titleTopic = titleBuffer.toString().trim();
         final String customPrompt = customPromptBuffer.toString().trim();
         final QuestionType type = selectedType;
@@ -346,7 +351,7 @@ public class AIQuizGeneratorScreen implements Screen {
             Quiz createdQuiz = null;
             User teacher = Session.getCurrentUser().orElse(null);
             try {
-                Subject subj = subjectService.getOrCreateSubject(subjStr);
+                Subject subj = selectedSubj;
                 Integer teacherId = teacher != null ? teacher.getId() : null;
 
                 Quiz quiz = Quiz.builder()
@@ -425,9 +430,12 @@ public class AIQuizGeneratorScreen implements Screen {
         }
         String typeLabel = (assessmentType == AssessmentType.EXAM && isExamMixed)
                 ? "MIXED (Custom Counts)" : selectedType.name();
+        String subjectDisplay = (subjects.isEmpty() || selectedSubjectIndex == 0)
+                ? "(No Subject)"
+                : subjects.get(selectedSubjectIndex - 1).getCode() + " - " + subjects.get(selectedSubjectIndex - 1).getName();
         return QuizViews.renderAIQuizForm(
                 assessmentType,
-                subjectName.toString(),
+                subjectDisplay,
                 titleBuffer.toString(),
                 customPromptBuffer.toString(),
                 countBuffer.toString(),

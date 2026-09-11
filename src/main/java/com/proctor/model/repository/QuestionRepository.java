@@ -199,6 +199,109 @@ public class QuestionRepository {
         return false;
     }
 
+    public List<Question> findBankQuestions(Integer createdBy, Integer subjectId, QuestionType type, Difficulty difficulty, String search) {
+        List<Question> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT q.id, q.quiz_id, q.subject_id, s.code AS subject_code, q.created_by, q.question_text, " +
+                "q.question_type, q.difficulty, q.points, q.explanation, q.ai_generated, q.is_enabled, q.created_at " +
+                "FROM questions q LEFT JOIN subjects s ON q.subject_id = s.id WHERE q.quiz_id IS NULL"
+        );
+        List<Object> params = new ArrayList<>();
+
+        if (createdBy != null) {
+            sql.append(" AND q.created_by = ?");
+            params.add(createdBy);
+        }
+        if (subjectId != null) {
+            sql.append(" AND q.subject_id = ?");
+            params.add(subjectId);
+        }
+        if (type != null) {
+            sql.append(" AND q.question_type = ?");
+            params.add(type.name());
+        }
+        if (difficulty != null) {
+            sql.append(" AND q.difficulty = ?");
+            params.add(difficulty.name());
+        }
+        if (search != null && !search.isBlank()) {
+            sql.append(" AND (LOWER(q.question_text) LIKE ? OR LOWER(COALESCE(q.explanation, '')) LIKE ?)");
+            String p = "%" + search.trim().toLowerCase() + "%";
+            params.add(p);
+            params.add(p);
+        }
+        sql.append(" ORDER BY q.id DESC");
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                stmt.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Question q = mapRow(rs);
+                    q.setOptions(loadOptions(conn, q.getId()));
+                    list.add(q);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error querying bank questions: " + e.getMessage());
+        }
+        return list;
+    }
+
+    public int copyToQuiz(int bankQuestionId, int quizId) {
+        Question source = findById(bankQuestionId).orElseThrow(() ->
+                new com.proctor.exception.ValidationException("Bank question not found: " + bankQuestionId));
+
+        String insertQ = "INSERT INTO questions (quiz_id, subject_id, created_by, question_text, question_type, " +
+                "difficulty, points, explanation, ai_generated, is_enabled) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(insertQ, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setInt(1, quizId);
+            if (source.getSubjectId() != null) stmt.setInt(2, source.getSubjectId());
+            else stmt.setNull(2, Types.INTEGER);
+            if (source.getCreatedBy() != null) stmt.setInt(3, source.getCreatedBy());
+            else stmt.setNull(3, Types.INTEGER);
+            stmt.setString(4, source.getQuestionText());
+            stmt.setString(5, source.getQuestionType().name());
+            stmt.setString(6, source.getDifficulty().name());
+            stmt.setDouble(7, source.getPoints());
+            stmt.setString(8, source.getExplanation());
+            stmt.setBoolean(9, source.isAiGenerated());
+            stmt.setBoolean(10, true);
+
+            stmt.executeUpdate();
+            int newId;
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                if (!rs.next()) throw new com.proctor.exception.ValidationException("Failed to copy question.");
+                newId = rs.getInt(1);
+            }
+
+            saveOptions(conn, newId, source.getOptions());
+
+            String countSql = "SELECT COUNT(*) FROM quiz_questions WHERE quiz_id = ?";
+            int order;
+            try (PreparedStatement countStmt = conn.prepareStatement(countSql)) {
+                countStmt.setInt(1, quizId);
+                try (ResultSet rs = countStmt.executeQuery()) {
+                    order = rs.next() ? rs.getInt(1) + 1 : 1;
+                }
+            }
+            String qqSql = "INSERT INTO quiz_questions (quiz_id, question_id, question_order) VALUES (?, ?, ?)";
+            try (PreparedStatement qqStmt = conn.prepareStatement(qqSql)) {
+                qqStmt.setInt(1, quizId);
+                qqStmt.setInt(2, newId);
+                qqStmt.setInt(3, order);
+                qqStmt.executeUpdate();
+            }
+            return newId;
+        } catch (SQLException e) {
+            System.err.println("Error copying bank question to quiz: " + e.getMessage());
+            throw new com.proctor.exception.ValidationException("Failed to copy question: " + e.getMessage());
+        }
+    }
+
     private List<QuestionOption> loadOptions(Connection conn, int questionId) throws SQLException {
         List<QuestionOption> options = new ArrayList<>();
         String sql = "SELECT id, question_id, option_text, is_correct, option_order FROM question_options " +

@@ -63,6 +63,19 @@ public class QuestionService {
         return questionRepository.toggleEnabled(id);
     }
 
+    public List<Question> getBankQuestions(Integer createdBy, Integer subjectId,
+                                           QuestionType type, Difficulty difficulty,
+                                           String search) {
+        return questionRepository.findBankQuestions(createdBy, subjectId, type, difficulty, search);
+    }
+
+    public int copyBankQuestionToQuiz(int bankQuestionId, int quizId) {
+        if (bankQuestionId <= 0 || quizId <= 0) {
+            throw new ValidationException("Invalid question or quiz ID.");
+        }
+        return questionRepository.copyToQuiz(bankQuestionId, quizId);
+    }
+
     private void validateQuestion(Question q) {
         if (q.getQuestionText() == null || q.getQuestionText().isBlank()) {
             throw new ValidationException("Question text is required.");
