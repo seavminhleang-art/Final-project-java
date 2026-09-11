@@ -282,7 +282,7 @@ public class AIQuestionGeneratorScreen implements Screen {
         }
     }
 
-    public ScreenResult startAsyncGeneration() {
+    private ScreenResult startAsyncGeneration() {
         if (topicBuffer.toString().trim().isBlank()) {
             bannerMessage = TuiHelper.red("✖ Topic cannot be blank.");
             return ScreenResult.stay(this);

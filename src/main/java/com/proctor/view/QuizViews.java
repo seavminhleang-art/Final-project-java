@@ -239,6 +239,7 @@ public class QuizViews {
                 "[←/→] Page",
                 "[Enter/e] Edit",
                 "[n] Add Question",
+                "[b] From Bank",
                 "[g] AI Generate",
                 "[Space] Publish",
                 "[d] Delete",

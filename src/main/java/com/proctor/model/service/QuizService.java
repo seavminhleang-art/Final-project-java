@@ -27,28 +27,12 @@ public class QuizService {
         this.questionRepository = questionRepository;
     }
 
-    public List<Quiz> getQuizzes(Integer subjectId, Boolean published, String search) {
-        return quizRepository.findAll(subjectId, published, search);
-    }
-
     public List<Quiz> getAssessments(AssessmentType type, Integer subjectId, Boolean published, String search) {
         return quizRepository.findAll(type, subjectId, null, published, search, false);
     }
 
-    public List<Quiz> getQuizzes(Integer subjectId, Integer createdBy, Boolean published, String search) {
-        return quizRepository.findAll(subjectId, createdBy, published, search, false);
-    }
-
     public List<Quiz> getAssessments(AssessmentType type, Integer subjectId, Integer createdBy, Boolean published, String search) {
         return quizRepository.findAll(type, subjectId, createdBy, published, search, false);
-    }
-
-    public List<Quiz> getActiveQuizzes(Integer subjectId, String search) {
-        return quizRepository.findAll(subjectId, true, search, true);
-    }
-
-    public Optional<Quiz> getQuizById(int id) {
-        return quizRepository.findById(id);
     }
 
     public Quiz createQuiz(Quiz quiz) {
@@ -161,9 +145,6 @@ public class QuizService {
         }
         if (quiz.getPassScore() < 1 || quiz.getPassScore() > 100) {
             quiz.setPassScore(60);
-        }
-        if (quiz.getMaxAttempts() < 1) {
-            quiz.setMaxAttempts(1);
         }
     }
 }

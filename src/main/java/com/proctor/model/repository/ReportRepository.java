@@ -89,7 +89,7 @@ public class ReportRepository {
     public List<SubjectReportDTO> getSubjectSummaryData() {
         List<SubjectReportDTO> list = new ArrayList<>();
         String sql = "SELECT s.id, s.code, s.name, " +
-                     "(SELECT COUNT(*) FROM user_subjects us WHERE us.subject_id = s.id) AS teacher_count, " +
+                     "(SELECT COUNT(DISTINCT q.created_by) FROM quizzes q WHERE q.subject_id = s.id) AS teacher_count, " +
                      "(SELECT COUNT(*) FROM quizzes q WHERE q.subject_id = s.id) AS quiz_count, " +
                      "COUNT(r.id) AS total_attempts, " +
                      "COALESCE(AVG(r.percentage), 0) AS avg_score " +

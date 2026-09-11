@@ -31,7 +31,6 @@ public class Quiz {
     private boolean randomizeQuestions;
     private boolean randomizeAnswers;
     private boolean showAnswersAfter;
-    private int maxAttempts;
     private boolean published;
     private Timestamp expiresAt;
     private Integer activeDurationHours;

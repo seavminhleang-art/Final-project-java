@@ -138,6 +138,8 @@ public class QuizQuestionEditorScreen implements Screen {
                 }
             } else if ("n".equalsIgnoreCase(k.key()) || "a".equalsIgnoreCase(k.key())) {
                 return ScreenResult.navigate(new QuestionFormScreen(questionService, subjectService, authService, null, quiz));
+            } else if ("b".equalsIgnoreCase(k.key())) {
+                return ScreenResult.navigate(new QuestionBankPickerScreen(quiz, quizService, questionService, subjectService, authService));
             } else if ("e".equalsIgnoreCase(k.key()) || KeyUtil.isEnter(k)) {
                 if (!questions.isEmpty()) {
                     return ScreenResult.navigate(new QuestionFormScreen(questionService, subjectService, authService, questions.get(selectedIndex), quiz));

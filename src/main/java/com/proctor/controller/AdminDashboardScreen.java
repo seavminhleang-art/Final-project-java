@@ -69,13 +69,14 @@ public class AdminDashboardScreen implements Screen {
 
     private String[] getMenuItems() {
         int unread = getUnreadCount();
-        String inboxLabel = unread > 0 ? "3. Inbox (" + unread + " unread)" : "3. Inbox";
+        String inboxLabel = unread > 0 ? "4. Inbox (" + unread + " unread)" : "4. Inbox";
         return new String[]{
                 "1. User Management",
-                "2. System Reports",
+                "2. Subject Management",
+                "3. System Reports",
                 inboxLabel,
-                "4. Logout",
-                "5. Exit"
+                "5. Logout",
+                "6. Exit"
         };
     }
 
@@ -124,16 +125,19 @@ public class AdminDashboardScreen implements Screen {
                 return ScreenResult.navigate(new UserListScreen(userService, authService));
             }
             case 1 -> {
-                return ScreenResult.navigate(new ReportMenuScreen(reportService, authService));
+                return ScreenResult.navigate(new SubjectListScreen(subjectService, userService, authService));
             }
             case 2 -> {
-                return ScreenResult.navigate(new InboxListScreen(inboxService, userService, authService, this));
+                return ScreenResult.navigate(new ReportMenuScreen(reportService, authService));
             }
             case 3 -> {
+                return ScreenResult.navigate(new InboxListScreen(inboxService, userService, authService, this));
+            }
+            case 4 -> {
                 authService.logout();
                 return ScreenResult.navigate(new LoginScreen(authService));
             }
-            case 4 -> {
+            case 5 -> {
                 showQuitModal = true;
                 quitConfirmFocused = false;
                 return ScreenResult.stay(this);

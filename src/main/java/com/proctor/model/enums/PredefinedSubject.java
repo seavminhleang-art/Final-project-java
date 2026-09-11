@@ -8,7 +8,8 @@ import java.util.Optional;
  */
 public enum PredefinedSubject {
     JAVASCRIPT("JS", "JavaScript", "JavaScript Programming & Web Scripting"),
-    HTML_CSS("HTML/CSS", "HTML/CSS", "Web Page Structure, Styling & Layout"),
+    HTML("HTML", "HTML", "HyperText Markup Language & Web Structure"),
+    CSS("CSS", "CSS", "Cascading Style Sheets & Responsive Styling"),
     SQL("SQL", "SQL", "Relational Database Design & Querying"),
     PYTHON("PYTHON", "Python", "Python Programming Language & Ecosystem"),
     LINUX("LINUX", "Linux", "Linux Commands, Shell & System Administration"),

@@ -1,7 +1,5 @@
 package com.proctor.model.repository;
 
-import com.proctor.model.entity.User;
-import com.proctor.model.enums.Role;
 import com.proctor.config.DatabaseConnection;
 import com.proctor.model.entity.Subject;
 
@@ -142,76 +140,33 @@ public class SubjectRepository {
         return false;
     }
 
-    public List<User> getAssignedTeachers(int subjectId) {
-        List<User> teachers = new ArrayList<>();
-        String sql = "SELECT u.id, u.username, u.password_hash, u.full_name, u.role, u.is_enabled, u.created_at, u.updated_at " +
-                     "FROM users u INNER JOIN user_subjects us ON u.id = us.user_id " +
-                     "WHERE us.subject_id = ? AND u.role = 'TEACHER' ORDER BY u.full_name ASC";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, subjectId);
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    teachers.add(User.builder()
-                            .id(rs.getInt("id"))
-                            .username(rs.getString("username"))
-                            .passwordHash(rs.getString("password_hash"))
-                            .fullName(rs.getString("full_name"))
-                            .role(Role.valueOf(rs.getString("role")))
-                            .enabled(rs.getBoolean("is_enabled"))
-                            .createdAt(rs.getTimestamp("created_at"))
-                            .updatedAt(rs.getTimestamp("updated_at"))
-                            .build());
-                }
+    public boolean delete(int subjectId) {
+        String unlinkQuizzes = "UPDATE quizzes SET subject_id = NULL WHERE subject_id = ?";
+        String unlinkQuestions = "UPDATE questions SET subject_id = NULL WHERE subject_id = ?";
+        String delSubject = "DELETE FROM subjects WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try (PreparedStatement s1 = conn.prepareStatement(unlinkQuizzes);
+                 PreparedStatement s2 = conn.prepareStatement(unlinkQuestions);
+                 PreparedStatement s3 = conn.prepareStatement(delSubject)) {
+                s1.setInt(1, subjectId);
+                s1.executeUpdate();
+
+                s2.setInt(1, subjectId);
+                s2.executeUpdate();
+
+                s3.setInt(1, subjectId);
+                int affected = s3.executeUpdate();
+                conn.commit();
+                conn.setAutoCommit(true);
+                return affected > 0;
+            } catch (SQLException e) {
+                conn.rollback();
+                conn.setAutoCommit(true);
+                throw e;
             }
         } catch (SQLException e) {
-            System.err.println("Error querying assigned teachers: " + e.getMessage());
-        }
-        return teachers;
-    }
-
-    public List<Subject> getSubjectsForTeacher(int teacherId) {
-        List<Subject> subjects = new ArrayList<>();
-        String sql = "SELECT s.id, s.code, s.name, s.description, s.is_enabled, s.created_at " +
-                     "FROM subjects s INNER JOIN user_subjects us ON s.id = us.subject_id " +
-                     "WHERE us.user_id = ? AND s.is_enabled = TRUE ORDER BY s.code ASC";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, teacherId);
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    subjects.add(mapRow(rs));
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("Error querying teacher subjects: " + e.getMessage());
-        }
-        return subjects;
-    }
-
-    public boolean assignTeacher(int userId, int subjectId) {
-        String sql = "INSERT INTO user_subjects (user_id, subject_id) VALUES (?, ?) ON CONFLICT DO NOTHING";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, userId);
-            stmt.setInt(2, subjectId);
-            stmt.executeUpdate();
-            return true;
-        } catch (SQLException e) {
-            System.err.println("Error assigning teacher: " + e.getMessage());
-        }
-        return false;
-    }
-
-    public boolean unassignTeacher(int userId, int subjectId) {
-        String sql = "DELETE FROM user_subjects WHERE user_id = ? AND subject_id = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, userId);
-            stmt.setInt(2, subjectId);
-            return stmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("Error unassigning teacher: " + e.getMessage());
+            System.err.println("Error deleting subject: " + e.getMessage());
         }
         return false;
     }

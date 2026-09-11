@@ -13,9 +13,6 @@ public class Session {
         return Optional.ofNullable(currentUser);
     }
 
-    public static boolean isLoggedIn() {
-        return currentUser != null;
-    }
 
     public static void clear() {
         currentUser = null;

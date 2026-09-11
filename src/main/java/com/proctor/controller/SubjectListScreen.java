@@ -1,5 +1,6 @@
 package com.proctor.controller;
 
+import com.proctor.exception.ValidationException;
 import com.proctor.model.service.AuthService;
 import com.proctor.model.entity.Subject;
 import com.proctor.model.service.SubjectService;
@@ -24,6 +25,10 @@ public class SubjectListScreen implements Screen {
     private boolean searchMode = false;
     private String bannerMessage = "";
 
+    private boolean confirmingDelete = false;
+    private boolean confirmDeleteFocused = false;
+    private Subject pendingDeleteSubject = null;
+
     public SubjectListScreen(SubjectService subjectService, UserService userService, AuthService authService) {
         this.subjectService = subjectService;
         this.userService = userService;
@@ -43,6 +48,27 @@ public class SubjectListScreen implements Screen {
     @Override
     public ScreenResult update(Message msg) {
         if (msg instanceof KeyPressMessage k) {
+            if (confirmingDelete) {
+                if (KeyUtil.isLeft(k) || KeyUtil.isRight(k) || KeyUtil.isTab(k)) {
+                    confirmDeleteFocused = !confirmDeleteFocused;
+                    return ScreenResult.stay(this);
+                }
+                if (KeyUtil.isEnter(k)) {
+                    if (confirmDeleteFocused) {
+                        executeDelete();
+                    }
+                    confirmingDelete = false;
+                    pendingDeleteSubject = null;
+                    return ScreenResult.stay(this);
+                }
+                if (KeyUtil.isEsc(k)) {
+                    confirmingDelete = false;
+                    pendingDeleteSubject = null;
+                    return ScreenResult.stay(this);
+                }
+                return ScreenResult.stay(this);
+            }
+
             if (searchMode) {
                 if (KeyUtil.isEnter(k) || KeyUtil.isEsc(k)) {
                     searchMode = false;
@@ -97,16 +123,16 @@ public class SubjectListScreen implements Screen {
                 if (!subjects.isEmpty()) {
                     return ScreenResult.navigate(new SubjectFormScreen(subjectService, userService, authService, subjects.get(selectedIndex)));
                 }
+            } else if ("d".equalsIgnoreCase(k.key()) || KeyUtil.isDelete(k)) {
+                if (!subjects.isEmpty()) {
+                    initiateDelete();
+                }
             } else if ("t".equalsIgnoreCase(k.key()) || KeyUtil.isSpace(k)) {
                 if (!subjects.isEmpty()) {
                     Subject s = subjects.get(selectedIndex);
                     subjectService.toggleSubjectStatus(s.getId());
                     bannerMessage = TuiHelper.green("Toggled status for " + s.getCode());
                     refreshList();
-                }
-            } else if ("a".equalsIgnoreCase(k.key())) {
-                if (!subjects.isEmpty()) {
-                    return ScreenResult.navigate(new TeacherAssignmentScreen(subjects.get(selectedIndex), subjectService, userService, authService));
                 }
             } else if ("/".equals(k.key())) {
                 searchMode = true;
@@ -116,13 +142,37 @@ public class SubjectListScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
-    @Override
-    public String view() {
-        return SubjectViews.renderSubjectList(subjects, selectedIndex, searchBuffer.toString(), searchMode, bannerMessage);
+    private void initiateDelete() {
+        pendingDeleteSubject = subjects.get(selectedIndex);
+        confirmingDelete = true;
+        confirmDeleteFocused = false;
     }
 
-    private String truncate(String text, int max) {
-        if (text == null) return "";
-        return text.length() <= max ? text : text.substring(0, max - 1) + "…";
+    private void executeDelete() {
+        if (pendingDeleteSubject == null) return;
+        try {
+            subjectService.deleteSubject(pendingDeleteSubject.getId());
+            bannerMessage = TuiHelper.green("✔ Successfully deleted subject: " + pendingDeleteSubject.getCode());
+            refreshList();
+        } catch (ValidationException e) {
+            bannerMessage = TuiHelper.red("✖ " + e.getMessage());
+        } catch (Exception e) {
+            bannerMessage = TuiHelper.red("✖ Delete failed: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public String view() {
+        if (confirmingDelete && pendingDeleteSubject != null) {
+            return TuiHelper.confirmationModal(
+                    "DELETE SUBJECT",
+                    "Are you sure you want to delete subject '" + pendingDeleteSubject.getCode() + "' (" + pendingDeleteSubject.getName() + ")?",
+                    "This will permanently delete the subject and unlink it from any quizzes or questions.",
+                    "Delete Subject",
+                    "Cancel",
+                    confirmDeleteFocused
+            );
+        }
+        return SubjectViews.renderSubjectList(subjects, selectedIndex, searchBuffer.toString(), searchMode, bannerMessage);
     }
 }

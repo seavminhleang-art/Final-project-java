@@ -15,43 +15,8 @@ import java.util.Optional;
 
 public class QuizRepository {
 
-    public List<Quiz> findAll(Integer subjectId, Boolean published, String search) {
-        return findAll(subjectId, null, published, search, false);
-    }
-
-    public List<Quiz> findAll(Integer subjectId, Boolean published, String search, boolean activeOnly) {
-        return queryDatabase(null, subjectId, null, published, search, activeOnly);
-    }
-
-    public List<Quiz> findAll(Integer subjectId, Integer createdBy, Boolean published, String search, boolean activeOnly) {
-        return queryDatabase(null, subjectId, createdBy, published, search, activeOnly);
-    }
-
     public List<Quiz> findAll(AssessmentType assessmentType, Integer subjectId, Integer createdBy, Boolean published, String search, boolean activeOnly) {
-        if (getClass() == QuizRepository.class) {
-            return queryDatabase(assessmentType, subjectId, createdBy, published, search, activeOnly);
-        }
-        List<Quiz> all;
-        try {
-            var m = getClass().getMethod("findAll", Integer.class, Integer.class, Boolean.class, String.class, boolean.class);
-            if (m.getDeclaringClass() != QuizRepository.class) {
-                all = findAll(subjectId, createdBy, published, search, activeOnly);
-            } else {
-                all = findAll(subjectId, published, search, activeOnly);
-            }
-        } catch (NoSuchMethodException e) {
-            all = findAll(subjectId, published, search, activeOnly);
-        }
-
-        if (assessmentType != null) {
-            return all.stream()
-                    .filter(q -> {
-                        AssessmentType type = q.getAssessmentType() != null ? q.getAssessmentType() : AssessmentType.QUIZ;
-                        return type == assessmentType;
-                    })
-                    .toList();
-        }
-        return all;
+        return queryDatabase(assessmentType, subjectId, createdBy, published, search, activeOnly);
     }
 
     private List<Quiz> queryDatabase(AssessmentType assessmentType, Integer subjectId, Integer createdBy, Boolean published, String search, boolean activeOnly) {
@@ -59,7 +24,7 @@ public class QuizRepository {
         StringBuilder sql = new StringBuilder(
                 "SELECT q.id, q.subject_id, s.code AS subject_code, q.created_by, q.assessment_type, q.quiz_question_type, q.title, q.topic, q.description, " +
                 "q.time_limit_mins, q.pass_score, q.randomize_questions, q.randomize_answers, q.show_answers_after, " +
-                "q.max_attempts, q.is_published, q.expires_at, q.created_at, q.updated_at, " +
+                "q.is_published, q.expires_at, q.created_at, q.updated_at, " +
                 "(SELECT COUNT(*) FROM questions qu WHERE qu.quiz_id = q.id OR qu.id IN (SELECT qq.question_id FROM quiz_questions qq WHERE qq.quiz_id = q.id)) AS q_count, " +
                 "(SELECT COALESCE(SUM(qu.points), 0) FROM questions qu WHERE qu.quiz_id = q.id OR qu.id IN (SELECT qq.question_id FROM quiz_questions qq WHERE qq.quiz_id = q.id)) AS total_pts " +
                 "FROM quizzes q LEFT JOIN subjects s ON q.subject_id = s.id WHERE 1=1"
@@ -126,7 +91,7 @@ public class QuizRepository {
     public Optional<Quiz> findById(int id) {
         String sql = "SELECT q.id, q.subject_id, s.code AS subject_code, q.created_by, q.assessment_type, q.quiz_question_type, q.title, q.topic, q.description, " +
                      "q.time_limit_mins, q.pass_score, q.randomize_questions, q.randomize_answers, q.show_answers_after, " +
-                     "q.max_attempts, q.is_published, q.expires_at, q.created_at, q.updated_at, " +
+                     "q.is_published, q.expires_at, q.created_at, q.updated_at, " +
                      "(SELECT COUNT(*) FROM questions qu WHERE qu.quiz_id = q.id OR qu.id IN (SELECT qq.question_id FROM quiz_questions qq WHERE qq.quiz_id = q.id)) AS q_count, " +
                      "(SELECT COALESCE(SUM(qu.points), 0) FROM questions qu WHERE qu.quiz_id = q.id OR qu.id IN (SELECT qq.question_id FROM quiz_questions qq WHERE qq.quiz_id = q.id)) AS total_pts " +
                      "FROM quizzes q LEFT JOIN subjects s ON q.subject_id = s.id WHERE q.id = ?";
@@ -150,8 +115,8 @@ public class QuizRepository {
 
     public boolean create(Quiz quiz) {
         String sql = "INSERT INTO quizzes (subject_id, created_by, assessment_type, quiz_question_type, title, topic, description, time_limit_mins, pass_score, " +
-                     "randomize_questions, randomize_answers, show_answers_after, max_attempts, is_published, expires_at) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                     "randomize_questions, randomize_answers, show_answers_after, is_published, expires_at) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             if (quiz.getSubjectId() != null) stmt.setInt(1, quiz.getSubjectId());
@@ -176,9 +141,8 @@ public class QuizRepository {
             stmt.setBoolean(10, quiz.isRandomizeQuestions());
             stmt.setBoolean(11, quiz.isRandomizeAnswers());
             stmt.setBoolean(12, quiz.isShowAnswersAfter());
-            stmt.setInt(13, quiz.getMaxAttempts() > 0 ? quiz.getMaxAttempts() : 1);
-            stmt.setBoolean(14, quiz.isPublished());
-            stmt.setTimestamp(15, quiz.getExpiresAt());
+            stmt.setBoolean(13, quiz.isPublished());
+            stmt.setTimestamp(14, quiz.getExpiresAt());
 
             int affected = stmt.executeUpdate();
             if (affected > 0) {
@@ -198,7 +162,7 @@ public class QuizRepository {
     public boolean update(Quiz quiz) {
         String sql = "UPDATE quizzes SET subject_id = ?, assessment_type = ?, quiz_question_type = ?, title = ?, topic = ?, description = ?, time_limit_mins = ?, " +
                      "pass_score = ?, randomize_questions = ?, randomize_answers = ?, show_answers_after = ?, " +
-                     "max_attempts = ?, is_published = ?, expires_at = ?, updated_at = NOW() WHERE id = ?";
+                     "is_published = ?, expires_at = ?, updated_at = NOW() WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             if (quiz.getSubjectId() != null) stmt.setInt(1, quiz.getSubjectId());
@@ -220,10 +184,9 @@ public class QuizRepository {
             stmt.setBoolean(9, quiz.isRandomizeQuestions());
             stmt.setBoolean(10, quiz.isRandomizeAnswers());
             stmt.setBoolean(11, quiz.isShowAnswersAfter());
-            stmt.setInt(12, quiz.getMaxAttempts() > 0 ? quiz.getMaxAttempts() : 1);
-            stmt.setBoolean(13, quiz.isPublished());
-            stmt.setTimestamp(14, quiz.getExpiresAt());
-            stmt.setInt(15, quiz.getId());
+            stmt.setBoolean(12, quiz.isPublished());
+            stmt.setTimestamp(13, quiz.getExpiresAt());
+            stmt.setInt(14, quiz.getId());
 
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -425,7 +388,6 @@ public class QuizRepository {
                 .randomizeQuestions(rs.getBoolean("randomize_questions"))
                 .randomizeAnswers(rs.getBoolean("randomize_answers"))
                 .showAnswersAfter(rs.getBoolean("show_answers_after"))
-                .maxAttempts(rs.getInt("max_attempts"))
                 .published(rs.getBoolean("is_published"))
                 .expiresAt(rs.getTimestamp("expires_at"))
                 .createdAt(rs.getTimestamp("created_at"))

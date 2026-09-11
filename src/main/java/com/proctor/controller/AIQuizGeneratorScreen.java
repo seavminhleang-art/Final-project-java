@@ -365,7 +365,6 @@ public class AIQuizGeneratorScreen implements Screen {
                         .timeLimitMins(finalMins > 0 ? finalMins : null)
                         .activeDurationHours(finalHours)
                         .passScore(finalScore)
-                        .maxAttempts(1)
                         .randomizeQuestions(randomizeQuestions)
                         .randomizeAnswers(randomizeAnswers)
                         .showAnswersAfter(showAnswersAfter)

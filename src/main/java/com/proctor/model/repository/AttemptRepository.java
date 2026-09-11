@@ -98,23 +98,6 @@ public class AttemptRepository {
         return list;
     }
 
-    public int getAttemptCount(int quizId, int studentId) {
-        String sql = "SELECT COUNT(*) FROM attempts WHERE quiz_id = ? AND student_id = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, quizId);
-            stmt.setInt(2, studentId);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("Error counting attempts: " + e.getMessage());
-        }
-        return 0;
-    }
-
     public boolean saveAnswer(int attemptId, int questionId, Integer selectedOptionId, String textAnswer) {
         String checkSql = "SELECT id FROM attempt_answers WHERE attempt_id = ? AND question_id = ?";
         String updateSql = "UPDATE attempt_answers SET selected_option_id = ?, text_answer = ? WHERE id = ?";

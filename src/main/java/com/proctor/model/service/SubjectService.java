@@ -1,6 +1,5 @@
 package com.proctor.model.service;
 
-import com.proctor.model.entity.User;
 import com.proctor.exception.ValidationException;
 import com.proctor.model.entity.Subject;
 import com.proctor.model.repository.SubjectRepository;
@@ -46,13 +45,6 @@ public class SubjectService {
         return subjectRepository.findById(id);
     }
 
-    public Optional<Subject> getSubjectByCode(String code) {
-        return subjectRepository.findByCode(code);
-    }
-
-    public Optional<Subject> getSubjectByName(String name) {
-        return subjectRepository.findByName(name);
-    }
 
 
 
@@ -62,6 +54,12 @@ public class SubjectService {
         }
 
         String cleanCode = code.trim().toUpperCase();
+        if (cleanCode.length() > 20) {
+            throw new ValidationException("Subject code cannot exceed 20 characters.");
+        }
+        if (name.trim().length() > 100) {
+            throw new ValidationException("Subject name cannot exceed 100 characters.");
+        }
         if (subjectRepository.findByCode(cleanCode).isPresent()) {
             throw new ValidationException("Subject code '" + cleanCode + "' already exists.");
         }
@@ -80,9 +78,25 @@ public class SubjectService {
         return subject;
     }
 
-    public Subject updateSubject(int id, String name, String description, boolean enabled) {
+    public Subject updateSubject(int id, String code, String name, String description, boolean enabled) {
+        if (code == null || code.isBlank()) {
+            throw new ValidationException("Subject code cannot be blank.");
+        }
         if (name == null || name.isBlank()) {
             throw new ValidationException("Subject name cannot be blank.");
+        }
+
+        String cleanCode = code.trim().toUpperCase();
+        if (cleanCode.length() > 20) {
+            throw new ValidationException("Subject code cannot exceed 20 characters.");
+        }
+        if (name.trim().length() > 100) {
+            throw new ValidationException("Subject name cannot exceed 100 characters.");
+        }
+
+        Optional<Subject> withCode = subjectRepository.findByCode(cleanCode);
+        if (withCode.isPresent() && !withCode.get().getId().equals(id)) {
+            throw new ValidationException("Subject code '" + cleanCode + "' is already in use by another subject.");
         }
 
         Optional<Subject> existing = subjectRepository.findById(id);
@@ -91,6 +105,7 @@ public class SubjectService {
         }
 
         Subject subject = existing.get();
+        subject.setCode(cleanCode);
         subject.setName(name.trim());
         subject.setDescription(description != null ? description.trim() : "");
         subject.setEnabled(enabled);
@@ -102,23 +117,24 @@ public class SubjectService {
         return subject;
     }
 
+    public Subject updateSubject(int id, String name, String description, boolean enabled) {
+        Subject s = subjectRepository.findById(id).orElseThrow(() -> new ValidationException("Subject not found."));
+        return updateSubject(id, s.getCode(), name, description, enabled);
+    }
+
+    public boolean deleteSubject(int id) {
+        Optional<Subject> existing = subjectRepository.findById(id);
+        if (existing.isEmpty()) {
+            throw new ValidationException("Subject not found.");
+        }
+        boolean deleted = subjectRepository.delete(id);
+        if (!deleted) {
+            throw new ValidationException("Failed to delete subject.");
+        }
+        return true;
+    }
+
     public boolean toggleSubjectStatus(int id) {
         return subjectRepository.toggleEnabled(id);
-    }
-
-    public List<User> getAssignedTeachers(int subjectId) {
-        return subjectRepository.getAssignedTeachers(subjectId);
-    }
-
-    public List<Subject> getSubjectsForTeacher(int teacherId) {
-        return subjectRepository.getSubjectsForTeacher(teacherId);
-    }
-
-    public boolean assignTeacher(int userId, int subjectId) {
-        return subjectRepository.assignTeacher(userId, subjectId);
-    }
-
-    public boolean unassignTeacher(int userId, int subjectId) {
-        return subjectRepository.unassignTeacher(userId, subjectId);
     }
 }

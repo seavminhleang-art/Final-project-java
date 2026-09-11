@@ -211,9 +211,6 @@ public class TuiHelper {
         return sb.toString();
     }
 
-    public static String asciiBannerBox(String[] asciiLines, String subtitle) {
-        return asciiBannerBox(asciiLines);
-    }
 
     public static String header(String title) {
         return header(title, null);
@@ -383,6 +380,23 @@ public class TuiHelper {
         int totalBtnWidth = visibleLength(btn1) + 4 + visibleLength(btn2);
         int leftPad = Math.max(0, (width - totalBtnWidth) / 2);
         return " ".repeat(leftPad) + btn1 + "    " + btn2 + CLEAR_EOL;
+    }
+
+    public static String buttonRow(String primaryLabel, boolean primaryFocused,
+                                   String dangerLabel, boolean dangerFocused,
+                                   String secondaryLabel, boolean secondaryFocused) {
+        return buttonRow(primaryLabel, primaryFocused, dangerLabel, dangerFocused, secondaryLabel, secondaryFocused, 106);
+    }
+
+    public static String buttonRow(String primaryLabel, boolean primaryFocused,
+                                   String dangerLabel, boolean dangerFocused,
+                                   String secondaryLabel, boolean secondaryFocused, int width) {
+        String btn1 = primaryFocused ? bold(NAVY_BLUE + "[ ▶ " + primaryLabel + " ]") : dim("[   " + primaryLabel + "   ]");
+        String btn2 = dangerFocused ? bold(RED + "[ ▶ " + dangerLabel + " ]") : dim("[   " + dangerLabel + "   ]");
+        String btn3 = secondaryFocused ? bold(YELLOW + "[ ▶ " + secondaryLabel + " ]") : dim("[   " + secondaryLabel + "   ]");
+        int totalBtnWidth = visibleLength(btn1) + 4 + visibleLength(btn2) + 4 + visibleLength(btn3);
+        int leftPad = Math.max(0, (width - totalBtnWidth) / 2);
+        return " ".repeat(leftPad) + btn1 + "    " + btn2 + "    " + btn3 + CLEAR_EOL;
     }
 
     public static String confirmationModal(String title, String message, String warningDetail, String confirmLabel, String cancelLabel, boolean confirmFocused) {

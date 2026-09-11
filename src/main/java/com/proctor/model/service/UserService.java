@@ -23,9 +23,6 @@ public class UserService {
         return userRepository.findAll(search, role);
     }
 
-    public Optional<User> getUserById(int id) {
-        return userRepository.findById(id);
-    }
 
     /** Convenience overload used by SeedService and admin quick-create (no birthday/gender). */
     public User createUser(String emailOrUsername, String rawPassword, String fullName, Role role) {

@@ -21,12 +21,6 @@ CREATE TABLE IF NOT EXISTS subjects (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS user_subjects (
-    user_id INT REFERENCES users(id) ON DELETE CASCADE,
-    subject_id INT REFERENCES subjects(id) ON DELETE CASCADE,
-    PRIMARY KEY (user_id, subject_id)
-);
-
 CREATE TABLE IF NOT EXISTS questions (
     id SERIAL PRIMARY KEY,
     quiz_id INT REFERENCES quizzes(id) ON DELETE CASCADE,
@@ -52,7 +46,7 @@ CREATE TABLE IF NOT EXISTS question_options (
 
 CREATE TABLE IF NOT EXISTS quizzes (
     id SERIAL PRIMARY KEY,
-    subject_id INT REFERENCES subjects(id),
+    subject_id INT REFERENCES subjects(id) ON DELETE SET NULL,
     created_by INT REFERENCES users(id),
     assessment_type VARCHAR(20) NOT NULL DEFAULT 'QUIZ',
     quiz_question_type VARCHAR(30),
@@ -64,7 +58,6 @@ CREATE TABLE IF NOT EXISTS quizzes (
     randomize_questions BOOLEAN DEFAULT TRUE,
     randomize_answers BOOLEAN DEFAULT TRUE,
     show_answers_after BOOLEAN DEFAULT FALSE,
-    max_attempts INT DEFAULT 1,
     is_published BOOLEAN DEFAULT FALSE,
     expires_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

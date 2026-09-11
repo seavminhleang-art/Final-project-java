@@ -22,9 +22,6 @@ public class QuestionService {
         return questionRepository.findByQuizId(quizId);
     }
 
-    public Optional<Question> getQuestionById(int id) {
-        return questionRepository.findById(id);
-    }
 
     public boolean deleteQuestion(int id) {
         return questionRepository.delete(id);

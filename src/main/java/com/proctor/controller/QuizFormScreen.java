@@ -213,7 +213,6 @@ public class QuizFormScreen implements Screen {
                     .timeLimitMins(mins > 0 ? mins : null)
                     .activeDurationHours(hours)
                     .passScore(score)
-                    .maxAttempts(1)
                     .randomizeQuestions(randomizeQuestions)
                     .randomizeAnswers(randomizeAnswers)
                     .showAnswersAfter(showAnswersAfter)
