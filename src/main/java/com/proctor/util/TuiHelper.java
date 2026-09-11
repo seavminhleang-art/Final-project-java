@@ -663,61 +663,134 @@ private static String stripAnsi(String str) {
 
         int innerWidth = Math.max(116, maxLineLen);
         if (termWidth > 30) {
-            innerWidth = Math.min(innerWidth, termWidth - 4);
+            innerWidth = Math.min(innerWidth, termWidth - 8);
         }
 
         int contentBlockOffset = Math.max(0, (innerWidth - maxLineLen) / 2);
-
         int targetInnerWidth = innerWidth + 2;
-        int boxWidth = innerWidth + 4;
-        int leftMargin = Math.max(0, (termWidth - boxWidth) / 2);
-        String indent = (leftMargin > 0) ? " ".repeat(leftMargin) : "";
+        int boxWidth = innerWidth + 4; // 120
+
+        // Constant Outer Viewport Monitor Frame (hugging the terminal screen like a monitor bezel)
+        int outerMarginX = (termWidth > 128) ? 2 : 0;
+        int outerWidth = termWidth - (outerMarginX * 2);
+        if (outerWidth < 124) {
+            outerWidth = Math.min(124, termWidth);
+        }
+        int outerInnerWidth = outerWidth - 2;
+        if (outerInnerWidth % 2 != 0) {
+            outerWidth -= 1;
+            outerInnerWidth = outerWidth - 2;
+        }
+        int leftIndent = Math.max(0, (termWidth - outerWidth) / 2);
+        int rightMarginLen = Math.max(0, termWidth - (leftIndent + outerWidth));
+        String indent = (leftIndent > 0) ? " ".repeat(leftIndent) : "";
+        String rightMargin = (rightMarginLen > 0) ? " ".repeat(rightMarginLen) : "";
+
+        // Strictly even horizontal padding inside the frame
+        int contentLeftPad = Math.max(0, (outerInnerWidth - boxWidth) / 2);
+        int contentRightPad = Math.max(0, outerInnerWidth - (contentLeftPad + boxWidth));
 
         int headerRows = headerLines.size();
         int bodyRows = (endBody >= startBody) ? (endBody - startBody + 1) : 0;
         int hintRows = hintIndices.size();
 
-        int totalHeight = (headerRows > 0 ? (headerRows + 1) : 0)
+        int contentHeight = (headerRows > 0 ? (headerRows + 1) : 0)
                 + (bodyRows > 0 ? (bodyRows + 4 + (hintRows > 0 ? 1 : 0)) : 0)
                 + (hintRows > 0 ? (hintRows + 2) : 0);
-        int topMargin = Math.max(0, (termHeight - totalHeight) / 2);
+
+        // CONSTANT FRAME HEIGHT: fixed across ALL screens so the outer border never shifts!
+        int targetFrameHeight;
+        int topMarginOutside;
+        int botMarginOutside;
+
+        if (termHeight >= 60) {
+            // Keep 1 line outside margin at top and bottom, frame hugs the screen with even margins
+            targetFrameHeight = termHeight - 2;
+            topMarginOutside = 1;
+            botMarginOutside = 1;
+        } else {
+            // Fits the maximum screen height (58 lines)
+            targetFrameHeight = 58;
+            topMarginOutside = Math.max(0, (termHeight - targetFrameHeight) / 2);
+            botMarginOutside = Math.max(0, termHeight - targetFrameHeight - topMarginOutside);
+        }
+
+        int interiorHeight = targetFrameHeight - 2;
+        int remainingY = Math.max(0, interiorHeight - contentHeight);
+        int topPadInside = remainingY / 2;
+        int botPadInside = remainingY - topPadInside;
 
         String borderCol = NAVY_BLUE;
 
         StringBuilder sb = new StringBuilder();
 
-        for (int r = 0; r < topMargin; r++) {
-            sb.append(CLEAR_EOL).append("\n");
+        // Top outside margin
+        for (int r = 0; r < topMarginOutside; r++) {
+            sb.append(" ".repeat(termWidth)).append(CLEAR_EOL).append("\n");
         }
 
+        // 1. Outer Monitor Frame Top Border
+        sb.append(indent)
+          .append(borderCol).append("┏").append("━".repeat(outerInnerWidth)).append("┓").append(RESET)
+          .append(rightMargin)
+          .append(CLEAR_EOL).append("\n");
+
+        // 2. Interior Top Padding Rows inside Monitor Frame
+        for (int p = 0; p < topPadInside; p++) {
+            sb.append(indent)
+              .append(borderCol).append("┃").append(RESET)
+              .append(" ".repeat(outerInnerWidth))
+              .append(borderCol).append("┃").append(RESET)
+              .append(rightMargin)
+              .append(CLEAR_EOL).append("\n");
+        }
+
+        // 3. ASCII Header Rows
         if (!headerLines.isEmpty()) {
             for (String hLine : headerLines) {
                 String cleanHLine = hLine.replace(CLEAR_EOL, "");
                 int visLen = visibleLength(cleanHLine);
-                if (visLen == 0) {
-                    sb.append(CLEAR_EOL).append("\n");
-                } else {
-                    int pad = Math.max(0, (boxWidth - visLen) / 2);
-                    sb.append(indent)
-                      .append(" ".repeat(pad))
-                      .append(cleanHLine)
-                      .append(CLEAR_EOL).append("\n");
-                }
+                int pad = Math.max(0, (outerInnerWidth - visLen) / 2);
+                int rightPad = Math.max(0, outerInnerWidth - (pad + visLen));
+                sb.append(indent)
+                  .append(borderCol).append("┃").append(RESET)
+                  .append(" ".repeat(pad))
+                  .append(cleanHLine)
+                  .append(" ".repeat(rightPad))
+                  .append(borderCol).append("┃").append(RESET)
+                  .append(rightMargin)
+                  .append(CLEAR_EOL).append("\n");
             }
             if (bodyRows > 0 || hintRows > 0) {
-                sb.append(CLEAR_EOL).append("\n");
+                sb.append(indent)
+                  .append(borderCol).append("┃").append(RESET)
+                  .append(" ".repeat(outerInnerWidth))
+                  .append(borderCol).append("┃").append(RESET)
+                  .append(rightMargin)
+                  .append(CLEAR_EOL).append("\n");
             }
         }
 
+        // 4. Inner Main Box
         if (bodyRows > 0) {
             sb.append(indent)
+              .append(borderCol).append("┃").append(RESET)
+              .append(" ".repeat(contentLeftPad))
               .append(borderCol).append("┏").append("━".repeat(targetInnerWidth)).append("┓").append(RESET)
+              .append(" ".repeat(contentRightPad))
+              .append(borderCol).append("┃").append(RESET)
+              .append(rightMargin)
               .append(CLEAR_EOL).append("\n");
 
             sb.append(indent)
               .append(borderCol).append("┃").append(RESET)
+              .append(" ".repeat(contentLeftPad))
+              .append(borderCol).append("┃").append(RESET)
               .append(" ".repeat(targetInnerWidth))
               .append(borderCol).append("┃").append(RESET)
+              .append(" ".repeat(contentRightPad))
+              .append(borderCol).append("┃").append(RESET)
+              .append(rightMargin)
               .append(CLEAR_EOL).append("\n");
 
             for (int i = startBody; i <= endBody; i++) {
@@ -748,33 +821,60 @@ private static String stripAnsi(String str) {
 
                 sb.append(indent)
                   .append(borderCol).append("┃").append(RESET)
+                  .append(" ".repeat(contentLeftPad))
+                  .append(borderCol).append("┃").append(RESET)
                   .append(" ")
                   .append(" ".repeat(leftPad))
                   .append(cleanLine)
                   .append(" ".repeat(rightPad))
                   .append(" ")
                   .append(borderCol).append("┃").append(RESET)
+                  .append(" ".repeat(contentRightPad))
+                  .append(borderCol).append("┃").append(RESET)
+                  .append(rightMargin)
                   .append(CLEAR_EOL).append("\n");
             }
 
             sb.append(indent)
               .append(borderCol).append("┃").append(RESET)
+              .append(" ".repeat(contentLeftPad))
+              .append(borderCol).append("┃").append(RESET)
               .append(" ".repeat(targetInnerWidth))
               .append(borderCol).append("┃").append(RESET)
+              .append(" ".repeat(contentRightPad))
+              .append(borderCol).append("┃").append(RESET)
+              .append(rightMargin)
               .append(CLEAR_EOL).append("\n");
 
             sb.append(indent)
+              .append(borderCol).append("┃").append(RESET)
+              .append(" ".repeat(contentLeftPad))
               .append(borderCol).append("┗").append("━".repeat(targetInnerWidth)).append("┛").append(RESET)
+              .append(" ".repeat(contentRightPad))
+              .append(borderCol).append("┃").append(RESET)
+              .append(rightMargin)
               .append(CLEAR_EOL);
 
             if (hintRows > 0) {
-                sb.append("\n").append(CLEAR_EOL).append("\n");
+                sb.append("\n")
+                  .append(indent)
+                  .append(borderCol).append("┃").append(RESET)
+                  .append(" ".repeat(outerInnerWidth))
+                  .append(borderCol).append("┃").append(RESET)
+                  .append(rightMargin)
+                  .append(CLEAR_EOL).append("\n");
             }
         }
 
+        // 5. Inner Hint Box
         if (hintRows > 0) {
             sb.append(indent)
+              .append(borderCol).append("┃").append(RESET)
+              .append(" ".repeat(contentLeftPad))
               .append(borderCol).append("┏").append("━".repeat(targetInnerWidth)).append("┓").append(RESET)
+              .append(" ".repeat(contentRightPad))
+              .append(borderCol).append("┃").append(RESET)
+              .append(rightMargin)
               .append(CLEAR_EOL).append("\n");
 
             for (int idx : hintIndices) {
@@ -786,23 +886,51 @@ private static String stripAnsi(String str) {
 
                 sb.append(indent)
                   .append(borderCol).append("┃").append(RESET)
+                  .append(" ".repeat(contentLeftPad))
+                  .append(borderCol).append("┃").append(RESET)
                   .append(" ")
                   .append(" ".repeat(leftPad))
                   .append(trimmedClean)
                   .append(" ".repeat(rightPad))
                   .append(" ")
                   .append(borderCol).append("┃").append(RESET)
+                  .append(" ".repeat(contentRightPad))
+                  .append(borderCol).append("┃").append(RESET)
+                  .append(rightMargin)
                   .append(CLEAR_EOL).append("\n");
             }
 
             sb.append(indent)
+              .append(borderCol).append("┃").append(RESET)
+              .append(" ".repeat(contentLeftPad))
               .append(borderCol).append("┗").append("━".repeat(targetInnerWidth)).append("┛").append(RESET)
+              .append(" ".repeat(contentRightPad))
+              .append(borderCol).append("┃").append(RESET)
+              .append(rightMargin)
               .append(CLEAR_EOL);
         }
 
-        int bottomMargin = Math.max(0, termHeight - totalHeight - topMargin);
-        for (int r = 0; r < bottomMargin; r++) {
-            sb.append("\n").append(CLEAR_EOL);
+        // 6. Interior Bottom Padding Rows inside Monitor Frame
+        for (int p = 0; p < botPadInside; p++) {
+            sb.append("\n")
+              .append(indent)
+              .append(borderCol).append("┃").append(RESET)
+              .append(" ".repeat(outerInnerWidth))
+              .append(borderCol).append("┃").append(RESET)
+              .append(rightMargin)
+              .append(CLEAR_EOL);
+        }
+
+        // 7. Outer Monitor Frame Bottom Border
+        sb.append("\n")
+          .append(indent)
+          .append(borderCol).append("┗").append("━".repeat(outerInnerWidth)).append("┛").append(RESET)
+          .append(rightMargin)
+          .append(CLEAR_EOL);
+
+        // Bottom outside margin
+        for (int r = 0; r < botMarginOutside; r++) {
+            sb.append("\n").append(" ".repeat(termWidth)).append(CLEAR_EOL);
         }
 
         return sb.toString();

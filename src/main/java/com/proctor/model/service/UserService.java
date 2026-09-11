@@ -6,7 +6,6 @@ import com.proctor.model.enums.Role;
 import com.proctor.exception.ValidationException;
 import com.proctor.util.PasswordUtils;
 
-import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -14,7 +13,6 @@ import java.util.regex.Pattern;
 
 public class UserService {
     private final UserRepository userRepository;
-    private final SecureRandom random = new SecureRandom();
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
 
     public UserService(UserRepository userRepository) {
@@ -150,44 +148,6 @@ public class UserService {
             }
         }
         return userRepository.toggleEnabled(id);
-    }
-
-    public String resetPassword(int id) {
-        Optional<User> existing = userRepository.findById(id);
-        if (existing.isEmpty()) {
-            throw new ValidationException("User not found.");
-        }
-
-        User user = existing.get();
-        if (user.getRole() == Role.ADMIN || SeedService.ADMIN_USERNAME.equalsIgnoreCase(user.getUsername())) {
-            throw new ValidationException("The administrator account is hardcoded and cannot be reset.");
-        }
-
-        String tempPassword = "Temp@" + (1000 + random.nextInt(9000));
-        String hash = PasswordUtils.hash(tempPassword);
-        boolean updated = userRepository.updatePassword(id, hash);
-        if (!updated) {
-            throw new ValidationException("Failed to reset password.");
-        }
-        return tempPassword;
-    }
-
-    public boolean resetPasswordWithAdminPassword(int id, String newRawPassword) {
-        PasswordUtils.validatePassword(newRawPassword);
-        Optional<User> existing = userRepository.findById(id);
-        if (existing.isEmpty()) {
-            throw new ValidationException("User not found.");
-        }
-        User user = existing.get();
-        if (user.getRole() == Role.ADMIN || SeedService.ADMIN_USERNAME.equalsIgnoreCase(user.getUsername())) {
-            throw new ValidationException("The administrator account is hardcoded and cannot be modified.");
-        }
-        String hash = PasswordUtils.hash(newRawPassword.trim());
-        boolean updated = userRepository.updatePassword(id, hash);
-        if (!updated) {
-            throw new ValidationException("Failed to reset password.");
-        }
-        return true;
     }
 
     public boolean changePassword(int id, String currentPassword, String newPassword) {

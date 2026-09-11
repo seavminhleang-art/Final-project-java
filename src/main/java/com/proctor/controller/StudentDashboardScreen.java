@@ -60,7 +60,14 @@ public class StudentDashboardScreen implements Screen {
     }
 
     private int getUnreadCount() {
-        return Session.getCurrentUser().map(u -> inboxService.getUnreadCount(u.getId())).orElse(0);
+        try {
+            return Session.getCurrentUser()
+                    .filter(u -> u.getId() != null)
+                    .map(u -> inboxService.getUnreadCount(u.getId()))
+                    .orElse(0);
+        } catch (Exception e) {
+            return 0;
+        }
     }
 
     private String[] getMenuItems() {

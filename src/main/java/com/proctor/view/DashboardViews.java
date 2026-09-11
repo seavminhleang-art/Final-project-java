@@ -6,19 +6,25 @@ public class DashboardViews {
 
     public static String renderDashboard(String headerTitle, String userFullName, String userIdentifier, String[] menuItems, int selectedIndex) {
         StringBuilder sb = new StringBuilder();
-        sb.append(TuiHelper.header(headerTitle));
+        String safeTitle = (headerTitle != null && !headerTitle.isBlank()) ? headerTitle : "PROCTOR";
+        sb.append(TuiHelper.header(safeTitle));
         sb.append("\n");
 
-        String portalRole = headerTitle.toUpperCase().contains("ADMIN") ? "Admin Portal"
-                : (headerTitle.toUpperCase().contains("TEACHER") ? "Teacher Portal" : "Student Portal");
-        String userInfo = "Logged in as: " + userFullName + " (" + userIdentifier + ")";
+        String upperTitle = safeTitle.toUpperCase();
+        String portalRole = upperTitle.contains("ADMIN") ? "Admin Portal"
+                : (upperTitle.contains("TEACHER") ? "Teacher Portal" : "Student Portal");
+        String safeName = (userFullName != null && !userFullName.isBlank()) ? userFullName : "User";
+        String safeIdentifier = (userIdentifier != null && !userIdentifier.isBlank()) ? userIdentifier : "";
+        String userInfo = safeIdentifier.isEmpty() ? "Logged in as: " + safeName : "Logged in as: " + safeName + " (" + safeIdentifier + ")";
         sb.append(TuiHelper.boxTitle(portalRole, userInfo)).append("\n\n");
 
-        for (int i = 0; i < menuItems.length; i++) {
+        String[] safeItems = menuItems != null ? menuItems : new String[0];
+        for (int i = 0; i < safeItems.length; i++) {
+            String item = safeItems[i] != null ? safeItems[i] : "";
             if (i == selectedIndex) {
-                sb.append(TuiHelper.cyan("  ▶ " + TuiHelper.bold(menuItems[i]))).append("\n\n");
+                sb.append(TuiHelper.cyan("  ▶ " + TuiHelper.bold(item))).append("\n\n");
             } else {
-                sb.append("    ").append(menuItems[i]).append("\n\n");
+                sb.append("    ").append(item).append("\n\n");
             }
         }
 
