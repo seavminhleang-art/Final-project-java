@@ -5,6 +5,7 @@ import com.proctor.exception.ValidationException;
 import com.proctor.model.entity.Subject;
 import com.proctor.model.service.SubjectService;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.TuiHelper;
 import com.proctor.view.SubjectViews;
 import com.proctor.model.service.UserService;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
@@ -24,6 +25,9 @@ public class SubjectFormScreen implements Screen {
 
     private int focusedField = 0;
     private String errorMessage = "";
+
+    private boolean showDeleteModal = false;
+    private boolean deleteConfirmFocused = false;
 
     public SubjectFormScreen(SubjectService subjectService, UserService userService, AuthService authService, Subject subjectToEdit) {
         this.subjectService = subjectService;
@@ -46,24 +50,59 @@ public class SubjectFormScreen implements Screen {
     }
 
     private int getNumInputFields() {
-        return 3;
+        return isEditMode() ? 4 : 3;
     }
 
     private int getFieldCount() {
-        return getNumInputFields() + 2;
+        return isEditMode() ? 7 : 5;
     }
 
     private int getSaveButtonIndex() {
         return getNumInputFields();
     }
 
+    private int getDeleteButtonIndex() {
+        return isEditMode() ? getNumInputFields() + 1 : -1;
+    }
+
     private int getCancelButtonIndex() {
-        return getNumInputFields() + 1;
+        return isEditMode() ? getNumInputFields() + 2 : getNumInputFields() + 1;
+    }
+
+    private boolean isButton(int field) {
+        return field >= getNumInputFields();
     }
 
     @Override
     public ScreenResult update(Message msg) {
         if (msg instanceof KeyPressMessage k) {
+            if (showDeleteModal) {
+                if (KeyUtil.isLeft(k) || KeyUtil.isRight(k) || KeyUtil.isTab(k)) {
+                    deleteConfirmFocused = !deleteConfirmFocused;
+                    return ScreenResult.stay(this);
+                }
+                if (KeyUtil.isEnter(k)) {
+                    if (deleteConfirmFocused) {
+                        try {
+                            subjectService.deleteSubject(subjectToEdit.getId());
+                            return ScreenResult.navigate(new SubjectListScreen(subjectService, userService, authService));
+                        } catch (ValidationException e) {
+                            showDeleteModal = false;
+                            errorMessage = e.getMessage();
+                            return ScreenResult.stay(this);
+                        }
+                    } else {
+                        showDeleteModal = false;
+                        return ScreenResult.stay(this);
+                    }
+                }
+                if (KeyUtil.isEsc(k)) {
+                    showDeleteModal = false;
+                    return ScreenResult.stay(this);
+                }
+                return ScreenResult.stay(this);
+            }
+
             if (KeyUtil.isEsc(k)) {
                 return ScreenResult.navigate(new SubjectListScreen(subjectService, userService, authService));
             }
@@ -79,8 +118,12 @@ public class SubjectFormScreen implements Screen {
             }
 
             if (KeyUtil.isEnter(k)) {
-                if (focusedField == getSaveButtonIndex() || focusedField == getNumInputFields() - 1) {
+                if (focusedField == getSaveButtonIndex() || (!isEditMode() && focusedField == getNumInputFields() - 1)) {
                     return handleSave();
+                } else if (focusedField == getDeleteButtonIndex()) {
+                    showDeleteModal = true;
+                    deleteConfirmFocused = false;
+                    return ScreenResult.stay(this);
                 } else if (focusedField == getCancelButtonIndex()) {
                     return ScreenResult.navigate(new SubjectListScreen(subjectService, userService, authService));
                 } else {
@@ -89,24 +132,39 @@ public class SubjectFormScreen implements Screen {
                 }
             }
 
-            if (focusedField == getSaveButtonIndex() || focusedField == getCancelButtonIndex()) {
-                if ("left".equals(k.key()) || "right".equals(k.key())) {
-                    focusedField = (focusedField == getSaveButtonIndex()) ? getCancelButtonIndex() : getSaveButtonIndex();
+            if (isButton(focusedField)) {
+                if ("left".equals(k.key())) {
+                    if (isEditMode()) {
+                        if (focusedField == getCancelButtonIndex()) focusedField = getDeleteButtonIndex();
+                        else if (focusedField == getDeleteButtonIndex()) focusedField = getSaveButtonIndex();
+                    } else {
+                        focusedField = (focusedField == getSaveButtonIndex()) ? getCancelButtonIndex() : getSaveButtonIndex();
+                    }
+                    return ScreenResult.stay(this);
+                } else if ("right".equals(k.key())) {
+                    if (isEditMode()) {
+                        if (focusedField == getSaveButtonIndex()) focusedField = getDeleteButtonIndex();
+                        else if (focusedField == getDeleteButtonIndex()) focusedField = getCancelButtonIndex();
+                    } else {
+                        focusedField = (focusedField == getSaveButtonIndex()) ? getCancelButtonIndex() : getSaveButtonIndex();
+                    }
                     return ScreenResult.stay(this);
                 }
             }
 
-            if (isEditMode()) {
-                handleEditModeInput(k);
-            } else {
-                handleCreateModeInput(k);
+            if (focusedField >= 0 && focusedField <= 2) {
+                handleTextInput(k);
+            } else if (isEditMode() && focusedField == 3) {
+                if (" ".equals(k.key()) || "right".equals(k.key()) || "left".equals(k.key())) {
+                    enabledStatus = !enabledStatus;
+                }
             }
         }
 
         return ScreenResult.stay(this);
     }
 
-    private void handleCreateModeInput(KeyPressMessage k) {
+    private void handleTextInput(KeyPressMessage k) {
         StringBuilder focusedBuffer = (focusedField == 0) ? code : (focusedField == 1 ? name : description);
         if (KeyUtil.isBackspace(k)) {
             if (!focusedBuffer.isEmpty()) focusedBuffer.deleteCharAt(focusedBuffer.length() - 1);
@@ -121,31 +179,10 @@ public class SubjectFormScreen implements Screen {
         }
     }
 
-    private void handleEditModeInput(KeyPressMessage k) {
-        if (focusedField == 0 || focusedField == 1) {
-            StringBuilder focusedBuffer = (focusedField == 0) ? name : description;
-            if (KeyUtil.isBackspace(k)) {
-                if (!focusedBuffer.isEmpty()) focusedBuffer.deleteCharAt(focusedBuffer.length() - 1);
-            } else if (k.type() == KeyType.KeyRunes && k.runes() != null) {
-                for (char c : k.runes()) {
-                    if (!Character.isISOControl(c)) focusedBuffer.append(c);
-                }
-                errorMessage = "";
-            } else if (k.key() != null && k.key().length() == 1 && !Character.isISOControl(k.key().charAt(0))) {
-                focusedBuffer.append(k.key());
-                errorMessage = "";
-            }
-        } else if (focusedField == 2) {
-            if (" ".equals(k.key()) || "right".equals(k.key()) || "left".equals(k.key())) {
-                enabledStatus = !enabledStatus;
-            }
-        }
-    }
-
     private ScreenResult handleSave() {
         try {
             if (isEditMode()) {
-                subjectService.updateSubject(subjectToEdit.getId(), name.toString(), description.toString(), enabledStatus);
+                subjectService.updateSubject(subjectToEdit.getId(), code.toString(), name.toString(), description.toString(), enabledStatus);
             } else {
                 subjectService.createSubject(code.toString(), name.toString(), description.toString());
             }
@@ -161,14 +198,26 @@ public class SubjectFormScreen implements Screen {
 
     @Override
     public String view() {
+        if (showDeleteModal && subjectToEdit != null) {
+            return TuiHelper.confirmationModal(
+                    "DELETE SUBJECT",
+                    "Are you sure you want to delete subject '" + subjectToEdit.getCode() + "'?",
+                    "This will permanently delete the subject and unlink it from any quizzes or questions.",
+                    "Delete Subject",
+                    "Cancel",
+                    deleteConfirmFocused
+            );
+        }
+
         return SubjectViews.renderSubjectForm(
                 isEditMode(),
-                isEditMode() ? subjectToEdit.getCode() : code.toString(),
+                code.toString(),
                 name.toString(),
                 description.toString(),
                 enabledStatus,
                 focusedField,
                 getSaveButtonIndex(),
+                getDeleteButtonIndex(),
                 getCancelButtonIndex(),
                 errorMessage
         );

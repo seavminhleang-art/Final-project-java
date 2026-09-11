@@ -4,14 +4,20 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c05deeaa-fc82-4d29-9b43-ab8bc6abc8c2" name="Changes" comment="" />
+    <list default="true" id="c05deeaa-fc82-4d29-9b43-ab8bc6abc8c2" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/SubjectFormScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/SubjectFormScreen.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/util/KeyUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/util/KeyUtil.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="127" />
+    <option name="cachedIndexableFilesCount" value="137" />
   </component>
   <component name="ExternalProjectsData">
     <projectState path="$PROJECT_DIR$">
@@ -59,23 +65,23 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.0000064609481485" />
-      <entry key="MS500" value="1.1090945957673901" />
-      <entry key="S2" value="2.409933330870582" />
-      <entry key="S5" value="4.158982138564786" />
-      <entry key="S10" value="5.306344553305514" />
-      <entry key="S30" value="6.358944852752277" />
-      <entry key="S60" value="6.66980119974587" />
-      <entry key="M2" value="6.919656670410992" />
-      <entry key="M5" value="8.196131170644191" />
-      <entry key="M10" value="10.195262407509754" />
-      <entry key="M15" value="11.462727129374533" />
-      <entry key="M30" value="13.294382804300108" />
-      <entry key="H1" value="14.511913072090808" />
-      <entry key="H2" value="15.218103982282782" />
-      <entry key="H4" value="15.599025219772937" />
-      <entry key="D1" value="15.93172734072218" />
-      <entry key="W1" value="15.990210725283667" />
+      <entry key="MS100" value="1.0" />
+      <entry key="MS500" value="1.000000039610208" />
+      <entry key="S2" value="1.039026122654644" />
+      <entry key="S5" value="1.8592279992790073" />
+      <entry key="S10" value="3.571699817740132" />
+      <entry key="S30" value="6.456234966717561" />
+      <entry key="S60" value="7.6041116462751335" />
+      <entry key="M2" value="8.348833144430873" />
+      <entry key="M5" value="9.92492887825194" />
+      <entry key="M10" value="12.028874734724454" />
+      <entry key="M15" value="13.338910300425706" />
+      <entry key="M30" value="15.223181801905914" />
+      <entry key="H1" value="16.47322722699706" />
+      <entry key="H2" value="17.197866542837076" />
+      <entry key="H4" value="17.588665271365713" />
+      <entry key="D1" value="17.92996556878546" />
+      <entry key="W1" value="17.989958161821036" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
@@ -97,23 +103,23 @@
       <entry key="W1" value="0.0" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.08717148269609346" />
-      <entry key="MS500" value="0.6386174845684529" />
-      <entry key="S2" value="1.9381516042633278" />
-      <entry key="S5" value="3.808837020534531" />
-      <entry key="S10" value="5.082378094974818" />
-      <entry key="S30" value="6.269863552269301" />
-      <entry key="S60" value="6.623168851196488" />
-      <entry key="M2" value="6.895593852302138" />
-      <entry key="M5" value="8.185258696080691" />
-      <entry key="M10" value="10.188822230316719" />
-      <entry key="M15" value="11.457991963851564" />
-      <entry key="M30" value="13.291686122145142" />
-      <entry key="H1" value="14.51045260857254" />
-      <entry key="H2" value="15.217340798400139" />
-      <entry key="H4" value="15.598634679482648" />
-      <entry key="D1" value="15.93166094250965" />
-      <entry key="W1" value="15.990201206899718" />
+      <entry key="MS100" value="0.04671403901984182" />
+      <entry key="MS500" value="0.5418630082492856" />
+      <entry key="S2" value="0.8905681141297106" />
+      <entry key="S5" value="1.7350481684020758" />
+      <entry key="S10" value="3.4420960662191398" />
+      <entry key="S30" value="6.375021039441731" />
+      <entry key="S60" value="7.555945231432566" />
+      <entry key="M2" value="8.322377492683126" />
+      <entry key="M5" value="9.91269543929335" />
+      <entry key="M10" value="12.02168419933117" />
+      <entry key="M15" value="13.333656947270718" />
+      <entry key="M30" value="15.220215342921017" />
+      <entry key="H1" value="16.471628652371137" />
+      <entry key="H2" value="17.197033397287814" />
+      <entry key="H4" value="17.588239508499697" />
+      <entry key="D1" value="17.929893265131483" />
+      <entry key="W1" value="17.989947798925353" />
     </decayedShown>
   </component>
   <component name="ProblemsViewState">
@@ -128,26 +134,32 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Gradle.Build Proctor.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Proctor [build].executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Proctor [run].executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Upgrade Gradle wrapper.executor&quot;: &quot;Run&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;SHELLCHECK.PATH&quot;: &quot;/home/tongan/.local/share/JetBrains/IdeaIC2026.2/Shell Script/shellcheck&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;prototype&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/tongan/Projects/Proctor&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settings.project.maven.runner&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_MARK_IGNORED_FILES_AS_EXCLUDED": "true",
+    "Gradle.Build Proctor.executor": "Run",
+    "Gradle.Proctor [build].executor": "Run",
+    "Gradle.Proctor [run].executor": "Run",
+    "Gradle.Upgrade Gradle wrapper.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "SHELLCHECK.PATH": "/home/tongan/.local/share/JetBrains/IdeaIC2026.2/Shell Script/shellcheck",
+    "git-widget-placeholder": "prototype",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "/home/tongan/Projects/Proctor",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0",
+    "settings.editor.selected.configurable": "reference.settings.project.maven.runner"
   }
-}</component>
+}]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+    </key>
+  </component>
   <component name="RunManager" selected="Gradle.Proctor [run]">
     <configuration name="Proctor [build]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
