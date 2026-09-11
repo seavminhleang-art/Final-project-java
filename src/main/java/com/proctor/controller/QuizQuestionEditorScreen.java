@@ -116,7 +116,7 @@ public class QuizQuestionEditorScreen implements Screen {
                 }
             } else if (KeyUtil.isLeft(k)) {
                 if (!questions.isEmpty()) {
-                    int pageSize = 5;
+                    int pageSize = TuiHelper.PAGE_SIZE;
                     int currentPage = selectedIndex / pageSize;
                     if (currentPage > 0) {
                         selectedIndex = (currentPage - 1) * pageSize;
@@ -124,7 +124,7 @@ public class QuizQuestionEditorScreen implements Screen {
                 }
             } else if (KeyUtil.isRight(k)) {
                 if (!questions.isEmpty()) {
-                    int pageSize = 5;
+                    int pageSize = TuiHelper.PAGE_SIZE;
                     int totalPages = Math.max(1, (int) Math.ceil((double) questions.size() / pageSize));
                     int currentPage = selectedIndex / pageSize;
                     if (currentPage < totalPages - 1) {

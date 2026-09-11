@@ -28,14 +28,14 @@ public class QuestionViews {
             sb.append("  Search: [ ").append(searchBuffer).append(" ] (Press '/' to edit)\n\n");
         }
 
-        sb.append(String.format("  %-4s  %-10s  %-11s  %-8s  %-5s  %-39s  %-8s%n",
+        sb.append(String.format("  %-4s  %-10s  %-12s  %-6s  %-5s  %-55s  %-8s%n",
                 "ID", "SUBJ", "TYPE", "DIFF", "PTS", "QUESTION TEXT", "STATUS")).append("\n");
-        sb.append("  " + "─".repeat(95) + "\n\n");
+        sb.append("  " + "─".repeat(112) + "\n\n");
 
         if (questions.isEmpty()) {
             sb.append("  ").append(TuiHelper.dim("No questions found matching criteria.")).append("\n");
         } else {
-            int pageSize = 5;
+            int pageSize = TuiHelper.PAGE_SIZE;
             int startRow = (selectedIndex / pageSize) * pageSize;
             int endRow = Math.min(questions.size(), startRow + pageSize);
 
@@ -45,13 +45,13 @@ public class QuestionViews {
                 String status = q.isEnabled() ? TuiHelper.green("Enabled") : TuiHelper.red("Disabled");
                 String subj = q.getSubjectCode() != null ? q.getSubjectCode() : "-";
 
-                String line = String.format("%-4d  %-10s  %-11s  %-8s  %-5.1f  %-39s  %-8s",
+                String line = String.format("%-4d  %-10s  %-12s  %-6s  %-5.1f  %-55s  %-8s",
                         q.getId(),
                         truncate(subj, 10),
                         q.getQuestionType().name(),
                         q.getDifficulty().name(),
                         q.getPoints(),
-                        truncate(q.getQuestionText(), 39),
+                        truncate(q.getQuestionText(), 55),
                         status);
 
                 if (i == selectedIndex) {
@@ -65,10 +65,10 @@ public class QuestionViews {
             }
         }
 
-        sb.append("\n  " + "─".repeat(95) + "\n\n");
+        sb.append("\n  " + "─".repeat(112) + "\n\n");
 
         if (!questions.isEmpty()) {
-            int pageSize = 5;
+            int pageSize = TuiHelper.PAGE_SIZE;
             int totalPages = Math.max(1, (int) Math.ceil((double) questions.size() / pageSize));
             int currentPage = selectedIndex / pageSize;
             sb.append(TuiHelper.paginationBar(currentPage, totalPages, questions.size()));
@@ -90,7 +90,7 @@ public class QuestionViews {
                 "[/] Search",
                 "[Esc] Back"
         );
-        sb.append(TuiHelper.wrapHints(hints, 90));
+        sb.append(TuiHelper.wrapHints(hints));
         return sb.toString();
     }
 
@@ -150,39 +150,39 @@ public class QuestionViews {
         int idx = fieldIndex;
         if (!isPinnedQuiz) {
             if (idx == 0) {
-                sb.append(TuiHelper.inputBox("Subject (Required)", subjectName, focusedField == 0, 86, false, "e.g. Java, Python, English, Math"));
+                sb.append(TuiHelper.inputBox("Subject (Required)", subjectName, focusedField == 0, 102, false, "e.g. Java, Python, English, Math"));
                 return;
             }
             idx -= 1;
         }
 
         switch (idx) {
-            case 0 -> sb.append(TuiHelper.inputBox("Question Prompt (Required)", questionText, focusedField == fieldIndex, 86, false, "enter question text"));
-            case 1 -> sb.append(TuiHelper.selectBox("Question Type", selectedType.name(), focusedField == fieldIndex, 86, "Space to cycle"));
-            case 2 -> sb.append(TuiHelper.selectBox("Difficulty", selectedDifficulty.name(), focusedField == fieldIndex, 86, "Space to cycle"));
-            case 3 -> sb.append(TuiHelper.inputBox("Points", points, focusedField == fieldIndex, 86, false, "e.g. 2.0"));
+            case 0 -> sb.append(TuiHelper.inputBox("Question Prompt (Required)", questionText, focusedField == fieldIndex, 102, false, "enter question text"));
+            case 1 -> sb.append(TuiHelper.selectBox("Question Type", selectedType.name(), focusedField == fieldIndex, 102, "Space to cycle"));
+            case 2 -> sb.append(TuiHelper.selectBox("Difficulty", selectedDifficulty.name(), focusedField == fieldIndex, 102, "Space to cycle"));
+            case 3 -> sb.append(TuiHelper.inputBox("Points", points, focusedField == fieldIndex, 102, false, "e.g. 2.0"));
             default -> {
                 int optIdx = idx - 4;
                 if (selectedType == QuestionType.MCQ) {
                     if (optIdx >= 0 && optIdx < 4) {
                         String isCorrectMark = (correctOptionIndex == optIdx) ? " [✔ CORRECT]" : "";
                         String label = "Option " + (char) ('A' + optIdx) + isCorrectMark;
-                        sb.append(TuiHelper.inputBox(label, options.get(optIdx).toString(), focusedField == fieldIndex, 86, false, "leave blank to omit"));
+                        sb.append(TuiHelper.inputBox(label, options.get(optIdx).toString(), focusedField == fieldIndex, 102, false, "leave blank to omit"));
                     } else if (optIdx == 4) {
                         String corrLabel = "Option " + (char) ('A' + correctOptionIndex);
-                        sb.append(TuiHelper.selectBox("Correct Answer Selection", corrLabel, focusedField == fieldIndex, 86, "Space to cycle"));
+                        sb.append(TuiHelper.selectBox("Correct Answer Selection", corrLabel, focusedField == fieldIndex, 102, "Space to cycle"));
                     } else if (optIdx == 5) {
-                        sb.append(TuiHelper.inputBox("Explanation (Optional)", explanation, focusedField == fieldIndex, 86, false, "rubric context"));
+                        sb.append(TuiHelper.inputBox("Explanation (Optional)", explanation, focusedField == fieldIndex, 102, false, "rubric context"));
                     }
                 } else if (selectedType == QuestionType.TRUE_FALSE) {
                     if (optIdx == 0) {
                         String corrLabel = (correctOptionIndex == 0) ? "True" : "False";
-                        sb.append(TuiHelper.selectBox("Correct Answer Selection", corrLabel, focusedField == fieldIndex, 86, "Space to cycle"));
+                        sb.append(TuiHelper.selectBox("Correct Answer Selection", corrLabel, focusedField == fieldIndex, 102, "Space to cycle"));
                     } else if (optIdx == 1) {
-                        sb.append(TuiHelper.inputBox("Explanation (Optional)", explanation, focusedField == fieldIndex, 86, false, "rubric context"));
+                        sb.append(TuiHelper.inputBox("Explanation (Optional)", explanation, focusedField == fieldIndex, 102, false, "rubric context"));
                     }
                 } else {
-                    sb.append(TuiHelper.inputBox("Model Answer Context", explanation, focusedField == fieldIndex, 86, false, "rubric / explanation"));
+                    sb.append(TuiHelper.inputBox("Model Answer Context", explanation, focusedField == fieldIndex, 102, false, "rubric / explanation"));
                 }
             }
         }
@@ -259,18 +259,18 @@ public class QuestionViews {
         List<String> fieldWidgets = new ArrayList<>();
         int actualField = 0;
         if (!isPinnedQuiz) {
-            fieldWidgets.add(TuiHelper.inputBox("Subject (Required)", subjectName, focusedField == actualField++, 86, false, "e.g. Java, Python, English, Math"));
+            fieldWidgets.add(TuiHelper.inputBox("Subject (Required)", subjectName, focusedField == actualField++, 102, false, "e.g. Java, Python, English, Math"));
         }
 
-        fieldWidgets.add(TuiHelper.inputBox("Topic / Focus Area (Required)", topicBuffer, focusedField == actualField++, 86, false, "e.g. Dynamic Programming or Recursion"));
-        fieldWidgets.add(TuiHelper.inputBox("Custom Prompt / Instructions (Optional)", customPrompt, focusedField == actualField++, 86, false, "e.g. Focus on memoization, ask conceptual scenarios"));
-        fieldWidgets.add(TuiHelper.inputBox("Question Count (1-10)", countBuffer, focusedField == actualField++, 86, false, "e.g. 3"));
-        fieldWidgets.add(TuiHelper.selectBox("Question Type", selectedType.name(), focusedField == actualField++, 86, "Space to cycle"));
-        fieldWidgets.add(TuiHelper.selectBox("Difficulty", selectedDifficulty.name(), focusedField == actualField++, 86, "Space to cycle"));
+        fieldWidgets.add(TuiHelper.inputBox("Topic / Focus Area (Required)", topicBuffer, focusedField == actualField++, 102, false, "e.g. Dynamic Programming or Recursion"));
+        fieldWidgets.add(TuiHelper.inputBox("Custom Prompt / Instructions (Optional)", customPrompt, focusedField == actualField++, 102, false, "e.g. Focus on memoization, ask conceptual scenarios"));
+        fieldWidgets.add(TuiHelper.inputBox("Question Count (1-10)", countBuffer, focusedField == actualField++, 102, false, "e.g. 3"));
+        fieldWidgets.add(TuiHelper.selectBox("Question Type", selectedType.name(), focusedField == actualField++, 102, "Space to cycle"));
+        fieldWidgets.add(TuiHelper.selectBox("Difficulty", selectedDifficulty.name(), focusedField == actualField++, 102, "Space to cycle"));
 
         if (selectedType == QuestionType.MCQ) {
             String optLabel = mcqOptionCount + " Options per Question";
-            fieldWidgets.add(TuiHelper.selectBox("MCQ Option Count", optLabel, focusedField == actualField++, 86, "Space to cycle (2, 3, 4)"));
+            fieldWidgets.add(TuiHelper.selectBox("MCQ Option Count", optLabel, focusedField == actualField++, 102, "Space to cycle (2, 3, 4)"));
         }
 
         int numInputFields = fieldWidgets.size();
@@ -337,7 +337,7 @@ public class QuestionViews {
             sb.append("\n");
         }
 
-        sb.append("  " + "─".repeat(95) + "\n\n");
+        sb.append("  " + "─".repeat(112) + "\n\n");
 
         if (!generatedDrafts.isEmpty()) {
             sb.append(TuiHelper.paginationBar(currentPage, totalPages, generatedDrafts.size()));

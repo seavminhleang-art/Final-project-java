@@ -51,10 +51,10 @@ public class AuthViews {
 
         sb.append(TuiHelper.boxTitle("Sign In to Your Account")).append("\n\n");
 
-        sb.append(TuiHelper.inputBox("Email or Username", identifier, focusedField == 0, 86, false, "e.g. user@proctor.edu or username"));
+        sb.append(TuiHelper.inputBox("Email or Username", identifier, focusedField == 0, 102, false, "e.g. user@proctor.edu or username"));
         sb.append("\n");
 
-        sb.append(TuiHelper.inputBox("Password", password, focusedField == 1, 86, true, "enter password"));
+        sb.append(TuiHelper.inputBox("Password", password, focusedField == 1, 102, true, "enter password"));
         sb.append("\n\n");
 
         String btnSignIn = (focusedField == 2) ? TuiHelper.bold(TuiHelper.NAVY_BLUE + "[ ▶ Log In ]") : TuiHelper.dim("[   Log In   ]");
@@ -64,7 +64,7 @@ public class AuthViews {
         int totalBtnsWidth = TuiHelper.visibleLength(btnSignIn) + 2
                            + TuiHelper.visibleLength(btnForgot) + 2
                            + TuiHelper.visibleLength(btnExit);
-        int btnPad = Math.max(0, (100 - totalBtnsWidth) / 2);
+        int btnPad = Math.max(0, (116 - totalBtnsWidth) / 2);
         sb.append(" ".repeat(btnPad)).append(btnSignIn).append("  ").append(btnForgot).append("  ").append(btnExit).append("\n\n");
 
         if (infoBanner != null && !infoBanner.isBlank()) {
@@ -126,29 +126,29 @@ public class AuthViews {
 
         sb.append(TuiHelper.boxTitle(roleLabel + " Registration")).append("\n\n");
 
-        sb.append(TuiHelper.inputBox("Full Name", fullName, focusedField == 0, 86, false, "e.g. Jane Doe"));
+        sb.append(TuiHelper.inputBox("Full Name", fullName, focusedField == 0, 102, false, "e.g. Jane Doe"));
         sb.append("\n");
 
         String genderVal = (gender != null && !gender.isBlank()) ? gender : "Male";
         String genderHelp = "Press Space or ←/→ to switch";
-        sb.append(TuiHelper.selectBox("Gender", genderVal, focusedField == 1, 86, genderHelp));
+        sb.append(TuiHelper.selectBox("Gender", genderVal, focusedField == 1, 102, genderHelp));
         sb.append("\n");
 
         // Birthday masked input — show DD - MM - YYYY template with typed digits filled in
         String birthdayDisplay = TuiHelper.birthdayMask(birthday, focusedField == 2);
-        sb.append(TuiHelper.inputBox("Date of Birth", birthdayDisplay, focusedField == 2, 86, false, "DD - MM - YYYY"));
+        sb.append(TuiHelper.inputBox("Date of Birth", birthdayDisplay, focusedField == 2, 102, false, "DD - MM - YYYY"));
         sb.append("\n");
 
-        sb.append(TuiHelper.inputBox("Email Address", email, focusedField == 3, 86, false, "e.g. jane@proctor.edu"));
+        sb.append(TuiHelper.inputBox("Email Address", email, focusedField == 3, 102, false, "e.g. jane@proctor.edu"));
         sb.append("\n");
 
-        sb.append(TuiHelper.inputBox("Username", username, focusedField == 4, 86, false, "e.g. janedoe"));
+        sb.append(TuiHelper.inputBox("Username", username, focusedField == 4, 102, false, "e.g. janedoe"));
         sb.append("\n");
 
-        sb.append(TuiHelper.inputBox("Password", password, focusedField == 5, 86, true, "create a secure password"));
+        sb.append(TuiHelper.inputBox("Password", password, focusedField == 5, 102, true, "create a secure password"));
         sb.append("\n");
 
-        sb.append(TuiHelper.inputBox("Confirm Password", confirmPassword, focusedField == 6, 86, true, "re-enter your password"));
+        sb.append(TuiHelper.inputBox("Confirm Password", confirmPassword, focusedField == 6, 102, true, "re-enter your password"));
         sb.append("\n\n");
 
         sb.append(TuiHelper.buttonRow("Register", focusedField == 7, "Back", focusedField == 8)).append("\n\n");

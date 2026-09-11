@@ -26,14 +26,14 @@ public class TeacherSubmissionViews {
         sb.append("\n");
         sb.append(TuiHelper.boxTitle(title, String.format("Total Submissions: %d", submissions.size()))).append("\n\n");
 
-        sb.append(String.format("  %-8s  %-34s  %-24s  %-22s%n",
+        sb.append(String.format("  %-8s  %-50s  %-24s  %-22s%n",
                 "ID", "STUDENT", "STATUS", "SUBMITTED AT")).append("\n");
-        sb.append("  " + "─".repeat(95) + "\n\n");
+        sb.append("  " + "─".repeat(114) + "\n\n");
 
         if (submissions.isEmpty()) {
             sb.append("  ").append(TuiHelper.dim("No student submissions found for this assessment.")).append("\n");
         } else {
-            int pageSize = 5;
+            int pageSize = TuiHelper.PAGE_SIZE;
             int startRow = (selectedIndex / pageSize) * pageSize;
             int endRow = Math.min(submissions.size(), startRow + pageSize);
 
@@ -53,9 +53,9 @@ public class TeacherSubmissionViews {
                     statusStr = TuiHelper.dim(String.format("%-24s", "IN PROGRESS"));
                 }
 
-                String line = String.format("#%-7d  %-34s  %s  %-22s",
+                String line = String.format("#%-7d  %-50s  %s  %-22s",
                         a.getId(),
-                        truncate(studentName, 34),
+                        truncate(studentName, 50),
                         statusStr,
                         dateStr);
 
@@ -70,10 +70,10 @@ public class TeacherSubmissionViews {
             }
         }
 
-        sb.append("\n  " + "─".repeat(95) + "\n\n");
+        sb.append("\n  " + "─".repeat(114) + "\n\n");
 
         if (!submissions.isEmpty()) {
-            int pageSize = 5;
+            int pageSize = TuiHelper.PAGE_SIZE;
             int totalPages = Math.max(1, (int) Math.ceil((double) submissions.size() / pageSize));
             int currentPage = selectedIndex / pageSize;
             sb.append(TuiHelper.paginationBar(currentPage, totalPages, submissions.size()));
@@ -137,7 +137,7 @@ public class TeacherSubmissionViews {
             }
         }
 
-        sb.append("\n  " + "─".repeat(95) + "\n\n");
+        sb.append("\n  " + "─".repeat(114) + "\n\n");
 
         if (!questions.isEmpty()) {
             sb.append(TuiHelper.paginationBar(inspectingAnswerIndex, questions.size(), questions.size()));

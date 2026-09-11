@@ -20,14 +20,14 @@ public class InboxViews {
         sb.append("\n");
         sb.append(TuiHelper.boxTitle("Inbox & Notifications", subtitle)).append("\n\n");
 
-        sb.append(String.format("    %-14s  %-16s  %-18s  %-26s  %-16s%n",
+        sb.append(String.format("    %-14s  %-16s  %-20s  %-38s  %-16s%n",
                 "STATUS", "TYPE", "FROM", "SUBJECT", "RECEIVED")).append("\n");
-        sb.append("  " + "─".repeat(96) + "\n\n");
+        sb.append("  " + "─".repeat(114) + "\n\n");
 
         if (messages.isEmpty()) {
             sb.append("  ").append(TuiHelper.dim("Your inbox is empty.")).append("\n");
         } else {
-            int pageSize = 5;
+            int pageSize = TuiHelper.PAGE_SIZE;
             int startRow = (selectedIndex / pageSize) * pageSize;
             int endRow = Math.min(messages.size(), startRow + pageSize);
 
@@ -38,11 +38,11 @@ public class InboxViews {
 
                 String statusBadge = formatStatusBadge(msg.getStatus(), !msg.isRead());
                 String typeBadge = formatTypeBadge(msg.getType());
-                String sender = msg.getSenderName() != null ? truncate(msg.getSenderName(), 18) : "System";
-                String title = truncate(msg.getTitle(), 26);
+                String sender = msg.getSenderName() != null ? truncate(msg.getSenderName(), 20) : "System";
+                String title = truncate(msg.getTitle(), 38);
                 String dateStr = msg.getCreatedAt() != null ? DATE_FMT.format(msg.getCreatedAt()) : "-";
 
-                String line = String.format("%s  %-16s  %-18s  %-26s  %-16s",
+                String line = String.format("%s  %-16s  %-20s  %-38s  %-16s",
                         statusBadge,
                         typeBadge,
                         sender,
@@ -60,10 +60,10 @@ public class InboxViews {
             }
         }
 
-        sb.append("\n  " + "─".repeat(96) + "\n\n");
+        sb.append("\n  " + "─".repeat(114) + "\n\n");
 
         if (!messages.isEmpty()) {
-            int pageSize = 5;
+            int pageSize = TuiHelper.PAGE_SIZE;
             int totalPages = Math.max(1, (int) Math.ceil((double) messages.size() / pageSize));
             int currentPage = selectedIndex / pageSize;
             sb.append(TuiHelper.paginationBar(currentPage, totalPages, messages.size()));
@@ -105,17 +105,17 @@ public class InboxViews {
         sb.append("  ").append(TuiHelper.bold("From:     ")).append(sender);
         sb.append("   ").append(TuiHelper.bold("Received: ")).append(dateStr);
         sb.append("   ").append(TuiHelper.bold("Status:   ")).append(formatStatusBadge(msg.getStatus(), false)).append("\n\n");
-        sb.append("  " + "─".repeat(95) + "\n\n");
+        sb.append("  " + "─".repeat(114) + "\n\n");
 
         for (String line : msg.getBody().split("\n")) {
             if (line.startsWith("[HASH:")) continue;
             sb.append("  ").append(line).append("\n");
         }
-        sb.append("\n  " + "─".repeat(95) + "\n\n");
+        sb.append("\n  " + "─".repeat(114) + "\n\n");
 
         if (msg.isActionable()) {
             if (showAdminResetInput) {
-                sb.append(TuiHelper.inputBox("New Temporary Password for User", tempPasswordInput, inputFocused, 86, false, "type new temporary password"));
+                sb.append(TuiHelper.inputBox("New Temporary Password for User", tempPasswordInput, inputFocused, 102, false, "type new temporary password"));
                 sb.append("\n");
                 sb.append(TuiHelper.buttonRow("Approve & Reset", focusedActionBtn == 0, "Reject Request", focusedActionBtn == 1));
                 sb.append("\n\n");

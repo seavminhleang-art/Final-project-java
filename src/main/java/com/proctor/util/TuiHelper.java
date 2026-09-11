@@ -18,6 +18,7 @@ public class TuiHelper {
     public static final String CLEAR_EOL = "\u001B[K";
     public static final String HEADER_START = "\u001B[?9901h";
     public static final String HEADER_END = "\u001B[?9901l";
+    public static final int PAGE_SIZE = 10;
 
     private static Integer cachedTermWidth = null;
     private static Integer cachedTermHeight = null;
@@ -381,7 +382,7 @@ public class TuiHelper {
     }
 
     public static String buttonRow(String primaryLabel, boolean primaryFocused, String secondaryLabel, boolean secondaryFocused) {
-        return buttonRow(primaryLabel, primaryFocused, secondaryLabel, secondaryFocused, 100);
+        return buttonRow(primaryLabel, primaryFocused, secondaryLabel, secondaryFocused, 106);
     }
 
     public static String buttonRow(String primaryLabel, boolean primaryFocused, String secondaryLabel, boolean secondaryFocused, int width) {
@@ -397,19 +398,19 @@ public class TuiHelper {
         sb.append(header("CONFIRM ACTION"));
         sb.append("\n");
         sb.append(boxTitle(title)).append("\n\n");
-        sb.append(bold(padCenter(message, 100))).append(CLEAR_EOL).append("\n\n");
+        sb.append(bold(padCenter(message, 116))).append(CLEAR_EOL).append("\n\n");
         if (warningDetail != null && !warningDetail.isBlank()) {
-            sb.append(dim(padCenter(warningDetail, 100))).append(CLEAR_EOL).append("\n\n");
+            sb.append(dim(padCenter(warningDetail, 116))).append(CLEAR_EOL).append("\n\n");
         }
-        sb.append(dim(padCenter("─".repeat(96), 100))).append(CLEAR_EOL).append("\n\n");
+        sb.append(dim(padCenter("─".repeat(112), 116))).append(CLEAR_EOL).append("\n\n");
 
         String btn1 = confirmFocused ? bold(NAVY_BLUE + "[ ▶ " + confirmLabel + " ]") : dim("[   " + confirmLabel + "   ]");
         String btn2 = !confirmFocused ? bold(RED + "[ ▶ " + cancelLabel + " ]") : dim("[   " + cancelLabel + "   ]");
         int textWidth = confirmLabel.length() + cancelLabel.length() + 18;
-        int leftPad = Math.max(0, (100 - textWidth) / 2);
+        int leftPad = Math.max(0, (116 - textWidth) / 2);
 
         sb.append(" ".repeat(leftPad)).append(btn1).append("    ").append(btn2).append(CLEAR_EOL).append("\n\n");
-        sb.append(dim(padCenter("[←/→] Select Option  •  [Enter] Confirm  •  [Esc] Cancel", 100))).append(CLEAR_EOL).append("\n");
+        sb.append(dim(padCenter("[←/→] Select Option  •  [Enter] Confirm  •  [Esc] Cancel", 116))).append(CLEAR_EOL).append("\n");
         return sb.toString();
     }
 
@@ -439,7 +440,7 @@ public class TuiHelper {
             }
         } catch (Exception ignored) {}
 
-        cachedTermWidth = 100;
+        cachedTermWidth = 124;
         return cachedTermWidth;
     }
 
@@ -521,7 +522,7 @@ public class TuiHelper {
     }
 
     public static String wrapHints(List<String> hints) {
-        return wrapHints(hints, 90);
+        return wrapHints(hints, 108);
     }
 
 private static String stripAnsi(String str) {
@@ -660,7 +661,7 @@ private static String stripAnsi(String str) {
             }
         }
 
-        int innerWidth = Math.max(100, maxLineLen);
+        int innerWidth = Math.max(116, maxLineLen);
         if (termWidth > 30) {
             innerWidth = Math.min(innerWidth, termWidth - 4);
         }

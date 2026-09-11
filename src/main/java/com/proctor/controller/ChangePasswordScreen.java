@@ -160,11 +160,11 @@ public class ChangePasswordScreen implements Screen {
         sb.append(TuiHelper.header("ACCOUNT SECURITY"));
         sb.append("\n");
         sb.append(TuiHelper.boxTitle("Change Account Password")).append("\n\n");
-        sb.append(TuiHelper.inputBox("Current Password", currentPassword.toString(), focusedField == 0, 86, true, "Enter current password"));
+        sb.append(TuiHelper.inputBox("Current Password", currentPassword.toString(), focusedField == 0, 102, true, "Enter current password"));
         sb.append("\n");
-        sb.append(TuiHelper.inputBox("New Password", newPassword.toString(), focusedField == 1, 86, true, "Min 8 chars, mix of upper/lower/numbers"));
+        sb.append(TuiHelper.inputBox("New Password", newPassword.toString(), focusedField == 1, 102, true, "Min 8 chars, mix of upper/lower/numbers"));
         sb.append("\n");
-        sb.append(TuiHelper.inputBox("Confirm New Password", confirmPassword.toString(), focusedField == 2, 86, true, "Repeat new password"));
+        sb.append(TuiHelper.inputBox("Confirm New Password", confirmPassword.toString(), focusedField == 2, 102, true, "Repeat new password"));
         sb.append("\n");
         sb.append(TuiHelper.buttonRow("Save Password", focusedField == 3, "Back", focusedField == 4)).append("\n\n");
 

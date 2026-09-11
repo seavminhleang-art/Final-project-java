@@ -117,7 +117,7 @@ public class TeacherSubmissionScreen implements Screen {
                 }
             } else if (KeyUtil.isLeft(k)) {
                 if (!submissions.isEmpty()) {
-                    int pageSize = 5;
+                    int pageSize = TuiHelper.PAGE_SIZE;
                     int currentPage = selectedIndex / pageSize;
                     if (currentPage > 0) {
                         selectedIndex = (currentPage - 1) * pageSize;
@@ -125,7 +125,7 @@ public class TeacherSubmissionScreen implements Screen {
                 }
             } else if (KeyUtil.isRight(k)) {
                 if (!submissions.isEmpty()) {
-                    int pageSize = 5;
+                    int pageSize = TuiHelper.PAGE_SIZE;
                     int totalPages = Math.max(1, (int) Math.ceil((double) submissions.size() / pageSize));
                     int currentPage = selectedIndex / pageSize;
                     if (currentPage < totalPages - 1) {

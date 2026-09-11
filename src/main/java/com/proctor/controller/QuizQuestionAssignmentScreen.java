@@ -73,7 +73,7 @@ public class QuizQuestionAssignmentScreen implements Screen {
                 }
             } else if (KeyUtil.isLeft(k)) {
                 if (!bankQuestions.isEmpty()) {
-                    int pageSize = 5;
+                    int pageSize = TuiHelper.PAGE_SIZE;
                     int currentPage = selectedIndex / pageSize;
                     if (currentPage > 0) {
                         selectedIndex = (currentPage - 1) * pageSize;
@@ -81,7 +81,7 @@ public class QuizQuestionAssignmentScreen implements Screen {
                 }
             } else if (KeyUtil.isRight(k)) {
                 if (!bankQuestions.isEmpty()) {
-                    int pageSize = 5;
+                    int pageSize = TuiHelper.PAGE_SIZE;
                     int totalPages = Math.max(1, (int) Math.ceil((double) bankQuestions.size() / pageSize));
                     int currentPage = selectedIndex / pageSize;
                     if (currentPage < totalPages - 1) {

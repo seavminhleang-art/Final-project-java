@@ -24,14 +24,14 @@ public class UserViews {
         } else if (!searchBuffer.isEmpty()) {
             sb.append("  Search: [ ").append(searchBuffer).append(" ] (Press '/' to edit)\n\n");
         }
-        sb.append(String.format("  %-4s  %-14s  %-16s  %-14s  %-7s  %-10s  %-8s  %-8s%n",
+        sb.append(String.format("  %-4s  %-18s  %-26s  %-18s  %-6s  %-10s  %-8s  %-8s%n",
                 "ID", "USERNAME", "EMAIL", "FULL NAME", "GENDER", "BIRTHDAY", "ROLE", "STATUS")).append("\n");
-        sb.append("  " + "─".repeat(96) + "\n\n");
+        sb.append("  " + "─".repeat(112) + "\n\n");
 
         if (users.isEmpty()) {
             sb.append("  ").append(TuiHelper.dim("No users found matching search/filter criteria.")).append("\n");
         } else {
-            int pageSize = 5;
+            int pageSize = TuiHelper.PAGE_SIZE;
             int startRow = (selectedIndex / pageSize) * pageSize;
             int endRow = Math.min(users.size(), startRow + pageSize);
 
@@ -42,12 +42,12 @@ public class UserViews {
                 String dobStr = (u.getDateOfBirth() != null) ? u.getDateOfBirth().format(DISPLAY_FMT) : "-";
                 String genderStr = (u.getGender() != null && !u.getGender().isBlank()) ? u.getGender() : "-";
 
-                String line = String.format("%-4d  %-14s  %-16s  %-14s  %-7s  %-10s  %-8s  %-8s",
+                String line = String.format("%-4d  %-18s  %-26s  %-18s  %-6s  %-10s  %-8s  %-8s",
                         u.getId(),
-                        truncate("@" + u.getUsername(), 14),
-                        truncate(u.getEmail() != null ? u.getEmail() : "-", 16),
-                        truncate(u.getFullName(), 14),
-                        truncate(genderStr, 7),
+                        truncate("@" + u.getUsername(), 18),
+                        truncate(u.getEmail() != null ? u.getEmail() : "-", 26),
+                        truncate(u.getFullName(), 18),
+                        truncate(genderStr, 6),
                         dobStr,
                         u.getRole().name(),
                         status);
@@ -63,10 +63,10 @@ public class UserViews {
             }
         }
 
-        sb.append("\n  " + "─".repeat(96) + "\n\n");
+        sb.append("\n  " + "─".repeat(112) + "\n\n");
 
         if (!users.isEmpty()) {
-            int pageSize = 5;
+            int pageSize = TuiHelper.PAGE_SIZE;
             int totalPages = Math.max(1, (int) Math.ceil((double) users.size() / pageSize));
             int currentPage = selectedIndex / pageSize;
             sb.append(TuiHelper.paginationBar(currentPage, totalPages, users.size()));
@@ -87,7 +87,7 @@ public class UserViews {
                 "[/] Search",
                 "[Esc] Back"
         );
-        sb.append(TuiHelper.wrapHints(hints, 90));
+        sb.append(TuiHelper.wrapHints(hints));
         return sb.toString();
     }
 
@@ -106,34 +106,34 @@ public class UserViews {
 
         if (isEditMode) {
             // Edit: 0=fullName, 1=gender, 2=birthday, 3=role, 4=status
-            sb.append(TuiHelper.inputBox("Full Name", fullName, focusedField == 0, 86, false, "enter full name"));
+            sb.append(TuiHelper.inputBox("Full Name", fullName, focusedField == 0, 102, false, "enter full name"));
             sb.append("\n");
-            sb.append(TuiHelper.selectBox("Gender", genderVal, focusedField == 1, 86, "Space to cycle"));
+            sb.append(TuiHelper.selectBox("Gender", genderVal, focusedField == 1, 102, "Space to cycle"));
             sb.append("\n");
             String bdDisplay = TuiHelper.birthdayMask(birthday, focusedField == 2);
-            sb.append(TuiHelper.inputBox("Date of Birth", bdDisplay, focusedField == 2, 86, false, "DD - MM - YYYY"));
+            sb.append(TuiHelper.inputBox("Date of Birth", bdDisplay, focusedField == 2, 102, false, "DD - MM - YYYY"));
             sb.append("\n");
-            sb.append(TuiHelper.selectBox("Role", selectedRole.name(), focusedField == 3, 86, "Space to cycle"));
+            sb.append(TuiHelper.selectBox("Role", selectedRole.name(), focusedField == 3, 102, "Space to cycle"));
             sb.append("\n");
             String statusText = enabledStatus ? "Enabled" : "Disabled";
-            sb.append(TuiHelper.selectBox("Account Status", statusText, focusedField == 4, 86, "Space to toggle (Enabled/Disabled)"));
+            sb.append(TuiHelper.selectBox("Account Status", statusText, focusedField == 4, 102, "Space to toggle (Enabled/Disabled)"));
             sb.append("\n");
         } else {
             // Create: 0=fullName, 1=gender, 2=birthday, 3=email, 4=username, 5=password, 6=role
-            sb.append(TuiHelper.inputBox("Full Name", fullName, focusedField == 0, 86, false, "enter full name"));
+            sb.append(TuiHelper.inputBox("Full Name", fullName, focusedField == 0, 102, false, "enter full name"));
             sb.append("\n");
-            sb.append(TuiHelper.selectBox("Gender", genderVal, focusedField == 1, 86, "Space to cycle"));
+            sb.append(TuiHelper.selectBox("Gender", genderVal, focusedField == 1, 102, "Space to cycle"));
             sb.append("\n");
             String bdDisplay = TuiHelper.birthdayMask(birthday, focusedField == 2);
-            sb.append(TuiHelper.inputBox("Date of Birth", bdDisplay, focusedField == 2, 86, false, "DD - MM - YYYY"));
+            sb.append(TuiHelper.inputBox("Date of Birth", bdDisplay, focusedField == 2, 102, false, "DD - MM - YYYY"));
             sb.append("\n");
-            sb.append(TuiHelper.inputBox("Email Address", email, focusedField == 3, 86, false, "e.g. user@proctor.edu"));
+            sb.append(TuiHelper.inputBox("Email Address", email, focusedField == 3, 102, false, "e.g. user@proctor.edu"));
             sb.append("\n");
-            sb.append(TuiHelper.inputBox("Username", username, focusedField == 4, 86, false, "e.g. jdoe"));
+            sb.append(TuiHelper.inputBox("Username", username, focusedField == 4, 102, false, "e.g. jdoe"));
             sb.append("\n");
-            sb.append(TuiHelper.inputBox("Password", password, focusedField == 5, 86, true, "enter password"));
+            sb.append(TuiHelper.inputBox("Password", password, focusedField == 5, 102, true, "enter password"));
             sb.append("\n");
-            sb.append(TuiHelper.selectBox("Role", selectedRole.name(), focusedField == 6, 86, "Space to cycle"));
+            sb.append(TuiHelper.selectBox("Role", selectedRole.name(), focusedField == 6, 102, "Space to cycle"));
             sb.append("\n");
         }
 

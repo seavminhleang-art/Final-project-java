@@ -13,14 +13,14 @@ public class PortalViews {
         sb.append("\n");
         sb.append(TuiHelper.boxTitle("Global Leaderboard", String.format("Top Performers (%d ranked)", leaderboard.size()))).append("\n\n");
 
-        sb.append(String.format("  %-6s  %-30s  %-20s  %-10s  %-12s  %-8s%n",
+        sb.append(String.format("  %-6s  %-44s  %-24s  %-10s  %-12s  %-8s%n",
                 "RANK", "STUDENT NAME", "USERNAME", "QUIZZES", "TOTAL PTS", "AVG %")).append("\n");
-        sb.append("  " + "─".repeat(95) + "\n\n");
+        sb.append("  " + "─".repeat(114) + "\n\n");
 
         if (leaderboard.isEmpty()) {
             sb.append("  ").append(TuiHelper.dim("No quizzes completed yet. Be the first on the leaderboard!")).append("\n");
         } else {
-            int pageSize = 5;
+            int pageSize = TuiHelper.PAGE_SIZE;
             int startRow = (selectedIndex / pageSize) * pageSize;
             int endRow = Math.min(leaderboard.size(), startRow + pageSize);
 
@@ -34,10 +34,10 @@ public class PortalViews {
                 else if (entry.getRank() == 3) rankStr = "#3";
                 else rankStr = String.format("%d", entry.getRank());
 
-                String line = String.format("%-6s  %-30s  %-20s  %-10d  %-12.1f  %-8s",
+                String line = String.format("%-6s  %-44s  %-24s  %-10d  %-12.1f  %-8s",
                         rankStr,
-                        truncate(entry.getStudentName(), 30),
-                        truncate("@" + entry.getUsername(), 20),
+                        truncate(entry.getStudentName(), 44),
+                        truncate("@" + entry.getUsername(), 24),
                         entry.getTotalQuizzes(),
                         entry.getTotalPoints(),
                         String.format("%.1f%%", entry.getAvgPercentage()));
@@ -53,10 +53,10 @@ public class PortalViews {
             }
         }
 
-        sb.append("\n  " + "─".repeat(95) + "\n\n");
+        sb.append("\n  " + "─".repeat(114) + "\n\n");
 
         if (!leaderboard.isEmpty()) {
-            int pageSize = 5;
+            int pageSize = TuiHelper.PAGE_SIZE;
             int totalPages = Math.max(1, (int) Math.ceil((double) leaderboard.size() / pageSize));
             int currentPage = selectedIndex / pageSize;
             sb.append(TuiHelper.paginationBar(currentPage, totalPages, leaderboard.size()));

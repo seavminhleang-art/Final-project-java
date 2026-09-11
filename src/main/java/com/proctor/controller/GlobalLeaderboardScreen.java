@@ -5,6 +5,7 @@ import com.proctor.model.service.ExamService;
 import com.proctor.model.entity.LeaderboardEntry;
 import com.proctor.model.service.PortalService;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.TuiHelper;
 import com.proctor.view.PortalViews;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
 import com.williamcallahan.tui4j.compat.bubbletea.Message;
@@ -59,7 +60,7 @@ public class GlobalLeaderboardScreen implements Screen {
                 }
             } else if (KeyUtil.isLeft(k)) {
                 if (!leaderboard.isEmpty()) {
-                    int pageSize = 5;
+                    int pageSize = TuiHelper.PAGE_SIZE;
                     int currentPage = selectedIndex / pageSize;
                     if (currentPage > 0) {
                         selectedIndex = (currentPage - 1) * pageSize;
@@ -67,7 +68,7 @@ public class GlobalLeaderboardScreen implements Screen {
                 }
             } else if (KeyUtil.isRight(k)) {
                 if (!leaderboard.isEmpty()) {
-                    int pageSize = 5;
+                    int pageSize = TuiHelper.PAGE_SIZE;
                     int totalPages = Math.max(1, (int) Math.ceil((double) leaderboard.size() / pageSize));
                     int currentPage = selectedIndex / pageSize;
                     if (currentPage < totalPages - 1) {

@@ -101,7 +101,7 @@ public class InboxListScreen implements Screen {
 
             if (KeyUtil.isLeft(k)) {
                 if (!messages.isEmpty()) {
-                    int pageSize = 5;
+                    int pageSize = TuiHelper.PAGE_SIZE;
                     int currentPage = selectedIndex / pageSize;
                     if (currentPage > 0) {
                         selectedIndex = (currentPage - 1) * pageSize;
@@ -112,7 +112,7 @@ public class InboxListScreen implements Screen {
 
             if (KeyUtil.isRight(k)) {
                 if (!messages.isEmpty()) {
-                    int pageSize = 5;
+                    int pageSize = TuiHelper.PAGE_SIZE;
                     int totalPages = Math.max(1, (int) Math.ceil((double) messages.size() / pageSize));
                     int currentPage = selectedIndex / pageSize;
                     if (currentPage < totalPages - 1) {

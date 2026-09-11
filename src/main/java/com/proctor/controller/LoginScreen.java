@@ -244,11 +244,11 @@ public class LoginScreen implements Screen {
             sb.append(TuiHelper.boxTitle("Password Recovery")).append("\n\n");
             sb.append("  ").append(TuiHelper.dim("Submit your registered email or username and choose your new password.\n"));
             sb.append("  ").append(TuiHelper.dim("An administrator will review and activate your new password.\n\n"));
-            sb.append(TuiHelper.inputBox("Email or Username", forgotIdentifier.toString(), forgotFocusIndex == 0, 86, false, "e.g. user@proctor.edu or username"));
+            sb.append(TuiHelper.inputBox("Email or Username", forgotIdentifier.toString(), forgotFocusIndex == 0, 102, false, "e.g. user@proctor.edu or username"));
             sb.append("\n");
-            sb.append(TuiHelper.inputBox("New Password", forgotNewPassword.toString(), forgotFocusIndex == 1, 86, true, "Min 8 chars, mix of upper/lower/numbers"));
+            sb.append(TuiHelper.inputBox("New Password", forgotNewPassword.toString(), forgotFocusIndex == 1, 102, true, "Min 8 chars, mix of upper/lower/numbers"));
             sb.append("\n");
-            sb.append(TuiHelper.inputBox("Confirm New Password", forgotConfirmPassword.toString(), forgotFocusIndex == 2, 86, true, "Repeat new password"));
+            sb.append(TuiHelper.inputBox("Confirm New Password", forgotConfirmPassword.toString(), forgotFocusIndex == 2, 102, true, "Repeat new password"));
             sb.append("\n");
             sb.append(TuiHelper.buttonRow("Submit Request", forgotFocusIndex == 3, "Cancel", forgotFocusIndex == 4)).append("\n\n");
             if (!forgotMessage.isBlank()) {

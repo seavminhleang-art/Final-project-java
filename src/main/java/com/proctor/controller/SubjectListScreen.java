@@ -77,7 +77,7 @@ public class SubjectListScreen implements Screen {
                 }
             } else if (KeyUtil.isLeft(k)) {
                 if (!subjects.isEmpty()) {
-                    int pageSize = 5;
+                    int pageSize = TuiHelper.PAGE_SIZE;
                     int currentPage = selectedIndex / pageSize;
                     if (currentPage > 0) {
                         selectedIndex = (currentPage - 1) * pageSize;
@@ -85,7 +85,7 @@ public class SubjectListScreen implements Screen {
                 }
             } else if (KeyUtil.isRight(k)) {
                 if (!subjects.isEmpty()) {
-                    int pageSize = 5;
+                    int pageSize = TuiHelper.PAGE_SIZE;
                     int totalPages = Math.max(1, (int) Math.ceil((double) subjects.size() / pageSize));
                     int currentPage = selectedIndex / pageSize;
                     if (currentPage < totalPages - 1) {

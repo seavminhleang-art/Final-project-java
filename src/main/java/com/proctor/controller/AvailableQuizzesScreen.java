@@ -101,7 +101,7 @@ public class AvailableQuizzesScreen implements Screen {
                 }
             } else if (KeyUtil.isLeft(k)) {
                 if (!quizzes.isEmpty()) {
-                    int pageSize = 5;
+                    int pageSize = TuiHelper.PAGE_SIZE;
                     int currentPage = selectedIndex / pageSize;
                     if (currentPage > 0) {
                         selectedIndex = (currentPage - 1) * pageSize;
@@ -109,7 +109,7 @@ public class AvailableQuizzesScreen implements Screen {
                 }
             } else if (KeyUtil.isRight(k)) {
                 if (!quizzes.isEmpty()) {
-                    int pageSize = 5;
+                    int pageSize = TuiHelper.PAGE_SIZE;
                     int totalPages = Math.max(1, (int) Math.ceil((double) quizzes.size() / pageSize));
                     int currentPage = selectedIndex / pageSize;
                     if (currentPage < totalPages - 1) {
@@ -319,7 +319,7 @@ public class AvailableQuizzesScreen implements Screen {
             sb.append("\n");
             sb.append(TuiHelper.boxTitle("Request Exam Makeup", q.getTitle())).append("\n\n");
             sb.append("  ").append(TuiHelper.bold("Justification Reason (Required for Instructor Review):")).append("\n\n");
-            sb.append(TuiHelper.inputBox("Reason", examReasonBuffer.toString(), examReasonFocusIndex == 0, 72, false, "e.g. Illness, technical malfunction, etc."));
+            sb.append(TuiHelper.inputBox("Reason", examReasonBuffer.toString(), examReasonFocusIndex == 0, 102, false, "e.g. Illness, technical malfunction, etc."));
             sb.append("\n");
             sb.append(TuiHelper.buttonRow("Submit Request", examReasonFocusIndex == 1, "Cancel", examReasonFocusIndex == 2)).append("\n\n");
             if (!bannerMessage.isBlank()) {

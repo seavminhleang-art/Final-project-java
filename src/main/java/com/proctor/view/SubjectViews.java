@@ -21,13 +21,13 @@ public class SubjectViews {
         } else if (!searchBuffer.isEmpty()) {
             sb.append("  Search: [ ").append(searchBuffer).append(" ] (Press '/' to edit)\n\n");
         }
-        sb.append(String.format("  %-4s  %-16s  %-60s  %-9s%n", "ID", "CODE", "SUBJECT NAME", "STATUS")).append("\n");
-        sb.append("  " + "─".repeat(95) + "\n\n");
+        sb.append(String.format("  %-4s  %-16s  %-78s  %-9s%n", "ID", "CODE", "SUBJECT NAME", "STATUS")).append("\n");
+        sb.append("  " + "─".repeat(114) + "\n\n");
 
         if (subjects.isEmpty()) {
             sb.append("  ").append(TuiHelper.dim("No subjects found.")).append("\n");
         } else {
-            int pageSize = 5;
+            int pageSize = TuiHelper.PAGE_SIZE;
             int startRow = (selectedIndex / pageSize) * pageSize;
             int endRow = Math.min(subjects.size(), startRow + pageSize);
 
@@ -36,10 +36,10 @@ public class SubjectViews {
                 String cursor = (i == selectedIndex) ? TuiHelper.cyan("▶ ") : "  ";
                 String status = s.isEnabled() ? TuiHelper.green("Enabled") : TuiHelper.red("Disabled");
 
-                String line = String.format("%-4d  %-16s  %-60s  %-9s",
+                String line = String.format("%-4d  %-16s  %-78s  %-9s",
                         s.getId(),
                         truncate(s.getCode(), 16),
-                        truncate(s.getName(), 60),
+                        truncate(s.getName(), 78),
                         status);
 
                 if (i == selectedIndex) {
@@ -53,10 +53,10 @@ public class SubjectViews {
             }
         }
 
-        sb.append("\n  " + "─".repeat(95) + "\n\n");
+        sb.append("\n  " + "─".repeat(114) + "\n\n");
 
         if (!subjects.isEmpty()) {
-            int pageSize = 5;
+            int pageSize = TuiHelper.PAGE_SIZE;
             int totalPages = Math.max(1, (int) Math.ceil((double) subjects.size() / pageSize));
             int currentPage = selectedIndex / pageSize;
             sb.append(TuiHelper.paginationBar(currentPage, totalPages, subjects.size()));
@@ -76,7 +76,7 @@ public class SubjectViews {
                 "[/] Search",
                 "[Esc] Back"
         );
-        sb.append(TuiHelper.wrapHints(hints, 90));
+        sb.append(TuiHelper.wrapHints(hints));
         return sb.toString();
     }
 
@@ -90,19 +90,19 @@ public class SubjectViews {
         sb.append(TuiHelper.boxTitle(formTitle, "Configure subject details")).append("\n\n");
 
         if (isEditMode) {
-            sb.append(TuiHelper.inputBox("Subject Name", name, focusedField == 0, 86, false, "enter subject name"));
+            sb.append(TuiHelper.inputBox("Subject Name", name, focusedField == 0, 102, false, "enter subject name"));
             sb.append("\n");
-            sb.append(TuiHelper.inputBox("Description", description, focusedField == 1, 86, false, "enter description"));
+            sb.append(TuiHelper.inputBox("Description", description, focusedField == 1, 102, false, "enter description"));
             sb.append("\n");
             String statusText = enabledStatus ? "Enabled" : "Disabled";
-            sb.append(TuiHelper.selectBox("Subject Status", statusText, focusedField == 2, 86, "Space to toggle (Enabled/Disabled)"));
+            sb.append(TuiHelper.selectBox("Subject Status", statusText, focusedField == 2, 102, "Space to toggle (Enabled/Disabled)"));
             sb.append("\n");
         } else {
-            sb.append(TuiHelper.inputBox("Subject Code", subjectCode, focusedField == 0, 86, false, "e.g. JAVA, MATH, ENG"));
+            sb.append(TuiHelper.inputBox("Subject Code", subjectCode, focusedField == 0, 102, false, "e.g. JAVA, MATH, ENG"));
             sb.append("\n");
-            sb.append(TuiHelper.inputBox("Subject Name", name, focusedField == 1, 86, false, "e.g. Java, Mathematics, English"));
+            sb.append(TuiHelper.inputBox("Subject Name", name, focusedField == 1, 102, false, "e.g. Java, Mathematics, English"));
             sb.append("\n");
-            sb.append(TuiHelper.inputBox("Description", description, focusedField == 2, 86, false, "enter optional description"));
+            sb.append(TuiHelper.inputBox("Description", description, focusedField == 2, 102, false, "enter optional description"));
             sb.append("\n");
         }
 
@@ -128,9 +128,9 @@ public class SubjectViews {
             sb.append("  ").append(TuiHelper.dim("No teachers found in the system. Create teacher accounts first in User Management.")).append("\n\n");
         } else {
             sb.append("   " + TuiHelper.bold("Assigned Teachers for this Subject:") + "\n\n");
-            sb.append("  " + "─".repeat(95) + "\n\n");
+            sb.append("  " + "─".repeat(114) + "\n\n");
 
-            int pageSize = 5;
+            int pageSize = TuiHelper.PAGE_SIZE;
             int startRow = (selectedIndex / pageSize) * pageSize;
             int endRow = Math.min(allTeachers.size(), startRow + pageSize);
 
@@ -140,7 +140,7 @@ public class SubjectViews {
                 String checkbox = isAssigned ? TuiHelper.green("[✔] Assigned  ") : TuiHelper.dim("[ ] Unassigned");
                 String cursor = (i == selectedIndex) ? TuiHelper.cyan("▶ ") : "  ";
 
-                String line = String.format("%s  %-30s  (%s)", checkbox, truncate(t.getFullName(), 30), t.getDisplayIdentifier());
+                String line = String.format("%s  %-48s  (%s)", checkbox, truncate(t.getFullName(), 48), t.getDisplayIdentifier());
                 if (i == selectedIndex) {
                     sb.append(cursor).append(TuiHelper.bold(line)).append("\n");
                 } else {
@@ -150,7 +150,7 @@ public class SubjectViews {
                     sb.append("\n");
                 }
             }
-            sb.append("\n  " + "─".repeat(95) + "\n\n");
+            sb.append("\n  " + "─".repeat(114) + "\n\n");
 
             int totalPages = Math.max(1, (int) Math.ceil((double) allTeachers.size() / pageSize));
             int currentPage = selectedIndex / pageSize;

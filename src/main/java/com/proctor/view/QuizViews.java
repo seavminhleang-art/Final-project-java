@@ -37,15 +37,15 @@ public class QuizViews {
             sb.append("  Search: [ ").append(searchBuffer).append(" ] (Press '/' to edit)\n\n");
         }
 
-        sb.append(String.format("  %-4s  %-12s  %-30s  %-10s  %-8s  %-4s  %-5s  %-9s%n",
+        sb.append(String.format("  %-4s  %-12s  %-48s  %-10s  %-8s  %-4s  %-5s  %-9s%n",
                 "ID", "SUBJ", "TITLE", "TYPE", "TIME", "Qs", "PTS", "STATUS")).append("\n");
-        sb.append("  " + "─".repeat(95) + "\n\n");
+        sb.append("  " + "─".repeat(114) + "\n\n");
 
         if (quizzes.isEmpty()) {
             String emptyLabel = (assessmentType == AssessmentType.EXAM) ? "exams" : "quizzes";
             sb.append("  ").append(TuiHelper.dim("No " + emptyLabel + " found. Press 'n' to create your first one!")).append("\n");
         } else {
-            int pageSize = 5;
+            int pageSize = TuiHelper.PAGE_SIZE;
             int startRow = (selectedIndex / pageSize) * pageSize;
             int endRow = Math.min(quizzes.size(), startRow + pageSize);
 
@@ -59,10 +59,10 @@ public class QuizViews {
                         ? "[MIXED]"
                         : (q.getQuizQuestionType() != null ? "[" + q.getQuizQuestionType().name() + "]" : "[QUIZ]");
 
-                String line = String.format("%-4d  %-12s  %-30s  %-10s  %-8s  %-4d  %-5.1f  %-9s",
+                String line = String.format("%-4d  %-12s  %-48s  %-10s  %-8s  %-4d  %-5.1f  %-9s",
                         q.getId(),
                         truncate(subj, 12),
-                        truncate(q.getTitle(), 30),
+                        truncate(q.getTitle(), 48),
                         typeStr,
                         timeStr,
                         q.getQuestionCount(),
@@ -80,10 +80,10 @@ public class QuizViews {
             }
         }
 
-        sb.append("\n  " + "─".repeat(95) + "\n\n");
+        sb.append("\n  " + "─".repeat(114) + "\n\n");
 
         if (!quizzes.isEmpty()) {
-            int pageSize = 5;
+            int pageSize = TuiHelper.PAGE_SIZE;
             int totalPages = Math.max(1, (int) Math.ceil((double) quizzes.size() / pageSize));
             int currentPage = selectedIndex / pageSize;
             sb.append(TuiHelper.paginationBar(currentPage, totalPages, quizzes.size()));
@@ -106,7 +106,7 @@ public class QuizViews {
                 "[d] Delete",
                 "[Esc] Back"
         );
-        sb.append(TuiHelper.wrapHints(hints, 90));
+        sb.append(TuiHelper.wrapHints(hints));
         return sb.toString();
     }
 
@@ -143,8 +143,8 @@ public class QuizViews {
 
         for (int f = startField; f < endField; f++) {
             switch (f) {
-                case 0 -> sb.append(TuiHelper.inputBox("Subject (Required)", subjectName, focusedField == 0, 86, false, "e.g. Java, Python, English, Math"));
-                case 1 -> sb.append(TuiHelper.inputBox(itemType + " Title (Required)", title, focusedField == 1, 86, false, "e.g. Midterm Assessment"));
+                case 0 -> sb.append(TuiHelper.inputBox("Subject (Required)", subjectName, focusedField == 0, 102, false, "e.g. Java, Python, English, Math"));
+                case 1 -> sb.append(TuiHelper.inputBox(itemType + " Title (Required)", title, focusedField == 1, 102, false, "e.g. Midterm Assessment"));
                 case 2 -> {
                     if (assessmentType == AssessmentType.QUIZ) {
                         String typeLabel = (quizQuestionType != null) ? switch (quizQuestionType) {
@@ -152,26 +152,26 @@ public class QuizViews {
                             case TRUE_FALSE -> "True / False";
                             case SHORT_ANSWER -> "Short Answer";
                         } : "Multiple Choice (MCQ)";
-                        sb.append(TuiHelper.selectBox("Quiz Question Type (Strict)", typeLabel, focusedField == 2, 86, "Space or ←/→ to switch"));
+                        sb.append(TuiHelper.selectBox("Quiz Question Type (Strict)", typeLabel, focusedField == 2, 102, "Space or ←/→ to switch"));
                     } else {
-                        sb.append(TuiHelper.selectBox("Assessment Mode", "Exam (Mixed - All Question Types Allowed)", focusedField == 2, 86, "Comprehensive Exam"));
+                        sb.append(TuiHelper.selectBox("Assessment Mode", "Exam (Mixed - All Question Types Allowed)", focusedField == 2, 102, "Comprehensive Exam"));
                     }
                 }
-                case 3 -> sb.append(TuiHelper.inputBox("Description", description, focusedField == 3, 86, false, "optional instructions"));
-                case 4 -> sb.append(TuiHelper.inputBox("Time Limit (Minutes)", timeLimit, focusedField == 4, 86, false, "0 for untimed"));
-                case 5 -> sb.append(TuiHelper.inputBox("Active Lifetime (Hours)", activeHours, focusedField == 5, 86, false, "0 for Available Forever"));
-                case 6 -> sb.append(TuiHelper.inputBox("Passing Score (%)", passScore, focusedField == 6, 86, false, "e.g. 50"));
+                case 3 -> sb.append(TuiHelper.inputBox("Description", description, focusedField == 3, 102, false, "optional instructions"));
+                case 4 -> sb.append(TuiHelper.inputBox("Time Limit (Minutes)", timeLimit, focusedField == 4, 102, false, "0 for untimed"));
+                case 5 -> sb.append(TuiHelper.inputBox("Active Lifetime (Hours)", activeHours, focusedField == 5, 102, false, "0 for Available Forever"));
+                case 6 -> sb.append(TuiHelper.inputBox("Passing Score (%)", passScore, focusedField == 6, 102, false, "e.g. 50"));
                 case 7 -> {
                     String rqText = randomizeQuestions ? "Enabled" : "Disabled";
-                    sb.append(TuiHelper.selectBox("Randomize Question Order", rqText, focusedField == 7, 86, "Space to toggle"));
+                    sb.append(TuiHelper.selectBox("Randomize Question Order", rqText, focusedField == 7, 102, "Space to toggle"));
                 }
                 case 8 -> {
                     String raText = randomizeAnswers ? "Enabled" : "Disabled";
-                    sb.append(TuiHelper.selectBox("Shuffle Answer Options", raText, focusedField == 8, 86, "Space to toggle"));
+                    sb.append(TuiHelper.selectBox("Shuffle Answer Options", raText, focusedField == 8, 102, "Space to toggle"));
                 }
                 case 9 -> {
                     String saText = showAnswersAfter ? "Enabled" : "Disabled";
-                    sb.append(TuiHelper.selectBox("Review Answers on Submit", saText, focusedField == 9, 86, "Space to toggle"));
+                    sb.append(TuiHelper.selectBox("Review Answers on Submit", saText, focusedField == 9, 102, "Space to toggle"));
                 }
             }
             sb.append("\n");
@@ -204,26 +204,26 @@ public class QuizViews {
         sb.append("\n");
         sb.append(TuiHelper.boxTitle(quiz.getTitle(), subtitle)).append("\n\n");
 
-        sb.append(String.format("  %-4s  %-12s  %-10s  %-6s  %-54s%n",
+        sb.append(String.format("  %-4s  %-12s  %-10s  %-6s  %-72s%n",
                 "ID", "TYPE", "DIFF", "PTS", "QUESTION TEXT")).append("\n");
-        sb.append("  " + "─".repeat(95) + "\n\n");
+        sb.append("  " + "─".repeat(114) + "\n\n");
 
         if (questions.isEmpty()) {
             sb.append("  ").append(TuiHelper.dim("No questions in this quiz yet. Press 'n' to add or 'g' to generate with AI.")).append("\n");
         } else {
-            int pageSize = 5;
+            int pageSize = TuiHelper.PAGE_SIZE;
             int startRow = (selectedIndex / pageSize) * pageSize;
             int endRow = Math.min(questions.size(), startRow + pageSize);
 
             for (int i = startRow; i < endRow; i++) {
                 Question q = questions.get(i);
                 String cursor = (i == selectedIndex) ? TuiHelper.cyan("▶ ") : "  ";
-                String line = String.format("%-4d  %-12s  %-10s  %-6.1f  %-54s",
+                String line = String.format("%-4d  %-12s  %-10s  %-6.1f  %-72s",
                         q.getId(),
                         truncate(q.getQuestionType().name(), 12),
                         truncate(q.getDifficulty().name(), 10),
                         q.getPoints(),
-                        truncate(q.getQuestionText(), 54));
+                        truncate(q.getQuestionText(), 72));
 
                 if (i == selectedIndex) {
                     sb.append(TuiHelper.cyan(cursor + line)).append("\n");
@@ -236,10 +236,10 @@ public class QuizViews {
             }
         }
 
-        sb.append("\n  " + "─".repeat(95) + "\n\n");
+        sb.append("\n  " + "─".repeat(114) + "\n\n");
 
         if (!questions.isEmpty()) {
-            int pageSize = 5;
+            int pageSize = TuiHelper.PAGE_SIZE;
             int totalPages = Math.max(1, (int) Math.ceil((double) questions.size() / pageSize));
             int currentPage = selectedIndex / pageSize;
             sb.append(TuiHelper.paginationBar(currentPage, totalPages, questions.size()));
@@ -259,7 +259,7 @@ public class QuizViews {
                 "[d] Delete",
                 "[Esc] Back"
         );
-        sb.append(TuiHelper.wrapHints(hints, 90));
+        sb.append(TuiHelper.wrapHints(hints));
         return sb.toString();
     }
 
@@ -279,14 +279,14 @@ public class QuizViews {
         sb.append("\n");
         sb.append(TuiHelper.boxTitle(quiz.getTitle(), subtitle)).append("\n\n");
 
-        sb.append(String.format("  %-4s  %-14s  %-12s  %-10s  %-6s  %-40s%n",
-                "SEL", "ID", "TYPE", "DIFF", "PTS", "QUESTION TEXT")).append("\n");
-        sb.append("  " + "─".repeat(95) + "\n\n");
+        sb.append(String.format("    %-14s  %-4s  %-12s  %-10s  %-6s  %-56s%n",
+                "STATUS", "ID", "TYPE", "DIFF", "PTS", "QUESTION TEXT")).append("\n");
+        sb.append("  " + "─".repeat(114) + "\n\n");
 
         if (bankQuestions.isEmpty()) {
             sb.append("  ").append(TuiHelper.dim("No questions available for this subject. Create questions first in Question Bank.")).append("\n");
         } else {
-            int pageSize = 5;
+            int pageSize = TuiHelper.PAGE_SIZE;
             int startRow = (selectedIndex / pageSize) * pageSize;
             int endRow = Math.min(bankQuestions.size(), startRow + pageSize);
 
@@ -296,13 +296,13 @@ public class QuizViews {
                 String checkbox = isAssigned ? TuiHelper.green("[✔] Assigned  ") : TuiHelper.dim("[ ] Unassigned");
                 String cursor = (i == selectedIndex) ? TuiHelper.cyan("▶ ") : "  ";
 
-                String line = String.format("%s  %-4d  %-12s  %-10s  %-6.1f  %-40s",
+                String line = String.format("%s  %-4d  %-12s  %-10s  %-6.1f  %-56s",
                         checkbox,
                         q.getId(),
                         truncate(q.getQuestionType().name(), 12),
                         truncate(q.getDifficulty().name(), 10),
                         q.getPoints(),
-                        truncate(q.getQuestionText(), 40));
+                        truncate(q.getQuestionText(), 56));
 
                 if (i == selectedIndex) {
                     sb.append(TuiHelper.cyan(cursor + line)).append("\n");
@@ -315,10 +315,10 @@ public class QuizViews {
             }
         }
 
-        sb.append("\n  " + "─".repeat(95) + "\n\n");
+        sb.append("\n  " + "─".repeat(114) + "\n\n");
 
         if (!bankQuestions.isEmpty()) {
-            int pageSize = 5;
+            int pageSize = TuiHelper.PAGE_SIZE;
             int totalPages = Math.max(1, (int) Math.ceil((double) bankQuestions.size() / pageSize));
             int currentPage = selectedIndex / pageSize;
             sb.append(TuiHelper.paginationBar(currentPage, totalPages, bankQuestions.size()));
@@ -362,40 +362,40 @@ public class QuizViews {
         boolean isMixed = questionTypeLabel.contains("MIXED");
 
         List<String> fieldWidgets = new ArrayList<>();
-        fieldWidgets.add(TuiHelper.inputBox("Subject (Required)", subjectName, focusedField == 0, 86, false, "e.g. Java, Python, English, Math"));
-        fieldWidgets.add(TuiHelper.inputBox(itemLabel + " Title / Topic (Required)", titleBuffer, focusedField == 1, 86, false, "e.g. Basic HTML, OOP Concepts"));
-        fieldWidgets.add(TuiHelper.inputBox("Custom Prompt / Instructions (Optional)", customPrompt, focusedField == 2, 86, false, "e.g. Focus on edge cases, avoid multi-threading, include code snippets"));
-        fieldWidgets.add(TuiHelper.selectBox("Question Type", questionTypeLabel, focusedField == 3, 86, "Space or ←/→ to cycle"));
+        fieldWidgets.add(TuiHelper.inputBox("Subject (Required)", subjectName, focusedField == 0, 102, false, "e.g. Java, Python, English, Math"));
+        fieldWidgets.add(TuiHelper.inputBox(itemLabel + " Title / Topic (Required)", titleBuffer, focusedField == 1, 102, false, "e.g. Basic HTML, OOP Concepts"));
+        fieldWidgets.add(TuiHelper.inputBox("Custom Prompt / Instructions (Optional)", customPrompt, focusedField == 2, 102, false, "e.g. Focus on edge cases, avoid multi-threading, include code snippets"));
+        fieldWidgets.add(TuiHelper.selectBox("Question Type", questionTypeLabel, focusedField == 3, 102, "Space or ←/→ to cycle"));
 
         int curIdx = 4;
         if (isMixed) {
-            fieldWidgets.add(TuiHelper.inputBox("MCQ Question Count (0-10)", mcqCountBuffer, focusedField == curIdx++, 86, false, "e.g. 2"));
-            fieldWidgets.add(TuiHelper.inputBox("True/False Question Count (0-10)", tfCountBuffer, focusedField == curIdx++, 86, false, "e.g. 2"));
-            fieldWidgets.add(TuiHelper.inputBox("Short Answer Question Count (0-10)", saCountBuffer, focusedField == curIdx++, 86, false, "e.g. 1"));
+            fieldWidgets.add(TuiHelper.inputBox("MCQ Question Count (0-10)", mcqCountBuffer, focusedField == curIdx++, 102, false, "e.g. 2"));
+            fieldWidgets.add(TuiHelper.inputBox("True/False Question Count (0-10)", tfCountBuffer, focusedField == curIdx++, 102, false, "e.g. 2"));
+            fieldWidgets.add(TuiHelper.inputBox("Short Answer Question Count (0-10)", saCountBuffer, focusedField == curIdx++, 102, false, "e.g. 1"));
         } else {
-            fieldWidgets.add(TuiHelper.inputBox("Number of Questions (1-10)", countBuffer, focusedField == curIdx++, 86, false, "e.g. 5"));
+            fieldWidgets.add(TuiHelper.inputBox("Number of Questions (1-10)", countBuffer, focusedField == curIdx++, 102, false, "e.g. 5"));
         }
 
-        fieldWidgets.add(TuiHelper.selectBox("Difficulty Level", selectedDifficulty.name(), focusedField == curIdx++, 86, "Space to cycle"));
+        fieldWidgets.add(TuiHelper.selectBox("Difficulty Level", selectedDifficulty.name(), focusedField == curIdx++, 102, "Space to cycle"));
 
         boolean showMcq = isMixed ? (!"0".equals(mcqCountBuffer != null ? mcqCountBuffer.trim() : "0")) : questionTypeLabel.contains("MCQ");
         if (showMcq) {
             String optLabel = mcqOptionCount + " Options per Question";
-            fieldWidgets.add(TuiHelper.selectBox("MCQ Option Count", optLabel, focusedField == curIdx++, 86, "Space to cycle (2, 3, 4)"));
+            fieldWidgets.add(TuiHelper.selectBox("MCQ Option Count", optLabel, focusedField == curIdx++, 102, "Space to cycle (2, 3, 4)"));
         }
 
-        fieldWidgets.add(TuiHelper.inputBox("Time Limit (Minutes)", timeLimitBuffer, focusedField == curIdx++, 86, false, "0 for untimed"));
-        fieldWidgets.add(TuiHelper.inputBox("Active Lifetime (Hours)", activeHours, focusedField == curIdx++, 86, false, "0 for Available Forever"));
-        fieldWidgets.add(TuiHelper.inputBox("Passing Score (%)", passScore, focusedField == curIdx++, 86, false, "e.g. 50"));
+        fieldWidgets.add(TuiHelper.inputBox("Time Limit (Minutes)", timeLimitBuffer, focusedField == curIdx++, 102, false, "0 for untimed"));
+        fieldWidgets.add(TuiHelper.inputBox("Active Lifetime (Hours)", activeHours, focusedField == curIdx++, 102, false, "0 for Available Forever"));
+        fieldWidgets.add(TuiHelper.inputBox("Passing Score (%)", passScore, focusedField == curIdx++, 102, false, "e.g. 50"));
 
         String rqText = randomizeQuestions ? "Enabled" : "Disabled";
-        fieldWidgets.add(TuiHelper.selectBox("Randomize Question Order", rqText, focusedField == curIdx++, 86, "Space to toggle"));
+        fieldWidgets.add(TuiHelper.selectBox("Randomize Question Order", rqText, focusedField == curIdx++, 102, "Space to toggle"));
 
         String raText = randomizeAnswers ? "Enabled" : "Disabled";
-        fieldWidgets.add(TuiHelper.selectBox("Shuffle Answer Options", raText, focusedField == curIdx++, 86, "Space to toggle"));
+        fieldWidgets.add(TuiHelper.selectBox("Shuffle Answer Options", raText, focusedField == curIdx++, 102, "Space to toggle"));
 
         String saText = showAnswersAfter ? "Enabled" : "Disabled";
-        fieldWidgets.add(TuiHelper.selectBox("Review Answers on Submit", saText, focusedField == curIdx++, 86, "Space to toggle"));
+        fieldWidgets.add(TuiHelper.selectBox("Review Answers on Submit", saText, focusedField == curIdx++, 102, "Space to toggle"));
 
         int numInputFields = fieldWidgets.size();
         int activeFieldDisplay = Math.min(numInputFields, focusedField + 1);
