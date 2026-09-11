@@ -24,5 +24,6 @@ public class Result {
     private double maxPoints;
     private double percentage;
     private boolean passed;
+    private boolean pendingReview;
     private Timestamp gradedAt;
 }

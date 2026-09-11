@@ -76,10 +76,11 @@ public class ExamTakerScreen implements Screen {
         if (q.getQuestionType() == QuestionType.SHORT_ANSWER) {
             session.getTextAnswers().put(q.getId(), shortAnswerBuffer.toString());
             examService.recordAnswer(session.getAttempt().getId(), q.getId(), null, shortAnswerBuffer.toString());
-        } else if (q.getOptions() != null && focusedOptionIndex >= 0 && focusedOptionIndex < q.getOptions().size()) {
-            QuestionOption opt = q.getOptions().get(focusedOptionIndex);
-            session.getSelectedOptions().put(q.getId(), opt.getId());
-            examService.recordAnswer(session.getAttempt().getId(), q.getId(), opt.getId(), null);
+        } else {
+            Integer selectedOptId = session.getSelectedOptions().get(q.getId());
+            if (selectedOptId != null) {
+                examService.recordAnswer(session.getAttempt().getId(), q.getId(), selectedOptId, null);
+            }
         }
     }
 
@@ -151,14 +152,23 @@ public class ExamTakerScreen implements Screen {
             if (q.getQuestionType() != QuestionType.SHORT_ANSWER && q.getOptions() != null) {
                 if (KeyUtil.isUp(k)) {
                     focusedOptionIndex = (focusedOptionIndex - 1 + q.getOptions().size()) % q.getOptions().size();
-                    saveCurrentAnswer();
                     return ScreenResult.stay(this);
                 } else if (KeyUtil.isDown(k)) {
                     focusedOptionIndex = (focusedOptionIndex + 1) % q.getOptions().size();
-                    saveCurrentAnswer();
                     return ScreenResult.stay(this);
-                } else if (KeyUtil.isSpace(k) || KeyUtil.isEnter(k)) {
-                    saveCurrentAnswer();
+                } else if (KeyUtil.isSpace(k)) {
+                    if (focusedOptionIndex >= 0 && focusedOptionIndex < q.getOptions().size()) {
+                        QuestionOption opt = q.getOptions().get(focusedOptionIndex);
+                        session.getSelectedOptions().put(q.getId(), opt.getId());
+                        saveCurrentAnswer();
+                    }
+                    return ScreenResult.stay(this);
+                } else if (KeyUtil.isEnter(k)) {
+                    if (focusedOptionIndex >= 0 && focusedOptionIndex < q.getOptions().size()) {
+                        QuestionOption opt = q.getOptions().get(focusedOptionIndex);
+                        session.getSelectedOptions().put(q.getId(), opt.getId());
+                        saveCurrentAnswer();
+                    }
                     if (currentQuestionIndex < session.getQuestions().size() - 1) {
                         currentQuestionIndex++;
                         loadCurrentQuestionState();

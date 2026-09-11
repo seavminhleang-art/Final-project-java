@@ -1,5 +1,7 @@
 package com.proctor.controller;
 
+import com.proctor.model.entity.Session;
+import com.proctor.model.entity.User;
 import com.proctor.model.service.AuthService;
 import com.proctor.exception.ValidationException;
 import com.proctor.model.entity.Attempt;
@@ -49,7 +51,9 @@ public class TeacherSubmissionScreen implements Screen {
         if (specificQuiz != null) {
             this.submissions = examService.getSubmissionsForQuiz(specificQuiz.getId());
         } else {
-            this.submissions = List.of();
+            User teacher = Session.getCurrentUser().orElse(null);
+            Integer teacherId = teacher != null ? teacher.getId() : null;
+            this.submissions = examService.getAllSubmissions(teacherId);
         }
         if (submissions.isEmpty()) {
             selectedIndex = 0;
@@ -62,7 +66,12 @@ public class TeacherSubmissionScreen implements Screen {
     public ScreenResult update(Message msg) {
         if (msg instanceof KeyPressMessage k) {
             if (inspectingAnswerSheet) {
-                List<Question> questions = (specificQuiz != null) ? specificQuiz.getQuestions() : List.of();
+                Attempt currentAttempt = !submissions.isEmpty() ? submissions.get(selectedIndex) : null;
+                Quiz currentQuiz = specificQuiz;
+                if (currentQuiz == null && currentAttempt != null) {
+                    currentQuiz = quizService.getQuizById(currentAttempt.getQuizId()).orElse(null);
+                }
+                List<Question> questions = (currentQuiz != null) ? currentQuiz.getQuestions() : List.of();
                 if (KeyUtil.isEsc(k)) {
                     inspectingAnswerSheet = false;
                     return ScreenResult.stay(this);
@@ -165,12 +174,16 @@ public class TeacherSubmissionScreen implements Screen {
     public String view() {
         if (inspectingAnswerSheet && !submissions.isEmpty()) {
             Attempt attempt = submissions.get(selectedIndex);
+            Quiz currentQuiz = specificQuiz;
+            if (currentQuiz == null) {
+                currentQuiz = quizService.getQuizById(attempt.getQuizId()).orElse(null);
+            }
             List<AttemptAnswer> answers = examService.getAttemptAnswers(attempt.getId());
             Map<Integer, AttemptAnswer> answerMap = new java.util.HashMap<>();
             for (AttemptAnswer a : answers) {
                 answerMap.put(a.getQuestionId(), a);
             }
-            return TeacherSubmissionViews.renderAnswerSheet(specificQuiz, attempt, answerMap, inspectingAnswerIndex, bannerMessage);
+            return TeacherSubmissionViews.renderAnswerSheet(currentQuiz, attempt, answerMap, inspectingAnswerIndex, bannerMessage);
         }
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
         return TeacherSubmissionViews.renderSubmissionList(specificQuiz, submissions, java.util.Collections.emptyMap(), selectedIndex, sdf, bannerMessage);

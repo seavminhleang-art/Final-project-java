@@ -17,6 +17,7 @@ public class Attempt {
     private Integer quizId;
     private String quizTitle;
     private Integer studentId;
+    private String studentName;
     private Timestamp startedAt;
     private Timestamp submittedAt;
     private AttemptStatus status;

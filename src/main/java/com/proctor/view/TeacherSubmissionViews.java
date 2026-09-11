@@ -26,8 +26,13 @@ public class TeacherSubmissionViews {
         sb.append("\n");
         sb.append(TuiHelper.boxTitle(title, String.format("Total Submissions: %d", submissions.size()))).append("\n\n");
 
-        sb.append(String.format("  %-8s  %-50s  %-24s  %-22s%n",
-                "ID", "STUDENT", "STATUS", "SUBMITTED AT")).append("\n");
+        if (specificQuiz == null) {
+            sb.append(String.format("  %-7s  %-34s  %-28s  %-18s  %-18s%n",
+                    "ID", "ASSESSMENT", "STUDENT", "STATUS", "SUBMITTED AT")).append("\n");
+        } else {
+            sb.append(String.format("  %-8s  %-50s  %-24s  %-22s%n",
+                    "ID", "STUDENT", "STATUS", "SUBMITTED AT")).append("\n");
+        }
         sb.append("  " + "─".repeat(114) + "\n\n");
 
         if (submissions.isEmpty()) {
@@ -41,23 +46,37 @@ public class TeacherSubmissionViews {
                 Attempt a = submissions.get(i);
                 String cursor = (i == selectedIndex) ? TuiHelper.cyan("▶ ") : "  ";
                 User student = studentMap.get(a.getStudentId());
-                String studentName = student != null ? student.getFullName() : "Student #" + a.getStudentId();
+                String studentName = (a.getStudentName() != null && !a.getStudentName().isBlank())
+                        ? a.getStudentName()
+                        : (student != null ? student.getFullName() : "Student #" + a.getStudentId());
                 String dateStr = a.getSubmittedAt() != null ? dateFormat.format(a.getSubmittedAt()) : "-";
 
+                int statusWidth = (specificQuiz == null) ? 18 : 24;
                 String statusStr;
                 if (a.getStatus() == com.proctor.model.enums.AttemptStatus.GRADED) {
-                    statusStr = TuiHelper.green(String.format("%-24s", "GRADED"));
-                } else if (a.getStatus() == com.proctor.model.enums.AttemptStatus.SUBMITTED || a.getStatus() == com.proctor.model.enums.AttemptStatus.AUTO_SUBMITTED || a.getStatus() == com.proctor.model.enums.AttemptStatus.TURNED_IN) {
-                    statusStr = TuiHelper.yellow(String.format("%-24s", "PENDING REVIEW"));
+                    statusStr = TuiHelper.green(String.format("%-" + statusWidth + "s", "GRADED"));
+                } else if (a.getStatus() == com.proctor.model.enums.AttemptStatus.AUTO_SUBMITTED || a.getStatus() == com.proctor.model.enums.AttemptStatus.TURNED_IN) {
+                    statusStr = TuiHelper.yellow(String.format("%-" + statusWidth + "s", "PENDING REVIEW"));
                 } else {
-                    statusStr = TuiHelper.dim(String.format("%-24s", "IN PROGRESS"));
+                    statusStr = TuiHelper.dim(String.format("%-" + statusWidth + "s", "IN PROGRESS"));
                 }
 
-                String line = String.format("#%-7d  %-50s  %s  %-22s",
-                        a.getId(),
-                        truncate(studentName, 50),
-                        statusStr,
-                        dateStr);
+                String line;
+                if (specificQuiz == null) {
+                    String quizTitle = a.getQuizTitle() != null ? a.getQuizTitle() : "Quiz #" + a.getQuizId();
+                    line = String.format("#%-6d  %-34s  %-28s  %s  %-18s",
+                            a.getId(),
+                            truncate(quizTitle, 34),
+                            truncate(studentName, 28),
+                            statusStr,
+                            dateStr);
+                } else {
+                    line = String.format("#%-7d  %-50s  %s  %-22s",
+                            a.getId(),
+                            truncate(studentName, 50),
+                            statusStr,
+                            dateStr);
+                }
 
                 if (i == selectedIndex) {
                     sb.append(cursor).append(TuiHelper.bold(line)).append("\n");
@@ -92,8 +111,11 @@ public class TeacherSubmissionViews {
                                            int inspectingAnswerIndex, String bannerMessage) {
         StringBuilder sb = new StringBuilder();
         List<Question> questions = (specificQuiz != null) ? specificQuiz.getQuestions() : List.of();
-        String subtitle = String.format("Student #%d  •  Status: %s  •  Question %d of %d",
-                attempt.getStudentId(), attempt.getStatus().name(),
+        String studentLabel = (attempt.getStudentName() != null && !attempt.getStudentName().isBlank())
+                ? attempt.getStudentName()
+                : "Student #" + attempt.getStudentId();
+        String subtitle = String.format("%s  •  Status: %s  •  Question %d of %d",
+                studentLabel, attempt.getStatus().name(),
                 questions.isEmpty() ? 0 : inspectingAnswerIndex + 1, questions.size());
 
         sb.append(TuiHelper.header("SUBMISSIONS"));

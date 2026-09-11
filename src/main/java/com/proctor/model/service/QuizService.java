@@ -35,6 +35,10 @@ public class QuizService {
         return quizRepository.findAll(type, subjectId, createdBy, published, search, false);
     }
 
+    public Optional<Quiz> getQuizById(int id) {
+        return quizRepository.findById(id);
+    }
+
     public Quiz createQuiz(Quiz quiz) {
         validateQuiz(quiz);
         applyExpiration(quiz);

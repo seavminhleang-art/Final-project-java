@@ -9,6 +9,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,12 +17,19 @@ public class PortalRepository {
 
     public List<Result> getStudentHistory(int studentId) {
         List<Result> list = new ArrayList<>();
-        String sql = "SELECT r.id, r.attempt_id, r.student_id, u.full_name AS student_name, " +
-                     "r.quiz_id, q.title AS quiz_title, q.assessment_type, r.total_points, r.max_points, r.percentage, r.passed, r.graded_at " +
-                     "FROM results r " +
-                     "LEFT JOIN users u ON r.student_id = u.id " +
-                     "LEFT JOIN quizzes q ON r.quiz_id = q.id " +
-                     "WHERE r.student_id = ? ORDER BY r.graded_at DESC";
+        String sql = "SELECT r.id AS result_id, a.id AS attempt_id, a.student_id, u.full_name AS student_name, " +
+                     "a.quiz_id, q.title AS quiz_title, q.assessment_type, " +
+                     "COALESCE(r.total_points, 0) AS total_points, " +
+                     "COALESCE(r.max_points, (SELECT COALESCE(SUM(points), 0) FROM questions qq WHERE qq.quiz_id = a.quiz_id OR qq.id IN (SELECT question_id FROM quiz_questions qqq WHERE qqq.quiz_id = a.quiz_id))) AS max_points, " +
+                     "COALESCE(r.percentage, 0) AS percentage, " +
+                     "COALESCE(r.passed, FALSE) AS passed, " +
+                     "r.graded_at, a.submitted_at, a.status AS attempt_status " +
+                     "FROM attempts a " +
+                     "LEFT JOIN results r ON a.id = r.attempt_id " +
+                     "LEFT JOIN users u ON a.student_id = u.id " +
+                     "LEFT JOIN quizzes q ON a.quiz_id = q.id " +
+                     "WHERE a.student_id = ? AND a.status != 'IN_PROGRESS' " +
+                     "ORDER BY COALESCE(r.graded_at, a.submitted_at, a.started_at) DESC";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, studentId);
@@ -34,8 +42,15 @@ public class PortalRepository {
                             type = AssessmentType.valueOf(typeStr.trim().toUpperCase());
                         } catch (IllegalArgumentException ignored) {}
                     }
+                    boolean isGraded = rs.getObject("result_id") != null && rs.getTimestamp("graded_at") != null;
+                    boolean pendingReview = !isGraded;
+                    Timestamp displayDate = rs.getTimestamp("graded_at");
+                    if (displayDate == null) {
+                        displayDate = rs.getTimestamp("submitted_at");
+                    }
+
                     list.add(Result.builder()
-                            .id(rs.getInt("id"))
+                            .id(rs.getObject("result_id") != null ? rs.getInt("result_id") : null)
                             .attemptId(rs.getInt("attempt_id"))
                             .studentId(rs.getInt("student_id"))
                             .studentName(rs.getString("student_name"))
@@ -46,7 +61,8 @@ public class PortalRepository {
                             .maxPoints(rs.getDouble("max_points"))
                             .percentage(rs.getDouble("percentage"))
                             .passed(rs.getBoolean("passed"))
-                            .gradedAt(rs.getTimestamp("graded_at"))
+                            .pendingReview(pendingReview)
+                            .gradedAt(displayDate)
                             .build());
                 }
             }

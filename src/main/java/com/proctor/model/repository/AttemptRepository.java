@@ -98,6 +98,37 @@ public class AttemptRepository {
         return list;
     }
 
+    public List<Attempt> getAllSubmissions(Integer teacherId) {
+        List<Attempt> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT a.id, a.quiz_id, q.title AS quiz_title, a.student_id, u.full_name AS student_name, " +
+                "a.started_at, a.submitted_at, a.status " +
+                "FROM attempts a " +
+                "LEFT JOIN quizzes q ON a.quiz_id = q.id " +
+                "LEFT JOIN users u ON a.student_id = u.id " +
+                "WHERE a.status != 'IN_PROGRESS'"
+        );
+        if (teacherId != null) {
+            sql.append(" AND q.created_by = ?");
+        }
+        sql.append(" ORDER BY COALESCE(a.submitted_at, a.started_at) DESC, a.id DESC");
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            if (teacherId != null) {
+                stmt.setInt(1, teacherId);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error querying all submissions: " + e.getMessage());
+        }
+        return list;
+    }
+
     public boolean saveAnswer(int attemptId, int questionId, Integer selectedOptionId, String textAnswer) {
         String checkSql = "SELECT id FROM attempt_answers WHERE attempt_id = ? AND question_id = ?";
         String updateSql = "UPDATE attempt_answers SET selected_option_id = ?, text_answer = ? WHERE id = ?";
@@ -232,13 +263,19 @@ public class AttemptRepository {
         try {
             status = AttemptStatus.valueOf(statusStr);
         } catch (Exception e) {
-            status = AttemptStatus.SUBMITTED;
+            status = AttemptStatus.TURNED_IN;
         }
+        String studentName = null;
+        try {
+            studentName = rs.getString("student_name");
+        } catch (SQLException ignored) {}
+
         return Attempt.builder()
                 .id(rs.getInt("id"))
                 .quizId(rs.getInt("quiz_id"))
                 .quizTitle(rs.getString("quiz_title"))
                 .studentId(rs.getInt("student_id"))
+                .studentName(studentName)
                 .startedAt(rs.getTimestamp("started_at"))
                 .submittedAt(rs.getTimestamp("submitted_at"))
                 .status(status)

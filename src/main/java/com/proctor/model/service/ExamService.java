@@ -56,6 +56,10 @@ public class ExamService {
         return attemptRepository.getAttemptsByQuiz(quizId);
     }
 
+    public List<Attempt> getAllSubmissions(Integer teacherId) {
+        return attemptRepository.getAllSubmissions(teacherId);
+    }
+
     public List<AttemptAnswer> getAttemptAnswers(int attemptId) {
         return attemptRepository.getAttemptAnswers(attemptId);
     }
@@ -76,7 +80,7 @@ public class ExamService {
 
         if (existingOpt.isPresent()) {
             Attempt latest = existingOpt.get();
-            if (latest.getStatus() == AttemptStatus.TURNED_IN || latest.getStatus() == AttemptStatus.GRADED || latest.getStatus() == AttemptStatus.SUBMITTED || latest.getStatus() == AttemptStatus.AUTO_SUBMITTED) {
+            if (latest.getStatus() == AttemptStatus.TURNED_IN || latest.getStatus() == AttemptStatus.GRADED || latest.getStatus() == AttemptStatus.AUTO_SUBMITTED) {
                 throw new ValidationException("You have already turned in this quiz. View your scorecard in History.");
             }
             attempt = latest;
@@ -168,7 +172,11 @@ public class ExamService {
         }
 
         if (!hasShortAnswer) {
-            return returnGrade(session.getAttempt().getId());
+            Result res = returnGrade(session.getAttempt().getId());
+            if (autoSubmitted) {
+                attemptRepository.finalizeAttempt(session.getAttempt().getId(), AttemptStatus.AUTO_SUBMITTED);
+            }
+            return res;
         }
 
         return Result.builder()
@@ -177,10 +185,12 @@ public class ExamService {
                 .quizId(session.getQuiz().getId())
                 .quizTitle(session.getQuiz().getTitle())
                 .assessmentType(session.getQuiz().getAssessmentType())
-                .totalPoints(Math.round(totalAwarded * 10.0) / 10.0)
+                .totalPoints(0.0)
                 .maxPoints(Math.round(maxPoints * 10.0) / 10.0)
-                .percentage(maxPoints > 0 ? Math.round((totalAwarded / maxPoints) * 1000.0) / 10.0 : 0.0)
+                .percentage(0.0)
                 .passed(false)
+                .pendingReview(true)
+                .gradedAt(null)
                 .build();
     }
 

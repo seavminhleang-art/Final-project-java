@@ -50,7 +50,7 @@ public class ExamViews {
                 } else {
                     statusStr = switch (att.getStatus()) {
                         case IN_PROGRESS -> TuiHelper.yellow("In Progress");
-                        case SUBMITTED, AUTO_SUBMITTED, TURNED_IN -> TuiHelper.cyan("Turned In");
+                        case AUTO_SUBMITTED, TURNED_IN -> TuiHelper.cyan("Turned In");
                         case GRADED -> TuiHelper.bold("Graded");
                     };
                 }
@@ -143,13 +143,37 @@ public class ExamViews {
         }
 
         sb.append("\n  " + "─".repeat(114) + "\n\n");
-        sb.append(TuiHelper.dim("  [↑/↓] Select Answer  •  [←/→] Prev/Next Question  •  [Esc] Submit Quiz\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Move Focus  •  [Space] Select  •  [Enter] Confirm & Next  •  [←/→] Prev/Next  •  [Esc] Submit\n"));
         return sb.toString();
     }
 
     public static String renderExamResult(Result result, ExamSession session, boolean hasReturnScreen) {
         StringBuilder sb = new StringBuilder();
         String typeLabel = (result != null && result.getAssessmentType() == AssessmentType.EXAM) ? "EXAM" : "QUIZ";
+
+        if (result != null && result.isPendingReview()) {
+            sb.append(TuiHelper.header(typeLabel + " SUBMISSION"));
+            sb.append("\n");
+            String titleStr = (result.getQuizTitle() != null && !result.getQuizTitle().isBlank())
+                    ? result.getQuizTitle() : (typeLabel + " Submission");
+            sb.append(TuiHelper.boxTitle(titleStr, "Assessment Submitted - Pending Teacher Evaluation")).append("\n\n");
+
+            String badge = TuiHelper.yellow(TuiHelper.bold("  ⏳ UNDER REVIEW  "));
+
+            sb.append("   Student:            ").append(result.getStudentName() != null ? result.getStudentName() : "Student #" + result.getStudentId()).append("\n");
+            sb.append("   Result Status:      ").append(badge).append("\n\n");
+            sb.append("   ").append(TuiHelper.bold("Notice:")).append("\n");
+            sb.append("   Your assessment has been submitted. Because this assessment includes written response\n");
+            sb.append("   (short answer) questions, your submission requires grading by your instructor.\n");
+            sb.append("   Your final score and question review will be available in History once all written questions\n");
+            sb.append("   have been evaluated and returned.\n\n");
+            sb.append("  " + "─".repeat(114) + "\n\n");
+
+            String returnMsg = hasReturnScreen ? "Back" : "Back to Dashboard";
+            sb.append(TuiHelper.dim("  [Enter / Esc] " + returnMsg + "\n"));
+            return sb.toString();
+        }
+
         sb.append(TuiHelper.header(typeLabel + " RESULTS"));
         sb.append("\n");
 
@@ -224,7 +248,18 @@ public class ExamViews {
             for (int i = startRow; i < endRow; i++) {
                 Result r = historyList.get(i);
                 String cursor = (i == selectedIndex) ? TuiHelper.cyan("▶ ") : "  ";
-                String status = r.isPassed() ? TuiHelper.green(String.format("%-8s", "PASSED")) : TuiHelper.red(String.format("%-8s", "FAILED"));
+                String status;
+                String scoreStr;
+                String pctStr;
+                if (r.isPendingReview()) {
+                    status = TuiHelper.yellow(String.format("%-8s", "PENDING"));
+                    scoreStr = "- / -";
+                    pctStr = "-";
+                } else {
+                    status = r.isPassed() ? TuiHelper.green(String.format("%-8s", "PASSED")) : TuiHelper.red(String.format("%-8s", "FAILED"));
+                    scoreStr = String.format("%.1f/%.1f", r.getTotalPoints(), r.getMaxPoints());
+                    pctStr = String.format("%.1f%%", r.getPercentage());
+                }
                 String dateStr = r.getGradedAt() != null ? dateFormat.format(r.getGradedAt()) : "-";
                 String typeStr = (r.getAssessmentType() == AssessmentType.EXAM) ? "EXAM" : "QUIZ";
 
@@ -232,8 +267,8 @@ public class ExamViews {
                         r.getAttemptId(),
                         typeStr,
                         truncate(r.getQuizTitle(), 46),
-                        String.format("%.1f/%.1f", r.getTotalPoints(), r.getMaxPoints()),
-                        String.format("%.1f%%", r.getPercentage()),
+                        scoreStr,
+                        pctStr,
                         status,
                         dateStr);
 
