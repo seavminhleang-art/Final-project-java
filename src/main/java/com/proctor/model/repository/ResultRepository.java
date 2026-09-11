@@ -63,28 +63,6 @@ public class ResultRepository {
         return Optional.empty();
     }
 
-    public List<Result> findByStudent(int studentId) {
-        List<Result> list = new ArrayList<>();
-        String sql = "SELECT r.id, r.attempt_id, r.student_id, u.full_name AS student_name, " +
-                     "r.quiz_id, q.title AS quiz_title, q.assessment_type, r.total_points, r.max_points, r.percentage, r.passed, r.graded_at " +
-                     "FROM results r " +
-                     "LEFT JOIN users u ON r.student_id = u.id " +
-                     "LEFT JOIN quizzes q ON r.quiz_id = q.id " +
-                     "WHERE r.student_id = ? ORDER BY r.graded_at DESC";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, studentId);
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    list.add(mapRow(rs));
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("Error finding results by student: " + e.getMessage());
-        }
-        return list;
-    }
-
     public List<Result> findByQuiz(int quizId) {
         List<Result> list = new ArrayList<>();
         String sql = "SELECT r.id, r.attempt_id, r.student_id, u.full_name AS student_name, " +

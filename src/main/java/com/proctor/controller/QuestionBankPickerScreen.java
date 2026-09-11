@@ -3,7 +3,6 @@ package com.proctor.controller;
 import com.proctor.model.entity.Question;
 import com.proctor.model.entity.Quiz;
 import com.proctor.model.entity.Session;
-import com.proctor.model.entity.Subject;
 import com.proctor.model.entity.User;
 import com.proctor.model.repository.QuizRepository;
 import com.proctor.model.service.AuthService;

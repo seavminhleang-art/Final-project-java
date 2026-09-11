@@ -12,7 +12,6 @@ import com.proctor.util.KeyUtil;
 import com.proctor.util.PasswordUtils;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.AuthViews;
-import com.proctor.model.service.UserService;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
 import com.williamcallahan.tui4j.compat.bubbletea.Message;
 import com.williamcallahan.tui4j.compat.bubbletea.input.key.KeyType;

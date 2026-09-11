@@ -221,10 +221,6 @@ public class ExamService {
         return true;
     }
 
-    public boolean manualGradeAnswer(int answerId, double points, boolean isCorrect, String feedback) {
-        return attemptRepository.updateAnswerGrade(answerId, isCorrect, points, null, null, feedback);
-    }
-
     public Result returnGrade(int attemptId) {
         Optional<Attempt> attemptOpt = attemptRepository.getAttempt(attemptId);
         if (attemptOpt.isEmpty()) {

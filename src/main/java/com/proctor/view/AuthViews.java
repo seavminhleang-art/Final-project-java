@@ -40,10 +40,6 @@ public class AuthViews {
         return sb.toString();
     }
 
-    public static String renderLogin(String identifier, String password, int focusedField, String errorMessage) {
-        return renderLogin(identifier, password, focusedField, errorMessage, "");
-    }
-
     public static String renderLogin(String identifier, String password, int focusedField, String errorMessage, String infoBanner) {
         StringBuilder sb = new StringBuilder();
         sb.append(TuiHelper.header("LOG IN"));
@@ -112,10 +108,6 @@ public class AuthViews {
 
         sb.append(TuiHelper.dim("  [←/→] Select  •  [Tab/↑/↓] Move  •  [Enter] Confirm  •  [Esc] Back\n"));
         return sb.toString();
-    }
-
-    public static String renderRegister(String fullName, String email, String username, String password, String confirmPassword, String birthday, Role selectedRole, int focusedField, String errorMessage) {
-        return renderRegister(selectedRole != null ? selectedRole : Role.STUDENT, fullName, email, username, password, confirmPassword, birthday, "Male", focusedField, errorMessage);
     }
 
     public static String renderRegister(Role targetRole, String fullName, String email, String username, String password, String confirmPassword, String birthday, String gender, int focusedField, String errorMessage) {

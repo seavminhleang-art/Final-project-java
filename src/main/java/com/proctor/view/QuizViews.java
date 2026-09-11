@@ -9,15 +9,8 @@ import com.proctor.util.TuiHelper;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 public class QuizViews {
-
-    public static String renderQuizList(List<Quiz> quizzes, int selectedIndex,
-                                        boolean isMyQuizzesScope, String searchBuffer, boolean searchMode, String bannerMessage) {
-        return renderQuizList(AssessmentType.QUIZ, quizzes, selectedIndex, isMyQuizzesScope, searchBuffer, searchMode, bannerMessage);
-    }
 
     public static String renderQuizList(AssessmentType assessmentType, List<Quiz> quizzes, int selectedIndex,
                                         boolean isMyQuizzesScope, String searchBuffer, boolean searchMode, String bannerMessage) {
@@ -108,14 +101,6 @@ public class QuizViews {
         );
         sb.append(TuiHelper.wrapHints(hints));
         return sb.toString();
-    }
-
-    public static String renderQuizForm(boolean isEditMode, String subjectName, String title, String description,
-                                        String timeLimit, String activeHours, String passScore,
-                                        boolean randomizeQuestions, boolean randomizeAnswers, boolean showAnswersAfter,
-                                        int focusedField, String errorMessage) {
-        return renderQuizForm(AssessmentType.QUIZ, QuestionType.MCQ, isEditMode, subjectName, title, description,
-                timeLimit, activeHours, passScore, randomizeQuestions, randomizeAnswers, showAnswersAfter, focusedField, errorMessage);
     }
 
     public static String renderQuizForm(AssessmentType assessmentType, QuestionType quizQuestionType,
@@ -260,75 +245,6 @@ public class QuizViews {
                 "[Esc] Back"
         );
         sb.append(TuiHelper.wrapHints(hints));
-        return sb.toString();
-    }
-
-    public static String renderQuizQuestionAssignment(Quiz quiz, List<Question> bankQuestions, Set<Integer> assignedIds,
-                                                     int selectedIndex, String bannerMessage) {
-        StringBuilder sb = new StringBuilder();
-        double totalPts = 0;
-        for (Question q : bankQuestions) {
-            if (assignedIds.contains(q.getId())) {
-                totalPts += q.getPoints();
-            }
-        }
-
-        String subtitle = String.format("Assigned: %d Questions (%.1f pts)  •  Bank: %d Available",
-                assignedIds.size(), totalPts, bankQuestions.size());
-        sb.append(TuiHelper.header("QUIZZES"));
-        sb.append("\n");
-        sb.append(TuiHelper.boxTitle(quiz.getTitle(), subtitle)).append("\n\n");
-
-        sb.append(String.format("    %-14s  %-4s  %-12s  %-10s  %-6s  %-56s%n",
-                "STATUS", "ID", "TYPE", "DIFF", "PTS", "QUESTION TEXT")).append("\n");
-        sb.append("  " + "─".repeat(114) + "\n\n");
-
-        if (bankQuestions.isEmpty()) {
-            sb.append("  ").append(TuiHelper.dim("No questions available for this subject. Create questions first in Question Bank.")).append("\n");
-        } else {
-            int pageSize = TuiHelper.PAGE_SIZE;
-            int startRow = (selectedIndex / pageSize) * pageSize;
-            int endRow = Math.min(bankQuestions.size(), startRow + pageSize);
-
-            for (int i = startRow; i < endRow; i++) {
-                Question q = bankQuestions.get(i);
-                boolean isAssigned = assignedIds.contains(q.getId());
-                String checkbox = isAssigned ? TuiHelper.green("[✔] Assigned  ") : TuiHelper.dim("[ ] Unassigned");
-                String cursor = (i == selectedIndex) ? TuiHelper.cyan("▶ ") : "  ";
-
-                String line = String.format("%s  %-4d  %-12s  %-10s  %-6.1f  %-56s",
-                        checkbox,
-                        q.getId(),
-                        truncate(q.getQuestionType().name(), 12),
-                        truncate(q.getDifficulty().name(), 10),
-                        q.getPoints(),
-                        truncate(q.getQuestionText(), 56));
-
-                if (i == selectedIndex) {
-                    sb.append(TuiHelper.cyan(cursor + line)).append("\n");
-                } else {
-                    sb.append(cursor).append(line).append("\n");
-                }
-                if (i < bankQuestions.size() - 1 && i < endRow - 1) {
-                    sb.append("\n");
-                }
-            }
-        }
-
-        sb.append("\n  " + "─".repeat(114) + "\n\n");
-
-        if (!bankQuestions.isEmpty()) {
-            int pageSize = TuiHelper.PAGE_SIZE;
-            int totalPages = Math.max(1, (int) Math.ceil((double) bankQuestions.size() / pageSize));
-            int currentPage = selectedIndex / pageSize;
-            sb.append(TuiHelper.paginationBar(currentPage, totalPages, bankQuestions.size()));
-        }
-
-        if (!bannerMessage.isBlank()) {
-            sb.append("  ").append(bannerMessage).append("\n\n");
-        }
-
-        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [Space/Enter] Toggle Question  •  [Esc] Back\n"));
         return sb.toString();
     }
 

@@ -173,23 +173,4 @@ public class UserService {
         }
         return true;
     }
-
-    public boolean applyPasswordHash(int id, String passwordHash) {
-        if (passwordHash == null || passwordHash.isBlank()) {
-            throw new ValidationException("Password hash cannot be blank.");
-        }
-        Optional<User> existing = userRepository.findById(id);
-        if (existing.isEmpty()) {
-            throw new ValidationException("User not found.");
-        }
-        User user = existing.get();
-        if (user.getRole() == Role.ADMIN || SeedService.ADMIN_USERNAME.equalsIgnoreCase(user.getUsername())) {
-            throw new ValidationException("The administrator account is hardcoded and cannot be modified.");
-        }
-        boolean updated = userRepository.updatePassword(id, passwordHash);
-        if (!updated) {
-            throw new ValidationException("Failed to update password.");
-        }
-        return true;
-    }
 }

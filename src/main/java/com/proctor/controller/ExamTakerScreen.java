@@ -8,7 +8,6 @@ import com.proctor.model.entity.Question;
 import com.proctor.model.entity.QuestionOption;
 import com.proctor.model.entity.Result;
 import com.proctor.util.KeyUtil;
-import com.proctor.util.TuiHelper;
 import com.proctor.view.ExamViews;
 import com.williamcallahan.tui4j.compat.bubbletea.Command;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;

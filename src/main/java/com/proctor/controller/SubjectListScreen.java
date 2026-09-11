@@ -1,6 +1,5 @@
 package com.proctor.controller;
 
-import com.proctor.model.entity.User;
 import com.proctor.model.service.AuthService;
 import com.proctor.model.entity.Subject;
 import com.proctor.model.service.SubjectService;

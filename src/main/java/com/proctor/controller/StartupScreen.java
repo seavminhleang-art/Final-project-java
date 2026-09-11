@@ -1,8 +1,6 @@
 package com.proctor.controller;
 
-import com.proctor.model.repository.UserRepository;
 import com.proctor.model.service.AuthService;
-import com.proctor.model.service.UserService;
 import com.proctor.util.KeyUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.AuthViews;

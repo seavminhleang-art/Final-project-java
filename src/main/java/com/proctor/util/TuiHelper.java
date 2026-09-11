@@ -36,10 +36,6 @@ public class TuiHelper {
         return NAVY_BLUE + text + RESET;
     }
 
-    public static String purple(String text) {
-        return navyBlue(text);
-    }
-
     public static String cyan(String text) {
         return navyBlue(text);
     }
@@ -217,10 +213,6 @@ public class TuiHelper {
 
     public static String asciiBannerBox(String[] asciiLines, String subtitle) {
         return asciiBannerBox(asciiLines);
-    }
-
-    public static String proctorAsciiBanner(String subtitle) {
-        return asciiBannerBox(ASCII_PROCTOR);
     }
 
     public static String header(String title) {

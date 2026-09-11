@@ -8,7 +8,6 @@ import com.proctor.model.service.AuthService;
 import com.proctor.model.enums.Difficulty;
 import com.proctor.model.enums.QuestionType;
 import com.proctor.model.entity.Question;
-import com.proctor.model.entity.QuestionOption;
 import com.proctor.model.service.QuestionService;
 import com.proctor.model.entity.Quiz;
 import com.proctor.model.repository.QuizRepository;

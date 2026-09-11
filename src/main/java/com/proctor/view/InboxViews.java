@@ -91,7 +91,6 @@ public class InboxViews {
     }
 
     public static String renderInboxDetail(InboxMessage msg, boolean showDeleteModal, boolean deleteConfirmFocused,
-                                           boolean showAdminResetInput, String tempPasswordInput, boolean inputFocused,
                                            int focusedActionBtn, String errorMessage, String bannerMessage) {
         StringBuilder sb = new StringBuilder();
         sb.append(TuiHelper.header("INBOX"));
@@ -114,15 +113,8 @@ public class InboxViews {
         sb.append("\n  " + "─".repeat(114) + "\n\n");
 
         if (msg.isActionable()) {
-            if (showAdminResetInput) {
-                sb.append(TuiHelper.inputBox("New Temporary Password for User", tempPasswordInput, inputFocused, 102, false, "type new temporary password"));
-                sb.append("\n");
-                sb.append(TuiHelper.buttonRow("Approve & Reset", focusedActionBtn == 0, "Reject Request", focusedActionBtn == 1));
-                sb.append("\n\n");
-            } else {
-                sb.append(TuiHelper.buttonRow("Approve Request", focusedActionBtn == 0, "Reject Request", focusedActionBtn == 1));
-                sb.append("\n\n");
-            }
+            sb.append(TuiHelper.buttonRow("Approve Request", focusedActionBtn == 0, "Reject Request", focusedActionBtn == 1));
+            sb.append("\n\n");
         }
 
         if (!errorMessage.isBlank()) {

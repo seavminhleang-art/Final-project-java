@@ -6,9 +6,7 @@ import com.proctor.model.entity.SubjectReportDTO;
 import com.proctor.model.entity.SystemOverviewDTO;
 import com.proctor.model.repository.ReportRepository;
 import net.sf.jasperreports.engine.*;
-import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.design.*;
-import net.sf.jasperreports.engine.type.HorizontalTextAlignEnum;
 
 import java.io.File;
 import java.text.SimpleDateFormat;

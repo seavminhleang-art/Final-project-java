@@ -1,7 +1,6 @@
 package com.proctor.controller;
 
 import com.proctor.model.service.AuthService;
-import com.proctor.model.enums.AttemptStatus;
 import com.proctor.exception.ValidationException;
 import com.proctor.model.entity.Attempt;
 import com.proctor.model.entity.AttemptAnswer;
@@ -21,7 +20,6 @@ import com.williamcallahan.tui4j.compat.bubbletea.Message;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public class TeacherSubmissionScreen implements Screen {
     private final Quiz specificQuiz;

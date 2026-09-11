@@ -56,25 +56,6 @@ public class AttemptRepository {
         return Optional.empty();
     }
 
-    public Optional<Attempt> findActiveAttempt(int quizId, int studentId) {
-        String sql = "SELECT a.id, a.quiz_id, q.title AS quiz_title, a.student_id, a.started_at, a.submitted_at, a.status " +
-                     "FROM attempts a LEFT JOIN quizzes q ON a.quiz_id = q.id " +
-                     "WHERE a.quiz_id = ? AND a.student_id = ? AND a.status = 'IN_PROGRESS'";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, quizId);
-            stmt.setInt(2, studentId);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(mapRow(rs));
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("Error finding active attempt: " + e.getMessage());
-        }
-        return Optional.empty();
-    }
-
     public Optional<Attempt> findLatestAttempt(int quizId, int studentId) {
         String sql = "SELECT a.id, a.quiz_id, q.title AS quiz_title, a.student_id, a.started_at, a.submitted_at, a.status " +
                      "FROM attempts a LEFT JOIN quizzes q ON a.quiz_id = q.id " +

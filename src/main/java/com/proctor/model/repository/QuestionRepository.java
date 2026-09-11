@@ -37,55 +37,6 @@ public class QuestionRepository {
         return list;
     }
 
-    public List<Question> findAll(Integer subjectId, QuestionType type, Difficulty difficulty, String search) {
-        List<Question> list = new ArrayList<>();
-        StringBuilder sql = new StringBuilder(
-                "SELECT q.id, q.quiz_id, q.subject_id, s.code AS subject_code, q.created_by, q.question_text, " +
-                "q.question_type, q.difficulty, q.points, q.explanation, q.ai_generated, q.is_enabled, q.created_at " +
-                "FROM questions q LEFT JOIN subjects s ON q.subject_id = s.id WHERE 1=1"
-        );
-        List<Object> params = new ArrayList<>();
-
-        if (subjectId != null) {
-            sql.append(" AND q.subject_id = ?");
-            params.add(subjectId);
-        }
-
-        if (type != null) {
-            sql.append(" AND q.question_type = ?");
-            params.add(type.name());
-        }
-
-        if (difficulty != null) {
-            sql.append(" AND q.difficulty = ?");
-            params.add(difficulty.name());
-        }
-
-        if (search != null && !search.isBlank()) {
-            sql.append(" AND (LOWER(q.question_text) LIKE ? OR LOWER(COALESCE(q.explanation, '')) LIKE ?)");
-            String p = "%" + search.trim().toLowerCase() + "%";
-            params.add(p);
-            params.add(p);
-        }
-
-        sql.append(" ORDER BY q.id DESC");
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
-            for (int i = 0; i < params.size(); i++) {
-                stmt.setObject(i + 1, params.get(i));
-            }
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    list.add(mapRow(rs));
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("Error querying questions: " + e.getMessage());
-        }
-        return list;
-    }
-
     public Optional<Question> findById(int id) {
         String sql = "SELECT q.id, q.quiz_id, q.subject_id, s.code AS subject_code, q.created_by, q.question_text, " +
                      "q.question_type, q.difficulty, q.points, q.explanation, q.ai_generated, q.is_enabled, q.created_at " +
@@ -183,18 +134,6 @@ public class QuestionRepository {
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             System.err.println("Error deleting question: " + e.getMessage());
-        }
-        return false;
-    }
-
-    public boolean toggleEnabled(int questionId) {
-        String sql = "UPDATE questions SET is_enabled = NOT is_enabled WHERE id = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, questionId);
-            return stmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("Error toggling question status: " + e.getMessage());
         }
         return false;
     }

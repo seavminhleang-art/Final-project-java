@@ -139,13 +139,12 @@ public class InboxService {
         return msg;
     }
 
-    public int sendPasswordResetRequest(String identifier) {
-        return sendPasswordResetRequest(identifier, null);
-    }
-
     public int sendPasswordResetRequest(String identifier, String newPassword) {
         if (identifier == null || identifier.trim().isBlank()) {
             throw new ValidationException("Email or username is required.");
+        }
+        if (newPassword == null || newPassword.isBlank()) {
+            throw new ValidationException("New password is required.");
         }
 
         Optional<User> userOpt = userRepository.findByEmailOrUsername(identifier.trim());
@@ -158,11 +157,8 @@ public class InboxService {
             throw new ValidationException("The administrator account is hardcoded and cannot be reset.");
         }
 
-        String hash = null;
-        if (newPassword != null && !newPassword.isBlank()) {
-            PasswordUtils.validatePassword(newPassword);
-            hash = PasswordUtils.hash(newPassword.trim());
-        }
+        PasswordUtils.validatePassword(newPassword);
+        String hash = PasswordUtils.hash(newPassword.trim());
 
         List<User> admins = userRepository.findAll(null, Role.ADMIN);
         if (admins.isEmpty()) {
@@ -171,11 +167,8 @@ public class InboxService {
 
         int sent = 0;
         for (User admin : admins) {
-            String bodyText = hash != null
-                    ? String.format("User @%s (%s, %s) has forgotten their password and provided their desired new password.\n[HASH:%s]",
-                            requester.getUsername(), requester.getFullName(), requester.getEmail(), hash)
-                    : String.format("User @%s (%s, %s) has forgotten their password and requested an administrator reset.",
-                            requester.getUsername(), requester.getFullName(), requester.getEmail());
+            String bodyText = String.format("User @%s (%s, %s) has forgotten their password and provided their desired new password.\n[HASH:%s]",
+                    requester.getUsername(), requester.getFullName(), requester.getEmail(), hash);
 
             InboxMessage msg = InboxMessage.builder()
                     .senderId(requester.getId())

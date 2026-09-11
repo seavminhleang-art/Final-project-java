@@ -12,88 +12,6 @@ import java.util.List;
 
 public class QuestionViews {
 
-    public static String renderQuestionList(List<Question> questions, int selectedIndex,
-                                           QuestionType typeFilter, Difficulty diffFilter,
-                                           String searchBuffer, boolean searchMode, String bannerMessage) {
-        StringBuilder sb = new StringBuilder();
-        String tf = (typeFilter == null) ? "ALL" : typeFilter.name();
-        String df = (diffFilter == null) ? "ALL" : diffFilter.name();
-        sb.append(TuiHelper.header("QUESTIONS"));
-        sb.append("\n");
-        sb.append(TuiHelper.boxTitle("Question Bank", String.format("Type: [%s]  •  Diff: [%s]  •  Total: %d", tf, df, questions.size()))).append("\n\n");
-
-        if (searchMode) {
-            sb.append("  Search: [ ").append(TuiHelper.cyan(searchBuffer + "_")).append(" ] (Press Enter to finish)\n\n");
-        } else if (!searchBuffer.isEmpty()) {
-            sb.append("  Search: [ ").append(searchBuffer).append(" ] (Press '/' to edit)\n\n");
-        }
-
-        sb.append(String.format("  %-4s  %-10s  %-12s  %-6s  %-5s  %-55s  %-8s%n",
-                "ID", "SUBJ", "TYPE", "DIFF", "PTS", "QUESTION TEXT", "STATUS")).append("\n");
-        sb.append("  " + "─".repeat(112) + "\n\n");
-
-        if (questions.isEmpty()) {
-            sb.append("  ").append(TuiHelper.dim("No questions found matching criteria.")).append("\n");
-        } else {
-            int pageSize = TuiHelper.PAGE_SIZE;
-            int startRow = (selectedIndex / pageSize) * pageSize;
-            int endRow = Math.min(questions.size(), startRow + pageSize);
-
-            for (int i = startRow; i < endRow; i++) {
-                Question q = questions.get(i);
-                String cursor = (i == selectedIndex) ? TuiHelper.cyan("▶ ") : "  ";
-                String status = q.isEnabled() ? TuiHelper.green("Enabled") : TuiHelper.red("Disabled");
-                String subj = q.getSubjectCode() != null ? q.getSubjectCode() : "-";
-
-                String line = String.format("%-4d  %-10s  %-12s  %-6s  %-5.1f  %-55s  %-8s",
-                        q.getId(),
-                        truncate(subj, 10),
-                        q.getQuestionType().name(),
-                        q.getDifficulty().name(),
-                        q.getPoints(),
-                        truncate(q.getQuestionText(), 55),
-                        status);
-
-                if (i == selectedIndex) {
-                    sb.append(cursor).append(TuiHelper.bold(line)).append("\n");
-                } else {
-                    sb.append(cursor).append(line).append("\n");
-                }
-                if (i < endRow - 1) {
-                    sb.append("\n");
-                }
-            }
-        }
-
-        sb.append("\n  " + "─".repeat(112) + "\n\n");
-
-        if (!questions.isEmpty()) {
-            int pageSize = TuiHelper.PAGE_SIZE;
-            int totalPages = Math.max(1, (int) Math.ceil((double) questions.size() / pageSize));
-            int currentPage = selectedIndex / pageSize;
-            sb.append(TuiHelper.paginationBar(currentPage, totalPages, questions.size()));
-        }
-
-        if (!bannerMessage.isBlank()) {
-            sb.append("  ").append(bannerMessage).append("\n\n");
-        }
-
-        List<String> hints = List.of(
-                "[↑/↓] Move",
-                "[←/→] Page",
-                "[Enter] View",
-                "[Space] Toggle Enabled",
-                "[n] New",
-                "[e] Edit",
-                "[f] Type",
-                "[d] Diff",
-                "[/] Search",
-                "[Esc] Back"
-        );
-        sb.append(TuiHelper.wrapHints(hints));
-        return sb.toString();
-    }
-
     public static String renderQuestionForm(boolean isEditMode, boolean isPinnedQuiz, String pinnedQuizTitle,
                                             String subjectName, String questionText, QuestionType selectedType,
                                             Difficulty selectedDifficulty, String points,
@@ -186,43 +104,6 @@ public class QuestionViews {
                 }
             }
         }
-    }
-
-    public static String renderQuestionView(Question question) {
-        StringBuilder sb = new StringBuilder();
-        String subj = question.getSubjectCode() != null ? question.getSubjectCode() : "No Subject";
-        sb.append(TuiHelper.header("QUESTIONS"));
-        sb.append("\n");
-        sb.append(TuiHelper.boxTitle("Question Details #" + question.getId(), "Subject: " + subj)).append("\n\n");
-
-        sb.append("  " + TuiHelper.bold("Type:") + "       " + question.getQuestionType().name());
-        sb.append("   " + TuiHelper.bold("Difficulty:") + " " + question.getDifficulty().name());
-        sb.append("   " + TuiHelper.bold("Points:") + " " + question.getPoints());
-        String status = question.isEnabled() ? TuiHelper.green("Enabled") : TuiHelper.red("Disabled");
-        sb.append("   " + TuiHelper.bold("Status:") + " " + status).append("\n\n");
-
-        sb.append("  " + TuiHelper.bold("Question Text:") + "\n");
-        sb.append("  " + question.getQuestionText()).append("\n\n");
-
-        if (question.getQuestionType() != QuestionType.SHORT_ANSWER && question.getOptions() != null) {
-            sb.append("  " + TuiHelper.bold("Options:") + "\n");
-            for (QuestionOption opt : question.getOptions()) {
-                if (opt.isCorrect()) {
-                    sb.append("   ").append(TuiHelper.green("✔ [Correct] " + opt.getOptionText())).append("\n");
-                } else {
-                    sb.append("   ").append(TuiHelper.dim("• [       ] " + opt.getOptionText())).append("\n");
-                }
-            }
-            sb.append("\n");
-        }
-
-        if (question.getExplanation() != null && !question.getExplanation().isBlank()) {
-            sb.append("  " + TuiHelper.bold("Explanation / Context:") + "\n");
-            sb.append("  " + question.getExplanation()).append("\n\n");
-        }
-
-        sb.append(TuiHelper.dim("  [Enter/e] Edit  •  [Space] Toggle Enabled  •  [Esc] Back\n"));
-        return sb.toString();
     }
 
     public static String renderAIQuestionLoading(String topic, int spinnerTick) {

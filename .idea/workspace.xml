@@ -4,21 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c05deeaa-fc82-4d29-9b43-ab8bc6abc8c2" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/AdminDashboardScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/AdminDashboardScreen.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/StudentDashboardScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/StudentDashboardScreen.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/TeacherDashboardScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/TeacherDashboardScreen.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/util/TuiHelper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/util/TuiHelper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/view/DashboardViews.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/view/DashboardViews.java" afterDir="false" />
-    </list>
+    <list default="true" id="c05deeaa-fc82-4d29-9b43-ab8bc6abc8c2" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="126" />
+    <option name="cachedIndexableFilesCount" value="127" />
   </component>
   <component name="ExternalProjectsData">
     <projectState path="$PROJECT_DIR$">

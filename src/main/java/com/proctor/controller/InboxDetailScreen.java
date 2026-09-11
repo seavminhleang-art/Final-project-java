@@ -1,6 +1,5 @@
 package com.proctor.controller;
 
-import com.proctor.model.entity.User;
 import com.proctor.model.service.AuthService;
 import com.proctor.exception.ValidationException;
 import com.proctor.model.entity.InboxMessage;
@@ -160,9 +159,6 @@ public class InboxDetailScreen implements Screen {
                 message,
                 showDeleteModal,
                 deleteConfirmFocused,
-                false,
-                "",
-                false,
                 focusedActionIndex,
                 errorMessage,
                 bannerMessage

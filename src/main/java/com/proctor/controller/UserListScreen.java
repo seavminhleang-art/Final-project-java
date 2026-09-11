@@ -3,7 +3,6 @@ package com.proctor.controller;
 import com.proctor.model.entity.User;
 import com.proctor.model.service.AuthService;
 import com.proctor.model.enums.Role;
-import com.proctor.exception.ValidationException;
 import com.proctor.util.KeyUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.UserViews;

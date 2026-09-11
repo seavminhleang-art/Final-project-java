@@ -18,10 +18,6 @@ public class QuestionService {
         this.questionRepository = questionRepository;
     }
 
-    public List<Question> getQuestions(Integer subjectId, QuestionType type, Difficulty difficulty, String search) {
-        return questionRepository.findAll(subjectId, type, difficulty, search);
-    }
-
     public List<Question> getQuestionsByQuizId(int quizId) {
         return questionRepository.findByQuizId(quizId);
     }
@@ -57,10 +53,6 @@ public class QuestionService {
             throw new ValidationException("Failed to update question.");
         }
         return q;
-    }
-
-    public boolean toggleQuestionStatus(int id) {
-        return questionRepository.toggleEnabled(id);
     }
 
     public List<Question> getBankQuestions(Integer createdBy, Integer subjectId,

@@ -15,12 +15,6 @@ import java.util.Map;
 
 public class ExamViews {
 
-    public static String renderAvailableQuizzes(List<Quiz> quizzes, Map<Integer, String> subjectNames,
-                                               Map<Integer, Attempt> studentAttempts, int selectedIndex,
-                                               String bannerMessage) {
-        return renderAvailableQuizzes(AssessmentType.QUIZ, quizzes, subjectNames, studentAttempts, selectedIndex, bannerMessage);
-    }
-
     public static String renderAvailableQuizzes(AssessmentType assessmentType, List<Quiz> quizzes, Map<Integer, String> subjectNames,
                                                Map<Integer, Attempt> studentAttempts, int selectedIndex,
                                                String bannerMessage) {

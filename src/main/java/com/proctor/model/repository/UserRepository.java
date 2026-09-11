@@ -5,26 +5,11 @@ import com.proctor.model.enums.Role;
 import com.proctor.config.DatabaseConnection;
 
 import java.sql.*;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public class UserRepository {
-
-    public int countUsers() {
-        String sql = "SELECT COUNT(*) FROM users";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            if (rs.next()) {
-                return rs.getInt(1);
-            }
-        } catch (SQLException e) {
-            System.err.println("Error counting users: " + e.getMessage());
-        }
-        return 0;
-    }
 
     public Optional<User> findByEmail(String email) {
         if (email == null || email.isBlank()) return Optional.empty();
