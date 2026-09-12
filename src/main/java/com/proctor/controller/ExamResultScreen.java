@@ -56,12 +56,12 @@ public class ExamResultScreen implements Screen {
                     if (q != null && q.getCreatedBy() != null) {
                         try {
                             inboxService.sendQuizRetakeRequest(result.getStudentId(), q.getCreatedBy(), q.getId(), q.getTitle());
-                            bannerMessage = TuiHelper.green("✔ Quiz retake request sent to instructor's inbox!");
+                            bannerMessage = TuiHelper.green("✔ Quiz retake request sent to teacher's inbox!");
                         } catch (ValidationException e) {
                             bannerMessage = TuiHelper.yellow("● " + e.getMessage());
                         }
                     } else {
-                        bannerMessage = TuiHelper.red("✖ Instructor for this quiz was not found.");
+                        bannerMessage = TuiHelper.red("✖ Teacher for this quiz was not found.");
                     }
                 } else {
                     bannerMessage = TuiHelper.yellow("● Retakes can only be requested if timer expired.");
@@ -83,7 +83,7 @@ public class ExamResultScreen implements Screen {
     public String view() {
         StringBuilder sb = new StringBuilder(ExamViews.renderExamResult(result, session, returnScreen != null));
         if (session != null && session.getAttempt() != null && session.getAttempt().getStatus() == AttemptStatus.AUTO_SUBMITTED) {
-            sb.append("\n  ").append(TuiHelper.yellow("● Timer expired. Press [r] to request a retake from your instructor.")).append("\n");
+            sb.append("\n  ").append(TuiHelper.yellow("● Timer expired. Press [r] to request a retake from your teacher.")).append("\n");
         }
         if (!bannerMessage.isBlank()) {
             sb.append("\n  ").append(bannerMessage).append("\n");

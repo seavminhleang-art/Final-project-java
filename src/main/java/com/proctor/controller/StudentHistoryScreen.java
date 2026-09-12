@@ -11,6 +11,7 @@ import com.proctor.util.TuiHelper;
 import com.proctor.view.ExamViews;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
 import com.williamcallahan.tui4j.compat.bubbletea.Message;
+import com.williamcallahan.tui4j.compat.bubbletea.input.key.KeyType;
 
 import java.text.SimpleDateFormat;
 import java.util.List;
@@ -20,9 +21,14 @@ public class StudentHistoryScreen implements Screen {
     private final ExamService examService;
     private final AuthService authService;
 
-    private List<Result> historyList;
+    private List<Result> allHistory = new java.util.ArrayList<>();
+    private List<Result> historyList = new java.util.ArrayList<>();
     private int selectedIndex = 0;
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+    private final StringBuilder searchBuffer = new StringBuilder();
+    private boolean searchMode = false;
+    private int statusFilterIndex = 0;
+    private static final String[] STATUS_FILTERS = {"ALL", "PASSED", "FAILED", "PENDING"};
 
     public StudentHistoryScreen(PortalService portalService, ExamService examService, AuthService authService) {
         this.portalService = portalService;
@@ -34,7 +40,34 @@ public class StudentHistoryScreen implements Screen {
     private void refreshHistory() {
         User student = Session.getCurrentUser().orElse(null);
         int studentId = student != null ? student.getId() : 0;
-        this.historyList = portalService.getStudentHistory(studentId);
+        this.allHistory = portalService.getStudentHistory(studentId);
+        applyFilters();
+    }
+
+    private void applyFilters() {
+        String filter = STATUS_FILTERS[statusFilterIndex];
+        String search = searchBuffer.toString().trim().toLowerCase();
+
+        this.historyList = allHistory.stream().filter(r -> {
+            if ("PASSED".equals(filter) && (r.isPendingReview() || !r.isPassed())) {
+                return false;
+            }
+            if ("FAILED".equals(filter) && (r.isPendingReview() || r.isPassed())) {
+                return false;
+            }
+            if ("PENDING".equals(filter) && !r.isPendingReview()) {
+                return false;
+            }
+            if (!search.isEmpty()) {
+                boolean matchTitle = r.getQuizTitle() != null && r.getQuizTitle().toLowerCase().contains(search);
+                boolean matchType = r.getAssessmentType() != null && r.getAssessmentType().name().toLowerCase().contains(search);
+                if (!matchTitle && !matchType) {
+                    return false;
+                }
+            }
+            return true;
+        }).toList();
+
         if (historyList.isEmpty()) {
             selectedIndex = 0;
         } else if (selectedIndex >= historyList.size()) {
@@ -45,6 +78,27 @@ public class StudentHistoryScreen implements Screen {
     @Override
     public ScreenResult update(Message msg) {
         if (msg instanceof KeyPressMessage k) {
+            if (searchMode) {
+                if (KeyUtil.isEsc(k) || KeyUtil.isEnter(k)) {
+                    searchMode = false;
+                    applyFilters();
+                } else if (KeyUtil.isBackspace(k)) {
+                    if (!searchBuffer.isEmpty()) {
+                        searchBuffer.deleteCharAt(searchBuffer.length() - 1);
+                        applyFilters();
+                    }
+                } else if (k.type() == KeyType.KeyRunes && k.runes() != null) {
+                    for (char c : k.runes()) {
+                        if (!Character.isISOControl(c)) searchBuffer.append(c);
+                    }
+                    applyFilters();
+                } else if (k.key() != null && k.key().length() == 1 && !Character.isISOControl(k.key().charAt(0))) {
+                    searchBuffer.append(k.key());
+                    applyFilters();
+                }
+                return ScreenResult.stay(this);
+            }
+
             if (KeyUtil.isEsc(k)) {
                 return ScreenResult.navigate(new StudentDashboardScreen(authService, examService, portalService));
             } else if (KeyUtil.isUp(k)) {
@@ -72,6 +126,14 @@ public class StudentHistoryScreen implements Screen {
                         selectedIndex = Math.min(historyList.size() - 1, (currentPage + 1) * pageSize);
                     }
                 }
+            } else if ("f".equalsIgnoreCase(k.key())) {
+                statusFilterIndex = (statusFilterIndex + 1) % STATUS_FILTERS.length;
+                selectedIndex = 0;
+                applyFilters();
+            } else if ("/".equals(k.key())) {
+                searchMode = true;
+                searchBuffer.setLength(0);
+                applyFilters();
             } else if (KeyUtil.isEnter(k)) {
                 if (!historyList.isEmpty()) {
                     Result r = historyList.get(selectedIndex);
@@ -84,7 +146,8 @@ public class StudentHistoryScreen implements Screen {
 
     @Override
     public String view() {
-        return ExamViews.renderStudentHistory(historyList, selectedIndex, dateFormat);
+        return ExamViews.renderStudentHistory(historyList, selectedIndex, dateFormat,
+                STATUS_FILTERS[statusFilterIndex], searchBuffer.toString(), searchMode);
     }
 
     private String truncate(String text, int max) {

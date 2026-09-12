@@ -17,6 +17,13 @@ public class TeacherSubmissionViews {
     public static String renderSubmissionList(Quiz specificQuiz, List<Attempt> submissions,
                                              Map<Integer, User> studentMap, int selectedIndex,
                                              SimpleDateFormat dateFormat, String bannerMessage) {
+        return renderSubmissionList(specificQuiz, submissions, studentMap, selectedIndex, dateFormat, "ALL", "", false, bannerMessage);
+    }
+
+    public static String renderSubmissionList(Quiz specificQuiz, List<Attempt> submissions,
+                                             Map<Integer, User> studentMap, int selectedIndex,
+                                             SimpleDateFormat dateFormat, String statusFilterDisplay,
+                                             String searchBuffer, boolean searchMode, String bannerMessage) {
         StringBuilder sb = new StringBuilder();
         String title = (specificQuiz != null)
                 ? "Quiz: " + specificQuiz.getTitle()
@@ -24,14 +31,21 @@ public class TeacherSubmissionViews {
 
         sb.append(TuiHelper.header("SUBMISSIONS"));
         sb.append("\n");
-        sb.append(TuiHelper.boxTitle(title, String.format("Total Submissions: %d", submissions.size()))).append("\n\n");
+        String statusLabel = (statusFilterDisplay == null || statusFilterDisplay.isBlank()) ? "ALL" : statusFilterDisplay;
+        sb.append(TuiHelper.boxTitle(title, String.format("Status: [ %s ]  •  Total Submissions: %d", statusLabel, submissions.size()))).append("\n\n");
+
+        if (searchMode) {
+            sb.append("  Search: [ ").append(TuiHelper.cyan(searchBuffer + "_")).append(" ] (Press Enter to finish)\n\n");
+        } else if (searchBuffer != null && !searchBuffer.isEmpty()) {
+            sb.append("  Search: [ ").append(searchBuffer).append(" ] (Press '/' to edit)\n\n");
+        }
 
         if (specificQuiz == null) {
             sb.append(String.format("  %-7s  %-34s  %-28s  %-18s  %-18s%n",
-                    "ID", "ASSESSMENT", "STUDENT", "STATUS", "SUBMITTED AT")).append("\n");
+                    "#", "ASSESSMENT", "STUDENT", "STATUS", "SUBMITTED AT")).append("\n");
         } else {
             sb.append(String.format("  %-8s  %-50s  %-24s  %-22s%n",
-                    "ID", "STUDENT", "STATUS", "SUBMITTED AT")).append("\n");
+                    "#", "STUDENT", "STATUS", "SUBMITTED AT")).append("\n");
         }
         sb.append("  " + "─".repeat(114) + "\n\n");
 
@@ -64,15 +78,15 @@ public class TeacherSubmissionViews {
                 String line;
                 if (specificQuiz == null) {
                     String quizTitle = a.getQuizTitle() != null ? a.getQuizTitle() : "Quiz #" + a.getQuizId();
-                    line = String.format("#%-6d  %-34s  %-28s  %s  %-18s",
-                            a.getId(),
+                    line = String.format("%-7d  %-34s  %-28s  %s  %-18s",
+                            (i + 1),
                             truncate(quizTitle, 34),
                             truncate(studentName, 28),
                             statusStr,
                             dateStr);
                 } else {
-                    line = String.format("#%-7d  %-50s  %s  %-22s",
-                            a.getId(),
+                    line = String.format("%-8d  %-50s  %s  %-22s",
+                            (i + 1),
                             truncate(studentName, 50),
                             statusStr,
                             dateStr);
@@ -102,7 +116,7 @@ public class TeacherSubmissionViews {
             sb.append("  ").append(bannerMessage).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [Enter] Inspect  •  [g] AI Grade  •  [r] Return Grade  •  [Esc] Back\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [f] Filter  •  [Enter] Inspect  •  [g] AI Grade  •  [r] Return Grade  •  [Esc] Back\n"));
         return sb.toString();
     }
 

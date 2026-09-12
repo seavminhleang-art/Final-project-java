@@ -18,14 +18,29 @@ public class ExamViews {
     public static String renderAvailableQuizzes(AssessmentType assessmentType, List<Quiz> quizzes, Map<Integer, String> subjectNames,
                                                Map<Integer, Attempt> studentAttempts, int selectedIndex,
                                                String bannerMessage) {
+        return renderAvailableQuizzes(assessmentType, quizzes, subjectNames, studentAttempts, selectedIndex, "ALL", "", false, bannerMessage);
+    }
+
+    public static String renderAvailableQuizzes(AssessmentType assessmentType, List<Quiz> quizzes, Map<Integer, String> subjectNames,
+                                               Map<Integer, Attempt> studentAttempts, int selectedIndex,
+                                               String subjectFilterDisplay, String searchBuffer, boolean searchMode,
+                                               String bannerMessage) {
         StringBuilder sb = new StringBuilder();
         String typeLabel = (assessmentType == AssessmentType.EXAM) ? "EXAMS" : "QUIZZES";
         sb.append(TuiHelper.header("AVAILABLE " + typeLabel));
         sb.append("\n");
-        sb.append(TuiHelper.boxTitle("Available " + (assessmentType == AssessmentType.EXAM ? "Exams" : "Quizzes"), String.format("Total: %d", quizzes.size()))).append("\n\n");
+        String subjLabel = (subjectFilterDisplay == null || subjectFilterDisplay.isBlank()) ? "ALL" : subjectFilterDisplay;
+        sb.append(TuiHelper.boxTitle("Available " + (assessmentType == AssessmentType.EXAM ? "Exams" : "Quizzes"),
+                String.format("Subject: [ %s ]  •  Total: %d", subjLabel, quizzes.size()))).append("\n\n");
 
-        sb.append(String.format("  %-4s  %-14s  %-58s  %-10s  %-6s  %-12s%n",
-                "ID", "SUBJ", "TITLE", "TIME", "PTS", "STATUS")).append("\n");
+        if (searchMode) {
+            sb.append("  Search: [ ").append(TuiHelper.cyan(searchBuffer + "_")).append(" ] (Press Enter to finish)\n\n");
+        } else if (!searchBuffer.isEmpty()) {
+            sb.append("  Search: [ ").append(searchBuffer).append(" ] (Press '/' to edit)\n\n");
+        }
+
+        sb.append(String.format("  %-4s  %-12s  %-42s  %-16s  %-8s  %-6s  %-12s%n",
+                "#", "SUBJ", "TITLE", "TEACHER", "TIME", "PTS", "STATUS")).append("\n");
         sb.append("  " + "─".repeat(114) + "\n\n");
 
         if (quizzes.isEmpty()) {
@@ -42,6 +57,7 @@ public class ExamViews {
                 String cursor = (i == selectedIndex) ? TuiHelper.cyan("▶ ") : "  ";
                 String subj = (q.getSubjectId() != null) ? subjectNames.getOrDefault(q.getSubjectId(), "-") : "-";
                 String time = (q.getTimeLimitMins() != null && q.getTimeLimitMins() > 0) ? q.getTimeLimitMins() + "m" : "Untimed";
+                String teacher = (q.getCreatorName() != null && !q.getCreatorName().isBlank()) ? q.getCreatorName() : "Teacher";
 
                 Attempt att = studentAttempts.get(q.getId());
                 String statusStr;
@@ -55,10 +71,11 @@ public class ExamViews {
                     };
                 }
 
-                String line = String.format("%-4d  %-14s  %-58s  %-10s  %-6.1f  %-12s",
-                        q.getId(),
-                        truncate(subj, 14),
-                        truncate(q.getTitle(), 58),
+                String line = String.format("%-4d  %-12s  %-42s  %-16s  %-8s  %-6.1f  %-12s",
+                        (i + 1),
+                        truncate(subj, 12),
+                        truncate(q.getTitle(), 42),
+                        truncate(teacher, 16),
                         time,
                         q.getTotalPoints(),
                         statusStr);
@@ -86,7 +103,7 @@ public class ExamViews {
             sb.append("  ").append(bannerMessage).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [Enter] Start / View Result  •  [r] Request Retake  •  [Esc] Back\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [s] Subject  •  [Enter] Start / View Result  •  [r] Request Retake  •  [Esc] Back\n"));
         return sb.toString();
     }
 
@@ -164,7 +181,7 @@ public class ExamViews {
             sb.append("   Result Status:      ").append(badge).append("\n\n");
             sb.append("   ").append(TuiHelper.bold("Notice:")).append("\n");
             sb.append("   Your assessment has been submitted. Because this assessment includes written response\n");
-            sb.append("   (short answer) questions, your submission requires grading by your instructor.\n");
+            sb.append("   (short answer) questions, your submission requires grading by your teacher.\n");
             sb.append("   Your final score and question review will be available in History once all written questions\n");
             sb.append("   have been evaluated and returned.\n\n");
             sb.append("  " + "─".repeat(114) + "\n\n");
@@ -227,13 +244,26 @@ public class ExamViews {
     }
 
     public static String renderStudentHistory(List<Result> historyList, int selectedIndex, SimpleDateFormat dateFormat) {
+        return renderStudentHistory(historyList, selectedIndex, dateFormat, "ALL", "", false);
+    }
+
+    public static String renderStudentHistory(List<Result> historyList, int selectedIndex, SimpleDateFormat dateFormat,
+                                             String statusFilterDisplay, String searchBuffer, boolean searchMode) {
         StringBuilder sb = new StringBuilder();
         sb.append(TuiHelper.header("ASSESSMENT HISTORY"));
         sb.append("\n");
-        sb.append(TuiHelper.boxTitle("Past Assessment Attempts", String.format("Total: %d", historyList.size()))).append("\n\n");
+        String statusLabel = (statusFilterDisplay == null || statusFilterDisplay.isBlank()) ? "ALL" : statusFilterDisplay;
+        sb.append(TuiHelper.boxTitle("Past Assessment Attempts",
+                String.format("Status: [ %s ]  •  Total: %d", statusLabel, historyList.size()))).append("\n\n");
 
-        sb.append(String.format("  %-8s  %-6s  %-46s  %-11s  %-7s  %-8s  %-16s%n",
-                "ATTEMPT", "TYPE", "TITLE", "SCORE", "PCT", "STATUS", "DATE")).append("\n");
+        if (searchMode) {
+            sb.append("  Search: [ ").append(TuiHelper.cyan(searchBuffer + "_")).append(" ] (Press Enter to finish)\n\n");
+        } else if (searchBuffer != null && !searchBuffer.isEmpty()) {
+            sb.append("  Search: [ ").append(searchBuffer).append(" ] (Press '/' to edit)\n\n");
+        }
+
+        sb.append(String.format("  %-4s  %-6s  %-50s  %-11s  %-7s  %-8s  %-16s%n",
+                "#", "TYPE", "TITLE", "SCORE", "PCT", "STATUS", "DATE")).append("\n");
         sb.append("  " + "─".repeat(114) + "\n\n");
 
         if (historyList.isEmpty()) {
@@ -263,10 +293,10 @@ public class ExamViews {
                 String dateStr = r.getGradedAt() != null ? dateFormat.format(r.getGradedAt()) : "-";
                 String typeStr = (r.getAssessmentType() == AssessmentType.EXAM) ? "EXAM" : "QUIZ";
 
-                String line = String.format("#%-7d  %-6s  %-46s  %-11s  %-7s  %s  %-16s",
-                        r.getAttemptId(),
+                String line = String.format("%-4d  %-6s  %-50s  %-11s  %-7s  %s  %-16s",
+                        (i + 1),
                         typeStr,
-                        truncate(r.getQuizTitle(), 46),
+                        truncate(r.getQuizTitle(), 50),
                         scoreStr,
                         pctStr,
                         status,
@@ -291,7 +321,7 @@ public class ExamViews {
             sb.append(TuiHelper.paginationBar(currentPage, totalPages, historyList.size()));
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [Enter] View Result  •  [Esc] Back\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [f] Filter  •  [Enter] View Result  •  [Esc] Back\n"));
         return sb.toString();
     }
 

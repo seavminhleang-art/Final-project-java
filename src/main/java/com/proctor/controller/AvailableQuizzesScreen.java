@@ -33,9 +33,15 @@ public class AvailableQuizzesScreen implements Screen {
     private final InboxService inboxService;
     private final Screen returnScreen;
 
-    private List<Quiz> quizzes;
+    private List<Quiz> allQuizzes = new java.util.ArrayList<>();
+    private List<Quiz> quizzes = new java.util.ArrayList<>();
     private int selectedIndex = 0;
     private String bannerMessage = "";
+    private final StringBuilder searchBuffer = new StringBuilder();
+    private boolean searchMode = false;
+    private int subjectFilterIndex = 0;
+    private final List<String> subjectCodes = new java.util.ArrayList<>();
+    private final Map<Integer, String> subjects = new java.util.HashMap<>();
 
     private boolean requestingExamReason = false;
     private final StringBuilder examReasonBuffer = new StringBuilder();
@@ -68,10 +74,46 @@ public class AvailableQuizzesScreen implements Screen {
         User student = Session.getCurrentUser().orElse(null);
         int studentId = student != null ? student.getId() : 0;
         if (assessmentType == AssessmentType.EXAM) {
-            this.quizzes = examService.getAvailableExams(studentId);
+            this.allQuizzes = examService.getAvailableExams(studentId);
         } else {
-            this.quizzes = examService.getAvailableQuizzes(studentId);
+            this.allQuizzes = examService.getAvailableQuizzes(studentId);
         }
+        subjects.clear();
+        subjectCodes.clear();
+        for (Quiz q : allQuizzes) {
+            if (q.getSubjectCode() != null && !q.getSubjectCode().isBlank()) {
+                if (q.getSubjectId() != null) {
+                    subjects.put(q.getSubjectId(), q.getSubjectCode());
+                }
+                if (!subjectCodes.contains(q.getSubjectCode())) {
+                    subjectCodes.add(q.getSubjectCode());
+                }
+            }
+        }
+        java.util.Collections.sort(subjectCodes);
+        applyFilters();
+    }
+
+    private void applyFilters() {
+        String filterCode = (subjectFilterIndex > 0 && subjectFilterIndex <= subjectCodes.size())
+                ? subjectCodes.get(subjectFilterIndex - 1) : null;
+        String search = searchBuffer.toString().trim().toLowerCase();
+
+        this.quizzes = allQuizzes.stream().filter(q -> {
+            if (filterCode != null && !filterCode.equalsIgnoreCase(q.getSubjectCode())) {
+                return false;
+            }
+            if (!search.isEmpty()) {
+                boolean matchTitle = q.getTitle() != null && q.getTitle().toLowerCase().contains(search);
+                boolean matchCreator = q.getCreatorName() != null && q.getCreatorName().toLowerCase().contains(search);
+                boolean matchSubject = q.getSubjectCode() != null && q.getSubjectCode().toLowerCase().contains(search);
+                if (!matchTitle && !matchCreator && !matchSubject) {
+                    return false;
+                }
+            }
+            return true;
+        }).toList();
+
         if (quizzes.isEmpty()) {
             selectedIndex = 0;
         } else if (selectedIndex >= quizzes.size()) {
@@ -85,6 +127,29 @@ public class AvailableQuizzesScreen implements Screen {
             if (requestingExamReason) {
                 return handleReasonDialogInput(k);
             }
+
+            if (searchMode) {
+                if (KeyUtil.isEsc(k) || KeyUtil.isEnter(k)) {
+                    searchMode = false;
+                    applyFilters();
+                } else if (KeyUtil.isBackspace(k)) {
+                    if (!searchBuffer.isEmpty()) {
+                        searchBuffer.deleteCharAt(searchBuffer.length() - 1);
+                        applyFilters();
+                    }
+                } else if (k.type() == KeyType.KeyRunes && k.runes() != null) {
+                    for (char c : k.runes()) {
+                        if (!Character.isISOControl(c)) searchBuffer.append(c);
+                    }
+                    applyFilters();
+                } else if (k.key() != null && k.key().length() == 1 && !Character.isISOControl(k.key().charAt(0))) {
+                    searchBuffer.append(k.key());
+                    applyFilters();
+                }
+                return ScreenResult.stay(this);
+            }
+
+            bannerMessage = "";
 
             if (KeyUtil.isEsc(k)) {
                 if (returnScreen != null) {
@@ -118,7 +183,19 @@ public class AvailableQuizzesScreen implements Screen {
                 }
             } else if ("r".equalsIgnoreCase(k.key())) {
                 return handleRetakeRequest();
-            } else if (KeyUtil.isEnter(k) || "s".equalsIgnoreCase(k.key())) {
+            } else if ("s".equalsIgnoreCase(k.key())) {
+                if (!subjectCodes.isEmpty()) {
+                    subjectFilterIndex = (subjectFilterIndex + 1) % (subjectCodes.size() + 1);
+                } else {
+                    subjectFilterIndex = 0;
+                }
+                selectedIndex = 0;
+                applyFilters();
+            } else if ("/".equals(k.key())) {
+                searchMode = true;
+                searchBuffer.setLength(0);
+                applyFilters();
+            } else if (KeyUtil.isEnter(k)) {
                 return handleQuizAction();
             }
         }
@@ -139,13 +216,13 @@ public class AvailableQuizzesScreen implements Screen {
             }
 
             if (q.getCreatedBy() == null) {
-                bannerMessage = TuiHelper.red("✖ Instructor for this quiz was not found.");
+                bannerMessage = TuiHelper.red("✖ Teacher for this quiz was not found.");
                 return ScreenResult.stay(this);
             }
 
             try {
                 inboxService.sendQuizRetakeRequest(studentId, q.getCreatedBy(), q.getId(), q.getTitle());
-                bannerMessage = TuiHelper.green("✔ Quiz retake request sent to instructor's inbox!");
+                bannerMessage = TuiHelper.green("✔ Quiz retake request sent to teacher's inbox!");
             } catch (ValidationException e) {
                 bannerMessage = TuiHelper.yellow("● " + e.getMessage());
             }
@@ -231,7 +308,7 @@ public class AvailableQuizzesScreen implements Screen {
             int studentId = student != null ? student.getId() : 0;
 
             if (q.getCreatedBy() == null) {
-                bannerMessage = TuiHelper.red("✖ Instructor for this exam was not found.");
+                bannerMessage = TuiHelper.red("✖ Teacher for this exam was not found.");
                 requestingExamReason = false;
                 return ScreenResult.stay(this);
             }
@@ -246,7 +323,7 @@ public class AvailableQuizzesScreen implements Screen {
                         isMissedExam,
                         examReferenceTime
                 );
-                bannerMessage = TuiHelper.green("✔ Exam makeup request sent to instructor's inbox!");
+                bannerMessage = TuiHelper.green("✔ Exam makeup request sent to teacher's inbox!");
             } catch (ValidationException e) {
                 bannerMessage = TuiHelper.yellow("● " + e.getMessage());
             }
@@ -318,7 +395,7 @@ public class AvailableQuizzesScreen implements Screen {
             sb.append(TuiHelper.header("EXAMS"));
             sb.append("\n");
             sb.append(TuiHelper.boxTitle("Request Exam Makeup", q.getTitle())).append("\n\n");
-            sb.append("  ").append(TuiHelper.bold("Justification Reason (Required for Instructor Review):")).append("\n\n");
+            sb.append("  ").append(TuiHelper.bold("Justification Reason (Required for Teacher Review):")).append("\n\n");
             sb.append(TuiHelper.inputBox("Reason", examReasonBuffer.toString(), examReasonFocusIndex == 0, 102, false, "e.g. Illness, technical malfunction, etc."));
             sb.append("\n");
             sb.append(TuiHelper.buttonRow("Submit Request", examReasonFocusIndex == 1, "Cancel", examReasonFocusIndex == 2)).append("\n\n");
@@ -332,13 +409,12 @@ public class AvailableQuizzesScreen implements Screen {
         User student = Session.getCurrentUser().orElse(null);
         int studentId = student != null ? student.getId() : 0;
         Map<Integer, Attempt> attempts = new java.util.HashMap<>();
-        Map<Integer, String> subjects = new java.util.HashMap<>();
         for (Quiz q : quizzes) {
             examService.getStudentAttempt(q.getId(), studentId).ifPresent(att -> attempts.put(q.getId(), att));
-            if (q.getSubjectCode() != null) {
-                subjects.put(q.getSubjectId(), q.getSubjectCode());
-            }
         }
-        return ExamViews.renderAvailableQuizzes(assessmentType, quizzes, subjects, attempts, selectedIndex, bannerMessage);
+        String subjectFilterDisplay = (subjectFilterIndex > 0 && subjectFilterIndex <= subjectCodes.size())
+                ? subjectCodes.get(subjectFilterIndex - 1) : "ALL";
+        return ExamViews.renderAvailableQuizzes(assessmentType, quizzes, subjects, attempts, selectedIndex,
+                subjectFilterDisplay, searchBuffer.toString(), searchMode, bannerMessage);
     }
 }

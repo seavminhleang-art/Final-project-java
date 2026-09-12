@@ -252,7 +252,7 @@ public class InboxService {
         if (updated && msg.getSenderId() != null) {
             String note = (responseNote != null && !responseNote.isBlank()) ? "\nNote: " + responseNote.trim() : "";
             sendNotification(msg.getSenderId(), "Request Rejected: " + msg.getTitle(),
-                    "Your request was reviewed and rejected by the instructor/administrator." + note);
+                    "Your request was reviewed and rejected by the teacher/administrator." + note);
         }
         return updated;
     }

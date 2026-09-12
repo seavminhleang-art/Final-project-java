@@ -11,6 +11,7 @@ import com.proctor.view.InboxViews;
 import com.proctor.model.service.UserService;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
 import com.williamcallahan.tui4j.compat.bubbletea.Message;
+import com.williamcallahan.tui4j.compat.bubbletea.input.key.KeyType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,9 +23,14 @@ public class InboxListScreen implements Screen {
     private final AuthService authService;
     private final Screen returnDashboardScreen;
 
+    private List<InboxMessage> allMessages = new ArrayList<>();
     private List<InboxMessage> messages = new ArrayList<>();
     private int selectedIndex = 0;
     private int unreadCount = 0;
+    private final StringBuilder searchBuffer = new StringBuilder();
+    private boolean searchMode = false;
+    private int filterIndex = 0;
+    private static final String[] FILTERS = {"ALL", "UNREAD", "ACTIONABLE"};
 
     private boolean showDeleteModal = false;
     private boolean deleteConfirmFocused = false;
@@ -45,11 +51,38 @@ public class InboxListScreen implements Screen {
     private void refreshMessages() {
         int userId = getCurrentUserId();
         if (userId != -1) {
-            this.messages = inboxService.getInbox(userId);
+            this.allMessages = inboxService.getInbox(userId);
             this.unreadCount = inboxService.getUnreadCount(userId);
-            if (selectedIndex >= messages.size()) {
-                selectedIndex = Math.max(0, messages.size() - 1);
+            applyFilters();
+        }
+    }
+
+    private void applyFilters() {
+        String filter = FILTERS[filterIndex];
+        String search = searchBuffer.toString().trim().toLowerCase();
+
+        this.messages = allMessages.stream().filter(m -> {
+            if ("UNREAD".equals(filter) && m.isRead()) {
+                return false;
             }
+            if ("ACTIONABLE".equals(filter) && !m.isActionable()) {
+                return false;
+            }
+            if (!search.isEmpty()) {
+                boolean matchTitle = m.getTitle() != null && m.getTitle().toLowerCase().contains(search);
+                boolean matchSender = m.getSenderName() != null && m.getSenderName().toLowerCase().contains(search);
+                boolean matchBody = m.getBody() != null && m.getBody().toLowerCase().contains(search);
+                if (!matchTitle && !matchSender && !matchBody) {
+                    return false;
+                }
+            }
+            return true;
+        }).toList();
+
+        if (messages.isEmpty()) {
+            selectedIndex = 0;
+        } else if (selectedIndex >= messages.size()) {
+            selectedIndex = Math.max(0, messages.size() - 1);
         }
     }
 
@@ -80,6 +113,29 @@ public class InboxListScreen implements Screen {
                 }
                 return ScreenResult.stay(this);
             }
+
+            if (searchMode) {
+                if (KeyUtil.isEsc(k) || KeyUtil.isEnter(k)) {
+                    searchMode = false;
+                    applyFilters();
+                } else if (KeyUtil.isBackspace(k)) {
+                    if (!searchBuffer.isEmpty()) {
+                        searchBuffer.deleteCharAt(searchBuffer.length() - 1);
+                        applyFilters();
+                    }
+                } else if (k.type() == KeyType.KeyRunes && k.runes() != null) {
+                    for (char c : k.runes()) {
+                        if (!Character.isISOControl(c)) searchBuffer.append(c);
+                    }
+                    applyFilters();
+                } else if (k.key() != null && k.key().length() == 1 && !Character.isISOControl(k.key().charAt(0))) {
+                    searchBuffer.append(k.key());
+                    applyFilters();
+                }
+                return ScreenResult.stay(this);
+            }
+
+            bannerMessage = "";
 
             if (KeyUtil.isEsc(k)) {
                 return ScreenResult.navigate(returnDashboardScreen);
@@ -122,6 +178,20 @@ public class InboxListScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
+            if ("f".equalsIgnoreCase(k.key())) {
+                filterIndex = (filterIndex + 1) % FILTERS.length;
+                selectedIndex = 0;
+                applyFilters();
+                return ScreenResult.stay(this);
+            }
+
+            if ("/".equals(k.key())) {
+                searchMode = true;
+                searchBuffer.setLength(0);
+                applyFilters();
+                return ScreenResult.stay(this);
+            }
+
             if (KeyUtil.isEnter(k)) {
                 if (!messages.isEmpty()) {
                     InboxMessage target = messages.get(selectedIndex);
@@ -152,11 +222,16 @@ public class InboxListScreen implements Screen {
 
     @Override
     public String view() {
-        refreshMessages();
+        if (!searchMode) {
+            refreshMessages();
+        }
         return InboxViews.renderInboxList(
                 messages,
                 selectedIndex,
                 unreadCount,
+                FILTERS[filterIndex],
+                searchBuffer.toString(),
+                searchMode,
                 bannerMessage,
                 showDeleteModal,
                 deleteConfirmFocused

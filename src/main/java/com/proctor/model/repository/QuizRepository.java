@@ -22,12 +22,12 @@ public class QuizRepository {
     private List<Quiz> queryDatabase(AssessmentType assessmentType, Integer subjectId, Integer createdBy, Boolean published, String search, boolean activeOnly) {
         List<Quiz> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
-                "SELECT q.id, q.subject_id, s.code AS subject_code, q.created_by, q.assessment_type, q.quiz_question_type, q.title, q.topic, q.description, " +
+                "SELECT q.id, q.subject_id, s.code AS subject_code, q.created_by, u.full_name AS creator_name, q.assessment_type, q.quiz_question_type, q.title, q.topic, q.description, " +
                 "q.time_limit_mins, q.pass_score, q.randomize_questions, q.randomize_answers, q.show_answers_after, " +
                 "q.is_published, q.expires_at, q.created_at, q.updated_at, " +
                 "(SELECT COUNT(*) FROM questions qu WHERE qu.quiz_id = q.id OR qu.id IN (SELECT qq.question_id FROM quiz_questions qq WHERE qq.quiz_id = q.id)) AS q_count, " +
                 "(SELECT COALESCE(SUM(qu.points), 0) FROM questions qu WHERE qu.quiz_id = q.id OR qu.id IN (SELECT qq.question_id FROM quiz_questions qq WHERE qq.quiz_id = q.id)) AS total_pts " +
-                "FROM quizzes q LEFT JOIN subjects s ON q.subject_id = s.id WHERE 1=1"
+                "FROM quizzes q LEFT JOIN subjects s ON q.subject_id = s.id LEFT JOIN users u ON q.created_by = u.id WHERE 1=1"
         );
         List<Object> params = new ArrayList<>();
 
@@ -89,12 +89,12 @@ public class QuizRepository {
     }
 
     public Optional<Quiz> findById(int id) {
-        String sql = "SELECT q.id, q.subject_id, s.code AS subject_code, q.created_by, q.assessment_type, q.quiz_question_type, q.title, q.topic, q.description, " +
+        String sql = "SELECT q.id, q.subject_id, s.code AS subject_code, q.created_by, u.full_name AS creator_name, q.assessment_type, q.quiz_question_type, q.title, q.topic, q.description, " +
                      "q.time_limit_mins, q.pass_score, q.randomize_questions, q.randomize_answers, q.show_answers_after, " +
                      "q.is_published, q.expires_at, q.created_at, q.updated_at, " +
                      "(SELECT COUNT(*) FROM questions qu WHERE qu.quiz_id = q.id OR qu.id IN (SELECT qq.question_id FROM quiz_questions qq WHERE qq.quiz_id = q.id)) AS q_count, " +
                      "(SELECT COALESCE(SUM(qu.points), 0) FROM questions qu WHERE qu.quiz_id = q.id OR qu.id IN (SELECT qq.question_id FROM quiz_questions qq WHERE qq.quiz_id = q.id)) AS total_pts " +
-                     "FROM quizzes q LEFT JOIN subjects s ON q.subject_id = s.id WHERE q.id = ?";
+                     "FROM quizzes q LEFT JOIN subjects s ON q.subject_id = s.id LEFT JOIN users u ON q.created_by = u.id WHERE q.id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
@@ -372,12 +372,17 @@ public class QuizRepository {
         AssessmentType aType = aTypeStr != null ? AssessmentType.valueOf(aTypeStr) : AssessmentType.QUIZ;
         String qTypeStr = rs.getString("quiz_question_type");
         QuestionType qType = qTypeStr != null ? QuestionType.valueOf(qTypeStr) : null;
+        String creatorName = null;
+        try {
+            creatorName = rs.getString("creator_name");
+        } catch (SQLException ignored) {}
 
         return Quiz.builder()
                 .id(rs.getInt("id"))
                 .subjectId(rs.getObject("subject_id") != null ? rs.getInt("subject_id") : null)
                 .subjectCode(rs.getString("subject_code"))
                 .createdBy(rs.getObject("created_by") != null ? rs.getInt("created_by") : null)
+                .creatorName(creatorName)
                 .assessmentType(aType)
                 .quizQuestionType(qType)
                 .title(rs.getString("title"))

@@ -20,6 +20,7 @@ public class Quiz {
     private Integer subjectId;
     private String subjectCode;
     private Integer createdBy;
+    private String creatorName;
     @Builder.Default
     private AssessmentType assessmentType = AssessmentType.QUIZ;
     private QuestionType quizQuestionType;

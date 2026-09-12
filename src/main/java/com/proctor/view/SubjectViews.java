@@ -9,10 +9,18 @@ public class SubjectViews {
 
     public static String renderSubjectList(List<Subject> subjects, int selectedIndex,
                                           String searchBuffer, boolean searchMode, String bannerMessage) {
+        return renderSubjectList(subjects, selectedIndex, "ALL", searchBuffer, searchMode, bannerMessage);
+    }
+
+    public static String renderSubjectList(List<Subject> subjects, int selectedIndex,
+                                          String statusFilterDisplay,
+                                          String searchBuffer, boolean searchMode, String bannerMessage) {
         StringBuilder sb = new StringBuilder();
         sb.append(TuiHelper.header("SUBJECTS"));
         sb.append("\n");
-        sb.append(TuiHelper.boxTitle("Subject Management", String.format("Total: %d", subjects.size()))).append("\n\n");
+        String statusLabel = (statusFilterDisplay == null || statusFilterDisplay.isBlank()) ? "ALL" : statusFilterDisplay;
+        sb.append(TuiHelper.boxTitle("Subject Management",
+                String.format("Status: [ %s ]  •  Total: %d", statusLabel, subjects.size()))).append("\n\n");
 
         if (searchMode) {
             sb.append("  Search: [ ").append(TuiHelper.cyan(searchBuffer + "_")).append(" ] (Press Enter to finish)\n\n");
@@ -72,6 +80,7 @@ public class SubjectViews {
                 "[n] New",
                 "[d] Delete",
                 "[/] Search",
+                "[f] Filter",
                 "[Esc] Back"
         );
         sb.append(TuiHelper.wrapHints(hints));

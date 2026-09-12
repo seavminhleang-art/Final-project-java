@@ -2,6 +2,7 @@ package com.proctor.controller;
 
 import com.proctor.model.entity.Session;
 import com.proctor.model.entity.User;
+import com.proctor.model.enums.Role;
 import com.proctor.model.service.AuthService;
 import com.proctor.exception.ValidationException;
 import com.proctor.model.entity.Attempt;
@@ -18,6 +19,7 @@ import com.proctor.util.TuiHelper;
 import com.proctor.view.TeacherSubmissionViews;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
 import com.williamcallahan.tui4j.compat.bubbletea.Message;
+import com.williamcallahan.tui4j.compat.bubbletea.input.key.KeyType;
 
 import java.text.SimpleDateFormat;
 import java.util.List;
@@ -31,11 +33,16 @@ public class TeacherSubmissionScreen implements Screen {
     private final SubjectService subjectService;
     private final AuthService authService;
 
-    private List<Attempt> submissions;
+    private List<Attempt> allSubmissions = new java.util.ArrayList<>();
+    private List<Attempt> submissions = new java.util.ArrayList<>();
     private int selectedIndex = 0;
     private boolean inspectingAnswerSheet = false;
     private int inspectingAnswerIndex = 0;
     private String bannerMessage = "";
+    private final StringBuilder searchBuffer = new StringBuilder();
+    private boolean searchMode = false;
+    private int statusFilterIndex = 0;
+    private static final String[] STATUS_FILTERS = {"ALL", "PENDING REVIEW", "GRADED"};
 
     public TeacherSubmissionScreen(Quiz specificQuiz, ExamService examService, QuizService quizService, QuestionService questionService, SubjectService subjectService, AuthService authService) {
         this.specificQuiz = specificQuiz;
@@ -49,12 +56,40 @@ public class TeacherSubmissionScreen implements Screen {
 
     private void refreshList() {
         if (specificQuiz != null) {
-            this.submissions = examService.getSubmissionsForQuiz(specificQuiz.getId());
+            this.allSubmissions = examService.getSubmissionsForQuiz(specificQuiz.getId());
         } else {
             User teacher = Session.getCurrentUser().orElse(null);
             Integer teacherId = teacher != null ? teacher.getId() : null;
-            this.submissions = examService.getAllSubmissions(teacherId);
+            this.allSubmissions = examService.getAllSubmissions(teacherId);
         }
+        applyFilters();
+    }
+
+    private void applyFilters() {
+        String filter = STATUS_FILTERS[statusFilterIndex];
+        String search = searchBuffer.toString().trim().toLowerCase();
+
+        this.submissions = allSubmissions.stream().filter(a -> {
+            if ("PENDING REVIEW".equals(filter)) {
+                if (a.getStatus() != com.proctor.model.enums.AttemptStatus.AUTO_SUBMITTED
+                        && a.getStatus() != com.proctor.model.enums.AttemptStatus.TURNED_IN) {
+                    return false;
+                }
+            } else if ("GRADED".equals(filter)) {
+                if (a.getStatus() != com.proctor.model.enums.AttemptStatus.GRADED) {
+                    return false;
+                }
+            }
+            if (!search.isEmpty()) {
+                boolean matchStudent = a.getStudentName() != null && a.getStudentName().toLowerCase().contains(search);
+                boolean matchQuiz = a.getQuizTitle() != null && a.getQuizTitle().toLowerCase().contains(search);
+                if (!matchStudent && !matchQuiz) {
+                    return false;
+                }
+            }
+            return true;
+        }).toList();
+
         if (submissions.isEmpty()) {
             selectedIndex = 0;
         } else if (selectedIndex >= submissions.size()) {
@@ -107,9 +142,36 @@ public class TeacherSubmissionScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
+            if (searchMode) {
+                if (KeyUtil.isEsc(k) || KeyUtil.isEnter(k)) {
+                    searchMode = false;
+                    applyFilters();
+                } else if (KeyUtil.isBackspace(k)) {
+                    if (!searchBuffer.isEmpty()) {
+                        searchBuffer.deleteCharAt(searchBuffer.length() - 1);
+                        applyFilters();
+                    }
+                } else if (k.type() == KeyType.KeyRunes && k.runes() != null) {
+                    for (char c : k.runes()) {
+                        if (!Character.isISOControl(c)) searchBuffer.append(c);
+                    }
+                    applyFilters();
+                } else if (k.key() != null && k.key().length() == 1 && !Character.isISOControl(k.key().charAt(0))) {
+                    searchBuffer.append(k.key());
+                    applyFilters();
+                }
+                return ScreenResult.stay(this);
+            }
+
+            bannerMessage = "";
+
             if (KeyUtil.isEsc(k)) {
                 if (specificQuiz != null) {
-                    return ScreenResult.navigate(new QuizListScreen(quizService, questionService, subjectService, authService));
+                    return ScreenResult.navigate(new QuizListScreen(quizService, questionService, subjectService, authService, specificQuiz.getAssessmentType()));
+                }
+                User user = Session.getCurrentUser().orElse(null);
+                if (user != null && user.getRole() == Role.ADMIN) {
+                    return ScreenResult.navigate(new AdminDashboardScreen(authService));
                 }
                 return ScreenResult.navigate(new TeacherDashboardScreen(authService, questionService, subjectService, quizService));
             }
@@ -139,6 +201,14 @@ public class TeacherSubmissionScreen implements Screen {
                         selectedIndex = Math.min(submissions.size() - 1, (currentPage + 1) * pageSize);
                     }
                 }
+            } else if ("f".equalsIgnoreCase(k.key())) {
+                statusFilterIndex = (statusFilterIndex + 1) % STATUS_FILTERS.length;
+                selectedIndex = 0;
+                applyFilters();
+            } else if ("/".equals(k.key())) {
+                searchMode = true;
+                searchBuffer.setLength(0);
+                applyFilters();
             } else if (KeyUtil.isEnter(k)) {
                 if (!submissions.isEmpty()) {
                     inspectingAnswerSheet = true;
@@ -186,7 +256,8 @@ public class TeacherSubmissionScreen implements Screen {
             return TeacherSubmissionViews.renderAnswerSheet(currentQuiz, attempt, answerMap, inspectingAnswerIndex, bannerMessage);
         }
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-        return TeacherSubmissionViews.renderSubmissionList(specificQuiz, submissions, java.util.Collections.emptyMap(), selectedIndex, sdf, bannerMessage);
+        return TeacherSubmissionViews.renderSubmissionList(specificQuiz, submissions, java.util.Collections.emptyMap(),
+                selectedIndex, sdf, STATUS_FILTERS[statusFilterIndex], searchBuffer.toString(), searchMode, bannerMessage);
     }
 
     private String truncate(String text, int max) {

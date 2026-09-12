@@ -14,15 +14,22 @@ public class QuizViews {
 
     public static String renderQuizList(AssessmentType assessmentType, List<Quiz> quizzes, int selectedIndex,
                                         boolean isMyQuizzesScope, String searchBuffer, boolean searchMode, String bannerMessage) {
+        return renderQuizList(assessmentType, quizzes, selectedIndex, isMyQuizzesScope, "ALL", searchBuffer, searchMode, bannerMessage);
+    }
+
+    public static String renderQuizList(AssessmentType assessmentType, List<Quiz> quizzes, int selectedIndex,
+                                        boolean isMyQuizzesScope, String subjectFilterDisplay,
+                                        String searchBuffer, boolean searchMode, String bannerMessage) {
         StringBuilder sb = new StringBuilder();
         String itemType = (assessmentType == AssessmentType.EXAM) ? "EXAMS" : "QUIZZES";
         String scopeLabel = isMyQuizzesScope
                 ? "Scope: [ MY " + itemType + " ]"
                 : "Scope: [ ALL GLOBAL " + itemType + " ]";
+        String subjLabel = (subjectFilterDisplay == null || subjectFilterDisplay.isBlank()) ? "ALL" : subjectFilterDisplay;
 
         sb.append(TuiHelper.header(itemType));
         sb.append("\n");
-        sb.append(TuiHelper.boxTitle(scopeLabel, String.format("Total: %d", quizzes.size()))).append("\n\n");
+        sb.append(TuiHelper.boxTitle(scopeLabel, String.format("Subject: [ %s ]  •  Total: %d", subjLabel, quizzes.size()))).append("\n\n");
 
         if (searchMode) {
             sb.append("  Search: [ ").append(TuiHelper.cyan(searchBuffer + "_")).append(" ] (Press Enter to finish)\n\n");
@@ -30,8 +37,8 @@ public class QuizViews {
             sb.append("  Search: [ ").append(searchBuffer).append(" ] (Press '/' to edit)\n\n");
         }
 
-        sb.append(String.format("  %-4s  %-12s  %-48s  %-10s  %-8s  %-4s  %-5s  %-9s%n",
-                "ID", "SUBJ", "TITLE", "TYPE", "TIME", "Qs", "PTS", "STATUS")).append("\n");
+        sb.append(String.format("  %-4s  %-10s  %-34s  %-16s  %-8s  %-7s  %-3s  %-5s  %-9s%n",
+                "#", "SUBJ", "TITLE", "TEACHER", "TYPE", "TIME", "Qs", "PTS", "STATUS")).append("\n");
         sb.append("  " + "─".repeat(114) + "\n\n");
 
         if (quizzes.isEmpty()) {
@@ -48,14 +55,20 @@ public class QuizViews {
                 String status = q.isPublished() ? TuiHelper.green("Published") : TuiHelper.dim("Draft");
                 String subj = q.getSubjectCode() != null ? q.getSubjectCode() : "-";
                 String timeStr = q.getTimeLimitMins() != null && q.getTimeLimitMins() > 0 ? q.getTimeLimitMins() + "m" : "Untimed";
+                String teacher = (q.getCreatorName() != null && !q.getCreatorName().isBlank()) ? q.getCreatorName() : "Teacher";
                 String typeStr = q.getAssessmentType() == AssessmentType.EXAM
                         ? "[MIXED]"
-                        : (q.getQuizQuestionType() != null ? "[" + q.getQuizQuestionType().name() + "]" : "[QUIZ]");
+                        : switch (q.getQuizQuestionType() != null ? q.getQuizQuestionType() : QuestionType.MCQ) {
+                            case MCQ -> "[MCQ]";
+                            case TRUE_FALSE -> "[T/F]";
+                            case SHORT_ANSWER -> "[SHORT]";
+                        };
 
-                String line = String.format("%-4d  %-12s  %-48s  %-10s  %-8s  %-4d  %-5.1f  %-9s",
-                        q.getId(),
-                        truncate(subj, 12),
-                        truncate(q.getTitle(), 48),
+                String line = String.format("%-4d  %-10s  %-34s  %-16s  %-8s  %-7s  %-3d  %-5.1f  %-9s",
+                        (i + 1),
+                        truncate(subj, 10),
+                        truncate(q.getTitle(), 34),
+                        truncate(teacher, 16),
                         typeStr,
                         timeStr,
                         q.getQuestionCount(),
@@ -92,7 +105,10 @@ public class QuizViews {
                 "[←/→] Page",
                 "[Enter] Builder",
                 "[Space] Publish",
+                "[/] Search",
                 "[f] Scope",
+                "[s] Subject",
+                "[r] Submissions",
                 "[n] New",
                 aiHint,
                 "[e] Edit",
@@ -190,7 +206,7 @@ public class QuizViews {
         sb.append(TuiHelper.boxTitle(quiz.getTitle(), subtitle)).append("\n\n");
 
         sb.append(String.format("  %-4s  %-12s  %-10s  %-6s  %-72s%n",
-                "ID", "TYPE", "DIFF", "PTS", "QUESTION TEXT")).append("\n");
+                "#", "TYPE", "DIFF", "PTS", "QUESTION TEXT")).append("\n");
         sb.append("  " + "─".repeat(114) + "\n\n");
 
         if (questions.isEmpty()) {
@@ -204,7 +220,7 @@ public class QuizViews {
                 Question q = questions.get(i);
                 String cursor = (i == selectedIndex) ? TuiHelper.cyan("▶ ") : "  ";
                 String line = String.format("%-4d  %-12s  %-10s  %-6.1f  %-72s",
-                        q.getId(),
+                        (i + 1),
                         truncate(q.getQuestionType().name(), 12),
                         truncate(q.getDifficulty().name(), 10),
                         q.getPoints(),

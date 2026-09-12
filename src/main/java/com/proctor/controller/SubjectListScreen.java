@@ -19,11 +19,14 @@ public class SubjectListScreen implements Screen {
     private final UserService userService;
     private final AuthService authService;
 
-    private List<Subject> subjects;
+    private List<Subject> allSubjects = new java.util.ArrayList<>();
+    private List<Subject> subjects = new java.util.ArrayList<>();
     private int selectedIndex = 0;
     private final StringBuilder searchBuffer = new StringBuilder();
     private boolean searchMode = false;
     private String bannerMessage = "";
+    private int statusFilterIndex = 0;
+    private static final String[] STATUS_FILTERS = {"ALL", "ENABLED", "DISABLED"};
 
     private boolean confirmingDelete = false;
     private boolean confirmDeleteFocused = false;
@@ -37,7 +40,22 @@ public class SubjectListScreen implements Screen {
     }
 
     private void refreshList() {
-        this.subjects = subjectService.getSubjects(searchBuffer.toString());
+        this.allSubjects = subjectService.getSubjects(searchBuffer.toString());
+        applyFilters();
+    }
+
+    private void applyFilters() {
+        String filter = STATUS_FILTERS[statusFilterIndex];
+        this.subjects = allSubjects.stream().filter(s -> {
+            if ("ENABLED".equals(filter) && !s.isEnabled()) {
+                return false;
+            }
+            if ("DISABLED".equals(filter) && s.isEnabled()) {
+                return false;
+            }
+            return true;
+        }).toList();
+
         if (subjects.isEmpty()) {
             selectedIndex = 0;
         } else if (selectedIndex >= subjects.size()) {
@@ -134,6 +152,10 @@ public class SubjectListScreen implements Screen {
                     bannerMessage = TuiHelper.green("Toggled status for " + s.getCode());
                     refreshList();
                 }
+            } else if ("f".equalsIgnoreCase(k.key())) {
+                statusFilterIndex = (statusFilterIndex + 1) % STATUS_FILTERS.length;
+                selectedIndex = 0;
+                applyFilters();
             } else if ("/".equals(k.key())) {
                 searchMode = true;
                 bannerMessage = "";
@@ -173,6 +195,6 @@ public class SubjectListScreen implements Screen {
                     confirmDeleteFocused
             );
         }
-        return SubjectViews.renderSubjectList(subjects, selectedIndex, searchBuffer.toString(), searchMode, bannerMessage);
+        return SubjectViews.renderSubjectList(subjects, selectedIndex, STATUS_FILTERS[statusFilterIndex], searchBuffer.toString(), searchMode, bannerMessage);
     }
 }

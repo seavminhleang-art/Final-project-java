@@ -11,6 +11,7 @@ import com.proctor.model.repository.AttemptRepository;
 import com.proctor.model.repository.ResultRepository;
 import com.proctor.model.service.ExamService;
 import com.proctor.model.service.QuestionService;
+import com.proctor.model.entity.Subject;
 import com.proctor.model.entity.Quiz;
 import com.proctor.model.repository.QuizRepository;
 import com.proctor.model.service.QuizService;
@@ -36,6 +37,8 @@ public class QuizListScreen implements Screen {
     private final AuthService authService;
     private final AssessmentType assessmentType;
 
+    private final List<Subject> allSubjects;
+    private int subjectFilterIndex = 0;
     private List<Quiz> quizzes;
     private int selectedIndex = 0;
     private final StringBuilder searchBuffer = new StringBuilder();
@@ -57,17 +60,24 @@ public class QuizListScreen implements Screen {
         this.subjectService = subjectService;
         this.authService = authService;
         this.assessmentType = assessmentType != null ? assessmentType : AssessmentType.QUIZ;
+        this.allSubjects = subjectService != null ? subjectService.getSubjects("") : List.of();
+        User user = Session.getCurrentUser().orElse(null);
+        if (user != null && user.getRole() == Role.ADMIN) {
+            this.currentScope = QuizScope.ALL_GLOBAL;
+        }
         refreshList();
     }
 
     private void refreshList() {
         User user = Session.getCurrentUser().orElse(null);
         Integer teacherId = (currentScope == QuizScope.MY_QUIZZES && user != null) ? user.getId() : null;
+        Integer subjectId = (subjectFilterIndex > 0 && subjectFilterIndex <= allSubjects.size())
+                ? allSubjects.get(subjectFilterIndex - 1).getId() : null;
 
         if (teacherId != null) {
-            this.quizzes = quizService.getAssessments(assessmentType, null, teacherId, null, searchBuffer.toString());
+            this.quizzes = quizService.getAssessments(assessmentType, subjectId, teacherId, null, searchBuffer.toString());
         } else {
-            this.quizzes = quizService.getAssessments(assessmentType, null, null, searchBuffer.toString());
+            this.quizzes = quizService.getAssessments(assessmentType, subjectId, null, searchBuffer.toString());
         }
 
         if (quizzes.isEmpty()) {
@@ -129,6 +139,10 @@ public class QuizListScreen implements Screen {
             }
 
             if (KeyUtil.isEsc(k)) {
+                User user = Session.getCurrentUser().orElse(null);
+                if (user != null && user.getRole() == Role.ADMIN) {
+                    return ScreenResult.navigate(new AdminDashboardScreen(authService));
+                }
                 return ScreenResult.navigate(new TeacherDashboardScreen(authService, questionService, subjectService, quizService));
             } else if (KeyUtil.isUp(k)) {
                 if (!quizzes.isEmpty()) {
@@ -178,11 +192,19 @@ public class QuizListScreen implements Screen {
                 if (!quizzes.isEmpty()) {
                     return ScreenResult.navigate(new QuizQuestionEditorScreen(quizzes.get(selectedIndex), quizService, questionService, subjectService, authService));
                 }
-            } else if ("r".equalsIgnoreCase(k.key()) || "s".equalsIgnoreCase(k.key())) {
+            } else if ("r".equalsIgnoreCase(k.key())) {
                 if (!quizzes.isEmpty()) {
                     ExamService examService = new ExamService(new QuizRepository(), new AttemptRepository(), new ResultRepository());
                     return ScreenResult.navigate(new TeacherSubmissionScreen(quizzes.get(selectedIndex), examService, quizService, questionService, subjectService, authService));
                 }
+            } else if ("s".equalsIgnoreCase(k.key())) {
+                if (!allSubjects.isEmpty()) {
+                    subjectFilterIndex = (subjectFilterIndex + 1) % (allSubjects.size() + 1);
+                } else {
+                    subjectFilterIndex = 0;
+                }
+                selectedIndex = 0;
+                refreshList();
             } else if ("p".equalsIgnoreCase(k.key()) || KeyUtil.isSpace(k)) {
                 if (!quizzes.isEmpty()) {
                     Quiz q = quizzes.get(selectedIndex);
@@ -265,7 +287,10 @@ public class QuizListScreen implements Screen {
             );
         }
 
-        return QuizViews.renderQuizList(assessmentType, quizzes, selectedIndex, currentScope == QuizScope.MY_QUIZZES, searchBuffer.toString(), searchMode, bannerMessage);
+        String subjectFilterDisplay = (subjectFilterIndex > 0 && subjectFilterIndex <= allSubjects.size())
+                ? allSubjects.get(subjectFilterIndex - 1).getCode() : "ALL";
+        return QuizViews.renderQuizList(assessmentType, quizzes, selectedIndex, currentScope == QuizScope.MY_QUIZZES,
+                subjectFilterDisplay, searchBuffer.toString(), searchMode, bannerMessage);
     }
 
     private String truncate(String text, int max) {
