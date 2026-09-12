@@ -151,7 +151,7 @@ public class QuestionBankScreen implements Screen {
             } else if (("e".equalsIgnoreCase(k.key()) || KeyUtil.isEnter(k)) && !questions.isEmpty()) {
                 // Edit selected bank question
                 return ScreenResult.navigate(new QuestionFormScreen(questionService, subjectService, authService, questions.get(selectedIndex), null));
-            } else if ("d".equalsIgnoreCase(k.key()) && !questions.isEmpty()) {
+            } else if (("d".equalsIgnoreCase(k.key()) || KeyUtil.isDelete(k)) && !questions.isEmpty()) {
                 // Delete with confirmation
                 pendingDeleteQuestion = questions.get(selectedIndex);
                 confirmingDelete = true;

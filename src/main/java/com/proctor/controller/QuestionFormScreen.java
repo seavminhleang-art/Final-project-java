@@ -163,7 +163,7 @@ public class QuestionFormScreen implements Screen {
             }
 
             if (KeyUtil.isEnter(k)) {
-                if (focusedField == getSaveButtonIndex() || focusedField == getNumInputFields() - 1) {
+                if (focusedField == getSaveButtonIndex()) {
                     return handleSave();
                 } else if (focusedField == getCancelButtonIndex()) {
                     return returnToPreviousScreen();
@@ -174,7 +174,7 @@ public class QuestionFormScreen implements Screen {
             }
 
             if (focusedField == getSaveButtonIndex() || focusedField == getCancelButtonIndex()) {
-                if ("left".equals(k.key()) || "right".equals(k.key())) {
+                if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {
                     focusedField = (focusedField == getSaveButtonIndex()) ? getCancelButtonIndex() : getSaveButtonIndex();
                     return ScreenResult.stay(this);
                 }

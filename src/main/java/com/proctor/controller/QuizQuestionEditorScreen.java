@@ -144,7 +144,7 @@ public class QuizQuestionEditorScreen implements Screen {
                 if (!questions.isEmpty()) {
                     return ScreenResult.navigate(new QuestionFormScreen(questionService, subjectService, authService, questions.get(selectedIndex), quiz));
                 }
-            } else if ("d".equalsIgnoreCase(k.key())) {
+            } else if ("d".equalsIgnoreCase(k.key()) || KeyUtil.isDelete(k)) {
                 if (!questions.isEmpty()) {
                     confirmingDelete = true;
                     confirmDeleteFocused = false;

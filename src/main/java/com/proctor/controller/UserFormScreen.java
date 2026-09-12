@@ -92,7 +92,7 @@ public class UserFormScreen implements Screen {
             }
 
             if (KeyUtil.isEnter(k)) {
-                if (focusedField == getSaveButtonIndex() || focusedField == getNumInputFields() - 1) {
+                if (focusedField == getSaveButtonIndex()) {
                     return handleSave();
                 } else if (focusedField == getCancelButtonIndex()) {
                     return ScreenResult.navigate(new UserListScreen(userService, authService));

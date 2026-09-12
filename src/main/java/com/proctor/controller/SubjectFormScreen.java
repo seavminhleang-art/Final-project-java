@@ -118,7 +118,7 @@ public class SubjectFormScreen implements Screen {
             }
 
             if (KeyUtil.isEnter(k)) {
-                if (focusedField == getSaveButtonIndex() || (!isEditMode() && focusedField == getNumInputFields() - 1)) {
+                if (focusedField == getSaveButtonIndex()) {
                     return handleSave();
                 } else if (focusedField == getDeleteButtonIndex()) {
                     showDeleteModal = true;
@@ -133,7 +133,7 @@ public class SubjectFormScreen implements Screen {
             }
 
             if (isButton(focusedField)) {
-                if ("left".equals(k.key())) {
+                if (KeyUtil.isLeft(k)) {
                     if (isEditMode()) {
                         if (focusedField == getCancelButtonIndex()) focusedField = getDeleteButtonIndex();
                         else if (focusedField == getDeleteButtonIndex()) focusedField = getSaveButtonIndex();
@@ -141,7 +141,7 @@ public class SubjectFormScreen implements Screen {
                         focusedField = (focusedField == getSaveButtonIndex()) ? getCancelButtonIndex() : getSaveButtonIndex();
                     }
                     return ScreenResult.stay(this);
-                } else if ("right".equals(k.key())) {
+                } else if (KeyUtil.isRight(k)) {
                     if (isEditMode()) {
                         if (focusedField == getSaveButtonIndex()) focusedField = getDeleteButtonIndex();
                         else if (focusedField == getDeleteButtonIndex()) focusedField = getCancelButtonIndex();
@@ -155,7 +155,7 @@ public class SubjectFormScreen implements Screen {
             if (focusedField >= 0 && focusedField <= 2) {
                 handleTextInput(k);
             } else if (isEditMode() && focusedField == 3) {
-                if (" ".equals(k.key()) || "right".equals(k.key()) || "left".equals(k.key())) {
+                if (KeyUtil.isSpace(k) || KeyUtil.isRight(k) || KeyUtil.isLeft(k)) {
                     enabledStatus = !enabledStatus;
                 }
             }

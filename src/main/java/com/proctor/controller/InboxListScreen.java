@@ -129,7 +129,7 @@ public class InboxListScreen implements Screen {
                 }
             }
 
-            if ("d".equalsIgnoreCase(k.key())) {
+            if ("d".equalsIgnoreCase(k.key()) || KeyUtil.isDelete(k)) {
                 if (!messages.isEmpty()) {
                     showDeleteModal = true;
                     deleteConfirmFocused = false;

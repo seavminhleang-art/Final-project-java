@@ -104,7 +104,7 @@ public class QuizFormScreen implements Screen {
             }
 
             if (KeyUtil.isEnter(k)) {
-                if (focusedField == 10 || focusedField == 9) {
+                if (focusedField == 10) {
                     return handleSave();
                 } else if (focusedField == 11) {
                     return ScreenResult.navigate(new QuizListScreen(quizService, questionService, subjectService, authService, assessmentType));

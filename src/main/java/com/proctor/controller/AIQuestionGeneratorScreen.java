@@ -194,7 +194,7 @@ public class AIQuestionGeneratorScreen implements Screen {
             }
 
             if (KeyUtil.isEnter(k)) {
-                if (focusedField == getGenerateButtonIndex() || focusedField == getNumInputFields() - 1) {
+                if (focusedField == getGenerateButtonIndex()) {
                     return startAsyncGeneration();
                 } else if (focusedField == getCancelButtonIndex()) {
                     return returnToPreviousScreen();
@@ -205,7 +205,7 @@ public class AIQuestionGeneratorScreen implements Screen {
             }
 
             if (focusedField == getGenerateButtonIndex() || focusedField == getCancelButtonIndex()) {
-                if ("left".equals(k.key()) || "right".equals(k.key())) {
+                if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {
                     focusedField = (focusedField == getGenerateButtonIndex()) ? getCancelButtonIndex() : getGenerateButtonIndex();
                     return ScreenResult.stay(this);
                 }

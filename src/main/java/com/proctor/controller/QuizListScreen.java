@@ -161,7 +161,7 @@ public class QuizListScreen implements Screen {
                 return ScreenResult.navigate(new AIQuizGeneratorScreen(new AIService(), quizService, questionService, subjectService, authService, assessmentType));
             } else if ("f".equalsIgnoreCase(k.key())) {
                 toggleScope();
-            } else if ("d".equalsIgnoreCase(k.key())) {
+            } else if ("d".equalsIgnoreCase(k.key()) || KeyUtil.isDelete(k)) {
                 if (!quizzes.isEmpty()) {
                     initiateDelete();
                 }
