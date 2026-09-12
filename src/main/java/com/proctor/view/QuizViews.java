@@ -45,9 +45,14 @@ public class QuizViews {
             sb.append("  Search: [ ").append(searchBuffer).append(" ] (Press '/' to edit)\n\n");
         }
 
-        sb.append(String.format("  %-4s  %-10s  %-34s  %-16s  %-8s  %-7s  %-3s  %-5s  %-9s%n",
-                "#", "SUBJ", "TITLE", "TEACHER", "TYPE", "TIME", "Qs", "PTS", "STATUS")).append("\n");
-        sb.append("  " + "─".repeat(114) + "\n\n");
+        if (isAdmin) {
+            sb.append(String.format("  %-4s  %-6s  %-12s  %-36s  %-18s  %-8s  %-8s  %-4s  %-6s  %-10s%n",
+                    "#", "ID", "SUBJ", "TITLE", "TEACHER", "TYPE", "TIME", "Qs", "PTS", "STATUS")).append("\n");
+        } else {
+            sb.append(String.format("  %-4s  %-12s  %-44s  %-18s  %-8s  %-8s  %-4s  %-6s  %-10s%n",
+                    "#", "SUBJ", "TITLE", "TEACHER", "TYPE", "TIME", "Qs", "PTS", "STATUS")).append("\n");
+        }
+        sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         if (quizzes.isEmpty()) {
             String emptyLabel = (assessmentType == AssessmentType.EXAM) ? "exams" : "quizzes";
@@ -72,16 +77,31 @@ public class QuizViews {
                             case SHORT_ANSWER -> "[SHORT]";
                         };
 
-                String line = String.format("%-4d  %-10s  %-34s  %-16s  %-8s  %-7s  %-3d  %-5.1f  %-9s",
-                        (i + 1),
-                        truncate(subj, 10),
-                        truncate(q.getTitle(), 34),
-                        truncate(teacher, 16),
-                        typeStr,
-                        timeStr,
-                        q.getQuestionCount(),
-                        q.getTotalPoints(),
-                        status);
+                String line;
+                if (isAdmin) {
+                    line = String.format("%-4d  %-6d  %-12s  %-36s  %-18s  %-8s  %-8s  %-4d  %-6.1f  %-10s",
+                            (i + 1),
+                            q.getId(),
+                            truncate(subj, 12),
+                            truncate(q.getTitle(), 36),
+                            truncate(teacher, 18),
+                            typeStr,
+                            timeStr,
+                            q.getQuestionCount(),
+                            q.getTotalPoints(),
+                            status);
+                } else {
+                    line = String.format("%-4d  %-12s  %-44s  %-18s  %-8s  %-8s  %-4d  %-6.1f  %-10s",
+                            (i + 1),
+                            truncate(subj, 12),
+                            truncate(q.getTitle(), 44),
+                            truncate(teacher, 18),
+                            typeStr,
+                            timeStr,
+                            q.getQuestionCount(),
+                            q.getTotalPoints(),
+                            status);
+                }
 
                 if (i == selectedIndex) {
                     sb.append(cursor).append(TuiHelper.bold(line)).append("\n");
@@ -94,7 +114,7 @@ public class QuizViews {
             }
         }
 
-        sb.append("\n  " + "─".repeat(114) + "\n\n");
+        sb.append("\n  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         if (!quizzes.isEmpty()) {
             int pageSize = TuiHelper.PAGE_SIZE;
@@ -229,9 +249,9 @@ public class QuizViews {
         sb.append("\n");
         sb.append(TuiHelper.boxTitle(quiz.getTitle(), subtitle)).append("\n\n");
 
-        sb.append(String.format("  %-4s  %-12s  %-10s  %-6s  %-72s%n",
+        sb.append(String.format("  %-4s  %-12s  %-10s  %-6s  %-90s%n",
                 "#", "TYPE", "DIFF", "PTS", "QUESTION TEXT")).append("\n");
-        sb.append("  " + "─".repeat(114) + "\n\n");
+        sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         if (questions.isEmpty()) {
             sb.append("  ").append(TuiHelper.dim("No questions in this quiz yet. Press 'n' to add or 'g' to generate with AI.")).append("\n");
@@ -243,12 +263,12 @@ public class QuizViews {
             for (int i = startRow; i < endRow; i++) {
                 Question q = questions.get(i);
                 String cursor = (i == selectedIndex) ? TuiHelper.cyan("▶ ") : "  ";
-                String line = String.format("%-4d  %-12s  %-10s  %-6.1f  %-72s",
+                String line = String.format("%-4d  %-12s  %-10s  %-6.1f  %-90s",
                         (i + 1),
                         truncate(q.getQuestionType().name(), 12),
                         truncate(q.getDifficulty().name(), 10),
                         q.getPoints(),
-                        truncate(q.getQuestionText(), 72));
+                        truncate(q.getQuestionText(), 90));
 
                 if (i == selectedIndex) {
                     sb.append(TuiHelper.cyan(cursor + line)).append("\n");
@@ -261,7 +281,7 @@ public class QuizViews {
             }
         }
 
-        sb.append("\n  " + "─".repeat(114) + "\n\n");
+        sb.append("\n  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         if (!questions.isEmpty()) {
             int pageSize = TuiHelper.PAGE_SIZE;

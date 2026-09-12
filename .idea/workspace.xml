@@ -6,21 +6,17 @@
   <component name="ChangeListManager">
     <list default="true" id="c05deeaa-fc82-4d29-9b43-ab8bc6abc8c2" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/AvailableQuizzesScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/AvailableQuizzesScreen.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/ExamResultScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/ExamResultScreen.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/InboxListScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/InboxListScreen.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/QuizListScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/QuizListScreen.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/StudentHistoryScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/StudentHistoryScreen.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/SubjectListScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/SubjectListScreen.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/TeacherSubmissionScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/TeacherSubmissionScreen.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/model/entity/Quiz.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/model/entity/Quiz.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/model/repository/QuizRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/model/repository/QuizRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/model/service/InboxService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/model/service/InboxService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/util/TuiHelper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/util/TuiHelper.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/view/ExamViews.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/view/ExamViews.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/view/InboxViews.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/view/InboxViews.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/view/PortalViews.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/view/PortalViews.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/view/QuestionBankViews.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/view/QuestionBankViews.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/view/QuestionViews.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/view/QuestionViews.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/view/QuizViews.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/view/QuizViews.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/view/SubjectViews.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/view/SubjectViews.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/view/TeacherSubmissionViews.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/view/TeacherSubmissionViews.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/view/UserViews.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/view/UserViews.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

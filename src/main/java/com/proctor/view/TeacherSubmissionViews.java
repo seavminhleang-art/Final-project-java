@@ -41,13 +41,13 @@ public class TeacherSubmissionViews {
         }
 
         if (specificQuiz == null) {
-            sb.append(String.format("  %-7s  %-34s  %-28s  %-18s  %-18s%n",
+            sb.append(String.format("  %-7s  %-42s  %-36s  %-18s  %-21s%n",
                     "#", "ASSESSMENT", "STUDENT", "STATUS", "SUBMITTED AT")).append("\n");
         } else {
-            sb.append(String.format("  %-8s  %-50s  %-24s  %-22s%n",
+            sb.append(String.format("  %-7s  %-68s  %-24s  %-25s%n",
                     "#", "STUDENT", "STATUS", "SUBMITTED AT")).append("\n");
         }
-        sb.append("  " + "─".repeat(114) + "\n\n");
+        sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         if (submissions.isEmpty()) {
             sb.append("  ").append(TuiHelper.dim("No student submissions found for this assessment.")).append("\n");
@@ -78,16 +78,16 @@ public class TeacherSubmissionViews {
                 String line;
                 if (specificQuiz == null) {
                     String quizTitle = a.getQuizTitle() != null ? a.getQuizTitle() : "Quiz #" + a.getQuizId();
-                    line = String.format("%-7d  %-34s  %-28s  %s  %-18s",
+                    line = String.format("%-7d  %-42s  %-36s  %s  %-21s",
                             (i + 1),
-                            truncate(quizTitle, 34),
-                            truncate(studentName, 28),
+                            truncate(quizTitle, 42),
+                            truncate(studentName, 36),
                             statusStr,
                             dateStr);
                 } else {
-                    line = String.format("%-8d  %-50s  %s  %-22s",
+                    line = String.format("%-7d  %-68s  %s  %-25s",
                             (i + 1),
-                            truncate(studentName, 50),
+                            truncate(studentName, 68),
                             statusStr,
                             dateStr);
                 }
@@ -103,7 +103,7 @@ public class TeacherSubmissionViews {
             }
         }
 
-        sb.append("\n  " + "─".repeat(114) + "\n\n");
+        sb.append("\n  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         if (!submissions.isEmpty()) {
             int pageSize = TuiHelper.PAGE_SIZE;
@@ -173,7 +173,7 @@ public class TeacherSubmissionViews {
             }
         }
 
-        sb.append("\n  " + "─".repeat(114) + "\n\n");
+        sb.append("\n  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         if (!questions.isEmpty()) {
             sb.append(TuiHelper.paginationBar(inspectingAnswerIndex, questions.size(), questions.size()));
@@ -184,6 +184,25 @@ public class TeacherSubmissionViews {
         }
 
         sb.append(TuiHelper.dim("  [↑/↓/←/→] Navigate  •  [g] AI Grade  •  [r] Return Grade  •  [Esc] Back\n"));
+        return sb.toString();
+    }
+
+    public static String renderAIGradingLoading(String studentName, String quizTitle, int spinnerTick) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(TuiHelper.header("SUBMISSIONS"));
+        sb.append("\n");
+        sb.append(TuiHelper.boxTitle("AI Grading & Evaluation", "Local Ollama LLM is evaluating short answers...")).append("\n\n");
+
+        String[] spinners = {"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"};
+        String icon = spinners[Math.abs(spinnerTick) % spinners.length];
+
+        String studentInfo = (studentName != null && !studentName.isBlank()) ? studentName : "Student Submission";
+        String quizInfo = (quizTitle != null && !quizTitle.isBlank()) ? " (" + quizTitle + ")" : "";
+
+        sb.append("  ").append(TuiHelper.cyan(icon)).append(" ").append(TuiHelper.bold("Evaluating: " + studentInfo + quizInfo)).append("\n\n");
+        sb.append("  ").append(TuiHelper.dim("Ollama LLM is assessing short-answer conceptual accuracy against model answers and rubrics...")).append("\n\n");
+        sb.append("  ").append(TuiHelper.dim("Please wait, results and suggested points will appear once evaluation completes.\n\n"));
+        sb.append("  ").append(TuiHelper.dim("[Esc] Cancel evaluation\n"));
         return sb.toString();
     }
 

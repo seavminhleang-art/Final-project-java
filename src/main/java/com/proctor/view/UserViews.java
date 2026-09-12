@@ -24,9 +24,9 @@ public class UserViews {
         } else if (!searchBuffer.isEmpty()) {
             sb.append("  Search: [ ").append(searchBuffer).append(" ] (Press '/' to edit)\n\n");
         }
-        sb.append(String.format("  %-4s  %-18s  %-26s  %-18s  %-6s  %-10s  %-8s  %-8s%n",
-                "ID", "USERNAME", "EMAIL", "FULL NAME", "GENDER", "BIRTHDAY", "ROLE", "STATUS")).append("\n");
-        sb.append("  " + "─".repeat(112) + "\n\n");
+        sb.append(String.format("  %-4s  %-6s  %-18s  %-28s  %-20s  %-8s  %-12s  %-10s  %-9s%n",
+                "#", "ID", "USERNAME", "EMAIL", "FULL NAME", "GENDER", "BIRTHDAY", "ROLE", "STATUS")).append("\n");
+        sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         if (users.isEmpty()) {
             sb.append("  ").append(TuiHelper.dim("No users found matching search/filter criteria.")).append("\n");
@@ -42,12 +42,13 @@ public class UserViews {
                 String dobStr = (u.getDateOfBirth() != null) ? u.getDateOfBirth().format(DISPLAY_FMT) : "-";
                 String genderStr = (u.getGender() != null && !u.getGender().isBlank()) ? u.getGender() : "-";
 
-                String line = String.format("%-4d  %-18s  %-26s  %-18s  %-6s  %-10s  %-8s  %-8s",
+                String line = String.format("%-4d  %-6d  %-18s  %-28s  %-20s  %-8s  %-12s  %-10s  %-9s",
+                        (i + 1),
                         u.getId(),
                         truncate("@" + u.getUsername(), 18),
-                        truncate(u.getEmail() != null ? u.getEmail() : "-", 26),
-                        truncate(u.getFullName(), 18),
-                        truncate(genderStr, 6),
+                        truncate(u.getEmail() != null ? u.getEmail() : "-", 28),
+                        truncate(u.getFullName(), 20),
+                        truncate(genderStr, 8),
                         dobStr,
                         u.getRole().name(),
                         status);
@@ -63,7 +64,7 @@ public class UserViews {
             }
         }
 
-        sb.append("\n  " + "─".repeat(112) + "\n\n");
+        sb.append("\n  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         if (!users.isEmpty()) {
             int pageSize = TuiHelper.PAGE_SIZE;

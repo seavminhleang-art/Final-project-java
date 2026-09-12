@@ -13,9 +13,9 @@ public class PortalViews {
         sb.append("\n");
         sb.append(TuiHelper.boxTitle("Global Leaderboard", String.format("Top Performers (%d ranked)", leaderboard.size()))).append("\n\n");
 
-        sb.append(String.format("  %-6s  %-44s  %-24s  %-10s  %-12s  %-8s%n",
+        sb.append(String.format("  %-6s  %-54s  %-32s  %-10s  %-12s  %-8s%n",
                 "RANK", "STUDENT NAME", "USERNAME", "QUIZZES", "TOTAL PTS", "AVG %")).append("\n");
-        sb.append("  " + "─".repeat(114) + "\n\n");
+        sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         if (leaderboard.isEmpty()) {
             sb.append("  ").append(TuiHelper.dim("No quizzes completed yet. Be the first on the leaderboard!")).append("\n");
@@ -34,10 +34,10 @@ public class PortalViews {
                 else if (entry.getRank() == 3) rankStr = "#3";
                 else rankStr = String.format("%d", entry.getRank());
 
-                String line = String.format("%-6s  %-44s  %-24s  %-10d  %-12.1f  %-8s",
+                String line = String.format("%-6s  %-54s  %-32s  %-10d  %-12.1f  %-8s",
                         rankStr,
-                        truncate(entry.getStudentName(), 44),
-                        truncate("@" + entry.getUsername(), 24),
+                        truncate(entry.getStudentName(), 54),
+                        truncate("@" + entry.getUsername(), 32),
                         entry.getTotalQuizzes(),
                         entry.getTotalPoints(),
                         String.format("%.1f%%", entry.getAvgPercentage()));
@@ -53,7 +53,7 @@ public class PortalViews {
             }
         }
 
-        sb.append("\n  " + "─".repeat(114) + "\n\n");
+        sb.append("\n  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         if (!leaderboard.isEmpty()) {
             int pageSize = TuiHelper.PAGE_SIZE;

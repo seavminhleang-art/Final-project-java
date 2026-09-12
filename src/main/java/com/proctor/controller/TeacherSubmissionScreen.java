@@ -43,6 +43,10 @@ public class TeacherSubmissionScreen implements Screen {
     private boolean searchMode = false;
     private int statusFilterIndex = 0;
     private static final String[] STATUS_FILTERS = {"ALL", "PENDING REVIEW", "GRADED"};
+    private boolean isGrading = false;
+    private int spinnerTick = 0;
+
+    public record AIGradingCompletedMessage(boolean success, String errorMessage) implements Message {}
 
     public TeacherSubmissionScreen(Quiz specificQuiz, ExamService examService, QuizService quizService, QuestionService questionService, SubjectService subjectService, AuthService authService) {
         this.specificQuiz = specificQuiz;
@@ -99,6 +103,31 @@ public class TeacherSubmissionScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        if (msg instanceof AIGradingCompletedMessage m) {
+            isGrading = false;
+            if (m.success()) {
+                bannerMessage = inspectingAnswerSheet
+                        ? TuiHelper.green("✔ AI evaluation complete! Press [r] to finalize and return grade.")
+                        : TuiHelper.green("✔ Auto-graded with AI! Press [r] to return grade.");
+                refreshList();
+            } else {
+                String err = (m.errorMessage() != null && !m.errorMessage().isBlank())
+                        ? m.errorMessage()
+                        : "AI grading failed. Please check Ollama.";
+                bannerMessage = TuiHelper.red("✖ " + err);
+            }
+            return ScreenResult.stay(this);
+        }
+
+        if (isGrading) {
+            spinnerTick++;
+            if (msg instanceof KeyPressMessage k && KeyUtil.isEsc(k)) {
+                isGrading = false;
+                bannerMessage = TuiHelper.yellow("AI grading cancelled.");
+            }
+            return ScreenResult.stay(this);
+        }
+
         if (msg instanceof KeyPressMessage k) {
             if (inspectingAnswerSheet) {
                 Attempt currentAttempt = !submissions.isEmpty() ? submissions.get(selectedIndex) : null;
@@ -119,12 +148,7 @@ public class TeacherSubmissionScreen implements Screen {
                         inspectingAnswerIndex = (inspectingAnswerIndex + 1) % questions.size();
                     }
                 } else if ("g".equalsIgnoreCase(k.key())) {
-                    if (!submissions.isEmpty()) {
-                        Attempt att = submissions.get(selectedIndex);
-                        boolean ok = examService.gradeWithAI(att.getId());
-                        bannerMessage = ok ? TuiHelper.green("✔ AI evaluation complete! Press [r] to finalize and return grade.")
-                                           : TuiHelper.red("✖ AI grading failed. Please check Ollama.");
-                    }
+                    return startAsyncGrading();
                 } else if ("r".equalsIgnoreCase(k.key())) {
                     if (!submissions.isEmpty()) {
                         Attempt att = submissions.get(selectedIndex);
@@ -216,12 +240,7 @@ public class TeacherSubmissionScreen implements Screen {
                     bannerMessage = "";
                 }
             } else if ("g".equalsIgnoreCase(k.key())) {
-                if (!submissions.isEmpty()) {
-                    Attempt att = submissions.get(selectedIndex);
-                    boolean ok = examService.gradeWithAI(att.getId());
-                    bannerMessage = ok ? TuiHelper.green("✔ Auto-graded with AI! Press [r] to return grade.")
-                                       : TuiHelper.red("✖ AI grading failed. Please check Ollama.");
-                }
+                return startAsyncGrading();
             } else if ("r".equalsIgnoreCase(k.key())) {
                 if (!submissions.isEmpty()) {
                     Attempt att = submissions.get(selectedIndex);
@@ -240,8 +259,46 @@ public class TeacherSubmissionScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    private ScreenResult startAsyncGrading() {
+        if (submissions.isEmpty()) {
+            return ScreenResult.stay(this);
+        }
+        Attempt att = submissions.get(selectedIndex);
+        isGrading = true;
+        bannerMessage = "";
+        return ScreenResult.stay(this, () -> {
+            try {
+                boolean ok = examService.gradeWithAI(att.getId());
+                return new AIGradingCompletedMessage(ok, ok ? null : "AI grading failed. Please check Ollama.");
+            } catch (Exception e) {
+                String err = e.getMessage();
+                if (err == null || err.isBlank()) {
+                    Throwable cause = e.getCause();
+                    if (cause != null && cause.getMessage() != null && !cause.getMessage().isBlank()) {
+                        err = cause.getMessage();
+                    } else {
+                        err = "Failed to grade with AI: " + e.getClass().getSimpleName();
+                    }
+                }
+                return new AIGradingCompletedMessage(false, err);
+            }
+        });
+    }
+
     @Override
     public String view() {
+        if (isGrading) {
+            Attempt attempt = !submissions.isEmpty() ? submissions.get(selectedIndex) : null;
+            String studentName = null;
+            String quizTitle = null;
+            if (attempt != null) {
+                studentName = (attempt.getStudentName() != null && !attempt.getStudentName().isBlank())
+                        ? attempt.getStudentName() : "Student #" + attempt.getStudentId();
+                quizTitle = (specificQuiz != null) ? specificQuiz.getTitle()
+                        : (attempt.getQuizTitle() != null ? attempt.getQuizTitle() : "Quiz #" + attempt.getQuizId());
+            }
+            return TeacherSubmissionViews.renderAIGradingLoading(studentName, quizTitle, spinnerTick);
+        }
         if (inspectingAnswerSheet && !submissions.isEmpty()) {
             Attempt attempt = submissions.get(selectedIndex);
             Quiz currentQuiz = specificQuiz;

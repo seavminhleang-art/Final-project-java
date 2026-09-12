@@ -27,8 +27,8 @@ public class SubjectViews {
         } else if (!searchBuffer.isEmpty()) {
             sb.append("  Search: [ ").append(searchBuffer).append(" ] (Press '/' to edit)\n\n");
         }
-        sb.append(String.format("  %-4s  %-16s  %-78s  %-9s%n", "ID", "CODE", "SUBJECT NAME", "STATUS")).append("\n");
-        sb.append("  " + "─".repeat(114) + "\n\n");
+        sb.append(String.format("  %-4s  %-6s  %-16s  %-88s  %-9s%n", "#", "ID", "CODE", "SUBJECT NAME", "STATUS")).append("\n");
+        sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         if (subjects.isEmpty()) {
             sb.append("  ").append(TuiHelper.dim("No subjects found.")).append("\n");
@@ -42,10 +42,11 @@ public class SubjectViews {
                 String cursor = (i == selectedIndex) ? TuiHelper.cyan("▶ ") : "  ";
                 String status = s.isEnabled() ? TuiHelper.green("Enabled") : TuiHelper.red("Disabled");
 
-                String line = String.format("%-4d  %-16s  %-78s  %-9s",
+                String line = String.format("%-4d  %-6d  %-16s  %-88s  %-9s",
+                        (i + 1),
                         s.getId(),
                         truncate(s.getCode(), 16),
-                        truncate(s.getName(), 78),
+                        truncate(s.getName(), 88),
                         status);
 
                 if (i == selectedIndex) {
@@ -59,7 +60,7 @@ public class SubjectViews {
             }
         }
 
-        sb.append("\n  " + "─".repeat(114) + "\n\n");
+        sb.append("\n  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         if (!subjects.isEmpty()) {
             int pageSize = TuiHelper.PAGE_SIZE;

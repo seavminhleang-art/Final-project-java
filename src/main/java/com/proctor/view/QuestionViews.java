@@ -218,7 +218,7 @@ public class QuestionViews {
             sb.append("\n");
         }
 
-        sb.append("  " + "─".repeat(112) + "\n\n");
+        sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         if (!generatedDrafts.isEmpty()) {
             sb.append(TuiHelper.paginationBar(currentPage, totalPages, generatedDrafts.size()));

@@ -19,6 +19,11 @@ public class TuiHelper {
     public static final String HEADER_START = "\u001B[?9901h";
     public static final String HEADER_END = "\u001B[?9901l";
     public static final int PAGE_SIZE = 10;
+    public static final int TABLE_WIDTH = 132;
+
+    public static String tableSeparator() {
+        return "  " + "─".repeat(TABLE_WIDTH) + "\n\n";
+    }
 
     private static Integer cachedTermWidth = null;
     private static Integer cachedTermHeight = null;
@@ -446,7 +451,7 @@ public class TuiHelper {
             }
         } catch (Exception ignored) {}
 
-        cachedTermWidth = 124;
+        cachedTermWidth = 144;
         return cachedTermWidth;
     }
 
@@ -528,7 +533,7 @@ public class TuiHelper {
     }
 
     public static String wrapHints(List<String> hints) {
-        return wrapHints(hints, 108);
+        return wrapHints(hints, TABLE_WIDTH);
     }
 
 private static String stripAnsi(String str) {
@@ -667,20 +672,20 @@ private static String stripAnsi(String str) {
             }
         }
 
-        int innerWidth = Math.max(116, maxLineLen);
+        int innerWidth = Math.max(TABLE_WIDTH + 2, maxLineLen);
         if (termWidth > 30) {
             innerWidth = Math.min(innerWidth, termWidth - 8);
         }
 
         int contentBlockOffset = Math.max(0, (innerWidth - maxLineLen) / 2);
         int targetInnerWidth = innerWidth + 2;
-        int boxWidth = innerWidth + 4; // 120
+        int boxWidth = innerWidth + 4; // 138
 
         // Constant Outer Viewport Monitor Frame (hugging the terminal screen like a monitor bezel)
-        int outerMarginX = (termWidth > 128) ? 2 : 0;
+        int outerMarginX = (termWidth > 146) ? 2 : 0;
         int outerWidth = termWidth - (outerMarginX * 2);
-        if (outerWidth < 124) {
-            outerWidth = Math.min(124, termWidth);
+        if (outerWidth < 144) {
+            outerWidth = Math.min(144, termWidth);
         }
         int outerInnerWidth = outerWidth - 2;
         if (outerInnerWidth % 2 != 0) {

@@ -33,9 +33,9 @@ public class InboxViews {
             sb.append("  Search: [ ").append(searchBuffer).append(" ] (Press '/' to edit)\n\n");
         }
 
-        sb.append(String.format("    %-14s  %-16s  %-20s  %-38s  %-16s%n",
-                "STATUS", "TYPE", "FROM", "SUBJECT", "RECEIVED")).append("\n");
-        sb.append("  " + "─".repeat(114) + "\n\n");
+        sb.append(String.format("    %-4s  %-14s  %-16s  %-22s  %-46s  %-16s%n",
+                "#", "STATUS", "TYPE", "FROM", "SUBJECT", "RECEIVED")).append("\n");
+        sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         if (messages.isEmpty()) {
             sb.append("  ").append(TuiHelper.dim("Your inbox is empty.")).append("\n");
@@ -51,11 +51,12 @@ public class InboxViews {
 
                 String statusBadge = formatStatusBadge(msg.getStatus(), !msg.isRead());
                 String typeBadge = formatTypeBadge(msg.getType());
-                String sender = msg.getSenderName() != null ? truncate(msg.getSenderName(), 20) : "System";
-                String title = truncate(msg.getTitle(), 38);
+                String sender = msg.getSenderName() != null ? truncate(msg.getSenderName(), 22) : "System";
+                String title = truncate(msg.getTitle(), 46);
                 String dateStr = msg.getCreatedAt() != null ? DATE_FMT.format(msg.getCreatedAt()) : "-";
 
-                String line = String.format("%s  %-16s  %-20s  %-38s  %-16s",
+                String line = String.format("%-4d  %s  %-16s  %-22s  %-46s  %-16s",
+                        (i + 1),
                         statusBadge,
                         typeBadge,
                         sender,
@@ -73,7 +74,7 @@ public class InboxViews {
             }
         }
 
-        sb.append("\n  " + "─".repeat(114) + "\n\n");
+        sb.append("\n  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         if (!messages.isEmpty()) {
             int pageSize = TuiHelper.PAGE_SIZE;
@@ -117,13 +118,13 @@ public class InboxViews {
         sb.append("  ").append(TuiHelper.bold("From:     ")).append(sender);
         sb.append("   ").append(TuiHelper.bold("Received: ")).append(dateStr);
         sb.append("   ").append(TuiHelper.bold("Status:   ")).append(formatStatusBadge(msg.getStatus(), false)).append("\n\n");
-        sb.append("  " + "─".repeat(114) + "\n\n");
+        sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         for (String line : msg.getBody().split("\n")) {
             if (line.startsWith("[HASH:")) continue;
             sb.append("  ").append(line).append("\n");
         }
-        sb.append("\n  " + "─".repeat(114) + "\n\n");
+        sb.append("\n  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         if (msg.isActionable()) {
             sb.append(TuiHelper.buttonRow("Approve Request", focusedActionBtn == 0, "Reject Request", focusedActionBtn == 1));

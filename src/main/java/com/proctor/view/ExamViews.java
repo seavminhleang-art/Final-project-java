@@ -39,9 +39,9 @@ public class ExamViews {
             sb.append("  Search: [ ").append(searchBuffer).append(" ] (Press '/' to edit)\n\n");
         }
 
-        sb.append(String.format("  %-4s  %-12s  %-42s  %-16s  %-8s  %-6s  %-12s%n",
+        sb.append(String.format("  %-4s  %-14s  %-52s  %-18s  %-10s  %-6s  %-14s%n",
                 "#", "SUBJ", "TITLE", "TEACHER", "TIME", "PTS", "STATUS")).append("\n");
-        sb.append("  " + "─".repeat(114) + "\n\n");
+        sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         if (quizzes.isEmpty()) {
             sb.append("  ").append(TuiHelper.dim("No " + typeLabel.toLowerCase() + " currently available.")).append("\n");
@@ -71,11 +71,11 @@ public class ExamViews {
                     };
                 }
 
-                String line = String.format("%-4d  %-12s  %-42s  %-16s  %-8s  %-6.1f  %-12s",
+                String line = String.format("%-4d  %-14s  %-52s  %-18s  %-10s  %-6.1f  %-14s",
                         (i + 1),
-                        truncate(subj, 12),
-                        truncate(q.getTitle(), 42),
-                        truncate(teacher, 16),
+                        truncate(subj, 14),
+                        truncate(q.getTitle(), 52),
+                        truncate(teacher, 18),
                         time,
                         q.getTotalPoints(),
                         statusStr);
@@ -91,7 +91,7 @@ public class ExamViews {
             }
         }
 
-        sb.append("\n  " + "─".repeat(114) + "\n\n");
+        sb.append("\n  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
         if (!quizzes.isEmpty()) {
             int pageSize = TuiHelper.PAGE_SIZE;
             int totalPages = Math.max(1, (int) Math.ceil((double) quizzes.size() / pageSize));
@@ -159,7 +159,7 @@ public class ExamViews {
             sb.append("\n");
         }
 
-        sb.append("\n  " + "─".repeat(114) + "\n\n");
+        sb.append("\n  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
         sb.append(TuiHelper.dim("  [↑/↓] Move Focus  •  [Space] Select  •  [Enter] Confirm & Next  •  [←/→] Prev/Next  •  [Esc] Submit\n"));
         return sb.toString();
     }
@@ -184,7 +184,7 @@ public class ExamViews {
             sb.append("   (short answer) questions, your submission requires grading by your teacher.\n");
             sb.append("   Your final score and question review will be available in History once all written questions\n");
             sb.append("   have been evaluated and returned.\n\n");
-            sb.append("  " + "─".repeat(114) + "\n\n");
+            sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
             String returnMsg = hasReturnScreen ? "Back" : "Back to Dashboard";
             sb.append(TuiHelper.dim("  [Enter / Esc] " + returnMsg + "\n"));
@@ -209,7 +209,7 @@ public class ExamViews {
 
         if (session != null && session.getQuiz().isShowAnswersAfter()) {
             sb.append("  " + TuiHelper.bold("Question-by-Question Review:") + "\n\n");
-            sb.append("  " + "─".repeat(114) + "\n\n");
+            sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
             for (int i = 0; i < session.getQuestions().size(); i++) {
                 Question q = session.getQuestions().get(i);
@@ -235,7 +235,7 @@ public class ExamViews {
                 }
                 sb.append("\n");
             }
-            sb.append("\n  " + "─".repeat(114) + "\n\n");
+            sb.append("\n  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
         }
 
         String returnMsg = hasReturnScreen ? "Back" : "Back to Portal";
@@ -262,9 +262,9 @@ public class ExamViews {
             sb.append("  Search: [ ").append(searchBuffer).append(" ] (Press '/' to edit)\n\n");
         }
 
-        sb.append(String.format("  %-4s  %-6s  %-50s  %-11s  %-7s  %-8s  %-16s%n",
+        sb.append(String.format("  %-4s  %-8s  %-60s  %-14s  %-8s  %-10s  %-18s%n",
                 "#", "TYPE", "TITLE", "SCORE", "PCT", "STATUS", "DATE")).append("\n");
-        sb.append("  " + "─".repeat(114) + "\n\n");
+        sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         if (historyList.isEmpty()) {
             sb.append("  ").append(TuiHelper.dim("No past assessment attempts found.")).append("\n");
@@ -282,21 +282,21 @@ public class ExamViews {
                 String scoreStr;
                 String pctStr;
                 if (r.isPendingReview()) {
-                    status = TuiHelper.yellow(String.format("%-8s", "PENDING"));
+                    status = TuiHelper.yellow(String.format("%-10s", "PENDING"));
                     scoreStr = "- / -";
                     pctStr = "-";
                 } else {
-                    status = r.isPassed() ? TuiHelper.green(String.format("%-8s", "PASSED")) : TuiHelper.red(String.format("%-8s", "FAILED"));
+                    status = r.isPassed() ? TuiHelper.green(String.format("%-10s", "PASSED")) : TuiHelper.red(String.format("%-10s", "FAILED"));
                     scoreStr = String.format("%.1f/%.1f", r.getTotalPoints(), r.getMaxPoints());
                     pctStr = String.format("%.1f%%", r.getPercentage());
                 }
                 String dateStr = r.getGradedAt() != null ? dateFormat.format(r.getGradedAt()) : "-";
                 String typeStr = (r.getAssessmentType() == AssessmentType.EXAM) ? "EXAM" : "QUIZ";
 
-                String line = String.format("%-4d  %-6s  %-50s  %-11s  %-7s  %s  %-16s",
+                String line = String.format("%-4d  %-8s  %-60s  %-14s  %-8s  %s  %-18s",
                         (i + 1),
                         typeStr,
-                        truncate(r.getQuizTitle(), 50),
+                        truncate(r.getQuizTitle(), 60),
                         scoreStr,
                         pctStr,
                         status,
@@ -313,7 +313,7 @@ public class ExamViews {
             }
         }
 
-        sb.append("\n  " + "─".repeat(114) + "\n\n");
+        sb.append("\n  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
         if (!historyList.isEmpty()) {
             int pageSize = TuiHelper.PAGE_SIZE;
             int totalPages = Math.max(1, (int) Math.ceil((double) historyList.size() / pageSize));
