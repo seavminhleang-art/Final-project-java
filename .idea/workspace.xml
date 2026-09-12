@@ -5,11 +5,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c05deeaa-fc82-4d29-9b43-ab8bc6abc8c2" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/SubjectFormScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/SubjectFormScreen.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/util/KeyUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/util/KeyUtil.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/AdminDashboardScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/AdminDashboardScreen.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/AvailableQuizzesScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/AvailableQuizzesScreen.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/QuizListScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/QuizListScreen.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/StudentHistoryScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/StudentHistoryScreen.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/TeacherSubmissionScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/TeacherSubmissionScreen.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/model/entity/Quiz.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/model/entity/Quiz.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/model/repository/QuizRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/model/repository/QuizRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/view/ExamViews.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/view/ExamViews.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/view/QuestionBankViews.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/view/QuestionBankViews.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/view/QuizViews.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/view/QuizViews.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/view/TeacherSubmissionViews.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/view/TeacherSubmissionViews.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -17,7 +25,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="137" />
+    <option name="cachedIndexableFilesCount" value="145" />
   </component>
   <component name="ExternalProjectsData">
     <projectState path="$PROJECT_DIR$">
@@ -134,27 +142,27 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ASKED_MARK_IGNORED_FILES_AS_EXCLUDED": "true",
-    "Gradle.Build Proctor.executor": "Run",
-    "Gradle.Proctor [build].executor": "Run",
-    "Gradle.Proctor [run].executor": "Run",
-    "Gradle.Upgrade Gradle wrapper.executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.MCP Project settings loaded": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "SHELLCHECK.PATH": "/home/tongan/.local/share/JetBrains/IdeaIC2026.2/Shell Script/shellcheck",
-    "git-widget-placeholder": "prototype",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "/home/tongan/Projects/Proctor",
-    "project.structure.last.edited": "Project",
-    "project.structure.proportion": "0.0",
-    "project.structure.side.proportion": "0.0",
-    "settings.editor.selected.configurable": "reference.settings.project.maven.runner"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_MARK_IGNORED_FILES_AS_EXCLUDED&quot;: &quot;true&quot;,
+    &quot;Gradle.Build Proctor.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Proctor [build].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Proctor [run].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Upgrade Gradle wrapper.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;SHELLCHECK.PATH&quot;: &quot;/home/tongan/.local/share/JetBrains/IdeaIC2026.2/Shell Script/shellcheck&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;prototype&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/tongan/Projects/Proctor&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settings.project.maven.runner&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />

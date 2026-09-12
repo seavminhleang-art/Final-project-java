@@ -45,6 +45,14 @@ java {
     }
 }
 
+sourceSets {
+    test {
+        java {
+            srcDirs = ['test/java', 'src/test/java']
+        }
+    }
+}
+
 tasks.withType(JavaCompile).configureEach {
     options.compilerArgs += ['-Xlint:all', '-Xlint:-processing', '-Werror']
 }

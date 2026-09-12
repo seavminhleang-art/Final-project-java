@@ -32,7 +32,7 @@ public class QuestionBankViews {
         }
 
         sb.append(String.format("  %-4s  %-10s  %-12s  %-8s  %-5s  %-4s  %-52s%n",
-                "ID", "SUBJ", "TYPE", "DIFF", "PTS", "AI?", "QUESTION TEXT")).append("\n");
+                "#", "SUBJ", "TYPE", "DIFF", "PTS", "AI?", "QUESTION TEXT")).append("\n");
         sb.append("  " + "─".repeat(112) + "\n\n");
 
         if (questions.isEmpty()) {
@@ -49,7 +49,7 @@ public class QuestionBankViews {
                 String aiMark = q.isAiGenerated() ? TuiHelper.cyan("AI") : TuiHelper.dim("--");
 
                 String line = String.format("%-4d  %-10s  %-12s  %-8s  %-5.1f  %-4s  %-52s",
-                        q.getId(),
+                        (i + 1),
                         truncate(subj, 10),
                         q.getQuestionType().name(),
                         q.getDifficulty().name(),
@@ -121,7 +121,7 @@ public class QuestionBankViews {
         }
 
         sb.append(String.format("    %-14s  %-4s  %-12s  %-8s  %-5s  %-55s%n",
-                "SELECT", "ID", "TYPE", "DIFF", "PTS", "QUESTION TEXT")).append("\n");
+                "SELECT", "#", "TYPE", "DIFF", "PTS", "QUESTION TEXT")).append("\n");
         sb.append("  " + "─".repeat(112) + "\n\n");
 
         if (bankQuestions.isEmpty()) {
@@ -139,7 +139,7 @@ public class QuestionBankViews {
 
                 String line = String.format("%s  %-4d  %-12s  %-8s  %-5.1f  %-55s",
                         checkbox,
-                        q.getId(),
+                        (i + 1),
                         truncate(q.getQuestionType().name(), 12),
                         truncate(q.getDifficulty().name(), 8),
                         q.getPoints(),
