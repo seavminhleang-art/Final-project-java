@@ -289,7 +289,7 @@ public class AvailableQuizzesScreen implements Screen {
                 if (resOpt.isPresent()) {
                     return ScreenResult.navigate(new ExamResultScreen(resOpt.get(), this));
                 }
-            } else if (att.getStatus() == AttemptStatus.TURNED_IN || att.getStatus() == AttemptStatus.SUBMITTED) {
+            } else if (att.getStatus() == AttemptStatus.TURNED_IN) {
                 bannerMessage = TuiHelper.yellow("● This assessment is Turned In and pending teacher review.");
                 return ScreenResult.stay(this);
             } else if (att.getStatus() == AttemptStatus.AUTO_SUBMITTED) {

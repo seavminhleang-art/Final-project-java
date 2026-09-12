@@ -46,8 +46,9 @@ public class SchemaInitializer {
                 stmt.execute("UPDATE quizzes SET assessment_type = 'QUIZ' WHERE assessment_type IS NULL;");
                 stmt.execute("ALTER TABLE questions ADD COLUMN IF NOT EXISTS quiz_id INT REFERENCES quizzes(id) ON DELETE CASCADE;");
                 stmt.execute("ALTER TABLE attempt_answers ADD COLUMN IF NOT EXISTS teacher_feedback TEXT;");
+                stmt.execute("UPDATE attempts SET status = 'TURNED_IN' WHERE status = 'SUBMITTED';");
                 stmt.execute("ALTER TABLE attempts DROP CONSTRAINT IF EXISTS attempts_status_check;");
-                stmt.execute("ALTER TABLE attempts ADD CONSTRAINT attempts_status_check CHECK (status IN ('IN_PROGRESS', 'TURNED_IN', 'GRADED', 'AUTO_SUBMITTED', 'SUBMITTED'));");
+                stmt.execute("ALTER TABLE attempts ADD CONSTRAINT attempts_status_check CHECK (status IN ('IN_PROGRESS', 'TURNED_IN', 'GRADED', 'AUTO_SUBMITTED'));");
                 stmt.execute("CREATE TABLE IF NOT EXISTS inbox_messages (" +
                         "id SERIAL PRIMARY KEY, " +
                         "sender_id INT REFERENCES users(id) ON DELETE SET NULL, " +

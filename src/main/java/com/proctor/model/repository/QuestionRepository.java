@@ -127,11 +127,33 @@ public class QuestionRepository {
     }
 
     public boolean delete(int questionId) {
-        String sql = "DELETE FROM questions WHERE id = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, questionId);
-            return stmt.executeUpdate() > 0;
+        String unlinkOptionsSql = "UPDATE attempt_answers SET selected_option_id = NULL WHERE selected_option_id IN (SELECT id FROM question_options WHERE question_id = ?)";
+        String unlinkQuestionSql = "UPDATE attempt_answers SET question_id = NULL WHERE question_id = ?";
+        String deleteQuestionSql = "DELETE FROM questions WHERE id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try (PreparedStatement stmtOptions = conn.prepareStatement(unlinkOptionsSql);
+                 PreparedStatement stmtQuestion = conn.prepareStatement(unlinkQuestionSql);
+                 PreparedStatement stmtDelete = conn.prepareStatement(deleteQuestionSql)) {
+
+                stmtOptions.setInt(1, questionId);
+                stmtOptions.executeUpdate();
+
+                stmtQuestion.setInt(1, questionId);
+                stmtQuestion.executeUpdate();
+
+                stmtDelete.setInt(1, questionId);
+                int affected = stmtDelete.executeUpdate();
+
+                conn.commit();
+                return affected > 0;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
         } catch (SQLException e) {
             System.err.println("Error deleting question: " + e.getMessage());
         }
@@ -266,16 +288,21 @@ public class QuestionRepository {
         if (options == null || options.isEmpty()) return;
 
         String sql = "INSERT INTO question_options (question_id, option_text, is_correct, option_order) VALUES (?, ?, ?, ?)";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             for (int i = 0; i < options.size(); i++) {
                 QuestionOption opt = options.get(i);
                 stmt.setInt(1, questionId);
                 stmt.setString(2, opt.getOptionText().trim());
                 stmt.setBoolean(3, opt.isCorrect());
                 stmt.setInt(4, i + 1);
-                stmt.addBatch();
+                stmt.executeUpdate();
+                try (ResultSet rs = stmt.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        opt.setId(rs.getInt(1));
+                        opt.setQuestionId(questionId);
+                    }
+                }
             }
-            stmt.executeBatch();
         }
     }
 

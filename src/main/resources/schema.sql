@@ -83,8 +83,8 @@ CREATE TABLE IF NOT EXISTS attempts (
 CREATE TABLE IF NOT EXISTS attempt_answers (
     id SERIAL PRIMARY KEY,
     attempt_id INT REFERENCES attempts(id) ON DELETE CASCADE,
-    question_id INT REFERENCES questions(id),
-    selected_option_id INT REFERENCES question_options(id),
+    question_id INT REFERENCES questions(id) ON DELETE SET NULL,
+    selected_option_id INT REFERENCES question_options(id) ON DELETE SET NULL,
     text_answer TEXT,
     ai_score INT,
     ai_feedback TEXT,
