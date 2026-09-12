@@ -14,17 +14,25 @@ public class QuizViews {
 
     public static String renderQuizList(AssessmentType assessmentType, List<Quiz> quizzes, int selectedIndex,
                                         boolean isMyQuizzesScope, String searchBuffer, boolean searchMode, String bannerMessage) {
-        return renderQuizList(assessmentType, quizzes, selectedIndex, isMyQuizzesScope, "ALL", searchBuffer, searchMode, bannerMessage);
+        return renderQuizList(assessmentType, quizzes, selectedIndex, isMyQuizzesScope, "ALL", searchBuffer, searchMode, bannerMessage, false);
     }
 
     public static String renderQuizList(AssessmentType assessmentType, List<Quiz> quizzes, int selectedIndex,
                                         boolean isMyQuizzesScope, String subjectFilterDisplay,
                                         String searchBuffer, boolean searchMode, String bannerMessage) {
+        return renderQuizList(assessmentType, quizzes, selectedIndex, isMyQuizzesScope, subjectFilterDisplay, searchBuffer, searchMode, bannerMessage, false);
+    }
+
+    public static String renderQuizList(AssessmentType assessmentType, List<Quiz> quizzes, int selectedIndex,
+                                        boolean isMyQuizzesScope, String subjectFilterDisplay,
+                                        String searchBuffer, boolean searchMode, String bannerMessage, boolean isAdmin) {
         StringBuilder sb = new StringBuilder();
         String itemType = (assessmentType == AssessmentType.EXAM) ? "EXAMS" : "QUIZZES";
-        String scopeLabel = isMyQuizzesScope
-                ? "Scope: [ MY " + itemType + " ]"
-                : "Scope: [ ALL GLOBAL " + itemType + " ]";
+        String scopeLabel = isAdmin
+                ? "All " + (assessmentType == AssessmentType.EXAM ? "Exams" : "Quizzes")
+                : (isMyQuizzesScope
+                    ? "Scope: [ MY " + itemType + " ]"
+                    : "Scope: [ ALL GLOBAL " + itemType + " ]");
         String subjLabel = (subjectFilterDisplay == null || subjectFilterDisplay.isBlank()) ? "ALL" : subjectFilterDisplay;
 
         sb.append(TuiHelper.header(itemType));
@@ -43,7 +51,7 @@ public class QuizViews {
 
         if (quizzes.isEmpty()) {
             String emptyLabel = (assessmentType == AssessmentType.EXAM) ? "exams" : "quizzes";
-            sb.append("  ").append(TuiHelper.dim("No " + emptyLabel + " found. Press 'n' to create your first one!")).append("\n");
+            sb.append("  ").append(TuiHelper.dim("No " + emptyLabel + " found.")).append("\n");
         } else {
             int pageSize = TuiHelper.PAGE_SIZE;
             int startRow = (selectedIndex / pageSize) * pageSize;
@@ -100,21 +108,37 @@ public class QuizViews {
         }
 
         String aiHint = (assessmentType == AssessmentType.EXAM) ? "[g] AI Exam" : "[g] AI Quiz";
-        List<String> hints = List.of(
-                "[↑/↓] Move",
-                "[←/→] Page",
-                "[Enter] Builder",
-                "[Space] Publish",
-                "[/] Search",
-                "[f] Scope",
-                "[s] Subject",
-                "[r] Submissions",
-                "[n] New",
-                aiHint,
-                "[e] Edit",
-                "[d] Delete",
-                "[Esc] Back"
-        );
+        List<String> hints;
+        if (isAdmin) {
+            hints = List.of(
+                    "[↑/↓] Move",
+                    "[←/→] Page",
+                    "[Enter] Builder",
+                    "[Space] Publish",
+                    "[/] Search",
+                    "[s] Subject",
+                    "[r] Submissions",
+                    "[e] Edit",
+                    "[d] Delete",
+                    "[Esc] Back"
+            );
+        } else {
+            hints = List.of(
+                    "[↑/↓] Move",
+                    "[←/→] Page",
+                    "[Enter] Builder",
+                    "[Space] Publish",
+                    "[/] Search",
+                    "[f] Scope",
+                    "[s] Subject",
+                    "[r] Submissions",
+                    "[n] New",
+                    aiHint,
+                    "[e] Edit",
+                    "[d] Delete",
+                    "[Esc] Back"
+            );
+        }
         sb.append(TuiHelper.wrapHints(hints));
         return sb.toString();
     }

@@ -140,7 +140,8 @@ public class QuizListScreen implements Screen {
 
             if (KeyUtil.isEsc(k)) {
                 User user = Session.getCurrentUser().orElse(null);
-                if (user != null && user.getRole() == Role.ADMIN) {
+                boolean isAdmin = user != null && user.getRole() == Role.ADMIN;
+                if (isAdmin) {
                     return ScreenResult.navigate(new AdminDashboardScreen(authService));
                 }
                 return ScreenResult.navigate(new TeacherDashboardScreen(authService, questionService, subjectService, quizService));
@@ -170,11 +171,20 @@ public class QuizListScreen implements Screen {
                     }
                 }
             } else if ("n".equalsIgnoreCase(k.key())) {
-                return ScreenResult.navigate(new QuizFormScreen(quizService, questionService, subjectService, authService, null, assessmentType));
+                User user = Session.getCurrentUser().orElse(null);
+                if (user == null || user.getRole() != Role.ADMIN) {
+                    return ScreenResult.navigate(new QuizFormScreen(quizService, questionService, subjectService, authService, null, assessmentType));
+                }
             } else if ("g".equalsIgnoreCase(k.key())) {
-                return ScreenResult.navigate(new AIQuizGeneratorScreen(new AIService(), quizService, questionService, subjectService, authService, assessmentType));
+                User user = Session.getCurrentUser().orElse(null);
+                if (user == null || user.getRole() != Role.ADMIN) {
+                    return ScreenResult.navigate(new AIQuizGeneratorScreen(new AIService(), quizService, questionService, subjectService, authService, assessmentType));
+                }
             } else if ("f".equalsIgnoreCase(k.key())) {
-                toggleScope();
+                User user = Session.getCurrentUser().orElse(null);
+                if (user == null || user.getRole() != Role.ADMIN) {
+                    toggleScope();
+                }
             } else if ("d".equalsIgnoreCase(k.key()) || KeyUtil.isDelete(k)) {
                 if (!quizzes.isEmpty()) {
                     initiateDelete();
@@ -230,6 +240,11 @@ public class QuizListScreen implements Screen {
     }
 
     private void toggleScope() {
+        User user = Session.getCurrentUser().orElse(null);
+        if (user != null && user.getRole() == Role.ADMIN) {
+            currentScope = QuizScope.ALL_GLOBAL;
+            return;
+        }
         currentScope = (currentScope == QuizScope.MY_QUIZZES) ? QuizScope.ALL_GLOBAL : QuizScope.MY_QUIZZES;
         selectedIndex = 0;
         bannerMessage = (currentScope == QuizScope.MY_QUIZZES)
@@ -287,10 +302,12 @@ public class QuizListScreen implements Screen {
             );
         }
 
+        User user = Session.getCurrentUser().orElse(null);
+        boolean isAdmin = user != null && user.getRole() == Role.ADMIN;
         String subjectFilterDisplay = (subjectFilterIndex > 0 && subjectFilterIndex <= allSubjects.size())
                 ? allSubjects.get(subjectFilterIndex - 1).getCode() : "ALL";
         return QuizViews.renderQuizList(assessmentType, quizzes, selectedIndex, currentScope == QuizScope.MY_QUIZZES,
-                subjectFilterDisplay, searchBuffer.toString(), searchMode, bannerMessage);
+                subjectFilterDisplay, searchBuffer.toString(), searchMode, bannerMessage, isAdmin);
     }
 
     private String truncate(String text, int max) {
