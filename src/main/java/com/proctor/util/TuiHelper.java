@@ -187,6 +187,24 @@ public class TuiHelper {
         "╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝╚══════╝   ╚═╝   ╚══════╝╚═╝  ╚═╝"
     };
 
+    private static final String[] ASCII_SPEED = new String[]{
+        "███████╗██████╗ ███████╗███████╗██████╗ ",
+        "██╔════╝██╔══██╗██╔════╝██╔════╝██╔══██╗",
+        "███████╗██████╔╝█████╗  █████╗  ██║  ██║",
+        "╚════██║██╔═══╝ ██╔══╝  ██╔══╝  ██║  ██║",
+        "███████║██║     ███████╗███████╗██████╔╝",
+        "╚══════╝╚═╝     ╚══════╝╚══════╝╚═════╝ "
+    };
+
+    private static final String[] ASCII_SECURITY = new String[]{
+        "███████╗███████╗ ██████╗██╗   ██╗██████╗ ██╗████████╗██╗   ██╗",
+        "██╔════╝██╔════╝██╔════╝██║   ██║██╔══██╗██║╚══██╔══╝╚██╗ ██╔╝",
+        "███████╗█████╗  ██║     ██║   ██║██████╔╝██║   ██║    ╚████╔╝ ",
+        "╚════██║██╔══╝  ██║     ██║   ██║██╔══██╗██║   ██║     ╚██╔╝  ",
+        "███████║███████╗╚██████╗╚██████╔╝██║  ██║██║   ██║      ██║   ",
+        "╚══════╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚═╝   ╚═╝      ╚═╝   "
+    };
+
     public static final String BOX_TITLE_MARKER = "\u001B[8888m";
 
     public static String boxTitle(String title) {
@@ -236,8 +254,14 @@ public class TuiHelper {
         if (upper.contains("DASHBOARD") || upper.contains("PORTAL")) {
             return asciiBannerBox(ASCII_DASHBOARD);
         }
+        if (upper.contains("SECURITY") || upper.contains("PASSWORD")) {
+            return asciiBannerBox(ASCII_SECURITY);
+        }
         if (upper.contains("HISTORY")) {
             return asciiBannerBox(ASCII_HISTORY);
+        }
+        if (upper.contains("SPEED")) {
+            return asciiBannerBox(ASCII_SPEED);
         }
         if (upper.contains("EXAM")) {
             return asciiBannerBox(ASCII_EXAMS);
@@ -265,9 +289,6 @@ public class TuiHelper {
         }
         if (upper.contains("SUBJECT") || upper.contains("TEACHER ASSIGNMENT")) {
             return asciiBannerBox(ASCII_SUBJECTS);
-        }
-        if (upper.contains("ASSESSMENT")) {
-            return asciiBannerBox(ASCII_EXAMS);
         }
 
         StringBuilder sb = new StringBuilder();

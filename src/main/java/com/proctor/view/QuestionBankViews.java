@@ -115,7 +115,8 @@ public class QuestionBankViews {
             }
         }
 
-        String builderHeader = (quiz.getAssessmentType() == com.proctor.model.enums.AssessmentType.EXAM ? "EXAMS" : "QUIZZES");
+        String builderHeader = (quiz.getAssessmentType() == com.proctor.model.enums.AssessmentType.EXAM ? "EXAMS"
+                : (quiz.getAssessmentType() == com.proctor.model.enums.AssessmentType.SPEED ? "SPEED QUIZZES" : "QUIZZES"));
         String subtitle = String.format("Selected: %d Question(s) (%.1f pts)  •  Bank: %d available",
                 selectedIds.size(), selectedPts, bankQuestions.size());
         sb.append(TuiHelper.header(builderHeader));

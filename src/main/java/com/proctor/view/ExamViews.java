@@ -10,6 +10,7 @@ import com.proctor.model.entity.Result;
 import com.proctor.util.TuiHelper;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -141,7 +142,8 @@ public class ExamViews {
                 ? String.format("Time Remaining: %02d:%02d", session.getRemainingSeconds() / 60, session.getRemainingSeconds() % 60)
                 : "Untimed Exam";
 
-        sb.append(TuiHelper.header("ASSESSMENT"));
+        String takerHeader = (session.getQuiz() != null && session.getQuiz().getAssessmentType() == AssessmentType.EXAM) ? "EXAMS" : "QUIZZES";
+        sb.append(TuiHelper.header(takerHeader));
         sb.append("\n");
         sb.append(TuiHelper.boxTitle(session.getQuiz().getTitle(), String.format("Question %d of %d  •  %s", curQNum, totalQ, timerInfo))).append("\n\n");
 
@@ -168,6 +170,9 @@ public class ExamViews {
                 } else {
                     sb.append("    ").append(optText).append("\n");
                 }
+                if (i < q.getOptions().size() - 1) {
+                    sb.append("\n");
+                }
             }
             sb.append("\n");
         }
@@ -190,7 +195,7 @@ public class ExamViews {
 
             String badge = TuiHelper.yellow(TuiHelper.bold("  ⏳ UNDER REVIEW  "));
 
-            sb.append("   Student:            ").append(result.getStudentName() != null ? result.getStudentName() : "Student #" + result.getStudentId()).append("\n");
+            sb.append("   Student:            ").append(result.getStudentName() != null ? result.getStudentName() : "Student #" + result.getStudentId()).append("\n\n");
             sb.append("   Result Status:      ").append(badge).append("\n\n");
             sb.append("   ").append(TuiHelper.bold("Notice:")).append("\n");
             sb.append("   Your assessment has been submitted. Because this assessment includes written response\n");
@@ -220,9 +225,9 @@ public class ExamViews {
                     : TuiHelper.red(TuiHelper.bold("  ✖ FAILED  "));
         }
 
-        sb.append("   Student:            ").append(result.getStudentName() != null ? result.getStudentName() : "Student #" + result.getStudentId()).append("\n");
-        sb.append("   Result Status:      ").append(badge).append("\n");
-        sb.append("   Score:              ").append(TuiHelper.bold(String.format("%.1f / %.1f points", result.getTotalPoints(), result.getMaxPoints()))).append("\n");
+        sb.append("   Student:            ").append(result.getStudentName() != null ? result.getStudentName() : "Student #" + result.getStudentId()).append("\n\n");
+        sb.append("   Result Status:      ").append(badge).append("\n\n");
+        sb.append("   Score:              ").append(TuiHelper.bold(String.format("%.1f / %.1f points", result.getTotalPoints(), result.getMaxPoints()))).append("\n\n");
         sb.append("   Percentage:         ").append(TuiHelper.bold(String.format("%.1f%%", result.getPercentage()))).append("\n\n");
 
         if (session != null && session.getQuiz().isShowAnswersAfter()) {
@@ -237,12 +242,19 @@ public class ExamViews {
                 sb.append(String.format("   Q%d: %s (%.1f pts)\n", i + 1, q.getQuestionText(), q.getPoints()));
 
                 if (q.getQuestionType() == com.proctor.model.enums.QuestionType.MCQ || q.getQuestionType() == com.proctor.model.enums.QuestionType.TRUE_FALSE) {
+                    List<String> reviewLines = new ArrayList<>();
                     for (QuestionOption opt : q.getOptions()) {
                         boolean isSelected = selectedOptId != null && selectedOptId.equals(opt.getId());
                         if (opt.isCorrect()) {
-                            sb.append("     ").append(TuiHelper.green("[✔ Correct] " + opt.getOptionText() + (isSelected ? " (Your choice)" : ""))).append("\n");
+                            reviewLines.add("     " + TuiHelper.green("[✔ Correct] " + opt.getOptionText() + (isSelected ? " (Your choice)" : "")));
                         } else if (isSelected) {
-                            sb.append("     ").append(TuiHelper.red("[✖ Incorrect] " + opt.getOptionText() + " (Your choice)")).append("\n");
+                            reviewLines.add("     " + TuiHelper.red("[✖ Incorrect] " + opt.getOptionText() + " (Your choice)"));
+                        }
+                    }
+                    for (int rIdx = 0; rIdx < reviewLines.size(); rIdx++) {
+                        sb.append(reviewLines.get(rIdx)).append("\n");
+                        if (rIdx < reviewLines.size() - 1) {
+                            sb.append("\n");
                         }
                     }
                 } else {

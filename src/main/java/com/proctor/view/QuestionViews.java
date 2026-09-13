@@ -204,11 +204,16 @@ public class QuestionViews {
             sb.append(cursor).append(TuiHelper.bold(String.format("Q%d. %s [%s, %.1f pts]", i + 1, d.getQuestionText(), d.getDifficulty().name(), d.getPoints()))).append("\n");
 
             if (d.getOptions() != null && !d.getOptions().isEmpty()) {
-                for (QuestionOption opt : d.getOptions()) {
+                sb.append("\n");
+                for (int j = 0; j < d.getOptions().size(); j++) {
+                    QuestionOption opt = d.getOptions().get(j);
                     if (opt.isCorrect()) {
                         sb.append("     ").append(TuiHelper.green("✔ [Correct] " + opt.getOptionText())).append("\n");
                     } else {
                         sb.append("     ").append(TuiHelper.dim("• " + opt.getOptionText())).append("\n");
+                    }
+                    if (j < d.getOptions().size() - 1) {
+                        sb.append("\n");
                     }
                 }
             }

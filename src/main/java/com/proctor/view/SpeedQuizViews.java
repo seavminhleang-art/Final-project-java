@@ -199,6 +199,9 @@ public class SpeedQuizViews {
                         sb.append("    ").append(optText).append("\n");
                     }
                 }
+                if (i < q.getOptions().size() - 1) {
+                    sb.append("\n");
+                }
             }
             sb.append("\n");
         }
@@ -241,7 +244,7 @@ public class SpeedQuizViews {
         if (record.isCorrect()) {
             sb.append("  ").append(TuiHelper.green(TuiHelper.bold("✔ CORRECT!"))).append("\n\n");
 
-            sb.append(String.format("   Points Earned:     %s%n",
+            sb.append(String.format("   Points Earned:     %s%n%n",
                     TuiHelper.green(TuiHelper.bold(String.format("+%.1f pts", record.getTotalPointsAwarded())))));
 
             String multStr = switch (record.getTierShown()) {
@@ -249,32 +252,32 @@ public class SpeedQuizViews {
                 case MEDIUM -> "1.5x (Medium Tier)";
                 case EASY -> "1.0x (Easy Tier)";
             };
-            sb.append(String.format("     Base Points:     +%.1f (%.1f base pts × %s)%n",
+            sb.append(String.format("     Base Points:     +%.1f (%.1f base pts × %s)%n%n",
                     record.getBasePoints(), q.getPoints(), multStr));
             sb.append(String.format("     Speed Bonus:     +%.1f pts (%ds remaining)%n",
                     record.getSpeedBonus(), record.getSecondsRemaining()));
 
             if (record.getStreakBonus() > 0) {
-                sb.append(String.format("     Streak Bonus:    %s (+%.1f pts!)%n",
+                sb.append(String.format("%n     Streak Bonus:    %s (+%.1f pts!)%n",
                         TuiHelper.yellow(TuiHelper.bold("🔥 " + session.getCurrentStreak() + " STREAK BONUS")),
                         record.getStreakBonus()));
             }
         } else {
             if (record.getSecondsRemaining() <= 0 && record.getSelectedOptionId() == null) {
                 sb.append("  ").append(TuiHelper.red(TuiHelper.bold("⏱ TIME'S UP!"))).append("\n\n");
-                sb.append("   You did not select an answer in time.\n");
+                sb.append("   You did not select an answer in time.\n\n");
             } else {
                 sb.append("  ").append(TuiHelper.red(TuiHelper.bold("✖ INCORRECT!"))).append("\n\n");
 
                 QuestionOption picked = findOption(q, record.getSelectedOptionId());
                 String pickedText = picked != null ? picked.getOptionText() : "None";
-                sb.append("   Your Answer:       ").append(TuiHelper.red(pickedText)).append("\n");
+                sb.append("   Your Answer:       ").append(TuiHelper.red(pickedText)).append("\n\n");
             }
 
             QuestionOption correctOpt = findCorrectOption(q);
             String correctText = correctOpt != null ? correctOpt.getOptionText() : "-";
-            sb.append("   Correct Answer:    ").append(TuiHelper.green(TuiHelper.bold(correctText))).append("\n");
-            sb.append("   Points Earned:     ").append(TuiHelper.dim("+0.0 pts")).append("\n");
+            sb.append("   Correct Answer:    ").append(TuiHelper.green(TuiHelper.bold(correctText))).append("\n\n");
+            sb.append("   Points Earned:     ").append(TuiHelper.dim("+0.0 pts")).append("\n\n");
             sb.append("   Streak:            ").append(TuiHelper.dim("Reset to 0")).append("\n");
         }
 
@@ -324,20 +327,20 @@ public class SpeedQuizViews {
 
         double totalScore = result != null ? result.getTotalPoints() : (session != null ? session.getTotalScore() : 0.0);
 
-        sb.append("   Student:            ").append(result != null && result.getStudentName() != null ? result.getStudentName() : "Student").append("\n");
-        sb.append("   Final Score:        ").append(TuiHelper.bold(TuiHelper.cyan(String.format("%.1f points", totalScore)))).append("\n");
+        sb.append("   Student:            ").append(result != null && result.getStudentName() != null ? result.getStudentName() : "Student").append("\n\n");
+        sb.append("   Final Score:        ").append(TuiHelper.bold(TuiHelper.cyan(String.format("%.1f points", totalScore)))).append("\n\n");
 
         if (session != null) {
             long correctCount = session.getAnswerRecords().stream().filter(SpeedQuizAnswerRecord::isCorrect).count();
             int totalAns = session.getAnswerRecords().size();
             double accuracy = totalAns > 0 ? ((double) correctCount / totalAns) * 100.0 : 0.0;
-            sb.append("   Accuracy:           ").append(String.format("%d / %d (%.1f%%)", correctCount, totalAns, accuracy)).append("\n");
-            sb.append("   Max Streak:         ").append(TuiHelper.yellow(String.format("🔥 %d consecutive correct", session.getMaxStreak()))).append("\n");
+            sb.append("   Accuracy:           ").append(String.format("%d / %d (%.1f%%)", correctCount, totalAns, accuracy)).append("\n\n");
+            sb.append("   Max Streak:         ").append(TuiHelper.yellow(String.format("🔥 %d consecutive correct", session.getMaxStreak()))).append("\n\n");
         } else if (answers != null && !answers.isEmpty()) {
             long correctCount = answers.stream().filter(a -> Boolean.TRUE.equals(a.getCorrect())).count();
             int totalAns = answers.size();
             double accuracy = ((double) correctCount / totalAns) * 100.0;
-            sb.append("   Accuracy:           ").append(String.format("%d / %d (%.1f%%)", correctCount, totalAns, accuracy)).append("\n");
+            sb.append("   Accuracy:           ").append(String.format("%d / %d (%.1f%%)", correctCount, totalAns, accuracy)).append("\n\n");
         }
 
         sb.append("\n  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
@@ -378,6 +381,9 @@ public class SpeedQuizViews {
                             status,
                             timeStr,
                             String.format("+%.1f", rec.getTotalPointsAwarded())));
+                    if (i < records.size() - 1) {
+                        sb.append("\n");
+                    }
                 }
                 sb.append("\n  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
             } else if (answers != null && !answers.isEmpty() && quiz != null && quiz.getQuestions() != null) {
@@ -411,6 +417,9 @@ public class SpeedQuizViews {
                             status,
                             "-",
                             String.format("+%.1f", ans.getPointsAwarded())));
+                    if (i < answers.size() - 1) {
+                        sb.append("\n");
+                    }
                 }
                 sb.append("\n  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
             }

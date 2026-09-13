@@ -120,7 +120,7 @@ public class InboxViews {
         String sender = msg.getSenderName() != null ? msg.getSenderName() : "System";
         String dateStr = msg.getCreatedAt() != null ? DATE_FMT.format(msg.getCreatedAt()) : "-";
 
-        sb.append("  ").append(TuiHelper.bold("Subject:  ")).append(msg.getTitle()).append("\n");
+        sb.append("  ").append(TuiHelper.bold("Subject:  ")).append(msg.getTitle()).append("\n\n");
         sb.append("  ").append(TuiHelper.bold("From:     ")).append(sender);
         sb.append("   ").append(TuiHelper.bold("Received: ")).append(dateStr);
         sb.append("   ").append(TuiHelper.bold("Status:   ")).append(formatStatusBadge(msg.getStatus(), false)).append("\n\n");

@@ -175,7 +175,8 @@ public class TeacherSubmissionViews {
             if (q.getQuestionType() == com.proctor.model.enums.QuestionType.MCQ || q.getQuestionType() == com.proctor.model.enums.QuestionType.TRUE_FALSE) {
                 Integer chosenOptId = (ans != null) ? ans.getSelectedOptionId() : null;
                 if (q.getOptions() != null) {
-                    for (QuestionOption opt : q.getOptions()) {
+                    for (int i = 0; i < q.getOptions().size(); i++) {
+                        QuestionOption opt = q.getOptions().get(i);
                         boolean isChosen = chosenOptId != null && chosenOptId.equals(opt.getId());
                         if (opt.isCorrect()) {
                             sb.append("     ").append(TuiHelper.green("✔ [Model Answer] " + opt.getOptionText() + (isChosen ? " (Student Choice)" : ""))).append("\n");
@@ -183,6 +184,9 @@ public class TeacherSubmissionViews {
                             sb.append("     ").append(TuiHelper.red("✖ [Student Choice] " + opt.getOptionText())).append("\n");
                         } else {
                             sb.append("     ").append(TuiHelper.dim("• " + opt.getOptionText())).append("\n");
+                        }
+                        if (i < q.getOptions().size() - 1) {
+                            sb.append("\n");
                         }
                     }
                 }
