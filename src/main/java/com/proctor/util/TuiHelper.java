@@ -296,6 +296,24 @@ public class TuiHelper {
         return String.format("  %s   %s  %s   %s%n%n", prevLabel, pageInfo, countInfo, nextLabel);
     }
 
+    public static String tabBar(String[] tabs, int activeIndex) {
+        if (tabs == null || tabs.length == 0) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder("  Tabs:  ");
+        for (int i = 0; i < tabs.length; i++) {
+            if (i == activeIndex) {
+                sb.append(cyan(bold("[ ● " + tabs[i] + " ]")));
+            } else {
+                sb.append(dim("[   " + tabs[i] + " ]"));
+            }
+            if (i < tabs.length - 1) {
+                sb.append("   ");
+            }
+        }
+        return sb.toString();
+    }
+
     /**
      * Renders a masked date input in "DD - MM - YYYY" format.
      * {@code digits} contains the raw digit characters typed so far (0–8 chars).
@@ -810,7 +828,8 @@ private static String stripAnsi(String str) {
                 String stripped = cleanLine.replaceAll("\u001B\\[[;?0-9]*[a-zA-Z]", "");
 
                 boolean isBoxTitle = cleanLine.contains(BOX_TITLE_MARKER);
-                boolean isButtonRow = (stripped.contains("[ ▶ ") || stripped.contains("[   "))
+                boolean isTabsRow = stripped.trim().startsWith("Tabs:") || cleanLine.contains("Tabs:");
+                boolean isButtonRow = !isTabsRow && (stripped.contains("[ ▶ ") || stripped.contains("[   "))
                         && (stripped.contains("Sign In") || stripped.contains("Log In") || stripped.contains("Sign Up") || stripped.contains("Submit")
                         || stripped.contains("Cancel") || stripped.contains("Register") || stripped.contains("Approve")
                         || stripped.contains("Reject") || stripped.contains("Generate") || stripped.contains("Exit")
@@ -819,13 +838,21 @@ private static String stripAnsi(String str) {
 
                 int leftPad;
                 int rightPad;
-                if (isButtonRow || isBoxTitle) {
+                if (isBoxTitle) {
+                    // Box title / text line above tabs is ALWAYS centered across all pages
                     String trimmedClean = stripSpaces(cleanLine.replace(BOX_TITLE_MARKER, ""));
                     int trimmedVisLen = visibleLength(trimmedClean);
                     leftPad = Math.max(0, (innerWidth - trimmedVisLen) / 2);
                     rightPad = Math.max(0, innerWidth - (leftPad + trimmedVisLen));
                     cleanLine = trimmedClean;
+                } else if (isButtonRow) {
+                    String trimmedClean = stripSpaces(cleanLine);
+                    int trimmedVisLen = visibleLength(trimmedClean);
+                    leftPad = Math.max(0, (innerWidth - trimmedVisLen) / 2);
+                    rightPad = Math.max(0, innerWidth - (leftPad + trimmedVisLen));
+                    cleanLine = trimmedClean;
                 } else {
+                    // Normal content and Tabs row ALWAYS start on the left
                     leftPad = contentBlockOffset;
                     rightPad = Math.max(0, innerWidth - (leftPad + visLen));
                 }

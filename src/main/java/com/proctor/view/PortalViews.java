@@ -23,35 +23,25 @@ public class PortalViews {
         sb.append(TuiHelper.header("LEADERBOARD"));
         sb.append("\n");
 
-        String tabQuiz = (mode == com.proctor.controller.GlobalLeaderboardScreen.Mode.QUIZ)
-                ? TuiHelper.cyan(TuiHelper.bold("[ ● Quizzes ]"))
-                : TuiHelper.dim("[   Quizzes ]");
-        String tabExam = (mode == com.proctor.controller.GlobalLeaderboardScreen.Mode.EXAM)
-                ? TuiHelper.cyan(TuiHelper.bold("[ ● Exams ]"))
-                : TuiHelper.dim("[   Exams ]");
-        String tabSpeed = (mode == com.proctor.controller.GlobalLeaderboardScreen.Mode.SPEED)
-                ? TuiHelper.cyan(TuiHelper.bold("[ ● Speed Quizzes ]"))
-                : TuiHelper.dim("[   Speed Quizzes ]");
-        sb.append(String.format("  Tabs:  %s   %s   %s%n%n", tabQuiz, tabExam, tabSpeed));
-
         String title;
-        String modeLabel;
         String countColHeader;
+        int activeTab;
         if (mode == com.proctor.controller.GlobalLeaderboardScreen.Mode.SPEED) {
             title = "Speed Quiz Champions";
-            modeLabel = "SPEED QUIZZES";
             countColHeader = "RUNS";
+            activeTab = 2;
         } else if (mode == com.proctor.controller.GlobalLeaderboardScreen.Mode.EXAM) {
             title = "Exam Honor Roll";
-            modeLabel = "EXAMS";
             countColHeader = "EXAMS";
+            activeTab = 1;
         } else {
             title = "Quiz Champions";
-            modeLabel = "QUIZZES";
             countColHeader = "QUIZZES";
+            activeTab = 0;
         }
 
-        sb.append(TuiHelper.boxTitle(title, String.format("Mode: [ %s ]  •  Top Performers (%d ranked)", modeLabel, leaderboard.size()))).append("\n\n");
+        sb.append(TuiHelper.boxTitle(title, String.format("Top Performers (%d ranked)", leaderboard.size()))).append("\n\n");
+        sb.append(TuiHelper.tabBar(new String[]{"Quizzes", "Exams", "Speed Quizzes"}, activeTab)).append("\n\n");
 
         if (mode == com.proctor.controller.GlobalLeaderboardScreen.Mode.SPEED) {
             sb.append(String.format("  %-6s  %-54s  %-32s  %-10s  %-14s%n",
@@ -125,7 +115,7 @@ public class PortalViews {
             sb.append(TuiHelper.paginationBar(currentPage, totalPages, leaderboard.size()));
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [Tab] Switch Tab  •  [r] Refresh  •  [Esc] Back\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [f] Switch Tab  •  [r] Refresh  •  [Esc] Back\n"));
         return sb.toString();
     }
 

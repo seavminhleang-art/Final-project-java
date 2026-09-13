@@ -271,8 +271,15 @@ public class ExamViews {
         sb.append(TuiHelper.header("ASSESSMENT HISTORY"));
         sb.append("\n");
         String statusLabel = (statusFilterDisplay == null || statusFilterDisplay.isBlank()) ? "ALL" : statusFilterDisplay;
+        int activeTab = switch (statusLabel.toUpperCase()) {
+            case "PASSED" -> 1;
+            case "FAILED" -> 2;
+            case "PENDING" -> 3;
+            default -> 0;
+        };
         sb.append(TuiHelper.boxTitle("Past Assessment Attempts",
-                String.format("Status: [ %s ]  •  Total: %d", statusLabel, historyList.size()))).append("\n\n");
+                String.format("Total Attempts: %d", historyList.size()))).append("\n\n");
+        sb.append(TuiHelper.tabBar(new String[]{"All", "Passed", "Failed", "Pending"}, activeTab)).append("\n\n");
 
         if (searchMode) {
             sb.append("  Search: [ ").append(TuiHelper.cyan(searchBuffer + "_")).append(" ] (Press Enter to finish)\n\n");
@@ -343,7 +350,7 @@ public class ExamViews {
             sb.append(TuiHelper.paginationBar(currentPage, totalPages, historyList.size()));
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [f] Filter  •  [Enter] View Result  •  [Esc] Back\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [f] Tab  •  [Enter] View Result  •  [Esc] Back\n"));
         return sb.toString();
     }
 

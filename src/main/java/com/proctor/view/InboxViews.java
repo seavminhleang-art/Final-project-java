@@ -22,10 +22,16 @@ public class InboxViews {
                                          String bannerMessage, boolean showDeleteModal, boolean deleteConfirmFocused) {
         StringBuilder sb = new StringBuilder();
         String filterLabel = (filterStatusDisplay == null || filterStatusDisplay.isBlank()) ? "ALL" : filterStatusDisplay;
-        String subtitle = String.format("Filter: [ %s ]  •  Total: %d  •  Unread: %d", filterLabel, messages.size(), unreadCount);
+        int activeTab = switch (filterLabel.toUpperCase()) {
+            case "UNREAD" -> 1;
+            case "ACTIONABLE" -> 2;
+            default -> 0;
+        };
+        String subtitle = String.format("Total: %d  •  Unread: %d", messages.size(), unreadCount);
         sb.append(TuiHelper.header("INBOX"));
         sb.append("\n");
         sb.append(TuiHelper.boxTitle("Inbox & Notifications", subtitle)).append("\n\n");
+        sb.append(TuiHelper.tabBar(new String[]{"All", "Unread", "Actionable"}, activeTab)).append("\n\n");
 
         if (searchMode) {
             sb.append("  Search: [ ").append(TuiHelper.cyan(searchBuffer + "_")).append(" ] (Press Enter to finish)\n\n");
@@ -87,7 +93,7 @@ public class InboxViews {
             sb.append("  ").append(bannerMessage).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [f] Filter  •  [Enter] Open  •  [d] Delete  •  [m] Mark All Read  •  [Esc] Back\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [f] Tab  •  [Enter] Open  •  [d] Delete  •  [m] Mark All Read  •  [Esc] Back\n"));
 
         if (showDeleteModal) {
             sb.append("\n");

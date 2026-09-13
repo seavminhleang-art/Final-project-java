@@ -14,10 +14,15 @@ public class UserViews {
     public static String renderUserList(List<User> users, int selectedIndex, Role filterRole,
                                        String searchBuffer, boolean searchMode, String bannerMessage) {
         StringBuilder sb = new StringBuilder();
-        String roleLabel = (filterRole == null) ? "ALL ROLES" : filterRole.name();
+        int activeTab = 0;
+        if (filterRole == Role.STUDENT) activeTab = 1;
+        else if (filterRole == Role.TEACHER) activeTab = 2;
+        else if (filterRole == Role.ADMIN) activeTab = 3;
+
         sb.append(TuiHelper.header("USERS"));
         sb.append("\n");
-        sb.append(TuiHelper.boxTitle("User Management", String.format("Filter: [ %s ]  •  Total Users: %d", roleLabel, users.size()))).append("\n\n");
+        sb.append(TuiHelper.boxTitle("User Management", String.format("Total Users: %d", users.size()))).append("\n\n");
+        sb.append(TuiHelper.tabBar(new String[]{"All Roles", "Students", "Teachers", "Admins"}, activeTab)).append("\n\n");
 
         if (searchMode) {
             sb.append("  Search: [ ").append(TuiHelper.cyan(searchBuffer + "_")).append(" ] (Press Enter to finish)\n\n");
@@ -86,7 +91,7 @@ public class UserViews {
                 "[Enter] Edit",
                 "[Space] Toggle Enabled",
                 "[n] New",
-                "[f] Filter",
+                "[f] Tab",
                 "[/] Search",
                 "[Esc] Back"
         );

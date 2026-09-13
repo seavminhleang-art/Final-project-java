@@ -28,16 +28,18 @@ public class QuizViews {
                                         String searchBuffer, boolean searchMode, String bannerMessage, boolean isAdmin) {
         StringBuilder sb = new StringBuilder();
         String itemType = (assessmentType == AssessmentType.EXAM) ? "EXAMS" : (assessmentType == AssessmentType.SPEED ? "SPEED QUIZZES" : "QUIZZES");
-        String scopeLabel = isAdmin
-                ? "All " + (assessmentType == AssessmentType.EXAM ? "Exams" : (assessmentType == AssessmentType.SPEED ? "Speed Quizzes" : "Quizzes"))
-                : (isMyQuizzesScope
-                    ? "Scope: [ MY " + itemType + " ]"
-                    : "Scope: [ ALL GLOBAL " + itemType + " ]");
+        String baseItemTitle = (assessmentType == AssessmentType.EXAM) ? "Exams" : (assessmentType == AssessmentType.SPEED ? "Speed Quizzes" : "Quizzes");
+        String itemTitle = isAdmin ? "All " + baseItemTitle : baseItemTitle;
         String subjLabel = (subjectFilterDisplay == null || subjectFilterDisplay.isBlank()) ? "ALL" : subjectFilterDisplay;
 
         sb.append(TuiHelper.header(itemType));
         sb.append("\n");
-        sb.append(TuiHelper.boxTitle(scopeLabel, String.format("Subject: [ %s ]  •  Total: %d", subjLabel, quizzes.size()))).append("\n\n");
+        sb.append(TuiHelper.boxTitle(itemTitle, String.format("Subject: [ %s ]  •  Total: %d", subjLabel, quizzes.size()))).append("\n\n");
+        if (!isAdmin) {
+            String tabMy = "My " + baseItemTitle;
+            String tabAll = "All " + baseItemTitle;
+            sb.append(TuiHelper.tabBar(new String[]{tabMy, tabAll}, isMyQuizzesScope ? 0 : 1)).append("\n\n");
+        }
 
         if (searchMode) {
             sb.append("  Search: [ ").append(TuiHelper.cyan(searchBuffer + "_")).append(" ] (Press Enter to finish)\n\n");
@@ -160,7 +162,7 @@ public class QuizViews {
                     "[Enter] Builder",
                     "[Space] Publish",
                     "[/] Search",
-                    "[f] Scope",
+                    "[f] Tab",
                     "[s] Subject",
                     "[r] Submissions",
                     "[n] New",

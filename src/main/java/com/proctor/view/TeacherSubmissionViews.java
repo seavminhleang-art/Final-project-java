@@ -36,7 +36,13 @@ public class TeacherSubmissionViews {
         sb.append(TuiHelper.header("SUBMISSIONS"));
         sb.append("\n");
         String statusLabel = (statusFilterDisplay == null || statusFilterDisplay.isBlank()) ? "ALL" : statusFilterDisplay;
-        sb.append(TuiHelper.boxTitle(title, String.format("Status: [ %s ]  •  Total Submissions: %d", statusLabel, submissions.size()))).append("\n\n");
+        int activeTab = switch (statusLabel.toUpperCase()) {
+            case "PENDING REVIEW" -> 1;
+            case "GRADED" -> 2;
+            default -> 0;
+        };
+        sb.append(TuiHelper.boxTitle(title, String.format("Total Submissions: %d", submissions.size()))).append("\n\n");
+        sb.append(TuiHelper.tabBar(new String[]{"All", "Pending Review", "Graded"}, activeTab)).append("\n\n");
 
         if (searchMode) {
             sb.append("  Search: [ ").append(TuiHelper.cyan(searchBuffer + "_")).append(" ] (Press Enter to finish)\n\n");
@@ -129,9 +135,9 @@ public class TeacherSubmissionViews {
 
         boolean isSpeedContext = (specificQuiz != null && specificQuiz.getAssessmentType() == AssessmentType.SPEED);
         if (isSpeedContext) {
-            sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [f] Filter  •  [Enter] Inspect  •  [Esc] Back\n"));
+            sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [f] Tab  •  [Enter] Inspect  •  [Esc] Back\n"));
         } else {
-            sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [f] Filter  •  [Enter] Inspect  •  [g] AI Grade  •  [r] Return Grade  •  [Esc] Back\n"));
+            sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [f] Tab  •  [Enter] Inspect  •  [g] AI Grade  •  [r] Return Grade  •  [Esc] Back\n"));
         }
         return sb.toString();
     }
