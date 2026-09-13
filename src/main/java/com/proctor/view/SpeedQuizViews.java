@@ -85,6 +85,18 @@ public class SpeedQuizViews {
 
     public static String renderSpeedQuizTaker(SpeedQuizSession session, int focusedOptionIndex,
                                              boolean confirmForfeitMode, boolean confirmForfeitFocused) {
+        return renderSpeedQuizTaker(session, focusedOptionIndex, confirmForfeitMode, confirmForfeitFocused, null, 0);
+    }
+
+    public static String renderSpeedQuizTaker(SpeedQuizSession session, int focusedOptionIndex,
+                                             boolean confirmForfeitMode, boolean confirmForfeitFocused,
+                                             SpeedQuizAnswerRecord toastRecord) {
+        return renderSpeedQuizTaker(session, focusedOptionIndex, confirmForfeitMode, confirmForfeitFocused, toastRecord, 0);
+    }
+
+    public static String renderSpeedQuizTaker(SpeedQuizSession session, int focusedOptionIndex,
+                                             boolean confirmForfeitMode, boolean confirmForfeitFocused,
+                                             SpeedQuizAnswerRecord toastRecord, int revealSecondsRemaining) {
         if (confirmForfeitMode) {
             return TuiHelper.confirmationModal(
                     session.getQuiz().getTitle(),
@@ -100,7 +112,7 @@ public class SpeedQuizViews {
         sb.append(TuiHelper.header("SPEED QUIZ"));
         sb.append("\n");
 
-        Question q = session.getCurrentQuestion();
+        Question q = (toastRecord != null) ? toastRecord.getQuestion() : session.getCurrentQuestion();
         if (q == null) {
             sb.append(TuiHelper.boxTitle(session.getQuiz().getTitle(), "Speed Quiz Complete")).append("\n\n");
             sb.append("  ").append(TuiHelper.green("All questions completed!")).append("\n\n");
@@ -108,7 +120,7 @@ public class SpeedQuizViews {
             return sb.toString();
         }
 
-        int curQNum = session.getAnsweredCount() + 1;
+        int curQNum = (toastRecord != null) ? session.getAnsweredCount() : session.getAnsweredCount() + 1;
         int totalQ = session.getTotalQuestionsCount();
 
         String subInfo = String.format("Question %d of %d  •  Score: %.1f pts  •  Streak: 🔥 %d",
@@ -116,7 +128,9 @@ public class SpeedQuizViews {
         sb.append(TuiHelper.boxTitle(session.getQuiz().getTitle(), subInfo)).append("\n\n");
 
         // Difficulty badge
-        Difficulty diff = q.getDifficulty() != null ? q.getDifficulty() : Difficulty.MEDIUM;
+        Difficulty diff = (toastRecord != null && toastRecord.getTierShown() != null)
+                ? toastRecord.getTierShown()
+                : (q.getDifficulty() != null ? q.getDifficulty() : Difficulty.MEDIUM);
         String diffBadge = switch (diff) {
             case EASY -> TuiHelper.green(TuiHelper.bold(" EASY ")) + TuiHelper.dim(" (1.0x Base)");
             case MEDIUM -> TuiHelper.yellow(TuiHelper.bold(" MEDIUM ")) + TuiHelper.dim(" (1.5x Multiplier)");
@@ -126,19 +140,29 @@ public class SpeedQuizViews {
 
         // Visual Countdown Timer Bar
         int totalSec = session.getSecondsPerQuestion() > 0 ? session.getSecondsPerQuestion() : 15;
-        int remSec = Math.max(0, session.getQuestionSecondsRemaining());
+        int remSec = (toastRecord != null)
+                ? Math.max(0, toastRecord.getSecondsRemaining())
+                : Math.max(0, session.getQuestionSecondsRemaining());
         int barWidth = 28;
         int filled = Math.min(barWidth, (int) Math.ceil(((double) remSec / totalSec) * barWidth));
         int empty = barWidth - filled;
         String bar = "█".repeat(filled) + "░".repeat(empty);
 
         String timerColored;
-        if (remSec <= 3) {
-            timerColored = TuiHelper.red(TuiHelper.bold(String.format("⏱  %02ds / %02ds  [%s]  HURRY!", remSec, totalSec, bar)));
-        } else if (remSec <= totalSec / 2) {
-            timerColored = TuiHelper.yellow(String.format("⏱  %02ds / %02ds  [%s]", remSec, totalSec, bar));
+        if (toastRecord != null) {
+            if (toastRecord.getSecondsRemaining() <= 0 && toastRecord.getSelectedOptionId() == null) {
+                timerColored = TuiHelper.red(TuiHelper.bold(String.format("⏱  00s / %02ds  [%s]  TIME'S UP!", totalSec, bar)));
+            } else {
+                timerColored = TuiHelper.cyan(String.format("⏱  %02ds / %02ds  [%s]  (Locked In)", remSec, totalSec, bar));
+            }
         } else {
-            timerColored = TuiHelper.cyan(String.format("⏱  %02ds / %02ds  [%s]", remSec, totalSec, bar));
+            if (remSec <= 3) {
+                timerColored = TuiHelper.red(TuiHelper.bold(String.format("⏱  %02ds / %02ds  [%s]  HURRY!", remSec, totalSec, bar)));
+            } else if (remSec <= totalSec / 2) {
+                timerColored = TuiHelper.yellow(String.format("⏱  %02ds / %02ds  [%s]", remSec, totalSec, bar));
+            } else {
+                timerColored = TuiHelper.cyan(String.format("⏱  %02ds / %02ds  [%s]", remSec, totalSec, bar));
+            }
         }
         sb.append("  Timer: ").append(timerColored).append("\n\n");
 
@@ -148,23 +172,52 @@ public class SpeedQuizViews {
 
         // Options
         if (q.getOptions() != null) {
+            Integer pickedId = (toastRecord != null) ? toastRecord.getSelectedOptionId() : null;
             for (int i = 0; i < q.getOptions().size(); i++) {
                 QuestionOption opt = q.getOptions().get(i);
-                boolean isFocused = (i == focusedOptionIndex);
                 String numTag = String.format("[%d] ", i + 1);
                 String optText = numTag + opt.getOptionText();
 
-                if (isFocused) {
-                    sb.append("  ").append(TuiHelper.cyan("▶ ")).append(TuiHelper.bold(optText)).append("\n");
+                if (toastRecord != null) {
+                    boolean isPicked = (pickedId != null && pickedId.equals(opt.getId()));
+                    boolean isCorrect = opt.isCorrect();
+
+                    if (isPicked && isCorrect) {
+                        sb.append("  ").append(TuiHelper.green(TuiHelper.bold("✔ " + optText + "  (Your Answer - Correct!)"))).append("\n");
+                    } else if (isPicked && !isCorrect) {
+                        sb.append("  ").append(TuiHelper.red(TuiHelper.bold("✖ " + optText + "  (Your Answer - Incorrect)"))).append("\n");
+                    } else if (!isPicked && isCorrect) {
+                        sb.append("  ").append(TuiHelper.green("✔ " + optText + "  (Correct Answer)")).append("\n");
+                    } else {
+                        sb.append("    ").append(TuiHelper.dim(optText)).append("\n");
+                    }
                 } else {
-                    sb.append("    ").append(optText).append("\n");
+                    boolean isFocused = (i == focusedOptionIndex);
+                    if (isFocused) {
+                        sb.append("  ").append(TuiHelper.cyan("▶ ")).append(TuiHelper.bold(optText)).append("\n");
+                    } else {
+                        sb.append("    ").append(optText).append("\n");
+                    }
                 }
             }
             sb.append("\n");
         }
 
+        // In-place countdown message
+        if (toastRecord != null) {
+            if (session.isCompleted() || session.getCurrentQuestion() == null) {
+                sb.append("  ").append(TuiHelper.cyan(TuiHelper.bold(String.format("Finishing quiz in %d...", revealSecondsRemaining)))).append("\n\n");
+            } else {
+                sb.append("  ").append(TuiHelper.cyan(TuiHelper.bold(String.format("Next question in %d...", revealSecondsRemaining)))).append("\n\n");
+            }
+        }
+
         sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
-        sb.append(TuiHelper.dim("  [↑/↓] Move Focus  •  [1-4] Quick Select & Lock  •  [Space/Enter] Lock In  •  [Esc] Forfeit\n"));
+        if (toastRecord != null) {
+            sb.append(TuiHelper.dim("  [Esc] Forfeit\n"));
+        } else {
+            sb.append(TuiHelper.dim("  [↑/↓] Move Focus  •  [1-4] Quick Select & Lock  •  [Space/Enter] Lock In  •  [Esc] Forfeit\n"));
+        }
         return sb.toString();
     }
 

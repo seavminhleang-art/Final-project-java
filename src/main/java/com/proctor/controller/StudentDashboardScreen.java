@@ -74,8 +74,8 @@ public class StudentDashboardScreen implements Screen {
         int unread = getUnreadCount();
         String inboxLabel = unread > 0 ? "6. Inbox (" + unread + " unread)" : "6. Inbox";
         return new String[]{
-                "1. Available Quizzes",
-                "2. Available Exams",
+                "1. Quizzes",
+                "2. Exams",
                 "3. Speed Quizzes",
                 "4. My Assessment History",
                 "5. Global Leaderboard",

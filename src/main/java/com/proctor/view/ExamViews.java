@@ -27,10 +27,10 @@ public class ExamViews {
                                                String bannerMessage) {
         StringBuilder sb = new StringBuilder();
         String typeLabel = (assessmentType == AssessmentType.EXAM) ? "EXAMS" : (assessmentType == AssessmentType.SPEED ? "SPEED QUIZZES" : "QUIZZES");
-        sb.append(TuiHelper.header("AVAILABLE " + typeLabel));
+        sb.append(TuiHelper.header(typeLabel));
         sb.append("\n");
         String subjLabel = (subjectFilterDisplay == null || subjectFilterDisplay.isBlank()) ? "ALL" : subjectFilterDisplay;
-        String boxTitle = (assessmentType == AssessmentType.EXAM) ? "Available Exams" : (assessmentType == AssessmentType.SPEED ? "Available Speed Quizzes" : "Available Quizzes");
+        String boxTitle = (assessmentType == AssessmentType.EXAM) ? "Exams" : (assessmentType == AssessmentType.SPEED ? "Speed Quizzes" : "Quizzes");
         sb.append(TuiHelper.boxTitle(boxTitle,
                 String.format("Subject: [ %s ]  •  Total: %d", subjLabel, quizzes.size()))).append("\n\n");
 

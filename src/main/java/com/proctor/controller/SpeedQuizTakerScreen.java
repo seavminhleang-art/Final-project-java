@@ -26,21 +26,32 @@ public class SpeedQuizTakerScreen implements Screen {
     private final AuthService authService;
     private final Screen returnScreen;
 
+    private static final int TOAST_DURATION_SECONDS = 4;
+
     private State state = State.ANSWERING;
     private int focusedOptionIndex = 0;
     private SpeedQuizAnswerRecord lastAnswerRecord = null;
-    private int revealSecondsRemaining = 2;
+    private int revealSecondsRemaining = TOAST_DURATION_SECONDS;
     private boolean confirmForfeitMode = false;
     private boolean confirmForfeitFocused = false;
     private boolean isSubmitted = false;
+    private int tickGeneration = 0;
 
-    public record TickMessage() implements Message {}
+    public record TickMessage(int generation) implements Message {
+        public TickMessage() {
+            this(-1);
+        }
+    }
 
     public static Message tick() {
+        return tick(-1);
+    }
+
+    public static Message tick(int generation) {
         try {
             Thread.sleep(1000);
         } catch (InterruptedException ignored) {}
-        return new TickMessage();
+        return new TickMessage(generation);
     }
 
     public SpeedQuizTakerScreen(SpeedQuizSession session, ExamService examService, AuthService authService, Screen returnScreen) {
@@ -52,7 +63,9 @@ public class SpeedQuizTakerScreen implements Screen {
 
     @Override
     public Command init() {
-        return SpeedQuizTakerScreen::tick;
+        tickGeneration = 1;
+        int gen = tickGeneration;
+        return () -> tick(gen);
     }
 
     @Override
@@ -65,7 +78,12 @@ public class SpeedQuizTakerScreen implements Screen {
             return finishAndSubmit();
         }
 
-        if (msg instanceof TickMessage) {
+        if (msg instanceof TickMessage t) {
+            if (t.generation() != -1 && t.generation() != this.tickGeneration) {
+                // Ignore stale tick from a previous state or question
+                return ScreenResult.stay(this);
+            }
+
             if (state == State.ANSWERING) {
                 int remaining = session.getQuestionSecondsRemaining() - 1;
                 session.setQuestionSecondsRemaining(remaining);
@@ -76,11 +94,14 @@ public class SpeedQuizTakerScreen implements Screen {
                         examService.recordAnswer(session.getAttempt().getId(), q.getId(), null, null);
                     }
                     state = State.REVEAL;
-                    revealSecondsRemaining = 2;
+                    revealSecondsRemaining = TOAST_DURATION_SECONDS;
                     focusedOptionIndex = 0;
-                    return ScreenResult.stay(this, SpeedQuizTakerScreen::tick);
+                    tickGeneration++;
+                    int nextGen = tickGeneration;
+                    return ScreenResult.stay(this, () -> tick(nextGen));
                 }
-                return ScreenResult.stay(this, SpeedQuizTakerScreen::tick);
+                int curGen = tickGeneration;
+                return ScreenResult.stay(this, () -> tick(curGen));
             } else if (state == State.REVEAL) {
                 revealSecondsRemaining--;
                 if (revealSecondsRemaining <= 0) {
@@ -88,11 +109,15 @@ public class SpeedQuizTakerScreen implements Screen {
                         return finishAndSubmit();
                     } else {
                         state = State.ANSWERING;
+                        lastAnswerRecord = null;
                         focusedOptionIndex = 0;
-                        return ScreenResult.stay(this, SpeedQuizTakerScreen::tick);
+                        tickGeneration++;
+                        int nextGen = tickGeneration;
+                        return ScreenResult.stay(this, () -> tick(nextGen));
                     }
                 }
-                return ScreenResult.stay(this, SpeedQuizTakerScreen::tick);
+                int curGen = tickGeneration;
+                return ScreenResult.stay(this, () -> tick(curGen));
             }
         }
 
@@ -100,41 +125,36 @@ public class SpeedQuizTakerScreen implements Screen {
             if (confirmForfeitMode) {
                 if (KeyUtil.isLeft(k) || KeyUtil.isRight(k) || KeyUtil.isTab(k) || "shift+tab".equalsIgnoreCase(k.key())) {
                     confirmForfeitFocused = !confirmForfeitFocused;
-                    return ScreenResult.stay(this, SpeedQuizTakerScreen::tick);
+                    return ScreenResult.stay(this);
                 } else if (KeyUtil.isEnter(k)) {
                     if (confirmForfeitFocused) {
                         return finishAndSubmit();
                     } else {
                         confirmForfeitMode = false;
-                        return ScreenResult.stay(this, SpeedQuizTakerScreen::tick);
+                        return ScreenResult.stay(this);
                     }
                 } else if ("y".equalsIgnoreCase(k.key())) {
                     return finishAndSubmit();
                 } else if ("n".equalsIgnoreCase(k.key()) || KeyUtil.isEsc(k)) {
                     confirmForfeitMode = false;
-                    return ScreenResult.stay(this, SpeedQuizTakerScreen::tick);
+                    return ScreenResult.stay(this);
                 }
-                return ScreenResult.stay(this, SpeedQuizTakerScreen::tick);
+                return ScreenResult.stay(this);
             }
 
             if (state == State.REVEAL) {
-                if (KeyUtil.isEnter(k) || KeyUtil.isSpace(k)) {
-                    if (session.isCompleted() || session.getCurrentQuestion() == null) {
-                        return finishAndSubmit();
-                    } else {
-                        state = State.ANSWERING;
-                        focusedOptionIndex = 0;
-                        return ScreenResult.stay(this, SpeedQuizTakerScreen::tick);
-                    }
+                if (KeyUtil.isEsc(k)) {
+                    confirmForfeitMode = true;
+                    confirmForfeitFocused = false;
                 }
-                return ScreenResult.stay(this, SpeedQuizTakerScreen::tick);
+                return ScreenResult.stay(this);
             }
 
             if (state == State.ANSWERING) {
                 if (KeyUtil.isEsc(k)) {
                     confirmForfeitMode = true;
                     confirmForfeitFocused = false;
-                    return ScreenResult.stay(this, SpeedQuizTakerScreen::tick);
+                    return ScreenResult.stay(this);
                 }
 
                 Question q = session.getCurrentQuestion();
@@ -146,16 +166,16 @@ public class SpeedQuizTakerScreen implements Screen {
 
                 if (KeyUtil.isUp(k)) {
                     focusedOptionIndex = (focusedOptionIndex - 1 + optCount) % optCount;
-                    return ScreenResult.stay(this, SpeedQuizTakerScreen::tick);
+                    return ScreenResult.stay(this);
                 } else if (KeyUtil.isDown(k)) {
                     focusedOptionIndex = (focusedOptionIndex + 1) % optCount;
-                    return ScreenResult.stay(this, SpeedQuizTakerScreen::tick);
+                    return ScreenResult.stay(this);
                 } else if (KeyUtil.isSpace(k) || KeyUtil.isEnter(k)) {
                     if (focusedOptionIndex >= 0 && focusedOptionIndex < optCount) {
                         QuestionOption opt = q.getOptions().get(focusedOptionIndex);
                         return lockInOption(q, opt.getId());
                     }
-                    return ScreenResult.stay(this, SpeedQuizTakerScreen::tick);
+                    return ScreenResult.stay(this);
                 }
 
                 // Quick pick 1-4
@@ -191,7 +211,7 @@ public class SpeedQuizTakerScreen implements Screen {
             }
         }
 
-        return ScreenResult.stay(this, SpeedQuizTakerScreen::tick);
+        return ScreenResult.stay(this);
     }
 
     private ScreenResult lockInOption(Question q, Integer optionId) {
@@ -200,9 +220,11 @@ public class SpeedQuizTakerScreen implements Screen {
             examService.recordAnswer(session.getAttempt().getId(), q.getId(), optionId, null);
         }
         state = State.REVEAL;
-        revealSecondsRemaining = 2;
+        revealSecondsRemaining = TOAST_DURATION_SECONDS;
         focusedOptionIndex = 0;
-        return ScreenResult.stay(this, SpeedQuizTakerScreen::tick);
+        tickGeneration++;
+        int nextGen = tickGeneration;
+        return ScreenResult.stay(this, () -> tick(nextGen));
     }
 
     private ScreenResult finishAndSubmit() {
@@ -217,9 +239,7 @@ public class SpeedQuizTakerScreen implements Screen {
 
     @Override
     public String view() {
-        if (state == State.REVEAL) {
-            return SpeedQuizViews.renderSpeedQuizReveal(session, lastAnswerRecord, revealSecondsRemaining);
-        }
-        return SpeedQuizViews.renderSpeedQuizTaker(session, focusedOptionIndex, confirmForfeitMode, confirmForfeitFocused);
+        SpeedQuizAnswerRecord toast = (state == State.REVEAL) ? lastAnswerRecord : null;
+        return SpeedQuizViews.renderSpeedQuizTaker(session, focusedOptionIndex, confirmForfeitMode, confirmForfeitFocused, toast, revealSecondsRemaining);
     }
 }

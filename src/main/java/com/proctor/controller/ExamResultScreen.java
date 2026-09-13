@@ -57,7 +57,7 @@ public class ExamResultScreen implements Screen {
                     return ScreenResult.stay(this);
                 }
                 if (result != null && result.getAssessmentType() == AssessmentType.EXAM) {
-                    bannerMessage = TuiHelper.yellow("● Exam makeup requests require a justification reason. Please submit via the Available Exams screen.");
+                    bannerMessage = TuiHelper.yellow("● Exam makeup requests require a justification reason. Please submit via the Exams screen.");
                     return ScreenResult.stay(this);
                 }
                 if (session != null && session.getAttempt() != null && session.getAttempt().getStatus() == AttemptStatus.AUTO_SUBMITTED) {
