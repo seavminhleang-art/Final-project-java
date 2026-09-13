@@ -17,6 +17,14 @@ public class PortalService {
         return portalRepository.getStudentHistory(studentId);
     }
 
+    public List<LeaderboardEntry> getQuizLeaderboard() {
+        return portalRepository.getQuizLeaderboard();
+    }
+
+    public List<LeaderboardEntry> getExamLeaderboard() {
+        return portalRepository.getExamLeaderboard();
+    }
+
     public List<LeaderboardEntry> getGlobalLeaderboard() {
         return portalRepository.getGlobalLeaderboard();
     }

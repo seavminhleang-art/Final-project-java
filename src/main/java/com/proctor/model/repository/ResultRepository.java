@@ -5,8 +5,6 @@ import com.proctor.model.entity.Result;
 import com.proctor.model.enums.AssessmentType;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 public class ResultRepository {

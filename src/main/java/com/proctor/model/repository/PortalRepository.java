@@ -72,35 +72,49 @@ public class PortalRepository {
         return list;
     }
 
+    public List<LeaderboardEntry> getQuizLeaderboard() {
+        return queryStandardLeaderboard("QUIZ");
+    }
+
+    public List<LeaderboardEntry> getExamLeaderboard() {
+        return queryStandardLeaderboard("EXAM");
+    }
+
     public List<LeaderboardEntry> getGlobalLeaderboard() {
+        return getQuizLeaderboard();
+    }
+
+    private List<LeaderboardEntry> queryStandardLeaderboard(String assessmentType) {
         List<LeaderboardEntry> leaderboard = new ArrayList<>();
         String sql = "SELECT r.student_id, u.full_name, u.username, " +
                      "COUNT(r.id) AS total_quizzes, " +
                      "COALESCE(SUM(r.total_points), 0) AS total_points, " +
                      "COALESCE(AVG(r.percentage), 0) AS avg_percentage " +
                      "FROM results r " +
-                     "LEFT JOIN quizzes q ON r.quiz_id = q.id " +
+                     "INNER JOIN quizzes q ON r.quiz_id = q.id " +
                      "INNER JOIN users u ON r.student_id = u.id " +
-                     "WHERE (q.assessment_type IS NULL OR q.assessment_type != 'SPEED') AND u.is_enabled = TRUE AND u.role = 'STUDENT' " +
+                     "WHERE q.assessment_type = ? AND u.is_enabled = TRUE AND u.role = 'STUDENT' " +
                      "GROUP BY r.student_id, u.full_name, u.username " +
                      "ORDER BY total_points DESC, avg_percentage DESC, r.student_id ASC LIMIT 50";
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            int rank = 1;
-            while (rs.next()) {
-                leaderboard.add(LeaderboardEntry.builder()
-                        .rank(rank++)
-                        .studentId(rs.getInt("student_id"))
-                        .studentName(rs.getString("full_name"))
-                        .username(rs.getString("username"))
-                        .totalQuizzes(rs.getInt("total_quizzes"))
-                        .totalPoints(Math.round(rs.getDouble("total_points") * 10.0) / 10.0)
-                        .avgPercentage(Math.round(rs.getDouble("avg_percentage") * 10.0) / 10.0)
-                        .build());
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, assessmentType);
+            try (ResultSet rs = stmt.executeQuery()) {
+                int rank = 1;
+                while (rs.next()) {
+                    leaderboard.add(LeaderboardEntry.builder()
+                            .rank(rank++)
+                            .studentId(rs.getInt("student_id"))
+                            .studentName(rs.getString("full_name"))
+                            .username(rs.getString("username"))
+                            .totalQuizzes(rs.getInt("total_quizzes"))
+                            .totalPoints(Math.round(rs.getDouble("total_points") * 10.0) / 10.0)
+                            .avgPercentage(Math.round(rs.getDouble("avg_percentage") * 10.0) / 10.0)
+                            .build());
+                }
             }
         } catch (SQLException e) {
-            System.err.println("Error querying global leaderboard: " + e.getMessage());
+            System.err.println("Error querying " + assessmentType + " leaderboard: " + e.getMessage());
         }
         return leaderboard;
     }

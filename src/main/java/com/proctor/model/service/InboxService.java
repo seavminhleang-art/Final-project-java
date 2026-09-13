@@ -255,7 +255,7 @@ public class InboxService {
         boolean updated = inboxRepository.updateStatus(messageId, InboxStatus.APPROVED, new Timestamp(System.currentTimeMillis()));
         if (updated) {
             sendNotification(msg.getSenderId(), "Quiz Retake Approved",
-                    "Your teacher has approved your quiz retake request. You may now retake the quiz from Available Quizzes.");
+                    "Your teacher has approved your quiz retake request. You may now retake the quiz from Quizzes.");
         }
         return updated;
     }
@@ -275,7 +275,7 @@ public class InboxService {
         boolean updated = inboxRepository.updateStatus(messageId, InboxStatus.APPROVED, new Timestamp(System.currentTimeMillis()));
         if (updated) {
             sendNotification(msg.getSenderId(), "Exam Makeup Approved",
-                    "Your teacher has approved your exam makeup request. You may now take the exam from Available Exams.");
+                    "Your teacher has approved your exam makeup request. You may now take the exam from Exams.");
         }
         return updated;
     }

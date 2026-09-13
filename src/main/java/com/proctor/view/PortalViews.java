@@ -8,31 +8,69 @@ import java.util.List;
 public class PortalViews {
 
     public static String renderGlobalLeaderboard(List<LeaderboardEntry> leaderboard, int selectedIndex) {
-        return renderGlobalLeaderboard(leaderboard, selectedIndex, false);
+        return renderGlobalLeaderboard(leaderboard, selectedIndex, com.proctor.controller.GlobalLeaderboardScreen.Mode.QUIZ);
     }
 
     public static String renderGlobalLeaderboard(List<LeaderboardEntry> leaderboard, int selectedIndex, boolean isSpeedMode) {
+        return renderGlobalLeaderboard(leaderboard, selectedIndex,
+                isSpeedMode ? com.proctor.controller.GlobalLeaderboardScreen.Mode.SPEED
+                            : com.proctor.controller.GlobalLeaderboardScreen.Mode.QUIZ);
+    }
+
+    public static String renderGlobalLeaderboard(List<LeaderboardEntry> leaderboard, int selectedIndex,
+                                                com.proctor.controller.GlobalLeaderboardScreen.Mode mode) {
         StringBuilder sb = new StringBuilder();
-        sb.append(TuiHelper.header(isSpeedMode ? "SPEED QUIZ LEADERBOARD" : "LEADERBOARD"));
+        sb.append(TuiHelper.header("LEADERBOARD"));
         sb.append("\n");
 
-        String title = isSpeedMode ? "Speed Quiz Champions" : "Global Leaderboard";
-        String modeLabel = isSpeedMode ? "SPEED QUIZ (High Score Run)" : "STANDARD (Overall)";
+        String tabQuiz = (mode == com.proctor.controller.GlobalLeaderboardScreen.Mode.QUIZ)
+                ? TuiHelper.cyan(TuiHelper.bold("[ ● Quizzes ]"))
+                : TuiHelper.dim("[   Quizzes ]");
+        String tabExam = (mode == com.proctor.controller.GlobalLeaderboardScreen.Mode.EXAM)
+                ? TuiHelper.cyan(TuiHelper.bold("[ ● Exams ]"))
+                : TuiHelper.dim("[   Exams ]");
+        String tabSpeed = (mode == com.proctor.controller.GlobalLeaderboardScreen.Mode.SPEED)
+                ? TuiHelper.cyan(TuiHelper.bold("[ ● Speed Quizzes ]"))
+                : TuiHelper.dim("[   Speed Quizzes ]");
+        sb.append(String.format("  Tabs:  %s   %s   %s%n%n", tabQuiz, tabExam, tabSpeed));
+
+        String title;
+        String modeLabel;
+        String countColHeader;
+        if (mode == com.proctor.controller.GlobalLeaderboardScreen.Mode.SPEED) {
+            title = "Speed Quiz Champions";
+            modeLabel = "SPEED QUIZZES";
+            countColHeader = "RUNS";
+        } else if (mode == com.proctor.controller.GlobalLeaderboardScreen.Mode.EXAM) {
+            title = "Exam Honor Roll";
+            modeLabel = "EXAMS";
+            countColHeader = "EXAMS";
+        } else {
+            title = "Quiz Champions";
+            modeLabel = "QUIZZES";
+            countColHeader = "QUIZZES";
+        }
+
         sb.append(TuiHelper.boxTitle(title, String.format("Mode: [ %s ]  •  Top Performers (%d ranked)", modeLabel, leaderboard.size()))).append("\n\n");
 
-        if (isSpeedMode) {
+        if (mode == com.proctor.controller.GlobalLeaderboardScreen.Mode.SPEED) {
             sb.append(String.format("  %-6s  %-54s  %-32s  %-10s  %-14s%n",
-                    "RANK", "STUDENT NAME", "USERNAME", "RUNS", "HIGH SCORE")).append("\n");
+                    "RANK", "STUDENT NAME", "USERNAME", countColHeader, "HIGH SCORE")).append("\n");
         } else {
             sb.append(String.format("  %-6s  %-54s  %-32s  %-10s  %-12s  %-8s%n",
-                    "RANK", "STUDENT NAME", "USERNAME", "QUIZZES", "TOTAL PTS", "AVG %")).append("\n");
+                    "RANK", "STUDENT NAME", "USERNAME", countColHeader, "TOTAL PTS", "AVG %")).append("\n");
         }
         sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         if (leaderboard.isEmpty()) {
-            String emptyMsg = isSpeedMode
-                    ? "No speed quizzes completed yet. Take a speed quiz to claim the #1 spot!"
-                    : "No quizzes completed yet. Be the first on the leaderboard!";
+            String emptyMsg;
+            if (mode == com.proctor.controller.GlobalLeaderboardScreen.Mode.SPEED) {
+                emptyMsg = "No speed quizzes completed yet. Take a speed quiz to claim the #1 spot!";
+            } else if (mode == com.proctor.controller.GlobalLeaderboardScreen.Mode.EXAM) {
+                emptyMsg = "No exams completed yet. Complete an exam to earn a spot on the honor roll!";
+            } else {
+                emptyMsg = "No quizzes completed yet. Be the first on the quiz leaderboard!";
+            }
             sb.append("  ").append(TuiHelper.dim(emptyMsg)).append("\n");
         } else {
             int pageSize = TuiHelper.PAGE_SIZE;
@@ -50,7 +88,7 @@ public class PortalViews {
                 else rankStr = String.format("%d", entry.getRank());
 
                 String line;
-                if (isSpeedMode) {
+                if (mode == com.proctor.controller.GlobalLeaderboardScreen.Mode.SPEED) {
                     line = String.format("%-6s  %-54s  %-32s  %-10d  %-14s",
                             rankStr,
                             truncate(entry.getStudentName(), 54),
@@ -87,7 +125,7 @@ public class PortalViews {
             sb.append(TuiHelper.paginationBar(currentPage, totalPages, leaderboard.size()));
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [Tab / m] Switch Mode  •  [r] Refresh  •  [Esc] Back\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [Tab] Switch Tab  •  [r] Refresh  •  [Esc] Back\n"));
         return sb.toString();
     }
 

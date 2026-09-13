@@ -15,7 +15,8 @@ import java.util.List;
 public class GlobalLeaderboardScreen implements Screen {
 
     public enum Mode {
-        GLOBAL,
+        QUIZ,
+        EXAM,
         SPEED
     }
 
@@ -24,7 +25,7 @@ public class GlobalLeaderboardScreen implements Screen {
     private final AuthService authService;
     private final Screen returnScreen;
 
-    private Mode mode = Mode.GLOBAL;
+    private Mode mode = Mode.QUIZ;
     private List<LeaderboardEntry> leaderboard;
     private int selectedIndex = 0;
 
@@ -41,10 +42,10 @@ public class GlobalLeaderboardScreen implements Screen {
     }
 
     private void refreshLeaderboard() {
-        if (mode == Mode.SPEED) {
-            this.leaderboard = portalService.getSpeedQuizLeaderboard();
-        } else {
-            this.leaderboard = portalService.getGlobalLeaderboard();
+        switch (mode) {
+            case QUIZ -> this.leaderboard = portalService.getQuizLeaderboard();
+            case EXAM -> this.leaderboard = portalService.getExamLeaderboard();
+            case SPEED -> this.leaderboard = portalService.getSpeedQuizLeaderboard();
         }
         if (leaderboard.isEmpty()) {
             selectedIndex = 0;
@@ -86,8 +87,12 @@ public class GlobalLeaderboardScreen implements Screen {
                         selectedIndex = Math.min(leaderboard.size() - 1, (currentPage + 1) * pageSize);
                     }
                 }
-            } else if ("m".equalsIgnoreCase(k.key()) || "t".equalsIgnoreCase(k.key()) || KeyUtil.isTab(k)) {
-                mode = (mode == Mode.GLOBAL) ? Mode.SPEED : Mode.GLOBAL;
+            } else if (KeyUtil.isTab(k)) {
+                mode = switch (mode) {
+                    case QUIZ -> Mode.EXAM;
+                    case EXAM -> Mode.SPEED;
+                    case SPEED -> Mode.QUIZ;
+                };
                 selectedIndex = 0;
                 refreshLeaderboard();
                 return ScreenResult.stay(this);
@@ -99,8 +104,12 @@ public class GlobalLeaderboardScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    public Mode getMode() {
+        return mode;
+    }
+
     @Override
     public String view() {
-        return PortalViews.renderGlobalLeaderboard(leaderboard, selectedIndex, mode == Mode.SPEED);
+        return PortalViews.renderGlobalLeaderboard(leaderboard, selectedIndex, mode);
     }
 }
