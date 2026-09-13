@@ -37,7 +37,8 @@ public class KeyUtil {
     }
 
     public static boolean isSpace(KeyPressMessage k) {
-        return "space".equalsIgnoreCase(k.key()) || " ".equals(k.key()) || k.type() == KeyType.KeySpace;
+        return "space".equalsIgnoreCase(k.key()) || " ".equals(k.key()) || k.type() == KeyType.KeySpace
+                || (k.runes() != null && k.runes().length == 1 && k.runes()[0] == ' ');
     }
 
     public static boolean isDelete(KeyPressMessage k) {

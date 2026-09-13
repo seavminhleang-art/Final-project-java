@@ -32,6 +32,7 @@ public class QuestionBankPickerScreen implements Screen {
 
     private final List<Question> bankQuestions;
     private final Set<Integer> selectedIds = new HashSet<>();
+    private final Set<Integer> alreadyAddedIds = new HashSet<>();
     private int selectedIndex = 0;
     private final String filterSummary;
     private String bannerMessage = "";
@@ -50,6 +51,19 @@ public class QuestionBankPickerScreen implements Screen {
         com.proctor.model.enums.QuestionType typeFilter = quiz.getQuizQuestionType(); // null for exams (all types)
 
         this.bankQuestions = questionService.getBankQuestions(currentUserId, subjectId, typeFilter, null, null);
+
+        List<Question> existingQuizQuestions = questionService.getQuestionsByQuizId(quiz.getId());
+        Set<String> existingTexts = new HashSet<>();
+        for (Question eq : existingQuizQuestions) {
+            if (eq.getQuestionText() != null) {
+                existingTexts.add(eq.getQuestionText().trim().toLowerCase());
+            }
+        }
+        for (Question bq : bankQuestions) {
+            if (bq.getQuestionText() != null && existingTexts.contains(bq.getQuestionText().trim().toLowerCase())) {
+                alreadyAddedIds.add(bq.getId());
+            }
+        }
 
         // Build filter summary string
         StringBuilder fs = new StringBuilder("Auto-filter: Your bank questions");
@@ -99,6 +113,10 @@ public class QuestionBankPickerScreen implements Screen {
             } else if ((KeyUtil.isSpace(k) || KeyUtil.isEnter(k)) && !bankQuestions.isEmpty()) {
                 // Toggle checkbox
                 int qid = bankQuestions.get(selectedIndex).getId();
+                if (alreadyAddedIds.contains(qid)) {
+                    bannerMessage = TuiHelper.yellow("● This question is already in the quiz.");
+                    return ScreenResult.stay(this);
+                }
                 if (selectedIds.contains(qid)) {
                     selectedIds.remove(qid);
                 } else {
@@ -136,6 +154,6 @@ public class QuestionBankPickerScreen implements Screen {
 
     @Override
     public String view() {
-        return QuestionBankViews.renderBankPicker(quiz, bankQuestions, selectedIds, selectedIndex, filterSummary, bannerMessage);
+        return QuestionBankViews.renderBankPicker(quiz, bankQuestions, selectedIds, alreadyAddedIds, selectedIndex, filterSummary, bannerMessage);
     }
 }

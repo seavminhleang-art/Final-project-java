@@ -101,6 +101,12 @@ public class QuestionBankViews {
     public static String renderBankPicker(Quiz quiz, List<Question> bankQuestions,
                                           Set<Integer> selectedIds, int selectedIndex,
                                           String filterSummary, String bannerMessage) {
+        return renderBankPicker(quiz, bankQuestions, selectedIds, java.util.Collections.emptySet(), selectedIndex, filterSummary, bannerMessage);
+    }
+
+    public static String renderBankPicker(Quiz quiz, List<Question> bankQuestions,
+                                          Set<Integer> selectedIds, Set<Integer> alreadyAddedIds, int selectedIndex,
+                                          String filterSummary, String bannerMessage) {
         StringBuilder sb = new StringBuilder();
         double selectedPts = 0;
         for (Question q : bankQuestions) {
@@ -133,8 +139,16 @@ public class QuestionBankViews {
 
             for (int i = startRow; i < endRow; i++) {
                 Question q = bankQuestions.get(i);
+                boolean isAlreadyAdded = alreadyAddedIds != null && alreadyAddedIds.contains(q.getId());
                 boolean isSelected = selectedIds.contains(q.getId());
-                String checkbox = isSelected ? TuiHelper.green("[✔] Selected  ") : TuiHelper.dim("[ ] Unselected");
+                String checkbox;
+                if (isAlreadyAdded) {
+                    checkbox = TuiHelper.yellow("[✔ Added]     ");
+                } else if (isSelected) {
+                    checkbox = TuiHelper.green("[✔] Selected  ");
+                } else {
+                    checkbox = TuiHelper.dim("[ ] Unselected");
+                }
                 String cursor = (i == selectedIndex) ? TuiHelper.cyan("▶ ") : "  ";
 
                 String line = String.format("%s  %-4d  %-12s  %-8s  %-5.1f  %-79s",

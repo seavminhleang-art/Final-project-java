@@ -62,6 +62,14 @@ public class QuestionService {
         if (bankQuestionId <= 0 || quizId <= 0) {
             throw new ValidationException("Invalid question or quiz ID.");
         }
+        Optional<Question> bankQOpt = questionRepository.findById(bankQuestionId);
+        if (bankQOpt.isPresent()) {
+            Question bankQ = bankQOpt.get();
+            List<Question> existing = questionRepository.findByQuizId(quizId);
+            if (existing.stream().anyMatch(q -> q.getQuestionText() != null && q.getQuestionText().trim().equalsIgnoreCase(bankQ.getQuestionText().trim()))) {
+                throw new ValidationException("This question is already in the quiz.");
+            }
+        }
         return questionRepository.copyToQuiz(bankQuestionId, quizId);
     }
 

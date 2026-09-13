@@ -1,5 +1,6 @@
 package com.proctor.controller;
 
+import com.proctor.exception.ValidationException;
 import com.proctor.model.entity.User;
 import com.proctor.model.service.AuthService;
 import com.proctor.model.enums.Role;
@@ -99,9 +100,13 @@ public class UserListScreen implements Screen {
             } else if ("t".equalsIgnoreCase(k.key()) || KeyUtil.isSpace(k)) {
                 if (!users.isEmpty()) {
                     User u = users.get(selectedIndex);
-                    userService.toggleUserStatus(u.getId());
-                    u.setEnabled(!u.isEnabled());
-                    bannerMessage = "Updated status for @" + u.getUsername() + " to " + (u.isEnabled() ? TuiHelper.green("Enabled") : TuiHelper.red("Disabled"));
+                    try {
+                        userService.toggleUserStatus(u.getId());
+                        u.setEnabled(!u.isEnabled());
+                        bannerMessage = "Updated status for @" + u.getUsername() + " to " + (u.isEnabled() ? TuiHelper.green("Enabled") : TuiHelper.red("Disabled"));
+                    } catch (ValidationException e) {
+                        bannerMessage = TuiHelper.red("✖ " + e.getMessage());
+                    }
                 }
             } else if ("f".equalsIgnoreCase(k.key())) {
                 cycleFilterRole();

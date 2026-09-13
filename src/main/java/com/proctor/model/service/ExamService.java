@@ -81,7 +81,8 @@ public class ExamService {
         if (existingOpt.isPresent()) {
             Attempt latest = existingOpt.get();
             if (latest.getStatus() == AttemptStatus.TURNED_IN || latest.getStatus() == AttemptStatus.GRADED || latest.getStatus() == AttemptStatus.AUTO_SUBMITTED) {
-                throw new ValidationException("You have already turned in this quiz. View your scorecard in History.");
+                String itemType = quiz.getAssessmentType() == AssessmentType.EXAM ? "exam" : "quiz";
+                throw new ValidationException("You have already turned in this " + itemType + ". View your scorecard in History.");
             }
             attempt = latest;
         } else {
@@ -133,6 +134,31 @@ public class ExamService {
     }
 
     public Result submitExam(ExamSession session, boolean autoSubmitted) {
+        Optional<Attempt> existingOpt = attemptRepository.getAttempt(session.getAttempt().getId());
+        if (existingOpt.isPresent()) {
+            Attempt existing = existingOpt.get();
+            if (existing.getStatus() == AttemptStatus.GRADED || existing.getStatus() == AttemptStatus.TURNED_IN || existing.getStatus() == AttemptStatus.AUTO_SUBMITTED) {
+                Optional<Result> existingRes = resultRepository.findByAttemptId(session.getAttempt().getId());
+                if (existingRes.isPresent()) {
+                    return existingRes.get();
+                }
+                double maxPoints = session.getQuestions().stream().mapToDouble(Question::getPoints).sum();
+                return Result.builder()
+                        .attemptId(session.getAttempt().getId())
+                        .studentId(session.getAttempt().getStudentId())
+                        .quizId(session.getQuiz().getId())
+                        .quizTitle(session.getQuiz().getTitle())
+                        .assessmentType(session.getQuiz().getAssessmentType())
+                        .totalPoints(0.0)
+                        .maxPoints(Math.round(maxPoints * 10.0) / 10.0)
+                        .percentage(0.0)
+                        .passed(false)
+                        .pendingReview(true)
+                        .gradedAt(null)
+                        .build();
+            }
+        }
+
         AttemptStatus finalStatus = autoSubmitted ? AttemptStatus.AUTO_SUBMITTED : AttemptStatus.TURNED_IN;
         attemptRepository.finalizeAttempt(session.getAttempt().getId(), finalStatus);
 
@@ -199,6 +225,13 @@ public class ExamService {
         if (attemptOpt.isEmpty()) return false;
 
         Attempt attempt = attemptOpt.get();
+        if (attempt.getStatus() == AttemptStatus.GRADED) {
+            throw new ValidationException("This submission is already graded. AI grading cannot be re-run.");
+        }
+        if (attempt.getStatus() == AttemptStatus.IN_PROGRESS) {
+            throw new ValidationException("Cannot grade an assessment that is still in progress by the student.");
+        }
+
         Optional<Quiz> quizOpt = quizRepository.findById(attempt.getQuizId());
         if (quizOpt.isEmpty()) return false;
 
@@ -238,6 +271,13 @@ public class ExamService {
         }
 
         Attempt attempt = attemptOpt.get();
+        if (attempt.getStatus() == AttemptStatus.GRADED) {
+            throw new ValidationException("Grade has already been returned for this submission.");
+        }
+        if (attempt.getStatus() == AttemptStatus.IN_PROGRESS) {
+            throw new ValidationException("Cannot return grade for an assessment that is still in progress.");
+        }
+
         Optional<Quiz> quizOpt = quizRepository.findById(attempt.getQuizId());
         if (quizOpt.isEmpty()) {
             throw new ValidationException("Quiz not found.");

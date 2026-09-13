@@ -88,7 +88,9 @@ public class QuizService {
 
         Quiz q = opt.get();
         if (!q.isPublished()) {
-
+            if (q.isExpired()) {
+                throw new ValidationException("Cannot publish an assessment that has already expired. Update the deadline or active hours first.");
+            }
             List<Integer> assignedIds = quizRepository.getAssignedQuestionIds(quizId);
             if (assignedIds.isEmpty()) {
                 throw new ValidationException("Cannot publish quiz with 0 questions. Add questions first.");

@@ -6,6 +6,7 @@ import com.proctor.model.enums.Role;
 import com.proctor.model.service.AuthService;
 import com.proctor.exception.ValidationException;
 import com.proctor.model.entity.Attempt;
+import com.proctor.model.enums.AttemptStatus;
 import com.proctor.model.entity.AttemptAnswer;
 import com.proctor.model.service.ExamService;
 import com.proctor.model.entity.Question;
@@ -150,18 +151,7 @@ public class TeacherSubmissionScreen implements Screen {
                 } else if ("g".equalsIgnoreCase(k.key())) {
                     return startAsyncGrading();
                 } else if ("r".equalsIgnoreCase(k.key())) {
-                    if (!submissions.isEmpty()) {
-                        Attempt att = submissions.get(selectedIndex);
-                        try {
-                            Result res = examService.returnGrade(att.getId());
-                            bannerMessage = TuiHelper.green(String.format("✔ Grade returned: %.1f/%.1f points (%.1f%%) - %s",
-                                    res.getTotalPoints(), res.getMaxPoints(), res.getPercentage(),
-                                    res.isPassed() ? "PASSED" : "FAILED"));
-                            refreshList();
-                        } catch (ValidationException e) {
-                            bannerMessage = TuiHelper.red("✖ " + e.getMessage());
-                        }
-                    }
+                    executeReturnGrade();
                 }
                 return ScreenResult.stay(this);
             }
@@ -242,21 +232,34 @@ public class TeacherSubmissionScreen implements Screen {
             } else if ("g".equalsIgnoreCase(k.key())) {
                 return startAsyncGrading();
             } else if ("r".equalsIgnoreCase(k.key())) {
-                if (!submissions.isEmpty()) {
-                    Attempt att = submissions.get(selectedIndex);
-                    try {
-                        Result res = examService.returnGrade(att.getId());
-                        bannerMessage = TuiHelper.green(String.format("✔ Grade returned: %.1f/%.1f (%.1f%%) - %s",
-                                res.getTotalPoints(), res.getMaxPoints(), res.getPercentage(),
-                                res.isPassed() ? "PASSED" : "FAILED"));
-                        refreshList();
-                    } catch (ValidationException e) {
-                        bannerMessage = TuiHelper.red("✖ " + e.getMessage());
-                    }
-                }
+                executeReturnGrade();
             }
         }
         return ScreenResult.stay(this);
+    }
+
+    private void executeReturnGrade() {
+        if (submissions.isEmpty()) {
+            return;
+        }
+        Attempt att = submissions.get(selectedIndex);
+        if (att.getStatus() == AttemptStatus.GRADED) {
+            bannerMessage = TuiHelper.yellow("● Grade has already been returned for this submission.");
+            return;
+        }
+        if (att.getStatus() == AttemptStatus.IN_PROGRESS) {
+            bannerMessage = TuiHelper.yellow("● Cannot return grade for an assessment that is still in progress.");
+            return;
+        }
+        try {
+            Result res = examService.returnGrade(att.getId());
+            bannerMessage = TuiHelper.green(String.format("✔ Grade returned: %.1f/%.1f points (%.1f%%) - %s",
+                    res.getTotalPoints(), res.getMaxPoints(), res.getPercentage(),
+                    res.isPassed() ? "PASSED" : "FAILED"));
+            refreshList();
+        } catch (ValidationException e) {
+            bannerMessage = TuiHelper.red("✖ " + e.getMessage());
+        }
     }
 
     private ScreenResult startAsyncGrading() {
@@ -264,6 +267,14 @@ public class TeacherSubmissionScreen implements Screen {
             return ScreenResult.stay(this);
         }
         Attempt att = submissions.get(selectedIndex);
+        if (att.getStatus() == AttemptStatus.GRADED) {
+            bannerMessage = TuiHelper.yellow("● This submission is already graded. AI grading cannot be re-run.");
+            return ScreenResult.stay(this);
+        }
+        if (att.getStatus() == AttemptStatus.IN_PROGRESS) {
+            bannerMessage = TuiHelper.yellow("● Cannot grade an assessment that is still in progress by the student.");
+            return ScreenResult.stay(this);
+        }
         isGrading = true;
         bannerMessage = "";
         return ScreenResult.stay(this, () -> {

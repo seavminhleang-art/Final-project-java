@@ -24,6 +24,7 @@ public class ExamTakerScreen implements Screen {
     private final StringBuilder shortAnswerBuffer = new StringBuilder();
     private boolean confirmSubmitMode = false;
     private boolean confirmSubmitFocused = false;
+    private boolean isSubmitted = false;
 
     public record TickMessage() implements Message {}
 
@@ -86,11 +87,15 @@ public class ExamTakerScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        if (isSubmitted) {
+            return ScreenResult.stay(this);
+        }
 
         if (msg instanceof TickMessage) {
             if (session.isTimed()) {
                 session.setRemainingSeconds(session.getRemainingSeconds() - 1);
                 if (session.getRemainingSeconds() <= 0) {
+                    isSubmitted = true;
                     saveCurrentAnswer();
                     Result result = examService.submitExam(session, true);
                     return ScreenResult.navigate(new ExamResultScreen(result, session, examService, authService));
@@ -106,6 +111,7 @@ public class ExamTakerScreen implements Screen {
                     return ScreenResult.stay(this, session.isTimed() ? ExamTakerScreen::tick : null);
                 } else if (KeyUtil.isEnter(k)) {
                     if (confirmSubmitFocused) {
+                        isSubmitted = true;
                         saveCurrentAnswer();
                         Result result = examService.submitExam(session, false);
                         return ScreenResult.navigate(new ExamResultScreen(result, session, examService, authService));
@@ -114,6 +120,7 @@ public class ExamTakerScreen implements Screen {
                         return ScreenResult.stay(this, session.isTimed() ? ExamTakerScreen::tick : null);
                     }
                 } else if ("y".equalsIgnoreCase(k.key())) {
+                    isSubmitted = true;
                     saveCurrentAnswer();
                     Result result = examService.submitExam(session, false);
                     return ScreenResult.navigate(new ExamResultScreen(result, session, examService, authService));

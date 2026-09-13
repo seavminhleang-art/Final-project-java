@@ -79,6 +79,9 @@ public class InboxDetailScreen implements Screen {
 
             if (message.isActionable()) {
                 return handleStandardActionInput(k);
+            } else if ("a".equalsIgnoreCase(k.key()) || "r".equalsIgnoreCase(k.key())) {
+                bannerMessage = TuiHelper.yellow("● This request has already been processed (status: " + message.getStatus() + ").");
+                return ScreenResult.stay(this);
             }
         }
         return ScreenResult.stay(this);

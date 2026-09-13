@@ -151,6 +151,12 @@ public class UserService {
         if (currentPassword == null || currentPassword.isBlank()) {
             throw new ValidationException("Current password cannot be blank.");
         }
+        if (newPassword == null || newPassword.isBlank()) {
+            throw new ValidationException("New password cannot be blank.");
+        }
+        if (currentPassword.equals(newPassword.trim())) {
+            throw new ValidationException("New password must be different from your current password.");
+        }
         PasswordUtils.validatePassword(newPassword);
         Optional<User> existing = userRepository.findById(id);
         if (existing.isEmpty()) {

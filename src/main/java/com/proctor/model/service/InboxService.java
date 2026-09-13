@@ -5,11 +5,14 @@ import com.proctor.model.repository.UserRepository;
 import com.proctor.model.enums.Role;
 import com.proctor.exception.ValidationException;
 import com.proctor.model.repository.AttemptRepository;
+import com.proctor.model.entity.Attempt;
 import com.proctor.model.entity.InboxMessage;
+import com.proctor.model.entity.Result;
 import com.proctor.model.enums.InboxMessageType;
 import com.proctor.model.enums.InboxStatus;
-import com.proctor.util.PasswordUtils;
 import com.proctor.model.repository.InboxRepository;
+import com.proctor.model.repository.ResultRepository;
+import com.proctor.util.PasswordUtils;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -19,15 +22,21 @@ public class InboxService {
     private final InboxRepository inboxRepository;
     private final UserRepository userRepository;
     private final AttemptRepository attemptRepository;
+    private final ResultRepository resultRepository;
 
     public InboxService(InboxRepository inboxRepository, UserRepository userRepository) {
-        this(inboxRepository, userRepository, new AttemptRepository());
+        this(inboxRepository, userRepository, new AttemptRepository(), new ResultRepository());
     }
 
     public InboxService(InboxRepository inboxRepository, UserRepository userRepository, AttemptRepository attemptRepository) {
+        this(inboxRepository, userRepository, attemptRepository, new ResultRepository());
+    }
+
+    public InboxService(InboxRepository inboxRepository, UserRepository userRepository, AttemptRepository attemptRepository, ResultRepository resultRepository) {
         this.inboxRepository = inboxRepository;
         this.userRepository = userRepository;
         this.attemptRepository = attemptRepository;
+        this.resultRepository = resultRepository;
     }
 
     public List<InboxMessage> getInbox(int userId) {
@@ -73,6 +82,16 @@ public class InboxService {
             throw new ValidationException("You already have a pending retake request for this quiz.");
         }
 
+        if (attemptRepository != null && resultRepository != null) {
+            Optional<Attempt> attOpt = attemptRepository.findLatestAttempt(quizId, studentId);
+            if (attOpt.isPresent()) {
+                Optional<Result> resOpt = resultRepository.findByAttemptId(attOpt.get().getId());
+                if (resOpt.isPresent() && resOpt.get().isPassed()) {
+                    throw new ValidationException("Retakes cannot be requested for assessments that have been passed.");
+                }
+            }
+        }
+
         Optional<User> student = userRepository.findById(studentId);
         String studentName = student.map(User::getFullName).orElse("A student");
 
@@ -102,6 +121,16 @@ public class InboxService {
     public InboxMessage sendExamRetakeRequest(int studentId, int teacherId, int quizId, String examTitle, String reason, boolean missed, Timestamp examTimestamp) {
         if (inboxRepository.hasPendingRequest(studentId, InboxMessageType.EXAM_RETAKE, quizId)) {
             throw new ValidationException("You already have a pending makeup request for this exam.");
+        }
+
+        if (attemptRepository != null && resultRepository != null) {
+            Optional<Attempt> attOpt = attemptRepository.findLatestAttempt(quizId, studentId);
+            if (attOpt.isPresent()) {
+                Optional<Result> resOpt = resultRepository.findByAttemptId(attOpt.get().getId());
+                if (resOpt.isPresent() && resOpt.get().isPassed()) {
+                    throw new ValidationException("Retakes cannot be requested for assessments that have been passed.");
+                }
+            }
         }
 
         if (reason == null || reason.trim().isBlank()) {
@@ -194,6 +223,9 @@ public class InboxService {
         Optional<InboxMessage> opt = inboxRepository.findById(messageId);
         if (opt.isEmpty()) return false;
         InboxMessage msg = opt.get();
+        if (msg.getStatus() != InboxStatus.PENDING) {
+            throw new ValidationException("This request has already been processed (status: " + msg.getStatus() + ").");
+        }
         if (msg.getTargetId() == null) return false;
 
         String hash = msg.getEffectivePasswordHash();
@@ -212,6 +244,9 @@ public class InboxService {
         Optional<InboxMessage> opt = inboxRepository.findById(messageId);
         if (opt.isEmpty()) return false;
         InboxMessage msg = opt.get();
+        if (msg.getStatus() != InboxStatus.PENDING) {
+            throw new ValidationException("This request has already been processed (status: " + msg.getStatus() + ").");
+        }
         if (msg.getTargetId() == null || msg.getSenderId() == null) return false;
 
         if (attemptRepository != null) {
@@ -229,6 +264,9 @@ public class InboxService {
         Optional<InboxMessage> opt = inboxRepository.findById(messageId);
         if (opt.isEmpty()) return false;
         InboxMessage msg = opt.get();
+        if (msg.getStatus() != InboxStatus.PENDING) {
+            throw new ValidationException("This request has already been processed (status: " + msg.getStatus() + ").");
+        }
         if (msg.getTargetId() == null || msg.getSenderId() == null) return false;
 
         if (attemptRepository != null) {
@@ -247,6 +285,9 @@ public class InboxService {
         if (opt.isEmpty()) return false;
 
         InboxMessage msg = opt.get();
+        if (msg.getStatus() != InboxStatus.PENDING) {
+            throw new ValidationException("This request has already been processed (status: " + msg.getStatus() + ").");
+        }
         boolean updated = inboxRepository.updateStatus(messageId, InboxStatus.REJECTED, new Timestamp(System.currentTimeMillis()));
 
         if (updated && msg.getSenderId() != null) {

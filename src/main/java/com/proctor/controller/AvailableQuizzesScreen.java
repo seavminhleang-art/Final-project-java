@@ -366,6 +366,8 @@ public class AvailableQuizzesScreen implements Screen {
                 if (resOpt.isPresent()) {
                     return ScreenResult.navigate(new ExamResultScreen(resOpt.get(), this));
                 }
+                bannerMessage = TuiHelper.yellow("● You have already completed this assessment. View your scorecard in History.");
+                return ScreenResult.stay(this);
             } else if (att.getStatus() == AttemptStatus.TURNED_IN) {
                 bannerMessage = TuiHelper.yellow("● This assessment is Turned In and pending teacher review.");
                 return ScreenResult.stay(this);
