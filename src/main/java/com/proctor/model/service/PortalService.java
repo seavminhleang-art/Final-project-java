@@ -20,4 +20,8 @@ public class PortalService {
     public List<LeaderboardEntry> getGlobalLeaderboard() {
         return portalRepository.getGlobalLeaderboard();
     }
+
+    public List<LeaderboardEntry> getSpeedQuizLeaderboard() {
+        return portalRepository.getSpeedQuizLeaderboard();
+    }
 }

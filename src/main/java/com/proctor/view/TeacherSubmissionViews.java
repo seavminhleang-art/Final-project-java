@@ -6,6 +6,7 @@ import com.proctor.model.entity.AttemptAnswer;
 import com.proctor.model.entity.Question;
 import com.proctor.model.entity.QuestionOption;
 import com.proctor.model.entity.Quiz;
+import com.proctor.model.enums.AssessmentType;
 import com.proctor.util.TuiHelper;
 
 import java.text.SimpleDateFormat;
@@ -25,8 +26,11 @@ public class TeacherSubmissionViews {
                                              SimpleDateFormat dateFormat, String statusFilterDisplay,
                                              String searchBuffer, boolean searchMode, String bannerMessage) {
         StringBuilder sb = new StringBuilder();
+        String quizTypePrefix = (specificQuiz != null)
+                ? (specificQuiz.getAssessmentType() == AssessmentType.SPEED ? "Speed Quiz: " : (specificQuiz.getAssessmentType() == AssessmentType.EXAM ? "Exam: " : "Quiz: "))
+                : "";
         String title = (specificQuiz != null)
-                ? "Quiz: " + specificQuiz.getTitle()
+                ? quizTypePrefix + specificQuiz.getTitle()
                 : "Student Submissions & Grading";
 
         sb.append(TuiHelper.header("SUBMISSIONS"));
@@ -41,8 +45,8 @@ public class TeacherSubmissionViews {
         }
 
         if (specificQuiz == null) {
-            sb.append(String.format("  %-7s  %-42s  %-36s  %-18s  %-21s%n",
-                    "#", "ASSESSMENT", "STUDENT", "STATUS", "SUBMITTED AT")).append("\n");
+            sb.append(String.format("  %-5s  %-7s  %-36s  %-32s  %-18s  %-19s%n",
+                    "#", "TYPE", "ASSESSMENT", "STUDENT", "STATUS", "SUBMITTED AT")).append("\n");
         } else {
             sb.append(String.format("  %-7s  %-68s  %-24s  %-25s%n",
                     "#", "STUDENT", "STATUS", "SUBMITTED AT")).append("\n");
@@ -68,7 +72,11 @@ public class TeacherSubmissionViews {
                 int statusWidth = (specificQuiz == null) ? 18 : 24;
                 String statusStr;
                 if (a.getStatus() == com.proctor.model.enums.AttemptStatus.GRADED) {
-                    statusStr = TuiHelper.green(String.format("%-" + statusWidth + "s", "GRADED"));
+                    if (a.getAssessmentType() == AssessmentType.SPEED) {
+                        statusStr = TuiHelper.cyan(String.format("%-" + statusWidth + "s", "GRADED"));
+                    } else {
+                        statusStr = TuiHelper.green(String.format("%-" + statusWidth + "s", "GRADED"));
+                    }
                 } else if (a.getStatus() == com.proctor.model.enums.AttemptStatus.AUTO_SUBMITTED || a.getStatus() == com.proctor.model.enums.AttemptStatus.TURNED_IN) {
                     statusStr = TuiHelper.yellow(String.format("%-" + statusWidth + "s", "PENDING REVIEW"));
                 } else {
@@ -78,10 +86,13 @@ public class TeacherSubmissionViews {
                 String line;
                 if (specificQuiz == null) {
                     String quizTitle = a.getQuizTitle() != null ? a.getQuizTitle() : "Quiz #" + a.getQuizId();
-                    line = String.format("%-7d  %-42s  %-36s  %s  %-21s",
+                    String typeStr = (a.getAssessmentType() == AssessmentType.SPEED) ? "SPEED"
+                            : (a.getAssessmentType() == AssessmentType.EXAM ? "EXAM" : "QUIZ");
+                    line = String.format("%-5d  %-7s  %-36s  %-32s  %s  %-19s",
                             (i + 1),
-                            truncate(quizTitle, 42),
-                            truncate(studentName, 36),
+                            typeStr,
+                            truncate(quizTitle, 36),
+                            truncate(studentName, 32),
                             statusStr,
                             dateStr);
                 } else {
@@ -116,7 +127,12 @@ public class TeacherSubmissionViews {
             sb.append("  ").append(bannerMessage).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [f] Filter  •  [Enter] Inspect  •  [g] AI Grade  •  [r] Return Grade  •  [Esc] Back\n"));
+        boolean isSpeedContext = (specificQuiz != null && specificQuiz.getAssessmentType() == AssessmentType.SPEED);
+        if (isSpeedContext) {
+            sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [f] Filter  •  [Enter] Inspect  •  [Esc] Back\n"));
+        } else {
+            sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [f] Filter  •  [Enter] Inspect  •  [g] AI Grade  •  [r] Return Grade  •  [Esc] Back\n"));
+        }
         return sb.toString();
     }
 
@@ -124,17 +140,22 @@ public class TeacherSubmissionViews {
                                            Map<Integer, AttemptAnswer> answerMap,
                                            int inspectingAnswerIndex, String bannerMessage) {
         StringBuilder sb = new StringBuilder();
-        List<Question> questions = (specificQuiz != null) ? specificQuiz.getQuestions() : List.of();
+        List<Question> questions = (specificQuiz != null && specificQuiz.getQuestions() != null) ? specificQuiz.getQuestions() : List.of();
         String studentLabel = (attempt.getStudentName() != null && !attempt.getStudentName().isBlank())
                 ? attempt.getStudentName()
                 : "Student #" + attempt.getStudentId();
-        String subtitle = String.format("%s  •  Status: %s  •  Question %d of %d",
-                studentLabel, attempt.getStatus().name(),
+        boolean isSpeedQuiz = (specificQuiz != null && specificQuiz.getAssessmentType() == AssessmentType.SPEED)
+                || (attempt != null && attempt.getAssessmentType() == AssessmentType.SPEED);
+        String typeLabel = isSpeedQuiz ? "Speed Quiz"
+                : ((specificQuiz != null && specificQuiz.getAssessmentType() == AssessmentType.EXAM)
+                || (attempt != null && attempt.getAssessmentType() == AssessmentType.EXAM) ? "Exam" : "Quiz");
+        String subtitle = String.format("%s  •  Type: %s  •  Status: %s  •  Question %d of %d",
+                studentLabel, typeLabel, (attempt != null ? attempt.getStatus().name() : "UNKNOWN"),
                 questions.isEmpty() ? 0 : inspectingAnswerIndex + 1, questions.size());
 
         sb.append(TuiHelper.header("SUBMISSIONS"));
         sb.append("\n");
-        sb.append(TuiHelper.boxTitle("Student Answer Sheet: Attempt #" + attempt.getId(), subtitle)).append("\n\n");
+        sb.append(TuiHelper.boxTitle("Student Answer Sheet: Attempt #" + (attempt != null ? attempt.getId() : "-"), subtitle)).append("\n\n");
 
         if (questions.isEmpty()) {
             sb.append("  ").append(TuiHelper.dim("No questions attached to this quiz assessment.")).append("\n");
@@ -168,8 +189,18 @@ public class TeacherSubmissionViews {
             }
 
             if (ans != null) {
-                String feedback = ans.getAiFeedback() != null ? " - " + ans.getAiFeedback() : "";
-                sb.append("\n     ").append(TuiHelper.bold(TuiHelper.green(String.format("Score: %.1f / %.1f pts%s", ans.getPointsAwarded(), q.getPoints(), feedback)))).append("\n");
+                boolean isCorrect = Boolean.TRUE.equals(ans.getCorrect());
+                if (isSpeedQuiz) {
+                    String statusText = isCorrect ? "Correct" : (ans.getSelectedOptionId() == null ? "Timed out / Unanswered" : "Incorrect");
+                    String scoreText = String.format("Score: %.1f pts (%s)", ans.getPointsAwarded(), statusText);
+                    sb.append("\n     ").append(isCorrect ? TuiHelper.green(TuiHelper.bold(scoreText)) : TuiHelper.red(TuiHelper.bold(scoreText))).append("\n");
+                } else {
+                    String feedback = ans.getAiFeedback() != null ? " - " + ans.getAiFeedback() : "";
+                    String scoreText = String.format("Score: %.1f / %.1f pts%s", ans.getPointsAwarded(), q.getPoints(), feedback);
+                    sb.append("\n     ").append(isCorrect ? TuiHelper.green(TuiHelper.bold(scoreText)) : TuiHelper.dim(scoreText)).append("\n");
+                }
+            } else {
+                sb.append("\n     ").append(TuiHelper.dim("(Not attempted or reached)")).append("\n");
             }
         }
 
@@ -183,7 +214,11 @@ public class TeacherSubmissionViews {
             sb.append("  ").append(bannerMessage).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓/←/→] Navigate  •  [g] AI Grade  •  [r] Return Grade  •  [Esc] Back\n"));
+        if (isSpeedQuiz) {
+            sb.append(TuiHelper.dim("  [↑/↓/←/→] Navigate  •  [Esc] Back\n"));
+        } else {
+            sb.append(TuiHelper.dim("  [↑/↓/←/→] Navigate  •  [g] AI Grade  •  [r] Return Grade  •  [Esc] Back\n"));
+        }
         return sb.toString();
     }
 

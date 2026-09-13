@@ -26,11 +26,12 @@ public class ExamViews {
                                                String subjectFilterDisplay, String searchBuffer, boolean searchMode,
                                                String bannerMessage) {
         StringBuilder sb = new StringBuilder();
-        String typeLabel = (assessmentType == AssessmentType.EXAM) ? "EXAMS" : "QUIZZES";
+        String typeLabel = (assessmentType == AssessmentType.EXAM) ? "EXAMS" : (assessmentType == AssessmentType.SPEED ? "SPEED QUIZZES" : "QUIZZES");
         sb.append(TuiHelper.header("AVAILABLE " + typeLabel));
         sb.append("\n");
         String subjLabel = (subjectFilterDisplay == null || subjectFilterDisplay.isBlank()) ? "ALL" : subjectFilterDisplay;
-        sb.append(TuiHelper.boxTitle("Available " + (assessmentType == AssessmentType.EXAM ? "Exams" : "Quizzes"),
+        String boxTitle = (assessmentType == AssessmentType.EXAM) ? "Available Exams" : (assessmentType == AssessmentType.SPEED ? "Available Speed Quizzes" : "Available Quizzes");
+        sb.append(TuiHelper.boxTitle(boxTitle,
                 String.format("Subject: [ %s ]  •  Total: %d", subjLabel, quizzes.size()))).append("\n\n");
 
         if (searchMode) {
@@ -39,8 +40,9 @@ public class ExamViews {
             sb.append("  Search: [ ").append(searchBuffer).append(" ] (Press '/' to edit)\n\n");
         }
 
+        String timeColHeader = (assessmentType == AssessmentType.SPEED) ? "SEC/Q" : "TIME";
         sb.append(String.format("  %-4s  %-14s  %-52s  %-18s  %-10s  %-6s  %-14s%n",
-                "#", "SUBJ", "TITLE", "TEACHER", "TIME", "PTS", "STATUS")).append("\n");
+                "#", "SUBJ", "TITLE", "TEACHER", timeColHeader, "PTS", "STATUS")).append("\n");
         sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         if (quizzes.isEmpty()) {
@@ -56,7 +58,14 @@ public class ExamViews {
                 Quiz q = quizzes.get(i);
                 String cursor = (i == selectedIndex) ? TuiHelper.cyan("▶ ") : "  ";
                 String subj = (q.getSubjectId() != null) ? subjectNames.getOrDefault(q.getSubjectId(), "-") : "-";
-                String time = (q.getTimeLimitMins() != null && q.getTimeLimitMins() > 0) ? q.getTimeLimitMins() + "m" : "Untimed";
+                String time;
+                if (assessmentType == AssessmentType.SPEED) {
+                    int sec = (q.getSpeedSecondsPerQuestion() != null && q.getSpeedSecondsPerQuestion() > 0)
+                            ? q.getSpeedSecondsPerQuestion() : 15;
+                    time = sec + "s";
+                } else {
+                    time = (q.getTimeLimitMins() != null && q.getTimeLimitMins() > 0) ? q.getTimeLimitMins() + "m" : "Untimed";
+                }
                 String teacher = (q.getCreatorName() != null && !q.getCreatorName().isBlank()) ? q.getCreatorName() : "Teacher";
 
                 Attempt att = studentAttempts.get(q.getId());
@@ -103,7 +112,11 @@ public class ExamViews {
             sb.append("  ").append(bannerMessage).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [s] Subject  •  [Enter] Start / View Result  •  [r] Request Retake  •  [Esc] Back\n"));
+        if (assessmentType == AssessmentType.SPEED) {
+            sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [s] Subject  •  [Enter] Start Run  •  [v] View Result  •  [Esc] Back\n"));
+        } else {
+            sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [s] Subject  •  [Enter] Start / View Result  •  [r] Request Retake  •  [Esc] Back\n"));
+        }
         return sb.toString();
     }
 
@@ -198,9 +211,14 @@ public class ExamViews {
                 ? result.getQuizTitle() : (typeLabel + " Results");
         sb.append(TuiHelper.boxTitle(titleStr)).append("\n\n");
 
-        String badge = result.isPassed()
-                ? TuiHelper.green(TuiHelper.bold("  ✔ PASSED  "))
-                : TuiHelper.red(TuiHelper.bold("  ✖ FAILED  "));
+        String badge;
+        if (result != null && result.getAssessmentType() == AssessmentType.SPEED) {
+            badge = TuiHelper.cyan(TuiHelper.bold("  SPEED RUN COMPLETE  "));
+        } else {
+            badge = result != null && result.isPassed()
+                    ? TuiHelper.green(TuiHelper.bold("  ✔ PASSED  "))
+                    : TuiHelper.red(TuiHelper.bold("  ✖ FAILED  "));
+        }
 
         sb.append("   Student:            ").append(result.getStudentName() != null ? result.getStudentName() : "Student #" + result.getStudentId()).append("\n");
         sb.append("   Result Status:      ").append(badge).append("\n");
@@ -285,13 +303,17 @@ public class ExamViews {
                     status = TuiHelper.yellow(String.format("%-10s", "PENDING"));
                     scoreStr = "- / -";
                     pctStr = "-";
+                } else if (r.getAssessmentType() == AssessmentType.SPEED) {
+                    status = TuiHelper.cyan(String.format("%-10s", "GRADED"));
+                    scoreStr = String.format("%.1f pts", r.getTotalPoints());
+                    pctStr = "-";
                 } else {
                     status = r.isPassed() ? TuiHelper.green(String.format("%-10s", "PASSED")) : TuiHelper.red(String.format("%-10s", "FAILED"));
                     scoreStr = String.format("%.1f/%.1f", r.getTotalPoints(), r.getMaxPoints());
                     pctStr = String.format("%.1f%%", r.getPercentage());
                 }
                 String dateStr = r.getGradedAt() != null ? dateFormat.format(r.getGradedAt()) : "-";
-                String typeStr = (r.getAssessmentType() == AssessmentType.EXAM) ? "EXAM" : "QUIZ";
+                String typeStr = (r.getAssessmentType() == AssessmentType.EXAM) ? "EXAM" : (r.getAssessmentType() == AssessmentType.SPEED ? "SPEED" : "QUIZ");
 
                 String line = String.format("%-4d  %-8s  %-60s  %-14s  %-8s  %s  %-18s",
                         (i + 1),

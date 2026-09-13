@@ -5,6 +5,7 @@ import com.proctor.model.entity.User;
 import com.proctor.model.service.AuthService;
 import com.proctor.model.service.ExamService;
 import com.proctor.model.service.PortalService;
+import com.proctor.model.enums.AssessmentType;
 import com.proctor.model.entity.Result;
 import com.proctor.util.KeyUtil;
 import com.proctor.util.TuiHelper;
@@ -49,10 +50,13 @@ public class StudentHistoryScreen implements Screen {
         String search = searchBuffer.toString().trim().toLowerCase();
 
         this.historyList = allHistory.stream().filter(r -> {
-            if ("PASSED".equals(filter) && (r.isPendingReview() || !r.isPassed())) {
+            if ("SPEED".equals(filter) && r.getAssessmentType() != AssessmentType.SPEED) {
                 return false;
             }
-            if ("FAILED".equals(filter) && (r.isPendingReview() || r.isPassed())) {
+            if ("PASSED".equals(filter) && (r.getAssessmentType() == AssessmentType.SPEED || r.isPendingReview() || !r.isPassed())) {
+                return false;
+            }
+            if ("FAILED".equals(filter) && (r.getAssessmentType() == AssessmentType.SPEED || r.isPendingReview() || r.isPassed())) {
                 return false;
             }
             if ("PENDING".equals(filter) && !r.isPendingReview()) {
@@ -137,6 +141,9 @@ public class StudentHistoryScreen implements Screen {
             } else if (KeyUtil.isEnter(k)) {
                 if (!historyList.isEmpty()) {
                     Result r = historyList.get(selectedIndex);
+                    if (r.getAssessmentType() == AssessmentType.SPEED) {
+                        return ScreenResult.navigate(new SpeedQuizResultScreen(r, this, examService, authService));
+                    }
                     return ScreenResult.navigate(new ExamResultScreen(r, this));
                 }
             }

@@ -115,6 +115,10 @@ public class QuestionFormScreen implements Screen {
                 && quizContext.getQuizQuestionType() != null;
     }
 
+    private boolean isSpeedQuiz() {
+        return quizContext != null && quizContext.getAssessmentType() == com.proctor.model.enums.AssessmentType.SPEED;
+    }
+
     private boolean isPinnedQuiz() {
         return quizContext != null;
     }
@@ -258,6 +262,12 @@ public class QuestionFormScreen implements Screen {
     }
 
     private void cycleType(boolean forward) {
+        if (isSpeedQuiz()) {
+            if (selectedType == QuestionType.MCQ) selectedType = QuestionType.TRUE_FALSE;
+            else selectedType = QuestionType.MCQ;
+            if (focusedField >= getFieldCount()) focusedField = getFieldCount() - 1;
+            return;
+        }
         if (forward) {
             if (selectedType == QuestionType.MCQ) selectedType = QuestionType.TRUE_FALSE;
             else if (selectedType == QuestionType.TRUE_FALSE) selectedType = QuestionType.SHORT_ANSWER;
@@ -284,6 +294,9 @@ public class QuestionFormScreen implements Screen {
 
     private ScreenResult handleSave() {
         try {
+            if (isSpeedQuiz() && selectedType == QuestionType.SHORT_ANSWER) {
+                throw new ValidationException("Speed Quizzes only support Multiple Choice and True/False questions.");
+            }
             if (questionText.toString().trim().isBlank()) {
                 throw new ValidationException("Question text cannot be blank.");
             }

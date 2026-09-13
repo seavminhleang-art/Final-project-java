@@ -17,4 +17,5 @@ public class LeaderboardEntry {
     private int totalQuizzes;
     private double totalPoints;
     private double avgPercentage;
+    private double highScore;
 }

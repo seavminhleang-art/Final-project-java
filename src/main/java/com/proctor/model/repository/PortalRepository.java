@@ -79,8 +79,9 @@ public class PortalRepository {
                      "COALESCE(SUM(r.total_points), 0) AS total_points, " +
                      "COALESCE(AVG(r.percentage), 0) AS avg_percentage " +
                      "FROM results r " +
+                     "LEFT JOIN quizzes q ON r.quiz_id = q.id " +
                      "INNER JOIN users u ON r.student_id = u.id " +
-                     "WHERE u.is_enabled = TRUE AND u.role = 'STUDENT' " +
+                     "WHERE (q.assessment_type IS NULL OR q.assessment_type != 'SPEED') AND u.is_enabled = TRUE AND u.role = 'STUDENT' " +
                      "GROUP BY r.student_id, u.full_name, u.username " +
                      "ORDER BY total_points DESC, avg_percentage DESC, r.student_id ASC LIMIT 50";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -100,6 +101,39 @@ public class PortalRepository {
             }
         } catch (SQLException e) {
             System.err.println("Error querying global leaderboard: " + e.getMessage());
+        }
+        return leaderboard;
+    }
+
+    public List<LeaderboardEntry> getSpeedQuizLeaderboard() {
+        List<LeaderboardEntry> leaderboard = new ArrayList<>();
+        String sql = "SELECT r.student_id, u.full_name, u.username, " +
+                     "COUNT(r.id) AS total_runs, " +
+                     "COALESCE(MAX(r.total_points), 0) AS highest_score " +
+                     "FROM results r " +
+                     "INNER JOIN quizzes q ON r.quiz_id = q.id " +
+                     "INNER JOIN users u ON r.student_id = u.id " +
+                     "WHERE q.assessment_type = 'SPEED' AND u.is_enabled = TRUE AND u.role = 'STUDENT' " +
+                     "GROUP BY r.student_id, u.full_name, u.username " +
+                     "ORDER BY highest_score DESC, total_runs DESC, r.student_id ASC LIMIT 50";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            int rank = 1;
+            while (rs.next()) {
+                double highScore = Math.round(rs.getDouble("highest_score") * 10.0) / 10.0;
+                leaderboard.add(LeaderboardEntry.builder()
+                        .rank(rank++)
+                        .studentId(rs.getInt("student_id"))
+                        .studentName(rs.getString("full_name"))
+                        .username(rs.getString("username"))
+                        .totalQuizzes(rs.getInt("total_runs"))
+                        .highScore(highScore)
+                        .totalPoints(highScore)
+                        .build());
+            }
+        } catch (SQLException e) {
+            System.err.println("Error querying speed quiz leaderboard: " + e.getMessage());
         }
         return leaderboard;
     }

@@ -43,6 +43,7 @@ public class SchemaInitializer {
                 stmt.execute("ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS expires_at TIMESTAMP;");
                 stmt.execute("ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS assessment_type VARCHAR(20) DEFAULT 'QUIZ';");
                 stmt.execute("ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS quiz_question_type VARCHAR(30);");
+                stmt.execute("ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS speed_quiz_seconds_per_question INT;");
                 stmt.execute("UPDATE quizzes SET assessment_type = 'QUIZ' WHERE assessment_type IS NULL;");
                 stmt.execute("ALTER TABLE questions ADD COLUMN IF NOT EXISTS quiz_id INT REFERENCES quizzes(id) ON DELETE CASCADE;");
                 stmt.execute("ALTER TABLE attempt_answers ADD COLUMN IF NOT EXISTS teacher_feedback TEXT;");

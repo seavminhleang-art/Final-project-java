@@ -24,7 +24,7 @@ public class QuizRepository {
         List<Quiz> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT q.id, q.subject_id, s.code AS subject_code, q.created_by, u.full_name AS creator_name, u.gender AS creator_gender, u.role AS creator_role, q.assessment_type, q.quiz_question_type, q.title, q.topic, q.description, " +
-                "q.time_limit_mins, q.pass_score, q.randomize_questions, q.randomize_answers, q.show_answers_after, " +
+                "q.time_limit_mins, q.speed_quiz_seconds_per_question, q.pass_score, q.randomize_questions, q.randomize_answers, q.show_answers_after, " +
                 "q.is_published, q.expires_at, q.created_at, q.updated_at, " +
                 "(SELECT COUNT(*) FROM questions qu WHERE qu.quiz_id = q.id OR qu.id IN (SELECT qq.question_id FROM quiz_questions qq WHERE qq.quiz_id = q.id)) AS q_count, " +
                 "(SELECT COALESCE(SUM(qu.points), 0) FROM questions qu WHERE qu.quiz_id = q.id OR qu.id IN (SELECT qq.question_id FROM quiz_questions qq WHERE qq.quiz_id = q.id)) AS total_pts " +
@@ -91,7 +91,7 @@ public class QuizRepository {
 
     public Optional<Quiz> findById(int id) {
         String sql = "SELECT q.id, q.subject_id, s.code AS subject_code, q.created_by, u.full_name AS creator_name, u.gender AS creator_gender, u.role AS creator_role, q.assessment_type, q.quiz_question_type, q.title, q.topic, q.description, " +
-                     "q.time_limit_mins, q.pass_score, q.randomize_questions, q.randomize_answers, q.show_answers_after, " +
+                     "q.time_limit_mins, q.speed_quiz_seconds_per_question, q.pass_score, q.randomize_questions, q.randomize_answers, q.show_answers_after, " +
                      "q.is_published, q.expires_at, q.created_at, q.updated_at, " +
                      "(SELECT COUNT(*) FROM questions qu WHERE qu.quiz_id = q.id OR qu.id IN (SELECT qq.question_id FROM quiz_questions qq WHERE qq.quiz_id = q.id)) AS q_count, " +
                      "(SELECT COALESCE(SUM(qu.points), 0) FROM questions qu WHERE qu.quiz_id = q.id OR qu.id IN (SELECT qq.question_id FROM quiz_questions qq WHERE qq.quiz_id = q.id)) AS total_pts " +
@@ -115,9 +115,9 @@ public class QuizRepository {
     }
 
     public boolean create(Quiz quiz) {
-        String sql = "INSERT INTO quizzes (subject_id, created_by, assessment_type, quiz_question_type, title, topic, description, time_limit_mins, pass_score, " +
+        String sql = "INSERT INTO quizzes (subject_id, created_by, assessment_type, quiz_question_type, title, topic, description, time_limit_mins, speed_quiz_seconds_per_question, pass_score, " +
                      "randomize_questions, randomize_answers, show_answers_after, is_published, expires_at) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             if (quiz.getSubjectId() != null) stmt.setInt(1, quiz.getSubjectId());
@@ -138,12 +138,17 @@ public class QuizRepository {
             } else {
                 stmt.setNull(8, Types.INTEGER);
             }
-            stmt.setInt(9, quiz.getPassScore());
-            stmt.setBoolean(10, quiz.isRandomizeQuestions());
-            stmt.setBoolean(11, quiz.isRandomizeAnswers());
-            stmt.setBoolean(12, quiz.isShowAnswersAfter());
-            stmt.setBoolean(13, quiz.isPublished());
-            stmt.setTimestamp(14, quiz.getExpiresAt());
+            if (quiz.getSpeedSecondsPerQuestion() != null && quiz.getSpeedSecondsPerQuestion() > 0) {
+                stmt.setInt(9, quiz.getSpeedSecondsPerQuestion());
+            } else {
+                stmt.setNull(9, Types.INTEGER);
+            }
+            stmt.setInt(10, quiz.getPassScore());
+            stmt.setBoolean(11, quiz.isRandomizeQuestions());
+            stmt.setBoolean(12, quiz.isRandomizeAnswers());
+            stmt.setBoolean(13, quiz.isShowAnswersAfter());
+            stmt.setBoolean(14, quiz.isPublished());
+            stmt.setTimestamp(15, quiz.getExpiresAt());
 
             int affected = stmt.executeUpdate();
             if (affected > 0) {
@@ -161,7 +166,7 @@ public class QuizRepository {
     }
 
     public boolean update(Quiz quiz) {
-        String sql = "UPDATE quizzes SET subject_id = ?, assessment_type = ?, quiz_question_type = ?, title = ?, topic = ?, description = ?, time_limit_mins = ?, " +
+        String sql = "UPDATE quizzes SET subject_id = ?, assessment_type = ?, quiz_question_type = ?, title = ?, topic = ?, description = ?, time_limit_mins = ?, speed_quiz_seconds_per_question = ?, " +
                      "pass_score = ?, randomize_questions = ?, randomize_answers = ?, show_answers_after = ?, " +
                      "is_published = ?, expires_at = ?, updated_at = NOW() WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -181,13 +186,18 @@ public class QuizRepository {
             } else {
                 stmt.setNull(7, Types.INTEGER);
             }
-            stmt.setInt(8, quiz.getPassScore());
-            stmt.setBoolean(9, quiz.isRandomizeQuestions());
-            stmt.setBoolean(10, quiz.isRandomizeAnswers());
-            stmt.setBoolean(11, quiz.isShowAnswersAfter());
-            stmt.setBoolean(12, quiz.isPublished());
-            stmt.setTimestamp(13, quiz.getExpiresAt());
-            stmt.setInt(14, quiz.getId());
+            if (quiz.getSpeedSecondsPerQuestion() != null && quiz.getSpeedSecondsPerQuestion() > 0) {
+                stmt.setInt(8, quiz.getSpeedSecondsPerQuestion());
+            } else {
+                stmt.setNull(8, Types.INTEGER);
+            }
+            stmt.setInt(9, quiz.getPassScore());
+            stmt.setBoolean(10, quiz.isRandomizeQuestions());
+            stmt.setBoolean(11, quiz.isRandomizeAnswers());
+            stmt.setBoolean(12, quiz.isShowAnswersAfter());
+            stmt.setBoolean(13, quiz.isPublished());
+            stmt.setTimestamp(14, quiz.getExpiresAt());
+            stmt.setInt(15, quiz.getId());
 
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -387,6 +397,13 @@ public class QuizRepository {
             if (roleStr != null) creatorRole = Role.valueOf(roleStr);
         } catch (Exception ignored) {}
 
+        Integer speedSeconds = null;
+        try {
+            if (rs.getObject("speed_quiz_seconds_per_question") != null) {
+                speedSeconds = rs.getInt("speed_quiz_seconds_per_question");
+            }
+        } catch (SQLException ignored) {}
+
         return Quiz.builder()
                 .id(rs.getInt("id"))
                 .subjectId(rs.getObject("subject_id") != null ? rs.getInt("subject_id") : null)
@@ -401,6 +418,7 @@ public class QuizRepository {
                 .topic(rs.getString("topic"))
                 .description(rs.getString("description"))
                 .timeLimitMins(rs.getObject("time_limit_mins") != null ? rs.getInt("time_limit_mins") : null)
+                .speedSecondsPerQuestion(speedSeconds)
                 .passScore(rs.getInt("pass_score"))
                 .randomizeQuestions(rs.getBoolean("randomize_questions"))
                 .randomizeAnswers(rs.getBoolean("randomize_answers"))

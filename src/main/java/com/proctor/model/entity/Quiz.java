@@ -41,6 +41,7 @@ public class Quiz {
     private String topic;
     private String description;
     private Integer timeLimitMins;
+    private Integer speedSecondsPerQuestion;
     private int passScore;
     private boolean randomizeQuestions;
     private boolean randomizeAnswers;

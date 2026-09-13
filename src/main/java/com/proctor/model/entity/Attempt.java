@@ -1,5 +1,6 @@
 package com.proctor.model.entity;
 
+import com.proctor.model.enums.AssessmentType;
 import com.proctor.model.enums.AttemptStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,6 +17,7 @@ public class Attempt {
     private Integer id;
     private Integer quizId;
     private String quizTitle;
+    private AssessmentType assessmentType;
     private Integer studentId;
     private String studentName;
     private Timestamp startedAt;

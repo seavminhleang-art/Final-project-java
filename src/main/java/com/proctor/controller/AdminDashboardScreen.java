@@ -89,16 +89,17 @@ public class AdminDashboardScreen implements Screen {
 
     private String[] getMenuItems() {
         int unread = getUnreadCount();
-        String inboxLabel = unread > 0 ? "6. Inbox (" + unread + " unread)" : "6. Inbox";
+        String inboxLabel = unread > 0 ? "7. Inbox (" + unread + " unread)" : "7. Inbox";
         return new String[]{
                 "1. User Management",
                 "2. Subject Management",
                 "3. Quiz Management",
                 "4. Exam Management",
-                "5. System Reports",
+                "5. Speed Quiz Management",
+                "6. System Reports",
                 inboxLabel,
-                "7. Logout",
-                "8. Exit"
+                "8. Logout",
+                "9. Exit"
         };
     }
 
@@ -156,16 +157,19 @@ public class AdminDashboardScreen implements Screen {
                 return ScreenResult.navigate(new QuizListScreen(quizService, questionService, subjectService, authService, AssessmentType.EXAM));
             }
             case 4 -> {
-                return ScreenResult.navigate(new ReportMenuScreen(reportService, authService));
+                return ScreenResult.navigate(new QuizListScreen(quizService, questionService, subjectService, authService, AssessmentType.SPEED));
             }
             case 5 -> {
-                return ScreenResult.navigate(new InboxListScreen(inboxService, userService, authService, this));
+                return ScreenResult.navigate(new ReportMenuScreen(reportService, authService));
             }
             case 6 -> {
+                return ScreenResult.navigate(new InboxListScreen(inboxService, userService, authService, this));
+            }
+            case 7 -> {
                 authService.logout();
                 return ScreenResult.navigate(new LoginScreen(authService));
             }
-            case 7 -> {
+            case 8 -> {
                 showQuitModal = true;
                 quitConfirmFocused = false;
                 return ScreenResult.stay(this);

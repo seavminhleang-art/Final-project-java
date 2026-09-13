@@ -1,5 +1,6 @@
 package com.proctor.model.repository;
 
+import com.proctor.model.enums.AssessmentType;
 import com.proctor.model.enums.AttemptStatus;
 import com.proctor.config.DatabaseConnection;
 import com.proctor.model.entity.Attempt;
@@ -40,7 +41,7 @@ public class AttemptRepository {
     }
 
     public Optional<Attempt> getAttempt(int attemptId) {
-        String sql = "SELECT a.id, a.quiz_id, q.title AS quiz_title, a.student_id, a.started_at, a.submitted_at, a.status " +
+        String sql = "SELECT a.id, a.quiz_id, q.title AS quiz_title, q.assessment_type, a.student_id, a.started_at, a.submitted_at, a.status " +
                      "FROM attempts a LEFT JOIN quizzes q ON a.quiz_id = q.id WHERE a.id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -57,7 +58,7 @@ public class AttemptRepository {
     }
 
     public Optional<Attempt> findLatestAttempt(int quizId, int studentId) {
-        String sql = "SELECT a.id, a.quiz_id, q.title AS quiz_title, a.student_id, a.started_at, a.submitted_at, a.status " +
+        String sql = "SELECT a.id, a.quiz_id, q.title AS quiz_title, q.assessment_type, a.student_id, a.started_at, a.submitted_at, a.status " +
                      "FROM attempts a LEFT JOIN quizzes q ON a.quiz_id = q.id " +
                      "WHERE a.quiz_id = ? AND a.student_id = ? ORDER BY a.id DESC LIMIT 1";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -77,7 +78,7 @@ public class AttemptRepository {
 
     public List<Attempt> getAttemptsByQuiz(int quizId) {
         List<Attempt> list = new ArrayList<>();
-        String sql = "SELECT a.id, a.quiz_id, q.title AS quiz_title, a.student_id, u.full_name AS student_name, " +
+        String sql = "SELECT a.id, a.quiz_id, q.title AS quiz_title, q.assessment_type, a.student_id, u.full_name AS student_name, " +
                      "a.started_at, a.submitted_at, a.status " +
                      "FROM attempts a " +
                      "LEFT JOIN quizzes q ON a.quiz_id = q.id " +
@@ -101,7 +102,7 @@ public class AttemptRepository {
     public List<Attempt> getAllSubmissions(Integer teacherId) {
         List<Attempt> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
-                "SELECT a.id, a.quiz_id, q.title AS quiz_title, a.student_id, u.full_name AS student_name, " +
+                "SELECT a.id, a.quiz_id, q.title AS quiz_title, q.assessment_type, a.student_id, u.full_name AS student_name, " +
                 "a.started_at, a.submitted_at, a.status " +
                 "FROM attempts a " +
                 "LEFT JOIN quizzes q ON a.quiz_id = q.id " +
@@ -270,10 +271,19 @@ public class AttemptRepository {
             studentName = rs.getString("student_name");
         } catch (SQLException ignored) {}
 
+        AssessmentType assessmentType = null;
+        try {
+            String atStr = rs.getString("assessment_type");
+            if (atStr != null) {
+                assessmentType = AssessmentType.valueOf(atStr);
+            }
+        } catch (Exception ignored) {}
+
         return Attempt.builder()
                 .id(rs.getInt("id"))
                 .quizId(rs.getInt("quiz_id"))
                 .quizTitle(rs.getString("quiz_title"))
+                .assessmentType(assessmentType)
                 .studentId(rs.getInt("student_id"))
                 .studentName(studentName)
                 .startedAt(rs.getTimestamp("started_at"))

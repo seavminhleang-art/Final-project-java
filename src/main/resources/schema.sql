@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS quizzes (
     topic VARCHAR(100),
     description TEXT,
     time_limit_mins INT,
+    speed_quiz_seconds_per_question INT,
     pass_score INT NOT NULL DEFAULT 50,
     randomize_questions BOOLEAN DEFAULT TRUE,
     randomize_answers BOOLEAN DEFAULT TRUE,

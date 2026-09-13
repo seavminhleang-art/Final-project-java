@@ -48,9 +48,17 @@ public class QuestionBankPickerScreen implements Screen {
         // Auto-filter: current teacher's bank questions matching the quiz's subject and question type
         Integer currentUserId = Session.getCurrentUser().map(User::getId).orElse(null);
         Integer subjectId = quiz.getSubjectId();
-        com.proctor.model.enums.QuestionType typeFilter = quiz.getQuizQuestionType(); // null for exams (all types)
+        com.proctor.model.enums.QuestionType typeFilter = quiz.getQuizQuestionType(); // null for exams and speed quizzes
 
-        this.bankQuestions = questionService.getBankQuestions(currentUserId, subjectId, typeFilter, null, null);
+        List<Question> rawQuestions = questionService.getBankQuestions(currentUserId, subjectId, typeFilter, null, null);
+        if (quiz.getAssessmentType() == com.proctor.model.enums.AssessmentType.SPEED) {
+            this.bankQuestions = rawQuestions.stream()
+                    .filter(q -> q.getQuestionType() == com.proctor.model.enums.QuestionType.MCQ
+                              || q.getQuestionType() == com.proctor.model.enums.QuestionType.TRUE_FALSE)
+                    .toList();
+        } else {
+            this.bankQuestions = rawQuestions;
+        }
 
         List<Question> existingQuizQuestions = questionService.getQuestionsByQuizId(quiz.getId());
         Set<String> existingTexts = new HashSet<>();
@@ -71,10 +79,12 @@ public class QuestionBankPickerScreen implements Screen {
             subjectService.getSubjectById(subjectId).ifPresent(s ->
                     fs.append(" for subject [").append(s.getCode()).append(" - ").append(s.getName()).append("]"));
         }
-        if (typeFilter != null) {
+        if (quiz.getAssessmentType() == com.proctor.model.enums.AssessmentType.SPEED) {
+            fs.append(", MCQ & True/False only (Speed Quiz)");
+        } else if (typeFilter != null) {
             fs.append(", type [").append(typeFilter.name()).append("]");
         }
-        if (subjectId == null && typeFilter == null) {
+        if (subjectId == null && typeFilter == null && quiz.getAssessmentType() != com.proctor.model.enums.AssessmentType.SPEED) {
             fs.setLength(0);
             fs.append("Showing all your bank questions (no subject/type filter on this quiz).");
         }

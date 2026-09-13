@@ -13,11 +13,18 @@ import com.williamcallahan.tui4j.compat.bubbletea.Message;
 import java.util.List;
 
 public class GlobalLeaderboardScreen implements Screen {
+
+    public enum Mode {
+        GLOBAL,
+        SPEED
+    }
+
     private final PortalService portalService;
     private final ExamService examService;
     private final AuthService authService;
     private final Screen returnScreen;
 
+    private Mode mode = Mode.GLOBAL;
     private List<LeaderboardEntry> leaderboard;
     private int selectedIndex = 0;
 
@@ -34,7 +41,11 @@ public class GlobalLeaderboardScreen implements Screen {
     }
 
     private void refreshLeaderboard() {
-        this.leaderboard = portalService.getGlobalLeaderboard();
+        if (mode == Mode.SPEED) {
+            this.leaderboard = portalService.getSpeedQuizLeaderboard();
+        } else {
+            this.leaderboard = portalService.getGlobalLeaderboard();
+        }
         if (leaderboard.isEmpty()) {
             selectedIndex = 0;
         } else if (selectedIndex >= leaderboard.size()) {
@@ -75,6 +86,11 @@ public class GlobalLeaderboardScreen implements Screen {
                         selectedIndex = Math.min(leaderboard.size() - 1, (currentPage + 1) * pageSize);
                     }
                 }
+            } else if ("m".equalsIgnoreCase(k.key()) || "t".equalsIgnoreCase(k.key()) || KeyUtil.isTab(k)) {
+                mode = (mode == Mode.GLOBAL) ? Mode.SPEED : Mode.GLOBAL;
+                selectedIndex = 0;
+                refreshLeaderboard();
+                return ScreenResult.stay(this);
             } else if ("r".equalsIgnoreCase(k.key())) {
                 refreshLeaderboard();
                 return ScreenResult.stay(this);
@@ -85,6 +101,6 @@ public class GlobalLeaderboardScreen implements Screen {
 
     @Override
     public String view() {
-        return PortalViews.renderGlobalLeaderboard(leaderboard, selectedIndex);
+        return PortalViews.renderGlobalLeaderboard(leaderboard, selectedIndex, mode == Mode.SPEED);
     }
 }

@@ -8,17 +8,32 @@ import java.util.List;
 public class PortalViews {
 
     public static String renderGlobalLeaderboard(List<LeaderboardEntry> leaderboard, int selectedIndex) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(TuiHelper.header("LEADERBOARD"));
-        sb.append("\n");
-        sb.append(TuiHelper.boxTitle("Global Leaderboard", String.format("Top Performers (%d ranked)", leaderboard.size()))).append("\n\n");
+        return renderGlobalLeaderboard(leaderboard, selectedIndex, false);
+    }
 
-        sb.append(String.format("  %-6s  %-54s  %-32s  %-10s  %-12s  %-8s%n",
-                "RANK", "STUDENT NAME", "USERNAME", "QUIZZES", "TOTAL PTS", "AVG %")).append("\n");
+    public static String renderGlobalLeaderboard(List<LeaderboardEntry> leaderboard, int selectedIndex, boolean isSpeedMode) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(TuiHelper.header(isSpeedMode ? "SPEED QUIZ LEADERBOARD" : "LEADERBOARD"));
+        sb.append("\n");
+
+        String title = isSpeedMode ? "Speed Quiz Champions" : "Global Leaderboard";
+        String modeLabel = isSpeedMode ? "SPEED QUIZ (High Score Run)" : "STANDARD (Overall)";
+        sb.append(TuiHelper.boxTitle(title, String.format("Mode: [ %s ]  •  Top Performers (%d ranked)", modeLabel, leaderboard.size()))).append("\n\n");
+
+        if (isSpeedMode) {
+            sb.append(String.format("  %-6s  %-54s  %-32s  %-10s  %-14s%n",
+                    "RANK", "STUDENT NAME", "USERNAME", "RUNS", "HIGH SCORE")).append("\n");
+        } else {
+            sb.append(String.format("  %-6s  %-54s  %-32s  %-10s  %-12s  %-8s%n",
+                    "RANK", "STUDENT NAME", "USERNAME", "QUIZZES", "TOTAL PTS", "AVG %")).append("\n");
+        }
         sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         if (leaderboard.isEmpty()) {
-            sb.append("  ").append(TuiHelper.dim("No quizzes completed yet. Be the first on the leaderboard!")).append("\n");
+            String emptyMsg = isSpeedMode
+                    ? "No speed quizzes completed yet. Take a speed quiz to claim the #1 spot!"
+                    : "No quizzes completed yet. Be the first on the leaderboard!";
+            sb.append("  ").append(TuiHelper.dim(emptyMsg)).append("\n");
         } else {
             int pageSize = TuiHelper.PAGE_SIZE;
             int startRow = (selectedIndex / pageSize) * pageSize;
@@ -34,13 +49,23 @@ public class PortalViews {
                 else if (entry.getRank() == 3) rankStr = "#3";
                 else rankStr = String.format("%d", entry.getRank());
 
-                String line = String.format("%-6s  %-54s  %-32s  %-10d  %-12.1f  %-8s",
-                        rankStr,
-                        truncate(entry.getStudentName(), 54),
-                        truncate("@" + entry.getUsername(), 32),
-                        entry.getTotalQuizzes(),
-                        entry.getTotalPoints(),
-                        String.format("%.1f%%", entry.getAvgPercentage()));
+                String line;
+                if (isSpeedMode) {
+                    line = String.format("%-6s  %-54s  %-32s  %-10d  %-14s",
+                            rankStr,
+                            truncate(entry.getStudentName(), 54),
+                            truncate("@" + entry.getUsername(), 32),
+                            entry.getTotalQuizzes(),
+                            String.format("%.1f pts", entry.getHighScore()));
+                } else {
+                    line = String.format("%-6s  %-54s  %-32s  %-10d  %-12.1f  %-8s",
+                            rankStr,
+                            truncate(entry.getStudentName(), 54),
+                            truncate("@" + entry.getUsername(), 32),
+                            entry.getTotalQuizzes(),
+                            entry.getTotalPoints(),
+                            String.format("%.1f%%", entry.getAvgPercentage()));
+                }
 
                 if (i == selectedIndex) {
                     sb.append(cursor).append(TuiHelper.bold(line)).append("\n");
@@ -62,7 +87,7 @@ public class PortalViews {
             sb.append(TuiHelper.paginationBar(currentPage, totalPages, leaderboard.size()));
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [r] Refresh  •  [Esc] Back\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [Tab / m] Switch Mode  •  [r] Refresh  •  [Esc] Back\n"));
         return sb.toString();
     }
 

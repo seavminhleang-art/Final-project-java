@@ -27,9 +27,9 @@ public class QuizViews {
                                         boolean isMyQuizzesScope, String subjectFilterDisplay,
                                         String searchBuffer, boolean searchMode, String bannerMessage, boolean isAdmin) {
         StringBuilder sb = new StringBuilder();
-        String itemType = (assessmentType == AssessmentType.EXAM) ? "EXAMS" : "QUIZZES";
+        String itemType = (assessmentType == AssessmentType.EXAM) ? "EXAMS" : (assessmentType == AssessmentType.SPEED ? "SPEED QUIZZES" : "QUIZZES");
         String scopeLabel = isAdmin
-                ? "All " + (assessmentType == AssessmentType.EXAM ? "Exams" : "Quizzes")
+                ? "All " + (assessmentType == AssessmentType.EXAM ? "Exams" : (assessmentType == AssessmentType.SPEED ? "Speed Quizzes" : "Quizzes"))
                 : (isMyQuizzesScope
                     ? "Scope: [ MY " + itemType + " ]"
                     : "Scope: [ ALL GLOBAL " + itemType + " ]");
@@ -45,17 +45,18 @@ public class QuizViews {
             sb.append("  Search: [ ").append(searchBuffer).append(" ] (Press '/' to edit)\n\n");
         }
 
+        String timeColHeader = (assessmentType == AssessmentType.SPEED) ? "SEC/Q" : "TIME";
         if (isAdmin) {
             sb.append(String.format("  %-4s  %-6s  %-12s  %-36s  %-18s  %-8s  %-8s  %-4s  %-6s  %-10s%n",
-                    "#", "ID", "SUBJ", "TITLE", "TEACHER", "TYPE", "TIME", "Qs", "PTS", "STATUS")).append("\n");
+                    "#", "ID", "SUBJ", "TITLE", "TEACHER", "TYPE", timeColHeader, "Qs", "PTS", "STATUS")).append("\n");
         } else {
             sb.append(String.format("  %-4s  %-12s  %-44s  %-18s  %-8s  %-8s  %-4s  %-6s  %-10s%n",
-                    "#", "SUBJ", "TITLE", "TEACHER", "TYPE", "TIME", "Qs", "PTS", "STATUS")).append("\n");
+                    "#", "SUBJ", "TITLE", "TEACHER", "TYPE", timeColHeader, "Qs", "PTS", "STATUS")).append("\n");
         }
         sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         if (quizzes.isEmpty()) {
-            String emptyLabel = (assessmentType == AssessmentType.EXAM) ? "exams" : "quizzes";
+            String emptyLabel = (assessmentType == AssessmentType.EXAM) ? "exams" : (assessmentType == AssessmentType.SPEED ? "speed quizzes" : "quizzes");
             sb.append("  ").append(TuiHelper.dim("No " + emptyLabel + " found.")).append("\n");
         } else {
             int pageSize = TuiHelper.PAGE_SIZE;
@@ -67,15 +68,25 @@ public class QuizViews {
                 String cursor = (i == selectedIndex) ? TuiHelper.cyan("▶ ") : "  ";
                 String status = q.isPublished() ? TuiHelper.green("Published") : TuiHelper.dim("Draft");
                 String subj = q.getSubjectCode() != null ? q.getSubjectCode() : "-";
-                String timeStr = q.getTimeLimitMins() != null && q.getTimeLimitMins() > 0 ? q.getTimeLimitMins() + "m" : "Untimed";
+                String timeStr;
+                if (q.getAssessmentType() == AssessmentType.SPEED) {
+                    timeStr = (q.getSpeedSecondsPerQuestion() != null ? q.getSpeedSecondsPerQuestion() : 15) + "s";
+                } else {
+                    timeStr = q.getTimeLimitMins() != null && q.getTimeLimitMins() > 0 ? q.getTimeLimitMins() + "m" : "Untimed";
+                }
                 String teacher = (q.getCreatorName() != null && !q.getCreatorName().isBlank()) ? q.getCreatorName() : "Teacher";
-                String typeStr = q.getAssessmentType() == AssessmentType.EXAM
-                        ? "[MIXED]"
-                        : switch (q.getQuizQuestionType() != null ? q.getQuizQuestionType() : QuestionType.MCQ) {
-                            case MCQ -> "[MCQ]";
-                            case TRUE_FALSE -> "[T/F]";
-                            case SHORT_ANSWER -> "[SHORT]";
-                        };
+                String typeStr;
+                if (q.getAssessmentType() == AssessmentType.SPEED) {
+                    typeStr = "[SPEED]";
+                } else if (q.getAssessmentType() == AssessmentType.EXAM) {
+                    typeStr = "[MIXED]";
+                } else {
+                    typeStr = switch (q.getQuizQuestionType() != null ? q.getQuizQuestionType() : QuestionType.MCQ) {
+                        case MCQ -> "[MCQ]";
+                        case TRUE_FALSE -> "[T/F]";
+                        case SHORT_ANSWER -> "[SHORT]";
+                    };
+                }
 
                 String line;
                 if (isAdmin) {
@@ -127,7 +138,7 @@ public class QuizViews {
             sb.append("  ").append(bannerMessage).append("\n\n");
         }
 
-        String aiHint = (assessmentType == AssessmentType.EXAM) ? "[g] AI Exam" : "[g] AI Quiz";
+        String aiHint = (assessmentType == AssessmentType.EXAM) ? "[g] AI Exam" : (assessmentType == AssessmentType.SPEED ? "[g] AI Speed" : "[g] AI Quiz");
         List<String> hints;
         if (isAdmin) {
             hints = List.of(
@@ -244,7 +255,7 @@ public class QuizViews {
                 subjectText, questions.size(), totalPoints,
                 quiz.isPublished() ? TuiHelper.green("PUBLISHED") : TuiHelper.dim("DRAFT"));
 
-        String builderHeader = (quiz.getAssessmentType() == AssessmentType.EXAM ? "EXAMS" : "QUIZZES");
+        String builderHeader = (quiz.getAssessmentType() == AssessmentType.EXAM ? "EXAMS" : (quiz.getAssessmentType() == AssessmentType.SPEED ? "SPEED QUIZZES" : "QUIZZES"));
         sb.append(TuiHelper.header(builderHeader));
         sb.append("\n");
         sb.append(TuiHelper.boxTitle(quiz.getTitle(), subtitle)).append("\n\n");
@@ -254,7 +265,8 @@ public class QuizViews {
         sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         if (questions.isEmpty()) {
-            sb.append("  ").append(TuiHelper.dim("No questions in this quiz yet. Press 'n' to add or 'g' to generate with AI.")).append("\n");
+            String emptyItemLabel = (quiz.getAssessmentType() == AssessmentType.EXAM ? "exam" : (quiz.getAssessmentType() == AssessmentType.SPEED ? "speed quiz" : "quiz"));
+            sb.append("  ").append(TuiHelper.dim("No questions in this " + emptyItemLabel + " yet. Press 'n' to add or 'g' to generate with AI.")).append("\n");
         } else {
             int pageSize = TuiHelper.PAGE_SIZE;
             int startRow = (selectedIndex / pageSize) * pageSize;
@@ -311,8 +323,8 @@ public class QuizViews {
 
     public static String renderAIQuizLoading(AssessmentType assessmentType, String title, int tick) {
         StringBuilder sb = new StringBuilder();
-        String itemType = (assessmentType == AssessmentType.EXAM) ? "EXAM" : "QUIZ";
-        String itemLabel = (assessmentType == AssessmentType.EXAM) ? "Exam" : "Quiz";
+        String itemType = (assessmentType == AssessmentType.EXAM) ? "EXAM" : (assessmentType == AssessmentType.SPEED ? "SPEED QUIZ" : "QUIZ");
+        String itemLabel = (assessmentType == AssessmentType.EXAM) ? "Exam" : (assessmentType == AssessmentType.SPEED ? "Speed Quiz" : "Quiz");
         sb.append(TuiHelper.header(itemType));
         sb.append("\n");
         sb.append(TuiHelper.boxTitle("Generating " + itemLabel + ": " + title, "Local Ollama LLM is assembling questions...")).append("\n\n");
@@ -334,39 +346,49 @@ public class QuizViews {
                                          boolean randomizeQuestions, boolean randomizeAnswers, boolean showAnswersAfter,
                                          int focusedField, String bannerMessage) {
         StringBuilder sb = new StringBuilder();
-        String itemType = (assessmentType == AssessmentType.EXAM) ? "EXAM" : "QUIZ";
-        String itemLabel = (assessmentType == AssessmentType.EXAM) ? "Exam" : "Quiz";
+        String itemType = (assessmentType == AssessmentType.EXAM) ? "EXAM" : (assessmentType == AssessmentType.SPEED ? "SPEED QUIZ" : "QUIZ");
+        String itemLabel = (assessmentType == AssessmentType.EXAM) ? "Exam" : (assessmentType == AssessmentType.SPEED ? "Speed Quiz" : "Quiz");
         boolean isMixed = questionTypeLabel.contains("MIXED");
+        boolean isSpeed = (assessmentType == AssessmentType.SPEED);
 
         List<String> fieldWidgets = new ArrayList<>();
         fieldWidgets.add(TuiHelper.selectBox("Subject (Required)", subjectName, focusedField == 0, 102, "Space or ←/→ to cycle"));
         fieldWidgets.add(TuiHelper.inputBox(itemLabel + " Title / Topic (Required)", titleBuffer, focusedField == 1, 102, false, "e.g. Basic HTML, OOP Concepts"));
         fieldWidgets.add(TuiHelper.inputBox("Custom Prompt / Instructions (Optional)", customPrompt, focusedField == 2, 102, false, "e.g. Focus on edge cases, avoid multi-threading, include code snippets"));
-        fieldWidgets.add(TuiHelper.selectBox("Question Type", questionTypeLabel, focusedField == 3, 102, "Space or ←/→ to cycle"));
 
-        int curIdx = 4;
-        if (isMixed) {
-            fieldWidgets.add(TuiHelper.inputBox("MCQ Question Count (0-10)", mcqCountBuffer, focusedField == curIdx++, 102, false, "e.g. 2"));
-            fieldWidgets.add(TuiHelper.inputBox("True/False Question Count (0-10)", tfCountBuffer, focusedField == curIdx++, 102, false, "e.g. 2"));
-            fieldWidgets.add(TuiHelper.inputBox("Short Answer Question Count (0-10)", saCountBuffer, focusedField == curIdx++, 102, false, "e.g. 1"));
+        int curIdx = 3;
+        if (isSpeed) {
+            fieldWidgets.add(TuiHelper.inputBox("MCQ Question Count (0-10)", mcqCountBuffer, focusedField == curIdx++, 102, false, "e.g. 3"));
+            fieldWidgets.add(TuiHelper.inputBox("True/False Question Count (0-10)", tfCountBuffer, focusedField == curIdx++, 102, false, "e.g. 3"));
         } else {
-            fieldWidgets.add(TuiHelper.inputBox("Number of Questions (1-10)", countBuffer, focusedField == curIdx++, 102, false, "e.g. 5"));
+            fieldWidgets.add(TuiHelper.selectBox("Question Type", questionTypeLabel, focusedField == curIdx++, 102, "Space or ←/→ to cycle"));
+            if (isMixed) {
+                fieldWidgets.add(TuiHelper.inputBox("MCQ Question Count (0-10)", mcqCountBuffer, focusedField == curIdx++, 102, false, "e.g. 2"));
+                fieldWidgets.add(TuiHelper.inputBox("True/False Question Count (0-10)", tfCountBuffer, focusedField == curIdx++, 102, false, "e.g. 2"));
+                fieldWidgets.add(TuiHelper.inputBox("Short Answer Question Count (0-10)", saCountBuffer, focusedField == curIdx++, 102, false, "e.g. 1"));
+            } else {
+                fieldWidgets.add(TuiHelper.inputBox("Number of Questions (1-10)", countBuffer, focusedField == curIdx++, 102, false, "e.g. 5"));
+            }
         }
 
         fieldWidgets.add(TuiHelper.selectBox("Difficulty Level", selectedDifficulty.name(), focusedField == curIdx++, 102, "Space to cycle"));
 
-        boolean showMcq = isMixed ? (!"0".equals(mcqCountBuffer != null ? mcqCountBuffer.trim() : "0")) : questionTypeLabel.contains("MCQ");
+        boolean showMcq = (isMixed || isSpeed) ? (!"0".equals(mcqCountBuffer != null ? mcqCountBuffer.trim() : "0")) : questionTypeLabel.contains("MCQ");
         if (showMcq) {
             String optLabel = mcqOptionCount + " Options per Question";
             fieldWidgets.add(TuiHelper.selectBox("MCQ Option Count", optLabel, focusedField == curIdx++, 102, "Space to cycle (2, 3, 4)"));
         }
 
-        fieldWidgets.add(TuiHelper.inputBox("Time Limit (Minutes)", timeLimitBuffer, focusedField == curIdx++, 102, false, "0 for untimed"));
-        fieldWidgets.add(TuiHelper.inputBox("Active Lifetime (Hours)", activeHours, focusedField == curIdx++, 102, false, "0 for Available Forever"));
-        fieldWidgets.add(TuiHelper.inputBox("Passing Score (%)", passScore, focusedField == curIdx++, 102, false, "e.g. 50"));
-
-        String rqText = randomizeQuestions ? "Enabled" : "Disabled";
-        fieldWidgets.add(TuiHelper.selectBox("Randomize Question Order", rqText, focusedField == curIdx++, 102, "Space to toggle"));
+        if (isSpeed) {
+            fieldWidgets.add(TuiHelper.inputBox("Timer Per Question (Seconds)", timeLimitBuffer, focusedField == curIdx++, 102, false, "default: 15 seconds"));
+            fieldWidgets.add(TuiHelper.inputBox("Active Lifetime (Hours)", activeHours, focusedField == curIdx++, 102, false, "0 for Available Forever"));
+        } else {
+            fieldWidgets.add(TuiHelper.inputBox("Time Limit (Minutes)", timeLimitBuffer, focusedField == curIdx++, 102, false, "0 for untimed"));
+            fieldWidgets.add(TuiHelper.inputBox("Active Lifetime (Hours)", activeHours, focusedField == curIdx++, 102, false, "0 for Available Forever"));
+            fieldWidgets.add(TuiHelper.inputBox("Passing Score (%)", passScore, focusedField == curIdx++, 102, false, "e.g. 50"));
+            String rqText = randomizeQuestions ? "Enabled" : "Disabled";
+            fieldWidgets.add(TuiHelper.selectBox("Randomize Question Order", rqText, focusedField == curIdx++, 102, "Space to toggle"));
+        }
 
         String raText = randomizeAnswers ? "Enabled" : "Disabled";
         fieldWidgets.add(TuiHelper.selectBox("Shuffle Answer Options", raText, focusedField == curIdx++, 102, "Space to toggle"));

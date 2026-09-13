@@ -70,10 +70,21 @@ public class AIQuizGeneratorScreen implements Screen {
         this.authService = authService;
         this.assessmentType = assessmentType != null ? assessmentType : AssessmentType.QUIZ;
         this.isExamMixed = (this.assessmentType == AssessmentType.EXAM);
+        if (this.assessmentType == AssessmentType.SPEED) {
+            this.mcqCountBuffer.setLength(0);
+            this.mcqCountBuffer.append("3");
+            this.tfCountBuffer.setLength(0);
+            this.tfCountBuffer.append("3");
+            this.timeLimitBuffer.setLength(0);
+            this.timeLimitBuffer.append("15");
+        }
         this.subjects = subjectService.getSubjects(null);
     }
 
     private boolean isMcqApplicable() {
+        if (assessmentType == AssessmentType.SPEED) {
+            return !"0".equals(mcqCountBuffer.toString().trim());
+        }
         if (assessmentType == AssessmentType.EXAM && isExamMixed) {
             return !"0".equals(mcqCountBuffer.toString().trim());
         }
@@ -81,6 +92,9 @@ public class AIQuizGeneratorScreen implements Screen {
     }
 
     private int getNumInputFields() {
+        if (assessmentType == AssessmentType.SPEED) {
+            return isMcqApplicable() ? 11 : 10;
+        }
         if (assessmentType == AssessmentType.EXAM && isExamMixed) {
             return isMcqApplicable() ? 15 : 14;
         }
@@ -161,6 +175,10 @@ public class AIQuizGeneratorScreen implements Screen {
     }
 
     private void handleFormInput(KeyPressMessage k) {
+        if (assessmentType == AssessmentType.SPEED) {
+            handleSpeedFormInput(k);
+            return;
+        }
         if (focusedField == 0) {
             int size = subjects.size() + 1;
             if (KeyUtil.isLeft(k)) selectedSubjectIndex = (selectedSubjectIndex - 1 + size) % size;
@@ -280,6 +298,76 @@ public class AIQuizGeneratorScreen implements Screen {
         }
     }
 
+    private void handleSpeedFormInput(KeyPressMessage k) {
+        if (focusedField == 0) {
+            int size = subjects.size() + 1;
+            if (KeyUtil.isLeft(k)) selectedSubjectIndex = (selectedSubjectIndex - 1 + size) % size;
+            else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) selectedSubjectIndex = (selectedSubjectIndex + 1) % size;
+            return;
+        }
+        if (focusedField == 1) {
+            handleTextInput(titleBuffer, k);
+            return;
+        }
+        if (focusedField == 2) {
+            handleTextInput(customPromptBuffer, k);
+            return;
+        }
+        if (focusedField == 3) {
+            handleTextInput(mcqCountBuffer, k);
+            return;
+        }
+        if (focusedField == 4) {
+            handleTextInput(tfCountBuffer, k);
+            return;
+        }
+        if (focusedField == 5) {
+            if (KeyUtil.isLeft(k)) {
+                if (selectedDifficulty == Difficulty.EASY) selectedDifficulty = Difficulty.HARD;
+                else if (selectedDifficulty == Difficulty.HARD) selectedDifficulty = Difficulty.MEDIUM;
+                else selectedDifficulty = Difficulty.EASY;
+            } else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) {
+                if (selectedDifficulty == Difficulty.EASY) selectedDifficulty = Difficulty.MEDIUM;
+                else if (selectedDifficulty == Difficulty.MEDIUM) selectedDifficulty = Difficulty.HARD;
+                else selectedDifficulty = Difficulty.EASY;
+            }
+            return;
+        }
+
+        int current = 6;
+        if (isMcqApplicable()) {
+            if (focusedField == current) {
+                if (KeyUtil.isLeft(k)) {
+                    if (mcqOptionCount == 2) mcqOptionCount = 4;
+                    else if (mcqOptionCount == 4) mcqOptionCount = 3;
+                    else mcqOptionCount = 2;
+                } else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) {
+                    if (mcqOptionCount == 2) mcqOptionCount = 3;
+                    else if (mcqOptionCount == 3) mcqOptionCount = 4;
+                    else mcqOptionCount = 2;
+                }
+                return;
+            }
+            current++;
+        }
+
+        if (focusedField == current++) {
+            handleTextInput(timeLimitBuffer, k);
+            return;
+        }
+        if (focusedField == current++) {
+            handleTextInput(activeHours, k);
+            return;
+        }
+        if (focusedField == current++) {
+            if (KeyUtil.isSpace(k) || KeyUtil.isRight(k) || KeyUtil.isLeft(k)) randomizeAnswers = !randomizeAnswers;
+            return;
+        }
+        if (focusedField == current) {
+            if (KeyUtil.isSpace(k) || KeyUtil.isRight(k) || KeyUtil.isLeft(k)) showAnswersAfter = !showAnswersAfter;
+        }
+    }
+
     private void handleTextInput(StringBuilder buffer, KeyPressMessage k) {
         if (KeyUtil.isBackspace(k)) {
             if (!buffer.isEmpty()) buffer.deleteCharAt(buffer.length() - 1);
@@ -298,12 +386,26 @@ public class AIQuizGeneratorScreen implements Screen {
             return ScreenResult.stay(this);
         }
         if (titleBuffer.toString().trim().isBlank()) {
-            bannerMessage = TuiHelper.red("✖ " + (assessmentType == AssessmentType.EXAM ? "Exam" : "Quiz") + " Title / Topic is required.");
+            bannerMessage = TuiHelper.red("✖ " + (assessmentType == AssessmentType.EXAM ? "Exam" : (assessmentType == AssessmentType.SPEED ? "Speed Quiz" : "Quiz")) + " Title / Topic is required.");
             return ScreenResult.stay(this);
         }
 
         int mcqC = 0, tfC = 0, saC = 0, singleC = 5;
-        if (assessmentType == AssessmentType.EXAM && isExamMixed) {
+        int timeLimit = 30;
+        if (assessmentType == AssessmentType.SPEED) {
+            try { mcqC = Integer.parseInt(mcqCountBuffer.toString().trim()); } catch (Exception ignored) {}
+            try { tfC = Integer.parseInt(tfCountBuffer.toString().trim()); } catch (Exception ignored) {}
+            mcqC = Math.max(0, Math.min(10, mcqC));
+            tfC = Math.max(0, Math.min(10, tfC));
+            if (mcqC + tfC == 0) {
+                bannerMessage = TuiHelper.red("✖ Please specify at least 1 question across MCQ / True-False.");
+                return ScreenResult.stay(this);
+            }
+            int speedSecs = 15;
+            try { speedSecs = Integer.parseInt(timeLimitBuffer.toString().trim()); } catch (Exception ignored) {}
+            if (speedSecs < 5) speedSecs = 5;
+            timeLimit = speedSecs;
+        } else if (assessmentType == AssessmentType.EXAM && isExamMixed) {
             try { mcqC = Integer.parseInt(mcqCountBuffer.toString().trim()); } catch (Exception ignored) {}
             try { tfC = Integer.parseInt(tfCountBuffer.toString().trim()); } catch (Exception ignored) {}
             try { saC = Integer.parseInt(saCountBuffer.toString().trim()); } catch (Exception ignored) {}
@@ -314,13 +416,12 @@ public class AIQuizGeneratorScreen implements Screen {
                 bannerMessage = TuiHelper.red("✖ Please specify at least 1 question across types.");
                 return ScreenResult.stay(this);
             }
+            try { timeLimit = Integer.parseInt(timeLimitBuffer.toString().trim()); } catch (Exception ignored) {}
         } else {
             try { singleC = Integer.parseInt(countBuffer.toString().trim()); } catch (Exception ignored) {}
             singleC = Math.max(1, Math.min(10, singleC));
+            try { timeLimit = Integer.parseInt(timeLimitBuffer.toString().trim()); } catch (Exception ignored) {}
         }
-
-        int timeLimit = 30;
-        try { timeLimit = Integer.parseInt(timeLimitBuffer.toString().trim()); } catch (Exception ignored) {}
 
         int hours = 0;
         try { hours = Integer.parseInt(activeHours.toString().trim()); } catch (Exception ignored) {}
@@ -359,13 +460,14 @@ public class AIQuizGeneratorScreen implements Screen {
                         .createdBy(teacherId)
                         .title(titleTopic)
                         .topic(titleTopic)
-                        .description("AI Generated " + (assessmentType == AssessmentType.EXAM ? "Exam" : "Quiz") + " on " + titleTopic)
+                        .description("AI Generated " + (assessmentType == AssessmentType.EXAM ? "Exam" : (assessmentType == AssessmentType.SPEED ? "Speed Quiz" : "Quiz")) + " on " + titleTopic)
                         .assessmentType(assessmentType)
                         .quizQuestionType(assessmentType == AssessmentType.QUIZ ? type : null)
-                        .timeLimitMins(finalMins > 0 ? finalMins : null)
+                        .timeLimitMins(assessmentType == AssessmentType.SPEED ? null : (finalMins > 0 ? finalMins : null))
+                        .speedSecondsPerQuestion(assessmentType == AssessmentType.SPEED ? finalMins : null)
                         .activeDurationHours(finalHours)
                         .passScore(finalScore)
-                        .randomizeQuestions(randomizeQuestions)
+                        .randomizeQuestions(assessmentType != AssessmentType.SPEED && randomizeQuestions)
                         .randomizeAnswers(randomizeAnswers)
                         .showAnswersAfter(showAnswersAfter)
                         .published(false)
@@ -375,7 +477,9 @@ public class AIQuizGeneratorScreen implements Screen {
 
                 String fullPromptTopic = subjStr + ": " + titleTopic;
                 List<AIQuestionDraft> drafts;
-                if (assessmentType == AssessmentType.EXAM && mixed) {
+                if (assessmentType == AssessmentType.SPEED) {
+                    drafts = aiService.generateMixedQuestions(fullPromptTopic, finalMcqCount, finalTfCount, 0, diff, optsPerMcq, customPrompt);
+                } else if (assessmentType == AssessmentType.EXAM && mixed) {
                     drafts = aiService.generateMixedQuestions(fullPromptTopic, finalMcqCount, finalTfCount, finalSaCount, diff, optsPerMcq, customPrompt);
                 } else {
                     drafts = aiService.generateQuestions(fullPromptTopic, finalSingleCount, type, diff, optsPerMcq, customPrompt);
@@ -427,8 +531,14 @@ public class AIQuizGeneratorScreen implements Screen {
         if (isGenerating) {
             return QuizViews.renderAIQuizLoading(assessmentType, titleBuffer.toString(), spinnerTick);
         }
-        String typeLabel = (assessmentType == AssessmentType.EXAM && isExamMixed)
-                ? "MIXED (Custom Counts)" : selectedType.name();
+        String typeLabel;
+        if (assessmentType == AssessmentType.SPEED) {
+            typeLabel = "SPEED (MCQ + T/F)";
+        } else if (assessmentType == AssessmentType.EXAM && isExamMixed) {
+            typeLabel = "MIXED (Custom Counts)";
+        } else {
+            typeLabel = selectedType.name();
+        }
         String subjectDisplay = (subjects.isEmpty() || selectedSubjectIndex == 0)
                 ? "(No Subject)"
                 : subjects.get(selectedSubjectIndex - 1).getCode() + " - " + subjects.get(selectedSubjectIndex - 1).getName();

@@ -89,17 +89,18 @@ public class TeacherDashboardScreen implements Screen {
 
     private String[] getMenuItems() {
         int unread = getUnreadCount();
-        String inboxLabel = unread > 0 ? "6. Inbox (" + unread + " unread)" : "6. Inbox";
+        String inboxLabel = unread > 0 ? "7. Inbox (" + unread + " unread)" : "7. Inbox";
         return new String[]{
                 "1. Quizzes",
                 "2. Exams",
-                "3. Question Bank",
-                "4. Submissions & Grading",
-                "5. Performance Reports",
+                "3. Speed Quizzes",
+                "4. Question Bank",
+                "5. Submissions & Grading",
+                "6. Performance Reports",
                 inboxLabel,
-                "7. Change Password",
-                "8. Logout",
-                "9. Exit"
+                "8. Change Password",
+                "9. Logout",
+                "10. Exit"
         };
     }
 
@@ -151,26 +152,29 @@ public class TeacherDashboardScreen implements Screen {
                 return ScreenResult.navigate(new QuizListScreen(quizService, questionService, subjectService, authService, com.proctor.model.enums.AssessmentType.EXAM));
             }
             case 2 -> {
-                return ScreenResult.navigate(new QuestionBankScreen(questionService, subjectService, authService));
+                return ScreenResult.navigate(new QuizListScreen(quizService, questionService, subjectService, authService, com.proctor.model.enums.AssessmentType.SPEED));
             }
             case 3 -> {
+                return ScreenResult.navigate(new QuestionBankScreen(questionService, subjectService, authService));
+            }
+            case 4 -> {
                 ExamService examService = new ExamService(new QuizRepository(), new AttemptRepository(), new ResultRepository());
                 return ScreenResult.navigate(new TeacherSubmissionScreen(null, examService, quizService, questionService, subjectService, authService));
             }
-            case 4 -> {
+            case 5 -> {
                 return ScreenResult.navigate(new ReportMenuScreen(reportService, authService));
             }
-            case 5 -> {
+            case 6 -> {
                 return ScreenResult.navigate(new InboxListScreen(inboxService, userService, authService, this));
             }
-            case 6 -> {
+            case 7 -> {
                 return ScreenResult.navigate(new ChangePasswordScreen(authService, userService, this));
             }
-            case 7 -> {
+            case 8 -> {
                 authService.logout();
                 return ScreenResult.navigate(new LoginScreen(authService));
             }
-            case 8 -> {
+            case 9 -> {
                 showQuitModal = true;
                 quitConfirmFocused = false;
                 return ScreenResult.stay(this);

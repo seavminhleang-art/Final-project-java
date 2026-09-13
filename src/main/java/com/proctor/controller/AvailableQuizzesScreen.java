@@ -20,6 +20,7 @@ import com.proctor.view.ExamViews;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
 import com.williamcallahan.tui4j.compat.bubbletea.Message;
 import com.williamcallahan.tui4j.compat.bubbletea.input.key.KeyType;
+import com.proctor.model.entity.SpeedQuizSession;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -75,6 +76,8 @@ public class AvailableQuizzesScreen implements Screen {
         int studentId = (student != null && student.getId() != null) ? student.getId() : 0;
         if (assessmentType == AssessmentType.EXAM) {
             this.allQuizzes = examService.getAvailableExams(studentId);
+        } else if (assessmentType == AssessmentType.SPEED) {
+            this.allQuizzes = examService.getAvailableSpeedQuizzes(studentId);
         } else {
             this.allQuizzes = examService.getAvailableQuizzes(studentId);
         }
@@ -195,6 +198,21 @@ public class AvailableQuizzesScreen implements Screen {
                 searchMode = true;
                 searchBuffer.setLength(0);
                 applyFilters();
+            } else if ("v".equalsIgnoreCase(k.key()) && assessmentType == AssessmentType.SPEED) {
+                if (!quizzes.isEmpty()) {
+                    Quiz q = quizzes.get(selectedIndex);
+                    User student = Session.getCurrentUser().orElse(null);
+                    int studentId = (student != null && student.getId() != null) ? student.getId() : 0;
+                    Optional<Attempt> attOpt = examService.getStudentAttempt(q.getId(), studentId);
+                    if (attOpt.isPresent() && attOpt.get().getStatus() == AttemptStatus.GRADED) {
+                        Optional<Result> resOpt = examService.getResultByAttempt(attOpt.get().getId());
+                        if (resOpt.isPresent()) {
+                            return ScreenResult.navigate(new SpeedQuizResultScreen(resOpt.get(), this, examService, authService));
+                        }
+                    }
+                    bannerMessage = TuiHelper.yellow("● No completed run found for this speed quiz.");
+                    return ScreenResult.stay(this);
+                }
             } else if (KeyUtil.isEnter(k)) {
                 return handleQuizAction();
             }
@@ -208,6 +226,11 @@ public class AvailableQuizzesScreen implements Screen {
         User student = Session.getCurrentUser().orElse(null);
         int studentId = (student != null && student.getId() != null) ? student.getId() : 0;
         Optional<Attempt> attOpt = examService.getStudentAttempt(q.getId(), studentId);
+
+        if (assessmentType == AssessmentType.SPEED) {
+            bannerMessage = TuiHelper.yellow("● Speed quizzes are score challenges and do not require retake requests.");
+            return ScreenResult.stay(this);
+        }
 
         if (assessmentType == AssessmentType.QUIZ) {
             if (attOpt.isEmpty() || attOpt.get().getStatus() != AttemptStatus.AUTO_SUBMITTED) {
@@ -357,6 +380,23 @@ public class AvailableQuizzesScreen implements Screen {
         Quiz q = quizzes.get(selectedIndex);
         User student = Session.getCurrentUser().orElse(null);
         int studentId = (student != null && student.getId() != null) ? student.getId() : 0;
+
+        if (assessmentType == AssessmentType.SPEED) {
+            if (q.isExpired()) {
+                bannerMessage = TuiHelper.red("✖ This speed quiz has expired and is no longer available.");
+                return ScreenResult.stay(this);
+            }
+            try {
+                SpeedQuizSession speedSession = examService.startSpeedQuiz(q.getId(), studentId);
+                return ScreenResult.navigate(new SpeedQuizTakerScreen(speedSession, examService, authService, this));
+            } catch (ValidationException e) {
+                bannerMessage = TuiHelper.red("✖ " + e.getMessage());
+                return ScreenResult.stay(this);
+            } catch (Exception e) {
+                bannerMessage = TuiHelper.red("✖ Failed to start speed quiz: " + e.getMessage());
+                return ScreenResult.stay(this);
+            }
+        }
 
         Optional<Attempt> attOpt = examService.getStudentAttempt(q.getId(), studentId);
         if (attOpt.isPresent()) {

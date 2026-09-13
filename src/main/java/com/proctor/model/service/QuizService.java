@@ -121,6 +121,19 @@ public class QuizService {
                         if (e instanceof ValidationException) throw e;
                     }
                 }
+            } else if (quiz.getAssessmentType() == AssessmentType.SPEED && questionIds != null) {
+                for (int qId : questionIds) {
+                    try {
+                        Optional<Question> qOpt = questionRepository.findById(qId);
+                        if (qOpt.isPresent() && qOpt.get().getQuestionType() == QuestionType.SHORT_ANSWER) {
+                            throw new ValidationException(String.format(
+                                    "Cannot assign question #%d (%s) to a Speed Quiz. Speed Quizzes only support Multiple Choice and True/False questions.",
+                                    qId, qOpt.get().getQuestionType()));
+                        }
+                    } catch (Exception e) {
+                        if (e instanceof ValidationException) throw e;
+                    }
+                }
             }
         }
         return quizRepository.assignQuestions(quizId, questionIds);
@@ -148,6 +161,11 @@ public class QuizService {
             }
         } else {
             quiz.setQuizQuestionType(null);
+        }
+        if (quiz.getAssessmentType() == AssessmentType.SPEED) {
+            if (quiz.getSpeedSecondsPerQuestion() == null || quiz.getSpeedSecondsPerQuestion() <= 0) {
+                quiz.setSpeedSecondsPerQuestion(15);
+            }
         }
         if (quiz.getPassScore() < 1 || quiz.getPassScore() > 100) {
             quiz.setPassScore(60);

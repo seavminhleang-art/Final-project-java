@@ -16,8 +16,9 @@ import com.proctor.model.entity.Result;
 import com.proctor.model.repository.ResultRepository;
 
 import java.util.*;
-
 import com.proctor.model.enums.AssessmentType;
+import com.proctor.model.entity.SpeedQuizSession;
+import com.proctor.model.entity.SpeedQuizAnswerRecord;
 
 public class ExamService {
     private final QuizRepository quizRepository;
@@ -40,8 +41,16 @@ public class ExamService {
         return quizRepository.findAll(AssessmentType.QUIZ, null, null, true, null, false);
     }
 
+    public Optional<Quiz> getQuiz(int quizId) {
+        return quizRepository.findById(quizId);
+    }
+
     public List<Quiz> getAvailableExams(int studentId) {
         return quizRepository.findAll(AssessmentType.EXAM, null, null, true, null, false);
+    }
+
+    public List<Quiz> getAvailableSpeedQuizzes(int studentId) {
+        return quizRepository.findAll(AssessmentType.SPEED, null, null, true, null, false);
     }
 
     public Optional<Attempt> getStudentAttempt(int quizId, int studentId) {
@@ -316,6 +325,100 @@ public class ExamService {
 
         resultRepository.saveResult(result);
         attemptRepository.finalizeAttempt(attemptId, AttemptStatus.GRADED);
+        return result;
+    }
+
+    public SpeedQuizSession startSpeedQuiz(int quizId, int studentId) {
+        Optional<Quiz> quizOpt = quizRepository.findById(quizId);
+        if (quizOpt.isEmpty()) {
+            throw new ValidationException("Speed quiz not found.");
+        }
+        Quiz quiz = quizOpt.get();
+        if (!quiz.isPublished()) {
+            throw new ValidationException("This speed quiz is not currently published.");
+        }
+        if (quiz.isExpired()) {
+            throw new ValidationException("This speed quiz has expired.");
+        }
+        if (quiz.getQuestions() == null || quiz.getQuestions().isEmpty()) {
+            throw new ValidationException("This speed quiz has no questions available.");
+        }
+
+        Attempt attempt = attemptRepository.createAttempt(quizId, studentId);
+        if (attempt == null) {
+            throw new ValidationException("Failed to initiate speed quiz attempt.");
+        }
+
+        List<Question> questions = new ArrayList<>(quiz.getQuestions());
+        if (quiz.isRandomizeAnswers()) {
+            for (Question q : questions) {
+                if (q.getOptions() != null) {
+                    List<QuestionOption> shuffled = new ArrayList<>(q.getOptions());
+                    Collections.shuffle(shuffled);
+                    q.setOptions(shuffled);
+                }
+            }
+        }
+
+        SpeedQuizSession session = new SpeedQuizSession();
+        session.initSession(quiz, attempt, questions);
+        return session;
+    }
+
+    public Result submitSpeedQuiz(SpeedQuizSession session) {
+        if (session == null || session.getAttempt() == null) {
+            throw new ValidationException("Invalid speed quiz session.");
+        }
+
+        int attemptId = session.getAttempt().getId();
+        int studentId = session.getAttempt().getStudentId();
+        int quizId = session.getQuiz().getId();
+
+        for (SpeedQuizAnswerRecord record : session.getAnswerRecords()) {
+            Question q = record.getQuestion();
+            if (q == null) continue;
+            attemptRepository.saveAnswer(attemptId, q.getId(), record.getSelectedOptionId(), null);
+        }
+
+        List<AttemptAnswer> savedAnswers = attemptRepository.getAttemptAnswers(attemptId);
+        Map<Integer, AttemptAnswer> answerMap = new HashMap<>();
+        for (AttemptAnswer a : savedAnswers) {
+            answerMap.put(a.getQuestionId(), a);
+        }
+
+        for (SpeedQuizAnswerRecord record : session.getAnswerRecords()) {
+            Question q = record.getQuestion();
+            if (q == null) continue;
+            AttemptAnswer ans = answerMap.get(q.getId());
+            if (ans != null) {
+                attemptRepository.updateAnswerGrade(
+                        ans.getId(),
+                        record.isCorrect(),
+                        record.getTotalPointsAwarded(),
+                        record.isCorrect() ? 100 : 0,
+                        null,
+                        null
+                );
+            }
+        }
+
+        attemptRepository.finalizeAttempt(attemptId, AttemptStatus.GRADED);
+
+        double roundedScore = Math.round(session.getTotalScore() * 10.0) / 10.0;
+        Result result = Result.builder()
+                .attemptId(attemptId)
+                .studentId(studentId)
+                .quizId(quizId)
+                .quizTitle(session.getQuiz().getTitle())
+                .assessmentType(AssessmentType.SPEED)
+                .totalPoints(roundedScore)
+                .maxPoints(roundedScore)
+                .percentage(100.0)
+                .passed(true)
+                .pendingReview(false)
+                .build();
+
+        resultRepository.saveResult(result);
         return result;
     }
 }

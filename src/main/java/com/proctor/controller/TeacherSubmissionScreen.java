@@ -6,6 +6,7 @@ import com.proctor.model.enums.Role;
 import com.proctor.model.service.AuthService;
 import com.proctor.exception.ValidationException;
 import com.proctor.model.entity.Attempt;
+import com.proctor.model.enums.AssessmentType;
 import com.proctor.model.enums.AttemptStatus;
 import com.proctor.model.entity.AttemptAnswer;
 import com.proctor.model.service.ExamService;
@@ -88,7 +89,8 @@ public class TeacherSubmissionScreen implements Screen {
             if (!search.isEmpty()) {
                 boolean matchStudent = a.getStudentName() != null && a.getStudentName().toLowerCase().contains(search);
                 boolean matchQuiz = a.getQuizTitle() != null && a.getQuizTitle().toLowerCase().contains(search);
-                if (!matchStudent && !matchQuiz) {
+                boolean matchType = a.getAssessmentType() != null && a.getAssessmentType().name().toLowerCase().contains(search);
+                if (!matchStudent && !matchQuiz && !matchType) {
                     return false;
                 }
             }
@@ -135,8 +137,10 @@ public class TeacherSubmissionScreen implements Screen {
                 Quiz currentQuiz = specificQuiz;
                 if (currentQuiz == null && currentAttempt != null) {
                     currentQuiz = quizService.getQuizById(currentAttempt.getQuizId()).orElse(null);
+                } else if (currentQuiz != null && (currentQuiz.getQuestions() == null || currentQuiz.getQuestions().isEmpty())) {
+                    currentQuiz = quizService.getQuizById(currentQuiz.getId()).orElse(currentQuiz);
                 }
-                List<Question> questions = (currentQuiz != null) ? currentQuiz.getQuestions() : List.of();
+                List<Question> questions = (currentQuiz != null && currentQuiz.getQuestions() != null) ? currentQuiz.getQuestions() : List.of();
                 if (KeyUtil.isEsc(k)) {
                     inspectingAnswerSheet = false;
                     return ScreenResult.stay(this);
@@ -243,6 +247,10 @@ public class TeacherSubmissionScreen implements Screen {
             return;
         }
         Attempt att = submissions.get(selectedIndex);
+        if (att.getAssessmentType() == AssessmentType.SPEED) {
+            bannerMessage = TuiHelper.yellow("● Speed Quizzes are auto-scored objective assessments. Grade is already finalized.");
+            return;
+        }
         if (att.getStatus() == AttemptStatus.GRADED) {
             bannerMessage = TuiHelper.yellow("● Grade has already been returned for this submission.");
             return;
@@ -267,6 +275,10 @@ public class TeacherSubmissionScreen implements Screen {
             return ScreenResult.stay(this);
         }
         Attempt att = submissions.get(selectedIndex);
+        if (att.getAssessmentType() == AssessmentType.SPEED) {
+            bannerMessage = TuiHelper.yellow("● Speed Quizzes are objective (MCQ / T&F) only. AI grading is not applicable.");
+            return ScreenResult.stay(this);
+        }
         if (att.getStatus() == AttemptStatus.GRADED) {
             bannerMessage = TuiHelper.yellow("● This submission is already graded. AI grading cannot be re-run.");
             return ScreenResult.stay(this);
@@ -315,6 +327,8 @@ public class TeacherSubmissionScreen implements Screen {
             Quiz currentQuiz = specificQuiz;
             if (currentQuiz == null) {
                 currentQuiz = quizService.getQuizById(attempt.getQuizId()).orElse(null);
+            } else if (currentQuiz.getQuestions() == null || currentQuiz.getQuestions().isEmpty()) {
+                currentQuiz = quizService.getQuizById(currentQuiz.getId()).orElse(currentQuiz);
             }
             List<AttemptAnswer> answers = examService.getAttemptAnswers(attempt.getId());
             Map<Integer, AttemptAnswer> answerMap = new java.util.HashMap<>();

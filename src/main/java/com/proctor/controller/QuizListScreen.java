@@ -173,6 +173,9 @@ public class QuizListScreen implements Screen {
             } else if ("n".equalsIgnoreCase(k.key())) {
                 User user = Session.getCurrentUser().orElse(null);
                 if (user == null || user.getRole() != Role.ADMIN) {
+                    if (assessmentType == AssessmentType.SPEED) {
+                        return ScreenResult.navigate(new SpeedQuizFormScreen(quizService, questionService, subjectService, authService, null));
+                    }
                     return ScreenResult.navigate(new QuizFormScreen(quizService, questionService, subjectService, authService, null, assessmentType));
                 }
             } else if ("g".equalsIgnoreCase(k.key())) {
@@ -193,6 +196,9 @@ public class QuizListScreen implements Screen {
                 if (!quizzes.isEmpty()) {
                     Quiz q = quizzes.get(selectedIndex);
                     if (canModify(q)) {
+                        if (assessmentType == AssessmentType.SPEED || q.getAssessmentType() == AssessmentType.SPEED) {
+                            return ScreenResult.navigate(new SpeedQuizFormScreen(quizService, questionService, subjectService, authService, q));
+                        }
                         return ScreenResult.navigate(new QuizFormScreen(quizService, questionService, subjectService, authService, q, assessmentType));
                     } else {
                         bannerMessage = TuiHelper.red("✖ You can only edit assessments you created.");
