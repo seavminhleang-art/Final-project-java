@@ -35,6 +35,13 @@ public class QuizService {
         return quizRepository.findAll(type, subjectId, createdBy, published, search, false);
     }
 
+    public List<Quiz> getAssessmentsVisibleTo(AssessmentType type, Integer subjectId, Integer visibleToUserId, String search) {
+        if (visibleToUserId == null) {
+            return quizRepository.findAll(type, subjectId, null, true, search, false);
+        }
+        return quizRepository.findAll(type, subjectId, null, null, search, false, visibleToUserId);
+    }
+
     public Optional<Quiz> getQuizById(int id) {
         return quizRepository.findById(id);
     }

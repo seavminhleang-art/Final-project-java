@@ -17,10 +17,14 @@ import java.util.Optional;
 public class QuizRepository {
 
     public List<Quiz> findAll(AssessmentType assessmentType, Integer subjectId, Integer createdBy, Boolean published, String search, boolean activeOnly) {
-        return queryDatabase(assessmentType, subjectId, createdBy, published, search, activeOnly);
+        return queryDatabase(assessmentType, subjectId, createdBy, published, search, activeOnly, null);
     }
 
-    private List<Quiz> queryDatabase(AssessmentType assessmentType, Integer subjectId, Integer createdBy, Boolean published, String search, boolean activeOnly) {
+    public List<Quiz> findAll(AssessmentType assessmentType, Integer subjectId, Integer createdBy, Boolean published, String search, boolean activeOnly, Integer visibleToUserId) {
+        return queryDatabase(assessmentType, subjectId, createdBy, published, search, activeOnly, visibleToUserId);
+    }
+
+    private List<Quiz> queryDatabase(AssessmentType assessmentType, Integer subjectId, Integer createdBy, Boolean published, String search, boolean activeOnly, Integer visibleToUserId) {
         List<Quiz> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT q.id, q.subject_id, s.code AS subject_code, q.created_by, u.full_name AS creator_name, u.gender AS creator_gender, u.role AS creator_role, q.assessment_type, q.quiz_question_type, q.title, q.topic, q.description, " +
@@ -54,6 +58,9 @@ public class QuizRepository {
         if (published != null) {
             sql.append(" AND q.is_published = ?");
             params.add(published);
+        } else if (visibleToUserId != null) {
+            sql.append(" AND (q.is_published = TRUE OR q.created_by = ?)");
+            params.add(visibleToUserId);
         }
 
         if (activeOnly) {

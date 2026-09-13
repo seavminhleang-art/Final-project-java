@@ -70,14 +70,18 @@ public class QuizListScreen implements Screen {
 
     private void refreshList() {
         User user = Session.getCurrentUser().orElse(null);
+        boolean isAdmin = user != null && user.getRole() == Role.ADMIN;
         Integer teacherId = (currentScope == QuizScope.MY_QUIZZES && user != null) ? user.getId() : null;
         Integer subjectId = (subjectFilterIndex > 0 && subjectFilterIndex <= allSubjects.size())
                 ? allSubjects.get(subjectFilterIndex - 1).getId() : null;
 
         if (teacherId != null) {
             this.quizzes = quizService.getAssessments(assessmentType, subjectId, teacherId, null, searchBuffer.toString());
-        } else {
+        } else if (isAdmin) {
             this.quizzes = quizService.getAssessments(assessmentType, subjectId, null, searchBuffer.toString());
+        } else {
+            Integer currentUserId = (user != null) ? user.getId() : null;
+            this.quizzes = quizService.getAssessmentsVisibleTo(assessmentType, subjectId, currentUserId, searchBuffer.toString());
         }
 
         if (quizzes.isEmpty()) {
@@ -253,9 +257,10 @@ public class QuizListScreen implements Screen {
         }
         currentScope = (currentScope == QuizScope.MY_QUIZZES) ? QuizScope.ALL_GLOBAL : QuizScope.MY_QUIZZES;
         selectedIndex = 0;
+        String baseItemTitle = (assessmentType == AssessmentType.EXAM) ? "EXAMS" : (assessmentType == AssessmentType.SPEED ? "SPEED QUIZZES" : "QUIZZES");
         bannerMessage = (currentScope == QuizScope.MY_QUIZZES)
-                ? TuiHelper.cyan("Switched scope to: MY QUIZZES")
-                : TuiHelper.cyan("Switched scope to: ALL GLOBAL QUIZZES");
+                ? TuiHelper.cyan("Switched scope to: MY " + baseItemTitle)
+                : TuiHelper.cyan("Switched scope to: ALL GLOBAL " + baseItemTitle);
         refreshList();
     }
 
