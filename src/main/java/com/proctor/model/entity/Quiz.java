@@ -2,6 +2,7 @@ package com.proctor.model.entity;
 
 import com.proctor.model.enums.AssessmentType;
 import com.proctor.model.enums.QuestionType;
+import com.proctor.model.enums.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,6 +22,18 @@ public class Quiz {
     private String subjectCode;
     private Integer createdBy;
     private String creatorName;
+    private String creatorGender;
+    private Role creatorRole;
+
+    public String getCreatorName() {
+        if (creatorName == null || creatorName.isBlank()) {
+            return creatorName;
+        }
+        if (creatorRole != null && creatorRole != Role.TEACHER) {
+            return creatorName;
+        }
+        return User.formatTeacherName(creatorGender, creatorName);
+    }
     @Builder.Default
     private AssessmentType assessmentType = AssessmentType.QUIZ;
     private QuestionType quizQuestionType;

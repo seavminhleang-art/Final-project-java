@@ -3,6 +3,7 @@ package com.proctor.model.repository;
 import com.proctor.model.enums.AssessmentType;
 import com.proctor.model.enums.Difficulty;
 import com.proctor.model.enums.QuestionType;
+import com.proctor.model.enums.Role;
 import com.proctor.config.DatabaseConnection;
 import com.proctor.model.entity.Question;
 import com.proctor.model.entity.QuestionOption;
@@ -22,7 +23,7 @@ public class QuizRepository {
     private List<Quiz> queryDatabase(AssessmentType assessmentType, Integer subjectId, Integer createdBy, Boolean published, String search, boolean activeOnly) {
         List<Quiz> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
-                "SELECT q.id, q.subject_id, s.code AS subject_code, q.created_by, u.full_name AS creator_name, q.assessment_type, q.quiz_question_type, q.title, q.topic, q.description, " +
+                "SELECT q.id, q.subject_id, s.code AS subject_code, q.created_by, u.full_name AS creator_name, u.gender AS creator_gender, u.role AS creator_role, q.assessment_type, q.quiz_question_type, q.title, q.topic, q.description, " +
                 "q.time_limit_mins, q.pass_score, q.randomize_questions, q.randomize_answers, q.show_answers_after, " +
                 "q.is_published, q.expires_at, q.created_at, q.updated_at, " +
                 "(SELECT COUNT(*) FROM questions qu WHERE qu.quiz_id = q.id OR qu.id IN (SELECT qq.question_id FROM quiz_questions qq WHERE qq.quiz_id = q.id)) AS q_count, " +
@@ -89,7 +90,7 @@ public class QuizRepository {
     }
 
     public Optional<Quiz> findById(int id) {
-        String sql = "SELECT q.id, q.subject_id, s.code AS subject_code, q.created_by, u.full_name AS creator_name, q.assessment_type, q.quiz_question_type, q.title, q.topic, q.description, " +
+        String sql = "SELECT q.id, q.subject_id, s.code AS subject_code, q.created_by, u.full_name AS creator_name, u.gender AS creator_gender, u.role AS creator_role, q.assessment_type, q.quiz_question_type, q.title, q.topic, q.description, " +
                      "q.time_limit_mins, q.pass_score, q.randomize_questions, q.randomize_answers, q.show_answers_after, " +
                      "q.is_published, q.expires_at, q.created_at, q.updated_at, " +
                      "(SELECT COUNT(*) FROM questions qu WHERE qu.quiz_id = q.id OR qu.id IN (SELECT qq.question_id FROM quiz_questions qq WHERE qq.quiz_id = q.id)) AS q_count, " +
@@ -376,6 +377,15 @@ public class QuizRepository {
         try {
             creatorName = rs.getString("creator_name");
         } catch (SQLException ignored) {}
+        String creatorGender = null;
+        try {
+            creatorGender = rs.getString("creator_gender");
+        } catch (SQLException ignored) {}
+        Role creatorRole = null;
+        try {
+            String roleStr = rs.getString("creator_role");
+            if (roleStr != null) creatorRole = Role.valueOf(roleStr);
+        } catch (Exception ignored) {}
 
         return Quiz.builder()
                 .id(rs.getInt("id"))
@@ -383,6 +393,8 @@ public class QuizRepository {
                 .subjectCode(rs.getString("subject_code"))
                 .createdBy(rs.getObject("created_by") != null ? rs.getInt("created_by") : null)
                 .creatorName(creatorName)
+                .creatorGender(creatorGender)
+                .creatorRole(creatorRole)
                 .assessmentType(aType)
                 .quizQuestionType(qType)
                 .title(rs.getString("title"))

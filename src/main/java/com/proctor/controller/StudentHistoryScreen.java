@@ -39,7 +39,7 @@ public class StudentHistoryScreen implements Screen {
 
     private void refreshHistory() {
         User student = Session.getCurrentUser().orElse(null);
-        int studentId = student != null ? student.getId() : 0;
+        int studentId = (student != null && student.getId() != null) ? student.getId() : 0;
         this.allHistory = portalService.getStudentHistory(studentId);
         applyFilters();
     }

@@ -72,7 +72,7 @@ public class AvailableQuizzesScreen implements Screen {
 
     private void refreshList() {
         User student = Session.getCurrentUser().orElse(null);
-        int studentId = student != null ? student.getId() : 0;
+        int studentId = (student != null && student.getId() != null) ? student.getId() : 0;
         if (assessmentType == AssessmentType.EXAM) {
             this.allQuizzes = examService.getAvailableExams(studentId);
         } else {
@@ -206,7 +206,7 @@ public class AvailableQuizzesScreen implements Screen {
         if (quizzes.isEmpty()) return ScreenResult.stay(this);
         Quiz q = quizzes.get(selectedIndex);
         User student = Session.getCurrentUser().orElse(null);
-        int studentId = student != null ? student.getId() : 0;
+        int studentId = (student != null && student.getId() != null) ? student.getId() : 0;
         Optional<Attempt> attOpt = examService.getStudentAttempt(q.getId(), studentId);
 
         if (assessmentType == AssessmentType.QUIZ) {
@@ -305,7 +305,7 @@ public class AvailableQuizzesScreen implements Screen {
 
             Quiz q = quizzes.get(selectedIndex);
             User student = Session.getCurrentUser().orElse(null);
-            int studentId = student != null ? student.getId() : 0;
+            int studentId = (student != null && student.getId() != null) ? student.getId() : 0;
 
             if (q.getCreatedBy() == null) {
                 bannerMessage = TuiHelper.red("✖ Teacher for this exam was not found.");
@@ -356,7 +356,7 @@ public class AvailableQuizzesScreen implements Screen {
 
         Quiz q = quizzes.get(selectedIndex);
         User student = Session.getCurrentUser().orElse(null);
-        int studentId = student != null ? student.getId() : 0;
+        int studentId = (student != null && student.getId() != null) ? student.getId() : 0;
 
         Optional<Attempt> attOpt = examService.getStudentAttempt(q.getId(), studentId);
         if (attOpt.isPresent()) {
@@ -409,7 +409,7 @@ public class AvailableQuizzesScreen implements Screen {
         }
 
         User student = Session.getCurrentUser().orElse(null);
-        int studentId = student != null ? student.getId() : 0;
+        int studentId = (student != null && student.getId() != null) ? student.getId() : 0;
         Map<Integer, Attempt> attempts = new java.util.HashMap<>();
         for (Quiz q : quizzes) {
             examService.getStudentAttempt(q.getId(), studentId).ifPresent(att -> attempts.put(q.getId(), att));

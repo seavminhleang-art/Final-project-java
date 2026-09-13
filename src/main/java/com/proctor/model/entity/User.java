@@ -32,4 +32,27 @@ public class User {
         }
         return email != null ? email : "";
     }
+
+    public String getDisplayNameWithHonorific() {
+        if (role == Role.TEACHER) {
+            return formatTeacherName(gender, fullName);
+        }
+        return fullName != null ? fullName : "";
+    }
+
+    public static String formatTeacherName(String gender, String fullName) {
+        if (fullName == null || fullName.isBlank()) {
+            return "Teacher";
+        }
+        String clean = fullName.trim();
+        if (clean.startsWith("Mr. ") || clean.startsWith("Mrs. ") || clean.startsWith("Ms. ")
+                || clean.startsWith("Miss ") || clean.startsWith("Dr. ") || clean.startsWith("Prof. ")) {
+            return clean;
+        }
+        if ("Female".equalsIgnoreCase(gender)) {
+            return "Mrs. " + clean;
+        } else {
+            return "Mr. " + clean;
+        }
+    }
 }

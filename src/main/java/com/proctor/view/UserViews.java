@@ -41,13 +41,16 @@ public class UserViews {
                 String status = u.isEnabled() ? TuiHelper.green("Enabled") : TuiHelper.red("Disabled");
                 String dobStr = (u.getDateOfBirth() != null) ? u.getDateOfBirth().format(DISPLAY_FMT) : "-";
                 String genderStr = (u.getGender() != null && !u.getGender().isBlank()) ? u.getGender() : "-";
+                String displayName = (u.getRole() == Role.TEACHER)
+                        ? u.getDisplayNameWithHonorific()
+                        : (u.getFullName() != null ? u.getFullName() : "-");
 
                 String line = String.format("%-4d  %-6d  %-18s  %-28s  %-20s  %-8s  %-12s  %-10s  %-9s",
                         (i + 1),
                         u.getId(),
                         truncate("@" + u.getUsername(), 18),
                         truncate(u.getEmail() != null ? u.getEmail() : "-", 28),
-                        truncate(u.getFullName(), 20),
+                        truncate(displayName, 20),
                         truncate(genderStr, 8),
                         dobStr,
                         u.getRole().name(),

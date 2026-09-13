@@ -192,7 +192,7 @@ public class TeacherDashboardScreen implements Screen {
             );
         }
         User user = Session.getCurrentUser().orElse(null);
-        String name = user != null ? user.getFullName() : "Teacher";
+        String name = user != null ? user.getDisplayNameWithHonorific() : "Teacher";
         String identifier = user != null ? user.getDisplayIdentifier() : "teacher";
         return DashboardViews.renderDashboard("PROCTOR - TEACHER DASHBOARD", name, identifier, getMenuItems(), selectedIndex);
     }
