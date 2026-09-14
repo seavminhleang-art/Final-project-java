@@ -105,6 +105,7 @@ public class SchemaInitializer {
             }
         } catch (Exception e) {
             System.err.println("Database schema initialization error: " + e.getMessage());
+            throw new RuntimeException("Database connection or schema initialization failed: " + e.getMessage(), e);
         }
     }
 }
