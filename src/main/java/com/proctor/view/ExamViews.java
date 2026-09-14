@@ -72,12 +72,12 @@ public class ExamViews {
                 Attempt att = studentAttempts.get(q.getId());
                 String statusStr;
                 if (att == null) {
-                    statusStr = q.isExpired() ? TuiHelper.red("Expired") : TuiHelper.green("Available");
+                    statusStr = q.isExpired() ? TuiHelper.red("EXPIRED") : TuiHelper.green("AVAILABLE");
                 } else {
                     statusStr = switch (att.getStatus()) {
-                        case IN_PROGRESS -> TuiHelper.yellow("In Progress");
-                        case AUTO_SUBMITTED, TURNED_IN -> TuiHelper.cyan("Turned In");
-                        case GRADED -> TuiHelper.green("Graded");
+                        case IN_PROGRESS -> TuiHelper.dim("IN PROGRESS");
+                        case AUTO_SUBMITTED, TURNED_IN -> TuiHelper.yellow("PENDING REVIEW");
+                        case GRADED -> TuiHelper.green("GRADED");
                     };
                 }
 

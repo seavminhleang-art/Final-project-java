@@ -19,8 +19,14 @@ public class SubjectViews {
         sb.append(TuiHelper.header("SUBJECTS"));
         sb.append("\n");
         String statusLabel = (statusFilterDisplay == null || statusFilterDisplay.isBlank()) ? "ALL" : statusFilterDisplay;
+        int activeTab = switch (statusLabel.toUpperCase()) {
+            case "ENABLED" -> 1;
+            case "DISABLED" -> 2;
+            default -> 0;
+        };
         sb.append(TuiHelper.boxTitle("Subject Management",
-                String.format("Status: [ %s ]  •  Total: %d", statusLabel, subjects.size()))).append("\n\n");
+                String.format("Total Subjects: %d", subjects.size()))).append("\n\n");
+        sb.append(TuiHelper.tabBar(new String[]{"All", "Enabled", "Disabled"}, activeTab)).append("\n\n");
 
         if (searchMode) {
             sb.append("  Search: [ ").append(TuiHelper.cyan(searchBuffer + "_")).append(" ] (Press Enter to finish)\n\n");
@@ -81,7 +87,7 @@ public class SubjectViews {
                 "[n] New",
                 "[d] Delete",
                 "[/] Search",
-                "[f] Filter",
+                "[f] Tab",
                 "[Esc] Back"
         );
         sb.append(TuiHelper.wrapHints(hints));

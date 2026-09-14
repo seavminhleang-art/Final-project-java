@@ -409,7 +409,7 @@ public class AvailableQuizzesScreen implements Screen {
                 bannerMessage = TuiHelper.yellow("● You have already completed this assessment. View your scorecard in History.");
                 return ScreenResult.stay(this);
             } else if (att.getStatus() == AttemptStatus.TURNED_IN) {
-                bannerMessage = TuiHelper.yellow("● This assessment is Turned In and pending teacher review.");
+                bannerMessage = TuiHelper.yellow("● This assessment is turned in and pending teacher review.");
                 return ScreenResult.stay(this);
             } else if (att.getStatus() == AttemptStatus.AUTO_SUBMITTED) {
                 bannerMessage = TuiHelper.yellow("● Timer expired. Press [r] to request a retake from your teacher.");
