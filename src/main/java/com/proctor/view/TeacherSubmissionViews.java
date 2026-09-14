@@ -78,11 +78,7 @@ public class TeacherSubmissionViews {
                 int statusWidth = (specificQuiz == null) ? 18 : 24;
                 String statusStr;
                 if (a.getStatus() == com.proctor.model.enums.AttemptStatus.GRADED) {
-                    if (a.getAssessmentType() == AssessmentType.SPEED) {
-                        statusStr = TuiHelper.cyan(String.format("%-" + statusWidth + "s", "GRADED"));
-                    } else {
-                        statusStr = TuiHelper.green(String.format("%-" + statusWidth + "s", "GRADED"));
-                    }
+                    statusStr = TuiHelper.green(String.format("%-" + statusWidth + "s", "GRADED"));
                 } else if (a.getStatus() == com.proctor.model.enums.AttemptStatus.AUTO_SUBMITTED || a.getStatus() == com.proctor.model.enums.AttemptStatus.TURNED_IN) {
                     statusStr = TuiHelper.yellow(String.format("%-" + statusWidth + "s", "PENDING REVIEW"));
                 } else {

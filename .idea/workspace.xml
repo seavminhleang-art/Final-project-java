@@ -6,11 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="c05deeaa-fc82-4d29-9b43-ab8bc6abc8c2" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/view/ExamViews.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/view/ExamViews.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/view/InboxViews.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/view/InboxViews.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/view/QuestionViews.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/view/QuestionViews.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/view/SpeedQuizViews.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/view/SpeedQuizViews.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/view/TeacherSubmissionViews.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/view/TeacherSubmissionViews.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

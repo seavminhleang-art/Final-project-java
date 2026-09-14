@@ -77,7 +77,7 @@ public class ExamViews {
                     statusStr = switch (att.getStatus()) {
                         case IN_PROGRESS -> TuiHelper.yellow("In Progress");
                         case AUTO_SUBMITTED, TURNED_IN -> TuiHelper.cyan("Turned In");
-                        case GRADED -> TuiHelper.bold("Graded");
+                        case GRADED -> TuiHelper.green("Graded");
                     };
                 }
 
@@ -323,7 +323,7 @@ public class ExamViews {
                     scoreStr = "- / -";
                     pctStr = "-";
                 } else if (r.getAssessmentType() == AssessmentType.SPEED) {
-                    status = TuiHelper.cyan(String.format("%-10s", "GRADED"));
+                    status = TuiHelper.green(String.format("%-10s", "GRADED"));
                     scoreStr = String.format("%.1f pts", r.getTotalPoints());
                     pctStr = "-";
                 } else {
