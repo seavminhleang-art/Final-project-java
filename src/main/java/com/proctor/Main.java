@@ -44,7 +44,7 @@ public class Main {
                 if (cause.getMessage() != null && !cause.getMessage().isBlank()) {
                     System.out.println("\u001B[33m  Caused by: " + cause.getMessage() + "\u001B[0m");
                 }
-                cause = cause.getCause();   
+                cause = cause.getCause();
             }
             System.out.println();
             String fullErr = (t.getMessage() != null ? t.getMessage() : "") + (t.getCause() != null && t.getCause().getMessage() != null ? t.getCause().getMessage() : "");

@@ -21,6 +21,27 @@ CREATE TABLE IF NOT EXISTS subjects (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS quizzes (
+    id SERIAL PRIMARY KEY,
+    subject_id INT REFERENCES subjects(id) ON DELETE SET NULL,
+    created_by INT REFERENCES users(id),
+    assessment_type VARCHAR(20) NOT NULL DEFAULT 'QUIZ',
+    quiz_question_type VARCHAR(30),
+    title VARCHAR(200) NOT NULL,
+    topic VARCHAR(100),
+    description TEXT,
+    time_limit_mins INT,
+    speed_quiz_seconds_per_question INT,
+    pass_score INT NOT NULL DEFAULT 50,
+    randomize_questions BOOLEAN DEFAULT TRUE,
+    randomize_answers BOOLEAN DEFAULT TRUE,
+    show_answers_after BOOLEAN DEFAULT FALSE,
+    is_published BOOLEAN DEFAULT FALSE,
+    expires_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS questions (
     id SERIAL PRIMARY KEY,
     quiz_id INT REFERENCES quizzes(id) ON DELETE CASCADE,
@@ -42,27 +63,6 @@ CREATE TABLE IF NOT EXISTS question_options (
     option_text TEXT NOT NULL,
     is_correct BOOLEAN NOT NULL DEFAULT FALSE,
     option_order INT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS quizzes (
-    id SERIAL PRIMARY KEY,
-    subject_id INT REFERENCES subjects(id) ON DELETE SET NULL,
-    created_by INT REFERENCES users(id),
-    assessment_type VARCHAR(20) NOT NULL DEFAULT 'QUIZ',
-    quiz_question_type VARCHAR(30),
-    title VARCHAR(200) NOT NULL,
-    topic VARCHAR(100),
-    description TEXT,
-    time_limit_mins INT,
-    speed_quiz_seconds_per_question INT,
-    pass_score INT NOT NULL DEFAULT 50,
-    randomize_questions BOOLEAN DEFAULT TRUE,
-    randomize_answers BOOLEAN DEFAULT TRUE,
-    show_answers_after BOOLEAN DEFAULT FALSE,
-    is_published BOOLEAN DEFAULT FALSE,
-    expires_at TIMESTAMP,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS quiz_questions (
