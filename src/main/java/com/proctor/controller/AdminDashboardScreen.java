@@ -108,7 +108,7 @@ public class AdminDashboardScreen implements Screen {
         String[] menuItems = getMenuItems();
         if (msg instanceof KeyPressMessage k) {
             if (showQuitModal) {
-                if (KeyUtil.isLeft(k) || KeyUtil.isRight(k) || KeyUtil.isTab(k)) {
+                if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {
                     quitConfirmFocused = !quitConfirmFocused;
                     return ScreenResult.stay(this);
                 }

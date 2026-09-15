@@ -74,7 +74,7 @@ public class QuestionBankScreen implements Screen {
 
             // --- Delete confirmation modal ---
             if (confirmingDelete) {
-                if (KeyUtil.isLeft(k) || KeyUtil.isRight(k) || KeyUtil.isTab(k)) {
+                if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {
                     confirmDeleteFocused = !confirmDeleteFocused;
                     return ScreenResult.stay(this);
                 }
@@ -157,7 +157,7 @@ public class QuestionBankScreen implements Screen {
                 confirmingDelete = true;
                 confirmDeleteFocused = false;
                 return ScreenResult.stay(this);
-            } else if ("f".equalsIgnoreCase(k.key())) {
+            } else if (KeyUtil.isTab(k) || "f".equalsIgnoreCase(k.key())) {
                 // Cycle type filter
                 if (typeFilter == null) typeFilter = QuestionType.MCQ;
                 else if (typeFilter == QuestionType.MCQ) typeFilter = QuestionType.TRUE_FALSE;

@@ -90,7 +90,7 @@ public class InboxListScreen implements Screen {
     public ScreenResult update(Message msg) {
         if (msg instanceof KeyPressMessage k) {
             if (showDeleteModal) {
-                if (KeyUtil.isLeft(k) || KeyUtil.isRight(k) || KeyUtil.isTab(k)) {
+                if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {
                     deleteConfirmFocused = !deleteConfirmFocused;
                     return ScreenResult.stay(this);
                 }
@@ -178,7 +178,7 @@ public class InboxListScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
-            if ("f".equalsIgnoreCase(k.key())) {
+            if (KeyUtil.isTab(k) || "f".equalsIgnoreCase(k.key())) {
                 filterIndex = (filterIndex + 1) % FILTERS.length;
                 selectedIndex = 0;
                 applyFilters();

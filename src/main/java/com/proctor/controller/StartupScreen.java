@@ -21,7 +21,7 @@ public class StartupScreen implements Screen {
     public ScreenResult update(Message msg) {
         if (msg instanceof KeyPressMessage k) {
             if (showQuitModal) {
-                if (KeyUtil.isLeft(k) || KeyUtil.isRight(k) || KeyUtil.isTab(k)) {
+                if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {
                     quitConfirmFocused = !quitConfirmFocused;
                     return ScreenResult.stay(this);
                 }
@@ -64,7 +64,7 @@ public class StartupScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
-            if (KeyUtil.isTab(k) || KeyUtil.isDown(k)) {
+            if (KeyUtil.isDown(k)) {
                 if (focusedButton == 0 || focusedButton == 1) {
                     focusedButton = 2;
                 } else {
@@ -73,7 +73,7 @@ public class StartupScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
-            if ("shift+tab".equalsIgnoreCase(k.key()) || KeyUtil.isUp(k)) {
+            if (KeyUtil.isUp(k)) {
                 if (focusedButton == 2) {
                     focusedButton = 0;
                 } else {

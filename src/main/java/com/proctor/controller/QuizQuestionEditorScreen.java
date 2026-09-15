@@ -75,7 +75,7 @@ public class QuizQuestionEditorScreen implements Screen {
 
         if (msg instanceof KeyPressMessage k) {
             if (confirmingDelete) {
-                if (KeyUtil.isLeft(k) || KeyUtil.isRight(k) || KeyUtil.isTab(k) || "shift+tab".equalsIgnoreCase(k.key())) {
+                if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {
                     confirmDeleteFocused = !confirmDeleteFocused;
                     return ScreenResult.stay(this);
                 } else if (KeyUtil.isEnter(k)) {

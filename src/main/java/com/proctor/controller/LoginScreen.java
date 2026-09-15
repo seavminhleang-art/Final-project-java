@@ -56,12 +56,12 @@ public class LoginScreen implements Screen {
                 return ScreenResult.navigate(new StartupScreen(authService));
             }
 
-            if (KeyUtil.isTab(k) || KeyUtil.isDown(k)) {
+            if (KeyUtil.isDown(k)) {
                 focusedField = (focusedField + 1) % getFieldCount();
                 return ScreenResult.stay(this);
             }
 
-            if ("shift+tab".equalsIgnoreCase(k.key()) || KeyUtil.isUp(k)) {
+            if (KeyUtil.isUp(k)) {
                 focusedField = (focusedField - 1 + getFieldCount()) % getFieldCount();
                 return ScreenResult.stay(this);
             }
@@ -127,12 +127,12 @@ public class LoginScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
-        if (KeyUtil.isTab(k) || KeyUtil.isDown(k)) {
+        if (KeyUtil.isDown(k)) {
             forgotFocusIndex = (forgotFocusIndex + 1) % 5;
             return ScreenResult.stay(this);
         }
 
-        if ("shift+tab".equalsIgnoreCase(k.key()) || KeyUtil.isUp(k)) {
+        if (KeyUtil.isUp(k)) {
             forgotFocusIndex = (forgotFocusIndex - 1 + 5) % 5;
             return ScreenResult.stay(this);
         }
@@ -253,7 +253,7 @@ public class LoginScreen implements Screen {
             if (!forgotMessage.isBlank()) {
                 sb.append("  ").append(forgotMessage).append("\n\n");
             }
-            sb.append(TuiHelper.dim("  [Tab/↑/↓] Switch Field  •  [Enter] Confirm  •  [Esc] Cancel\n"));
+            sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Confirm  •  [Esc] Cancel\n"));
             return sb.toString();
         }
 

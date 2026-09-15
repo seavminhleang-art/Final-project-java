@@ -141,12 +141,12 @@ public class AIQuizGeneratorScreen implements Screen {
                 return ScreenResult.navigate(new QuizListScreen(quizService, questionService, subjectService, authService, assessmentType));
             }
 
-            if (KeyUtil.isTab(k) || KeyUtil.isDown(k)) {
+            if (KeyUtil.isDown(k)) {
                 focusedField = (focusedField + 1) % getFieldCount();
                 return ScreenResult.stay(this);
             }
 
-            if ("shift+tab".equalsIgnoreCase(k.key()) || KeyUtil.isUp(k)) {
+            if (KeyUtil.isUp(k)) {
                 focusedField = (focusedField - 1 + getFieldCount()) % getFieldCount();
                 return ScreenResult.stay(this);
             }

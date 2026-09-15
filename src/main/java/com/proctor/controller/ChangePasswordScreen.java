@@ -38,12 +38,12 @@ public class ChangePasswordScreen implements Screen {
                 return navigateBack();
             }
 
-            if (KeyUtil.isTab(k) || KeyUtil.isDown(k)) {
+            if (KeyUtil.isDown(k)) {
                 focusedField = (focusedField + 1) % 5;
                 return ScreenResult.stay(this);
             }
 
-            if ("shift+tab".equalsIgnoreCase(k.key()) || KeyUtil.isUp(k)) {
+            if (KeyUtil.isUp(k)) {
                 focusedField = (focusedField - 1 + 5) % 5;
                 return ScreenResult.stay(this);
             }
@@ -175,7 +175,7 @@ public class ChangePasswordScreen implements Screen {
             sb.append("  ").append(successBanner).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [Tab/↑/↓] Switch Field  •  [Enter] Confirm  •  [Esc] Back\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Confirm  •  [Esc] Back\n"));
         return sb.toString();
     }
 }

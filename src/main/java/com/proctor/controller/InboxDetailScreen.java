@@ -47,7 +47,7 @@ public class InboxDetailScreen implements Screen {
     public ScreenResult update(Message msg) {
         if (msg instanceof KeyPressMessage k) {
             if (showDeleteModal) {
-                if (KeyUtil.isLeft(k) || KeyUtil.isRight(k) || KeyUtil.isTab(k)) {
+                if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {
                     deleteConfirmFocused = !deleteConfirmFocused;
                     return ScreenResult.stay(this);
                 }
@@ -88,7 +88,7 @@ public class InboxDetailScreen implements Screen {
     }
 
     private ScreenResult handleStandardActionInput(KeyPressMessage k) {
-        if (KeyUtil.isLeft(k) || KeyUtil.isRight(k) || KeyUtil.isTab(k)) {
+        if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {
             focusedActionIndex = (focusedActionIndex == 0) ? 1 : 0;
             return ScreenResult.stay(this);
         }

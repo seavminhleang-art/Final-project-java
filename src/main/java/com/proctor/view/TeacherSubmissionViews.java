@@ -131,9 +131,9 @@ public class TeacherSubmissionViews {
 
         boolean isSpeedContext = (specificQuiz != null && specificQuiz.getAssessmentType() == AssessmentType.SPEED);
         if (isSpeedContext) {
-            sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [f] Tab  •  [Enter] Inspect  •  [Esc] Back\n"));
+            sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [Tab] Tab  •  [Enter] Inspect  •  [Esc] Back\n"));
         } else {
-            sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [f] Tab  •  [Enter] Inspect  •  [g] AI Grade  •  [r] Return Grade  •  [Esc] Back\n"));
+            sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [Tab] Tab  •  [Enter] Inspect  •  [g] AI Grade  •  [r] Return Grade  •  [Esc] Back\n"));
         }
         return sb.toString();
     }

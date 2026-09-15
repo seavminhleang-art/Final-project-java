@@ -87,7 +87,7 @@ public class SubjectViews {
                 "[n] New",
                 "[d] Delete",
                 "[/] Search",
-                "[f] Tab",
+                "[Tab] Tab",
                 "[Esc] Back"
         );
         sb.append(TuiHelper.wrapHints(hints));
@@ -129,7 +129,7 @@ public class SubjectViews {
             sb.append("  ").append(TuiHelper.red("✖ " + errorMessage)).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [Tab/↑/↓] Switch Field  •  [Enter] Confirm / Submit  •  [Esc] Cancel\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Confirm / Submit  •  [Esc] Cancel\n"));
         return sb.toString();
     }
 

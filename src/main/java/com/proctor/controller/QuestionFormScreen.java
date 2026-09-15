@@ -156,12 +156,12 @@ public class QuestionFormScreen implements Screen {
                 return returnToPreviousScreen();
             }
 
-            if (KeyUtil.isTab(k) || KeyUtil.isDown(k)) {
+            if (KeyUtil.isDown(k)) {
                 focusedField = (focusedField + 1) % getFieldCount();
                 return ScreenResult.stay(this);
             }
 
-            if ("shift+tab".equalsIgnoreCase(k.key()) || KeyUtil.isUp(k)) {
+            if (KeyUtil.isUp(k)) {
                 focusedField = (focusedField - 1 + getFieldCount()) % getFieldCount();
                 return ScreenResult.stay(this);
             }

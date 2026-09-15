@@ -46,7 +46,7 @@ public class QuestionViews {
         }
 
         if (endField < numInputs) {
-            sb.append(TuiHelper.dim(String.format("  ▼ %d more fields below (Press Tab/↓ to scroll)", numInputs - endField))).append("\n");
+            sb.append(TuiHelper.dim(String.format("  ▼ %d more fields below (Press ↓ to scroll)", numInputs - endField))).append("\n");
         }
 
         sb.append("\n");
@@ -56,7 +56,7 @@ public class QuestionViews {
             sb.append("  ").append(TuiHelper.red("✖ " + errorMessage)).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [Tab/↑/↓] Switch Field  •  [Enter] Confirm / Next  •  [Esc] Cancel\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Confirm / Next  •  [Esc] Cancel\n"));
         return sb.toString();
     }
 
@@ -168,7 +168,7 @@ public class QuestionViews {
         }
 
         if (endField < numInputFields) {
-            sb.append(TuiHelper.dim(String.format("  ▼ %d more fields below (Press Tab/↓ to scroll)", numInputFields - endField))).append("\n");
+            sb.append(TuiHelper.dim(String.format("  ▼ %d more fields below (Press ↓ to scroll)", numInputFields - endField))).append("\n");
         }
 
         sb.append("\n");
@@ -178,7 +178,7 @@ public class QuestionViews {
             sb.append("  ").append(bannerMessage).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [Tab/↑/↓] Switch Field  •  [Enter] Confirm / Next  •  [Esc] Back\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Confirm / Next  •  [Esc] Back\n"));
         return sb.toString();
     }
 

@@ -91,7 +91,7 @@ public class UserViews {
                 "[Enter] Edit",
                 "[Space] Toggle Enabled",
                 "[n] New",
-                "[f] Tab",
+                "[Tab] Tab",
                 "[/] Search",
                 "[Esc] Back"
         );
@@ -151,7 +151,7 @@ public class UserViews {
             sb.append("  ").append(TuiHelper.red("✖ " + errorMessage)).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [Tab/↑/↓] Switch Field  •  [Enter] Confirm / Submit  •  [Esc] Cancel\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Confirm / Submit  •  [Esc] Cancel\n"));
         return sb.toString();
     }
 

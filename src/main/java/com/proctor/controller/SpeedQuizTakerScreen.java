@@ -123,7 +123,7 @@ public class SpeedQuizTakerScreen implements Screen {
 
         if (msg instanceof KeyPressMessage k) {
             if (confirmForfeitMode) {
-                if (KeyUtil.isLeft(k) || KeyUtil.isRight(k) || KeyUtil.isTab(k) || "shift+tab".equalsIgnoreCase(k.key())) {
+                if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {
                     confirmForfeitFocused = !confirmForfeitFocused;
                     return ScreenResult.stay(this);
                 } else if (KeyUtil.isEnter(k)) {

@@ -95,7 +95,7 @@ public class QuizListScreen implements Screen {
     public ScreenResult update(Message msg) {
         if (msg instanceof KeyPressMessage k) {
             if (confirmingDelete) {
-                if (KeyUtil.isLeft(k) || KeyUtil.isRight(k) || KeyUtil.isTab(k) || "shift+tab".equalsIgnoreCase(k.key())) {
+                if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {
                     confirmDeleteFocused = !confirmDeleteFocused;
                     return ScreenResult.stay(this);
                 } else if (KeyUtil.isEnter(k)) {
@@ -187,7 +187,7 @@ public class QuizListScreen implements Screen {
                 if (user == null || user.getRole() != Role.ADMIN) {
                     return ScreenResult.navigate(new AIQuizGeneratorScreen(new AIService(), quizService, questionService, subjectService, authService, assessmentType));
                 }
-            } else if ("f".equalsIgnoreCase(k.key())) {
+            } else if (KeyUtil.isTab(k) || "f".equalsIgnoreCase(k.key())) {
                 User user = Session.getCurrentUser().orElse(null);
                 if (user == null || user.getRole() != Role.ADMIN) {
                     toggleScope();

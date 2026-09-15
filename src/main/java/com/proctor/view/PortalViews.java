@@ -115,7 +115,7 @@ public class PortalViews {
             sb.append(TuiHelper.paginationBar(currentPage, totalPages, leaderboard.size()));
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [f] Switch Tab  •  [r] Refresh  •  [Esc] Back\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [Tab] Switch Tab  •  [r] Refresh  •  [Esc] Back\n"));
         return sb.toString();
     }
 

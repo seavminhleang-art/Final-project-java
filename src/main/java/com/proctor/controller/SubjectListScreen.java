@@ -67,7 +67,7 @@ public class SubjectListScreen implements Screen {
     public ScreenResult update(Message msg) {
         if (msg instanceof KeyPressMessage k) {
             if (confirmingDelete) {
-                if (KeyUtil.isLeft(k) || KeyUtil.isRight(k) || KeyUtil.isTab(k)) {
+                if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {
                     confirmDeleteFocused = !confirmDeleteFocused;
                     return ScreenResult.stay(this);
                 }
@@ -152,7 +152,7 @@ public class SubjectListScreen implements Screen {
                     bannerMessage = TuiHelper.green("Toggled status for " + s.getCode());
                     refreshList();
                 }
-            } else if ("f".equalsIgnoreCase(k.key())) {
+            } else if (KeyUtil.isTab(k) || "f".equalsIgnoreCase(k.key())) {
                 statusFilterIndex = (statusFilterIndex + 1) % STATUS_FILTERS.length;
                 selectedIndex = 0;
                 applyFilters();

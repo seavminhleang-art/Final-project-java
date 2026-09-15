@@ -93,7 +93,7 @@ public class InboxViews {
             sb.append("  ").append(bannerMessage).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [f] Tab  •  [Enter] Open  •  [d] Delete  •  [m] Mark All Read  •  [Esc] Back\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [Tab] Tab  •  [Enter] Open  •  [d] Delete  •  [m] Mark All Read  •  [Esc] Back\n"));
 
         if (showDeleteModal) {
             sb.append("\n");
@@ -145,7 +145,7 @@ public class InboxViews {
         }
 
         if (msg.isActionable()) {
-            sb.append(TuiHelper.dim("  [Tab/←/→] Switch Action  •  [Enter] Confirm Action  •  [d] Delete  •  [Esc] Back\n"));
+            sb.append(TuiHelper.dim("  [←/→] Switch Action  •  [Enter] Confirm Action  •  [d] Delete  •  [Esc] Back\n"));
         } else {
             sb.append(TuiHelper.dim("  [d] Delete Message  •  [Esc] Back\n"));
         }

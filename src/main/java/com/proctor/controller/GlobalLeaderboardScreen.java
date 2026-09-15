@@ -87,7 +87,7 @@ public class GlobalLeaderboardScreen implements Screen {
                         selectedIndex = Math.min(leaderboard.size() - 1, (currentPage + 1) * pageSize);
                     }
                 }
-            } else if ("f".equalsIgnoreCase(k.key())) {
+            } else if (KeyUtil.isTab(k) || "f".equalsIgnoreCase(k.key())) {
                 mode = switch (mode) {
                     case QUIZ -> Mode.EXAM;
                     case EXAM -> Mode.SPEED;

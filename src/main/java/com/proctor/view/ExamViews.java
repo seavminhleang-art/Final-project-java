@@ -362,7 +362,7 @@ public class ExamViews {
             sb.append(TuiHelper.paginationBar(currentPage, totalPages, historyList.size()));
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [f] Tab  •  [Enter] View Result  •  [Esc] Back\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [Tab] Tab  •  [Enter] View Result  •  [Esc] Back\n"));
         return sb.toString();
     }
 

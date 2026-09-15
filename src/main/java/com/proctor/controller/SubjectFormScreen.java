@@ -77,7 +77,7 @@ public class SubjectFormScreen implements Screen {
     public ScreenResult update(Message msg) {
         if (msg instanceof KeyPressMessage k) {
             if (showDeleteModal) {
-                if (KeyUtil.isLeft(k) || KeyUtil.isRight(k) || KeyUtil.isTab(k)) {
+                if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {
                     deleteConfirmFocused = !deleteConfirmFocused;
                     return ScreenResult.stay(this);
                 }
@@ -107,12 +107,12 @@ public class SubjectFormScreen implements Screen {
                 return ScreenResult.navigate(new SubjectListScreen(subjectService, userService, authService));
             }
 
-            if (KeyUtil.isTab(k) || KeyUtil.isDown(k)) {
+            if (KeyUtil.isDown(k)) {
                 focusedField = (focusedField + 1) % getFieldCount();
                 return ScreenResult.stay(this);
             }
 
-            if ("shift+tab".equalsIgnoreCase(k.key()) || KeyUtil.isUp(k)) {
+            if (KeyUtil.isUp(k)) {
                 focusedField = (focusedField - 1 + getFieldCount()) % getFieldCount();
                 return ScreenResult.stay(this);
             }

@@ -106,7 +106,7 @@ public class ExamTakerScreen implements Screen {
 
         if (msg instanceof KeyPressMessage k) {
             if (confirmSubmitMode) {
-                if (KeyUtil.isLeft(k) || KeyUtil.isRight(k) || KeyUtil.isTab(k) || "shift+tab".equalsIgnoreCase(k.key())) {
+                if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {
                     confirmSubmitFocused = !confirmSubmitFocused;
                     return ScreenResult.stay(this, session.isTimed() ? ExamTakerScreen::tick : null);
                 } else if (KeyUtil.isEnter(k)) {

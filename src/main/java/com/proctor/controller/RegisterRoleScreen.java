@@ -41,7 +41,7 @@ public class RegisterRoleScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
-            if (KeyUtil.isTab(k) || KeyUtil.isDown(k)) {
+            if (KeyUtil.isDown(k)) {
                 if (focusedButton == 0 || focusedButton == 1) {
                     focusedButton = 2;
                 } else {
@@ -50,7 +50,7 @@ public class RegisterRoleScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
-            if ("shift+tab".equalsIgnoreCase(k.key()) || KeyUtil.isUp(k)) {
+            if (KeyUtil.isUp(k)) {
                 if (focusedButton == 2) {
                     focusedButton = 0;
                 } else {

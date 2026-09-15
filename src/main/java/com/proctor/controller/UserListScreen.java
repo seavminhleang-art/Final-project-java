@@ -108,7 +108,7 @@ public class UserListScreen implements Screen {
                         bannerMessage = TuiHelper.red("✖ " + e.getMessage());
                     }
                 }
-            } else if ("f".equalsIgnoreCase(k.key())) {
+            } else if (KeyUtil.isTab(k) || "f".equalsIgnoreCase(k.key())) {
                 cycleFilterRole();
             } else if ("/".equals(k.key())) {
                 searchMode = true;

@@ -46,7 +46,7 @@ public class SpeedQuizViews {
         int endField = Math.min(numInputFields, startField + maxVisible);
 
         if (startField > 0) {
-            sb.append(TuiHelper.dim(String.format("  ▲ %d more fields above (Press Shift+Tab/↑ to scroll)", startField))).append("\n");
+            sb.append(TuiHelper.dim(String.format("  ▲ %d more fields above (Press ↑ to scroll)", startField))).append("\n");
         }
 
         for (int f = startField; f < endField; f++) {
@@ -69,7 +69,7 @@ public class SpeedQuizViews {
         }
 
         if (endField < numInputFields) {
-            sb.append(TuiHelper.dim(String.format("  ▼ %d more fields below (Press Tab/↓ to scroll)", numInputFields - endField))).append("\n");
+            sb.append(TuiHelper.dim(String.format("  ▼ %d more fields below (Press ↓ to scroll)", numInputFields - endField))).append("\n");
         }
 
         sb.append("\n");
@@ -79,7 +79,7 @@ public class SpeedQuizViews {
             sb.append("  ").append(TuiHelper.red("✖ " + errorMessage)).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [Tab/↑/↓] Switch Field  •  [Enter] Confirm / Next  •  [Esc] Cancel\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Confirm / Next  •  [Esc] Cancel\n"));
         return sb.toString();
     }
 

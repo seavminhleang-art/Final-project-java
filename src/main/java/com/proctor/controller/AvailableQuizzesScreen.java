@@ -299,12 +299,12 @@ public class AvailableQuizzesScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
-        if (KeyUtil.isTab(k) || KeyUtil.isDown(k)) {
+        if (KeyUtil.isDown(k)) {
             examReasonFocusIndex = (examReasonFocusIndex + 1) % 3;
             return ScreenResult.stay(this);
         }
 
-        if ("shift+tab".equalsIgnoreCase(k.key()) || KeyUtil.isUp(k)) {
+        if (KeyUtil.isUp(k)) {
             examReasonFocusIndex = (examReasonFocusIndex - 1 + 3) % 3;
             return ScreenResult.stay(this);
         }
@@ -444,7 +444,7 @@ public class AvailableQuizzesScreen implements Screen {
             if (!bannerMessage.isBlank()) {
                 sb.append("  ").append(bannerMessage).append("\n\n");
             }
-            sb.append(TuiHelper.dim("  [Tab/↑/↓] Switch Field  •  [Enter] Confirm  •  [Esc] Cancel\n"));
+            sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Confirm  •  [Esc] Cancel\n"));
             return sb.toString();
         }
 

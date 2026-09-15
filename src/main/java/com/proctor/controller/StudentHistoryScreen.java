@@ -130,7 +130,7 @@ public class StudentHistoryScreen implements Screen {
                         selectedIndex = Math.min(historyList.size() - 1, (currentPage + 1) * pageSize);
                     }
                 }
-            } else if ("f".equalsIgnoreCase(k.key())) {
+            } else if (KeyUtil.isTab(k) || "f".equalsIgnoreCase(k.key())) {
                 statusFilterIndex = (statusFilterIndex + 1) % STATUS_FILTERS.length;
                 selectedIndex = 0;
                 applyFilters();

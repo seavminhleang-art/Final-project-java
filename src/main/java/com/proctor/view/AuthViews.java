@@ -36,7 +36,7 @@ public class AuthViews {
           .append(btnExit)
           .append("\n\n");
 
-        sb.append(TuiHelper.dim("  [←/→] Select  •  [Tab/↑/↓] Move  •  [Enter] Confirm  •  [Esc] Exit\n"));
+        sb.append(TuiHelper.dim("  [←/→] Select  •  [↑/↓] Move  •  [Enter] Confirm  •  [Esc] Exit\n"));
         return sb.toString();
     }
 
@@ -71,7 +71,7 @@ public class AuthViews {
             sb.append("  ").append(TuiHelper.red("✖ " + errorMessage)).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [Tab/↑/↓] Switch Field  •  [←/→] Select Action  •  [Enter] Submit  •  [Esc] Back\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [←/→] Select Action  •  [Enter] Submit  •  [Esc] Back\n"));
         return sb.toString();
     }
 
@@ -106,7 +106,7 @@ public class AuthViews {
           .append(btnBack)
           .append("\n\n");
 
-        sb.append(TuiHelper.dim("  [←/→] Select  •  [Tab/↑/↓] Move  •  [Enter] Confirm  •  [Esc] Back\n"));
+        sb.append(TuiHelper.dim("  [←/→] Select  •  [↑/↓] Move  •  [Enter] Confirm  •  [Esc] Back\n"));
         return sb.toString();
     }
 
@@ -149,7 +149,7 @@ public class AuthViews {
             sb.append("  ").append(TuiHelper.red("✖ " + errorMessage)).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [Tab/↑/↓] Switch Field  •  [Enter] Confirm / Submit  •  [Esc] Back\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Confirm / Submit  •  [Esc] Back\n"));
         return sb.toString();
     }
 }

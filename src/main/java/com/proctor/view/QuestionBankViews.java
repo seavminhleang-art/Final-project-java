@@ -88,7 +88,7 @@ public class QuestionBankViews {
                 "[g] AI Generate",
                 "[e/Enter] Edit",
                 "[d] Delete",
-                "[f] Type Filter",
+                "[Tab] Type Filter",
                 "[s] Subj Filter",
                 "[x] Diff Filter",
                 "[/] Search",

@@ -162,7 +162,7 @@ public class QuizViews {
                     "[Enter] Builder",
                     "[Space] Publish",
                     "[/] Search",
-                    "[f] Tab",
+                    "[Tab] Tab",
                     "[s] Subject",
                     "[r] Submissions",
                     "[n] New",
@@ -236,7 +236,7 @@ public class QuizViews {
         }
 
         if (endField < numInputFields) {
-            sb.append(TuiHelper.dim(String.format("  ▼ %d more fields below (Press Tab/↓ to scroll)", numInputFields - endField))).append("\n");
+            sb.append(TuiHelper.dim(String.format("  ▼ %d more fields below (Press ↓ to scroll)", numInputFields - endField))).append("\n");
         }
 
         sb.append("\n");
@@ -246,7 +246,7 @@ public class QuizViews {
             sb.append("  ").append(TuiHelper.red("✖ " + errorMessage)).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [Tab/↑/↓] Switch Field  •  [Enter] Confirm / Next  •  [Esc] Cancel\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Confirm / Next  •  [Esc] Cancel\n"));
         return sb.toString();
     }
 
@@ -417,7 +417,7 @@ public class QuizViews {
         }
 
         if (endField < numInputFields) {
-            sb.append(TuiHelper.dim(String.format("  ▼ %d more fields below (Press Tab/↓ to scroll)", numInputFields - endField))).append("\n");
+            sb.append(TuiHelper.dim(String.format("  ▼ %d more fields below (Press ↓ to scroll)", numInputFields - endField))).append("\n");
         }
 
         sb.append("\n");
@@ -427,7 +427,7 @@ public class QuizViews {
             sb.append("  ").append(bannerMessage).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [Tab/↑/↓] Switch Field  •  [Enter] Confirm / Next  •  [Esc] Cancel\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Confirm / Next  •  [Esc] Cancel\n"));
         return sb.toString();
     }
 
