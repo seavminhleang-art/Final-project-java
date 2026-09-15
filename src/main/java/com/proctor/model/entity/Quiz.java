@@ -20,6 +20,7 @@ public class Quiz {
     private Integer id;
     private Integer subjectId;
     private String subjectCode;
+    private String subjectName;
     private Integer createdBy;
     private String creatorName;
     private String creatorGender;

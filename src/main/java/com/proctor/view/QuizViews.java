@@ -341,7 +341,8 @@ public class QuizViews {
         return sb.toString();
     }
 
-    public static String renderAIQuizForm(AssessmentType assessmentType, String subjectName, String titleBuffer, String customPrompt, String countBuffer,
+    public static String renderAIQuizForm(AssessmentType assessmentType, String subjectName, String titleBuffer,
+                                         String descriptionBuffer, String customPrompt, String countBuffer,
                                          String mcqCountBuffer, String tfCountBuffer, String saCountBuffer,
                                          String questionTypeLabel, Difficulty selectedDifficulty, int mcqOptionCount,
                                          String timeLimitBuffer, String activeHours, String passScore,
@@ -356,9 +357,10 @@ public class QuizViews {
         List<String> fieldWidgets = new ArrayList<>();
         fieldWidgets.add(TuiHelper.selectBox("Subject (Required)", subjectName, focusedField == 0, 102, "Space or ←/→ to cycle"));
         fieldWidgets.add(TuiHelper.inputBox(itemLabel + " Title / Topic (Required)", titleBuffer, focusedField == 1, 102, false, "e.g. Basic HTML, OOP Concepts"));
-        fieldWidgets.add(TuiHelper.inputBox("Custom Prompt / Instructions (Optional)", customPrompt, focusedField == 2, 102, false, "e.g. Focus on edge cases, avoid multi-threading, include code snippets"));
+        fieldWidgets.add(TuiHelper.inputBox("Student Instructions / Description (Optional)", descriptionBuffer, focusedField == 2, 102, false, "e.g. Complete all questions, no reference materials"));
+        fieldWidgets.add(TuiHelper.inputBox("AI Prompt / Custom Instructions (Optional)", customPrompt, focusedField == 3, 102, false, "e.g. Focus on edge cases, avoid multi-threading, include code snippets"));
 
-        int curIdx = 3;
+        int curIdx = 4;
         if (isSpeed) {
             fieldWidgets.add(TuiHelper.inputBox("MCQ Question Count (0-10)", mcqCountBuffer, focusedField == curIdx++, 102, false, "e.g. 3"));
             fieldWidgets.add(TuiHelper.inputBox("True/False Question Count (0-10)", tfCountBuffer, focusedField == curIdx++, 102, false, "e.g. 3"));

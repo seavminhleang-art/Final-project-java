@@ -1,6 +1,7 @@
 package com.proctor.model.service;
 
 import com.proctor.model.entity.AIGradeResult;
+import com.proctor.model.entity.AssessmentOverviewDTO;
 import com.proctor.model.enums.AttemptStatus;
 import com.proctor.model.enums.QuestionType;
 import com.proctor.exception.ValidationException;
@@ -420,5 +421,120 @@ public class ExamService {
 
         resultRepository.saveResult(result);
         return result;
+    }
+
+    public Optional<AssessmentOverviewDTO> getAssessmentOverview(int quizId, int studentId) {
+        Optional<Quiz> quizOpt = quizRepository.findById(quizId);
+        if (quizOpt.isEmpty()) {
+            return Optional.empty();
+        }
+        Quiz q = quizOpt.get();
+        Map<String, Object> qStats = quizRepository.getQuizQuestionStats(quizId);
+        Map<String, Object> cStats = quizRepository.getQuizCommunityStats(quizId);
+
+        int qCount = (int) qStats.getOrDefault("totalQuestions", q.getQuestionCount());
+        double totalPts = (double) qStats.getOrDefault("totalPoints", q.getTotalPoints());
+        int easyCount = (int) qStats.getOrDefault("easyCount", 0);
+        int medCount = (int) qStats.getOrDefault("mediumCount", 0);
+        int hardCount = (int) qStats.getOrDefault("hardCount", 0);
+        String qTypesRaw = (String) qStats.getOrDefault("questionTypes", null);
+
+        String qTypesSummary = "Multiple Choice";
+        if (qTypesRaw != null && !qTypesRaw.isBlank()) {
+            List<String> types = new ArrayList<>();
+            for (String t : qTypesRaw.split(",")) {
+                String cleanT = t.trim();
+                if ("MCQ".equalsIgnoreCase(cleanT)) types.add("Multiple Choice");
+                else if ("TRUE_FALSE".equalsIgnoreCase(cleanT)) types.add("True / False");
+                else if ("SHORT_ANSWER".equalsIgnoreCase(cleanT)) types.add("Written (Short Answer)");
+                else if (!cleanT.isEmpty()) types.add(cleanT);
+            }
+            if (!types.isEmpty()) {
+                qTypesSummary = String.join(", ", types);
+            }
+        }
+
+        String overallDifficulty;
+        if (q.getAssessmentType() == AssessmentType.SPEED) {
+            overallDifficulty = "ADAPTIVE (Dynamic Scaling)";
+        } else {
+            if (hardCount > medCount && hardCount > easyCount) {
+                overallDifficulty = "HARD";
+            } else if (easyCount > medCount && easyCount > hardCount) {
+                overallDifficulty = "EASY";
+            } else {
+                overallDifficulty = "MEDIUM";
+            }
+        }
+
+        int totalTakers = (int) cStats.getOrDefault("totalTakers", 0);
+        int passedCount = (int) cStats.getOrDefault("passedCount", 0);
+        double passRate = (double) cStats.getOrDefault("passRate", 0.0);
+        double avgScore = (double) cStats.getOrDefault("avgScore", 0.0);
+        double topScore = (double) cStats.getOrDefault("topScore", 0.0);
+
+        Optional<Attempt> attOpt = studentId > 0 ? attemptRepository.findLatestAttempt(quizId, studentId) : Optional.empty();
+        Optional<Result> resOpt = attOpt.isPresent() ? resultRepository.findByAttemptId(attOpt.get().getId()) : Optional.empty();
+
+        boolean canStart = true;
+        boolean canRetake = false;
+        boolean canViewResult = false;
+
+        if (q.isExpired()) {
+            canStart = false;
+        }
+
+        if (attOpt.isPresent()) {
+            Attempt att = attOpt.get();
+            if (att.getStatus() == AttemptStatus.GRADED) {
+                canViewResult = true;
+                if (q.getAssessmentType() != AssessmentType.SPEED) {
+                    canStart = false;
+                }
+            } else if (att.getStatus() == AttemptStatus.TURNED_IN) {
+                canStart = false;
+            } else if (att.getStatus() == AttemptStatus.AUTO_SUBMITTED) {
+                canStart = false;
+                canRetake = true;
+            } else if (att.getStatus() == AttemptStatus.IN_PROGRESS) {
+                canStart = true;
+            }
+        }
+
+        if (q.getAssessmentType() == AssessmentType.EXAM && resOpt.isPresent() && !resOpt.get().isPassed()) {
+            canRetake = true;
+        }
+        if (q.getAssessmentType() == AssessmentType.EXAM && attOpt.isEmpty() && q.isExpired()) {
+            canRetake = true;
+        }
+
+        AssessmentOverviewDTO dto = AssessmentOverviewDTO.builder()
+                .quiz(q)
+                .subjectCode(q.getSubjectCode())
+                .subjectName(q.getSubjectName() != null ? q.getSubjectName() : q.getSubjectCode())
+                .teacherName(q.getCreatorName() != null ? q.getCreatorName() : "Teacher")
+                .questionCount(qCount)
+                .totalPoints(totalPts)
+                .timeLimitMins(q.getTimeLimitMins())
+                .speedSecondsPerQuestion(q.getSpeedSecondsPerQuestion())
+                .passScorePercent(q.getPassScore())
+                .questionTypesSummary(qTypesSummary)
+                .overallDifficulty(overallDifficulty)
+                .easyQuestions(easyCount)
+                .mediumQuestions(medCount)
+                .hardQuestions(hardCount)
+                .totalTakers(totalTakers)
+                .passedCount(passedCount)
+                .passRate(passRate)
+                .avgScore(avgScore)
+                .topScore(topScore)
+                .studentAttempt(attOpt.orElse(null))
+                .studentResult(resOpt.orElse(null))
+                .canStart(canStart)
+                .canRetake(canRetake)
+                .canViewResult(canViewResult)
+                .build();
+
+        return Optional.of(dto);
     }
 }

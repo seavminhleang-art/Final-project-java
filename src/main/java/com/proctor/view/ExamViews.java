@@ -1,6 +1,7 @@
 package com.proctor.view;
 
 import com.proctor.model.enums.AssessmentType;
+import com.proctor.model.entity.AssessmentOverviewDTO;
 import com.proctor.model.entity.Attempt;
 import com.proctor.model.entity.ExamSession;
 import com.proctor.model.entity.Question;
@@ -41,9 +42,8 @@ public class ExamViews {
             sb.append("  Search: [ ").append(searchBuffer).append(" ] (Press '/' to edit)\n\n");
         }
 
-        String timeColHeader = (assessmentType == AssessmentType.SPEED) ? "SEC/Q" : "TIME";
-        sb.append(String.format("  %-4s  %-14s  %-52s  %-18s  %-10s  %-6s  %-14s%n",
-                "#", "SUBJ", "TITLE", "TEACHER", timeColHeader, "PTS", "STATUS")).append("\n");
+        sb.append(String.format("  %-4s  %-14s  %-64s  %-20s  %-16s%n",
+                "#", "SUBJ", "TITLE", "TEACHER", "STATUS")).append("\n");
         sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         if (quizzes.isEmpty()) {
@@ -59,14 +59,6 @@ public class ExamViews {
                 Quiz q = quizzes.get(i);
                 String cursor = (i == selectedIndex) ? TuiHelper.cyan("▶ ") : "  ";
                 String subj = (q.getSubjectId() != null) ? subjectNames.getOrDefault(q.getSubjectId(), "-") : "-";
-                String time;
-                if (assessmentType == AssessmentType.SPEED) {
-                    int sec = (q.getSpeedSecondsPerQuestion() != null && q.getSpeedSecondsPerQuestion() > 0)
-                            ? q.getSpeedSecondsPerQuestion() : 15;
-                    time = sec + "s";
-                } else {
-                    time = (q.getTimeLimitMins() != null && q.getTimeLimitMins() > 0) ? q.getTimeLimitMins() + "m" : "Untimed";
-                }
                 String teacher = (q.getCreatorName() != null && !q.getCreatorName().isBlank()) ? q.getCreatorName() : "Teacher";
 
                 Attempt att = studentAttempts.get(q.getId());
@@ -81,13 +73,11 @@ public class ExamViews {
                     };
                 }
 
-                String line = String.format("%-4d  %-14s  %-52s  %-18s  %-10s  %-6.1f  %-14s",
+                String line = String.format("%-4d  %-14s  %-64s  %-20s  %-16s",
                         (i + 1),
                         truncate(subj, 14),
-                        truncate(q.getTitle(), 52),
-                        truncate(teacher, 18),
-                        time,
-                        q.getTotalPoints(),
+                        truncate(q.getTitle(), 64),
+                        truncate(teacher, 20),
                         statusStr);
 
                 if (i == selectedIndex) {
@@ -114,11 +104,166 @@ public class ExamViews {
         }
 
         if (assessmentType == AssessmentType.SPEED) {
-            sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [s] Subject  •  [Enter] Start Run  •  [v] View Result  •  [Esc] Back\n"));
+            sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [s] Subject  •  [Enter] Overview / Briefing  •  [v] View Result  •  [Esc] Back\n"));
         } else {
-            sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [s] Subject  •  [Enter] Start / View Result  •  [r] Request Retake  •  [Esc] Back\n"));
+            sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [s] Subject  •  [Enter] Overview / Briefing  •  [r] Request Retake  •  [Esc] Back\n"));
         }
         return sb.toString();
+    }
+
+    public static String renderAssessmentOverview(AssessmentOverviewDTO overview, int focusedButtonIndex, List<String> buttonLabels, String bannerMessage) {
+        StringBuilder sb = new StringBuilder();
+        Quiz q = overview.getQuiz();
+        AssessmentType aType = (q != null && q.getAssessmentType() != null) ? q.getAssessmentType() : AssessmentType.QUIZ;
+        String headerLabel = switch (aType) {
+            case EXAM -> "EXAM BRIEFING";
+            case SPEED -> "SPEED QUIZ BRIEFING";
+            case QUIZ -> "QUIZ BRIEFING";
+        };
+        sb.append(TuiHelper.header(headerLabel)).append("\n");
+
+        String subInfo = (overview.getSubjectName() != null && !overview.getSubjectName().isBlank())
+                ? overview.getSubjectName()
+                : overview.getSubjectCode();
+        sb.append(TuiHelper.boxTitle(q.getTitle(), subInfo)).append("\n\n");
+
+        String timeStr;
+        if (aType == AssessmentType.SPEED) {
+            int sec = (overview.getSpeedSecondsPerQuestion() != null && overview.getSpeedSecondsPerQuestion() > 0)
+                    ? overview.getSpeedSecondsPerQuestion() : 15;
+            timeStr = sec + "s / question";
+        } else {
+            timeStr = (overview.getTimeLimitMins() != null && overview.getTimeLimitMins() > 0)
+                    ? overview.getTimeLimitMins() + " mins" : "N/A";
+        }
+
+        String passScoreStr = (aType == AssessmentType.SPEED) ? "N/A" : (overview.getPassScorePercent() + "%");
+        String shuffleStr = (q != null && q.isRandomizeQuestions()) ? "YES" : "NO";
+        String reviewPolicy = (q != null && q.isShowAnswersAfter()) ? "YES" : "NO";
+
+        String diffBreakdown = (aType == AssessmentType.SPEED)
+                ? "ADAPTIVE"
+                : String.format("%s (%d Easy, %d Med, %d Hard)", overview.getOverallDifficulty(), overview.getEasyQuestions(), overview.getMediumQuestions(), overview.getHardQuestions());
+
+        String passRateStr = (aType == AssessmentType.SPEED || overview.getTotalTakers() == 0)
+                ? "N/A"
+                : String.format("%.1f%%", overview.getPassRate());
+
+        String avgScoreStr = (overview.getTotalTakers() > 0) ? String.format("%.1f%%", overview.getAvgScore()) : "N/A";
+
+        String expiryStr = (q != null && q.getExpiresAt() != null)
+                ? new SimpleDateFormat("yyyy-MM-dd HH:mm").format(q.getExpiresAt())
+                : "N/A";
+
+        String subjectDisplayName = (overview.getSubjectName() != null && !overview.getSubjectName().isBlank())
+                ? overview.getSubjectName()
+                : overview.getSubjectCode();
+
+        List<String[]> leftItems = List.of(
+                new String[]{"Subject", subjectDisplayName},
+                new String[]{"Teacher", overview.getTeacherName()},
+                new String[]{"Questions", overview.getQuestionCount() + " (" + overview.getQuestionTypesSummary() + ")"},
+                new String[]{"Total Points", String.format("%.1f pts", overview.getTotalPoints())},
+                new String[]{"Pass Mark", passScoreStr},
+                new String[]{"Time Limit", timeStr}
+        );
+
+        List<String[]> rightItems = List.of(
+                new String[]{"Difficulty", diffBreakdown},
+                new String[]{"Class Average", avgScoreStr},
+                new String[]{"Pass Rate", passRateStr},
+                new String[]{"Shuffle Questions", shuffleStr},
+                new String[]{"Review Answers", reviewPolicy},
+                new String[]{"Expiration", expiryStr}
+        );
+
+        int cardW = 56;
+        int innerW = cardW - 4;
+
+        List<String> leftLines = buildSpacedCard("ASSESSMENT DETAILS", leftItems, cardW, innerW);
+        List<String> rightLines = buildSpacedCard("RULES & COMMUNITY STATS", rightItems, cardW, innerW);
+
+        for (int i = 0; i < leftLines.size(); i++) {
+            sb.append("  ").append(leftLines.get(i)).append("    ").append(rightLines.get(i)).append("\n");
+        }
+        sb.append("\n");
+
+        String desc = (q != null && q.getDescription() != null && !q.getDescription().isBlank())
+                ? q.getDescription().trim()
+                : "No special instructions provided by the instructor.";
+
+        int boxW = 116;
+        int boxInnerW = boxW - 4;
+        sb.append("  ┌─ INSTRUCTIONS & TOPIC ").append("─".repeat(boxW - "INSTRUCTIONS & TOPIC".length() - 5)).append("┐\n");
+        sb.append("  │ ").append(" ".repeat(boxInnerW)).append(" │\n");
+        List<String> wrappedDesc = wrapText(desc, boxInnerW);
+        for (String line : wrappedDesc) {
+            sb.append("  │ ").append(padRight(line, boxInnerW)).append(" │\n");
+        }
+        sb.append("  │ ").append(" ".repeat(boxInnerW)).append(" │\n");
+        sb.append("  └").append("─".repeat(boxW - 2)).append("┘\n\n");
+
+        if (buttonLabels.size() == 2) {
+            sb.append(TuiHelper.buttonRow(buttonLabels.get(0), focusedButtonIndex == 0, buttonLabels.get(1), focusedButtonIndex == 1, 120)).append("\n\n");
+        } else if (buttonLabels.size() >= 3) {
+            sb.append(TuiHelper.buttonRow(buttonLabels.get(0), focusedButtonIndex == 0, buttonLabels.get(1), focusedButtonIndex == 1, buttonLabels.get(2), focusedButtonIndex == 2, 120)).append("\n\n");
+        }
+
+        if (!bannerMessage.isBlank()) {
+            sb.append("  ").append(bannerMessage).append("\n\n");
+        }
+
+        sb.append(TuiHelper.dim("  [←/→] Select Action  •  [Enter] Confirm  •  [Esc] Back to List\n"));
+        return sb.toString();
+    }
+
+    private static List<String> buildSpacedCard(String title, List<String[]> items, int cardW, int innerW) {
+        List<String> lines = new ArrayList<>();
+        lines.add("┌─ " + title + " " + "─".repeat(Math.max(0, cardW - title.length() - 5)) + "┐");
+        lines.add("│ " + " ".repeat(innerW) + " │");
+        for (int i = 0; i < items.size(); i++) {
+            String label = items.get(i)[0] + ":";
+            String val = items.get(i)[1];
+            String formatted = String.format("%-19s %s", label, val);
+            lines.add("│ " + padRight(formatted, innerW) + " │");
+            if (i < items.size() - 1) {
+                lines.add("│ " + " ".repeat(innerW) + " │");
+            }
+        }
+        lines.add("│ " + " ".repeat(innerW) + " │");
+        lines.add("└" + "─".repeat(cardW - 2) + "┘");
+        return lines;
+    }
+
+    private static List<String> wrapText(String text, int maxLen) {
+        List<String> lines = new ArrayList<>();
+        if (text == null || text.isBlank()) {
+            lines.add("");
+            return lines;
+        }
+        String[] words = text.split("\\s+");
+        StringBuilder cur = new StringBuilder();
+        for (String w : words) {
+            if (cur.length() == 0) {
+                cur.append(w);
+            } else if (cur.length() + 1 + w.length() <= maxLen) {
+                cur.append(" ").append(w);
+            } else {
+                lines.add(cur.toString());
+                cur.setLength(0);
+                cur.append(w);
+            }
+        }
+        if (cur.length() > 0) {
+            lines.add(cur.toString());
+        }
+        return lines;
+    }
+
+    private static String padRight(String s, int width) {
+        if (s == null) s = "";
+        if (s.length() >= width) return s.substring(0, width);
+        return s + " ".repeat(width - s.length());
     }
 
     public static String renderExamTaker(ExamSession session, int currentQuestionIndex, int focusedOptionIndex,

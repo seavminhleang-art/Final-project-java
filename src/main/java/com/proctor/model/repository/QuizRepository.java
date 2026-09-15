@@ -11,7 +11,9 @@ import com.proctor.model.entity.Quiz;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class QuizRepository {
@@ -27,7 +29,7 @@ public class QuizRepository {
     private List<Quiz> queryDatabase(AssessmentType assessmentType, Integer subjectId, Integer createdBy, Boolean published, String search, boolean activeOnly, Integer visibleToUserId) {
         List<Quiz> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
-                "SELECT q.id, q.subject_id, s.code AS subject_code, q.created_by, u.full_name AS creator_name, u.gender AS creator_gender, u.role AS creator_role, q.assessment_type, q.quiz_question_type, q.title, q.topic, q.description, " +
+                "SELECT q.id, q.subject_id, s.code AS subject_code, s.name AS subject_name, q.created_by, u.full_name AS creator_name, u.gender AS creator_gender, u.role AS creator_role, q.assessment_type, q.quiz_question_type, q.title, q.topic, q.description, " +
                 "q.time_limit_mins, q.speed_quiz_seconds_per_question, q.pass_score, q.randomize_questions, q.randomize_answers, q.show_answers_after, " +
                 "q.is_published, q.expires_at, q.created_at, q.updated_at, " +
                 "(SELECT COUNT(*) FROM questions qu WHERE qu.quiz_id = q.id OR qu.id IN (SELECT qq.question_id FROM quiz_questions qq WHERE qq.quiz_id = q.id)) AS q_count, " +
@@ -97,7 +99,7 @@ public class QuizRepository {
     }
 
     public Optional<Quiz> findById(int id) {
-        String sql = "SELECT q.id, q.subject_id, s.code AS subject_code, q.created_by, u.full_name AS creator_name, u.gender AS creator_gender, u.role AS creator_role, q.assessment_type, q.quiz_question_type, q.title, q.topic, q.description, " +
+        String sql = "SELECT q.id, q.subject_id, s.code AS subject_code, s.name AS subject_name, q.created_by, u.full_name AS creator_name, u.gender AS creator_gender, u.role AS creator_role, q.assessment_type, q.quiz_question_type, q.title, q.topic, q.description, " +
                      "q.time_limit_mins, q.speed_quiz_seconds_per_question, q.pass_score, q.randomize_questions, q.randomize_answers, q.show_answers_after, " +
                      "q.is_published, q.expires_at, q.created_at, q.updated_at, " +
                      "(SELECT COUNT(*) FROM questions qu WHERE qu.quiz_id = q.id OR qu.id IN (SELECT qq.question_id FROM quiz_questions qq WHERE qq.quiz_id = q.id)) AS q_count, " +
@@ -411,10 +413,16 @@ public class QuizRepository {
             }
         } catch (SQLException ignored) {}
 
+        String subjectName = null;
+        try {
+            subjectName = rs.getString("subject_name");
+        } catch (SQLException ignored) {}
+
         return Quiz.builder()
                 .id(rs.getInt("id"))
                 .subjectId(rs.getObject("subject_id") != null ? rs.getInt("subject_id") : null)
                 .subjectCode(rs.getString("subject_code"))
+                .subjectName(subjectName)
                 .createdBy(rs.getObject("created_by") != null ? rs.getInt("created_by") : null)
                 .creatorName(creatorName)
                 .creatorGender(creatorGender)
@@ -435,5 +443,63 @@ public class QuizRepository {
                 .createdAt(rs.getTimestamp("created_at"))
                 .updatedAt(rs.getTimestamp("updated_at"))
                 .build();
+    }
+
+    public Map<String, Object> getQuizQuestionStats(int quizId) {
+        Map<String, Object> stats = new HashMap<>();
+        String sql = "SELECT " +
+                     "COUNT(*) AS total_q, " +
+                     "COALESCE(SUM(points), 0) AS total_pts, " +
+                     "COUNT(CASE WHEN difficulty = 'EASY' THEN 1 END) AS easy_cnt, " +
+                     "COUNT(CASE WHEN difficulty = 'MEDIUM' THEN 1 END) AS med_cnt, " +
+                     "COUNT(CASE WHEN difficulty = 'HARD' THEN 1 END) AS hard_cnt, " +
+                     "ARRAY_TO_STRING(ARRAY_AGG(DISTINCT question_type), ',') AS q_types " +
+                     "FROM questions qu " +
+                     "WHERE qu.quiz_id = ? OR qu.id IN (SELECT qq.question_id FROM quiz_questions qq WHERE qq.quiz_id = ?)";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, quizId);
+            stmt.setInt(2, quizId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    stats.put("totalQuestions", rs.getInt("total_q"));
+                    stats.put("totalPoints", rs.getDouble("total_pts"));
+                    stats.put("easyCount", rs.getInt("easy_cnt"));
+                    stats.put("mediumCount", rs.getInt("med_cnt"));
+                    stats.put("hardCount", rs.getInt("hard_cnt"));
+                    stats.put("questionTypes", rs.getString("q_types"));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error querying quiz question stats: " + e.getMessage());
+        }
+        return stats;
+    }
+
+    public Map<String, Object> getQuizCommunityStats(int quizId) {
+        Map<String, Object> stats = new HashMap<>();
+        String sql = "SELECT " +
+                     "COUNT(r.id) AS total_takers, " +
+                     "COALESCE(SUM(CASE WHEN r.passed THEN 1 ELSE 0 END), 0) AS passed_count, " +
+                     "COALESCE(SUM(CASE WHEN r.passed THEN 1 ELSE 0 END)::FLOAT / NULLIF(COUNT(r.id), 0) * 100, 0) AS pass_rate, " +
+                     "COALESCE(AVG(r.percentage), 0) AS avg_score, " +
+                     "COALESCE(MAX(r.total_points), 0) AS top_score " +
+                     "FROM results r WHERE r.quiz_id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, quizId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    stats.put("totalTakers", rs.getInt("total_takers"));
+                    stats.put("passedCount", rs.getInt("passed_count"));
+                    stats.put("passRate", Math.round(rs.getDouble("pass_rate") * 10.0) / 10.0);
+                    stats.put("avgScore", Math.round(rs.getDouble("avg_score") * 10.0) / 10.0);
+                    stats.put("topScore", rs.getDouble("top_score"));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error querying quiz community stats: " + e.getMessage());
+        }
+        return stats;
     }
 }

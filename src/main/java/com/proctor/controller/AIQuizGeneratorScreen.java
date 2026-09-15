@@ -34,6 +34,7 @@ public class AIQuizGeneratorScreen implements Screen {
     private final List<Subject> subjects;
     private int selectedSubjectIndex = 0;
     private final StringBuilder titleBuffer = new StringBuilder();
+    private final StringBuilder descriptionBuffer = new StringBuilder();
     private final StringBuilder customPromptBuffer = new StringBuilder();
     private final StringBuilder countBuffer = new StringBuilder("5");
     private final StringBuilder mcqCountBuffer = new StringBuilder("2");
@@ -93,12 +94,12 @@ public class AIQuizGeneratorScreen implements Screen {
 
     private int getNumInputFields() {
         if (assessmentType == AssessmentType.SPEED) {
-            return isMcqApplicable() ? 11 : 10;
+            return isMcqApplicable() ? 12 : 11;
         }
         if (assessmentType == AssessmentType.EXAM && isExamMixed) {
-            return isMcqApplicable() ? 15 : 14;
+            return isMcqApplicable() ? 16 : 15;
         }
-        return isMcqApplicable() ? 13 : 12;
+        return isMcqApplicable() ? 14 : 13;
     }
 
     private int getFieldCount() {
@@ -190,10 +191,14 @@ public class AIQuizGeneratorScreen implements Screen {
             return;
         }
         if (focusedField == 2) {
-            handleTextInput(customPromptBuffer, k);
+            handleTextInput(descriptionBuffer, k);
             return;
         }
         if (focusedField == 3) {
+            handleTextInput(customPromptBuffer, k);
+            return;
+        }
+        if (focusedField == 4) {
             if (assessmentType == AssessmentType.EXAM) {
                 int cur = isExamMixed ? 0 : (selectedType == QuestionType.MCQ ? 1 : (selectedType == QuestionType.TRUE_FALSE ? 2 : 3));
                 int next = (KeyUtil.isLeft(k)) ? (cur - 1 + 4) % 4 : (cur + 1) % 4;
@@ -223,7 +228,7 @@ public class AIQuizGeneratorScreen implements Screen {
             return;
         }
 
-        int current = 4;
+        int current = 5;
         if (assessmentType == AssessmentType.EXAM && isExamMixed) {
             if (focusedField == current++) {
                 handleTextInput(mcqCountBuffer, k);
@@ -310,18 +315,22 @@ public class AIQuizGeneratorScreen implements Screen {
             return;
         }
         if (focusedField == 2) {
-            handleTextInput(customPromptBuffer, k);
+            handleTextInput(descriptionBuffer, k);
             return;
         }
         if (focusedField == 3) {
-            handleTextInput(mcqCountBuffer, k);
+            handleTextInput(customPromptBuffer, k);
             return;
         }
         if (focusedField == 4) {
-            handleTextInput(tfCountBuffer, k);
+            handleTextInput(mcqCountBuffer, k);
             return;
         }
         if (focusedField == 5) {
+            handleTextInput(tfCountBuffer, k);
+            return;
+        }
+        if (focusedField == 6) {
             if (KeyUtil.isLeft(k)) {
                 if (selectedDifficulty == Difficulty.EASY) selectedDifficulty = Difficulty.HARD;
                 else if (selectedDifficulty == Difficulty.HARD) selectedDifficulty = Difficulty.MEDIUM;
@@ -334,7 +343,7 @@ public class AIQuizGeneratorScreen implements Screen {
             return;
         }
 
-        int current = 6;
+        int current = 7;
         if (isMcqApplicable()) {
             if (focusedField == current) {
                 if (KeyUtil.isLeft(k)) {
@@ -442,6 +451,7 @@ public class AIQuizGeneratorScreen implements Screen {
         final Subject selectedSubj = subjects.get(selectedSubjectIndex - 1);
         final String subjStr = selectedSubj.getCode() + " - " + selectedSubj.getName();
         final String titleTopic = titleBuffer.toString().trim();
+        final String studentInstructions = descriptionBuffer.toString().trim();
         final String customPrompt = customPromptBuffer.toString().trim();
         final QuestionType type = selectedType;
         final boolean mixed = isExamMixed;
@@ -455,12 +465,15 @@ public class AIQuizGeneratorScreen implements Screen {
                 Subject subj = selectedSubj;
                 Integer teacherId = teacher != null ? teacher.getId() : null;
 
+                String defaultDesc = "AI Generated " + (assessmentType == AssessmentType.EXAM ? "Exam" : (assessmentType == AssessmentType.SPEED ? "Speed Quiz" : "Quiz")) + " on " + titleTopic;
+                String quizDesc = studentInstructions.isBlank() ? defaultDesc : studentInstructions;
+
                 Quiz quiz = Quiz.builder()
                         .subjectId(subj.getId())
                         .createdBy(teacherId)
                         .title(titleTopic)
                         .topic(titleTopic)
-                        .description("AI Generated " + (assessmentType == AssessmentType.EXAM ? "Exam" : (assessmentType == AssessmentType.SPEED ? "Speed Quiz" : "Quiz")) + " on " + titleTopic)
+                        .description(quizDesc)
                         .assessmentType(assessmentType)
                         .quizQuestionType(assessmentType == AssessmentType.QUIZ ? type : null)
                         .timeLimitMins(assessmentType == AssessmentType.SPEED ? null : (finalMins > 0 ? finalMins : null))
@@ -546,6 +559,7 @@ public class AIQuizGeneratorScreen implements Screen {
                 assessmentType,
                 subjectDisplay,
                 titleBuffer.toString(),
+                descriptionBuffer.toString(),
                 customPromptBuffer.toString(),
                 countBuffer.toString(),
                 mcqCountBuffer.toString(),

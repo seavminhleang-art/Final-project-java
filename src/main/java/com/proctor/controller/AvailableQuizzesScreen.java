@@ -214,7 +214,11 @@ public class AvailableQuizzesScreen implements Screen {
                     return ScreenResult.stay(this);
                 }
             } else if (KeyUtil.isEnter(k)) {
-                return handleQuizAction();
+                if (!quizzes.isEmpty()) {
+                    Quiz q = quizzes.get(selectedIndex);
+                    return ScreenResult.navigate(new AssessmentOverviewScreen(q, examService, authService, inboxService, this));
+                }
+                return ScreenResult.stay(this);
             }
         }
         return ScreenResult.stay(this);
