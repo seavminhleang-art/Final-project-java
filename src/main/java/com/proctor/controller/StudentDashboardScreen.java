@@ -164,14 +164,7 @@ public class StudentDashboardScreen implements Screen {
     @Override
     public String view() {
         if (showQuitModal) {
-            return TuiHelper.confirmationModal(
-                    "QUIT APPLICATION",
-                    "Are you sure you want to quit?",
-                    "Any unsaved progress will be lost.",
-                    "Quit",
-                    "Cancel",
-                    quitConfirmFocused
-            );
+            return TuiHelper.quitConfirmationModal(quitConfirmFocused);
         }
         User user = Session.getCurrentUser().orElse(null);
         String name = user != null ? user.getFullName() : "Student";

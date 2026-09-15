@@ -100,14 +100,7 @@ public class StartupScreen implements Screen {
     @Override
     public String view() {
         if (showQuitModal) {
-            return TuiHelper.confirmationModal(
-                    "QUIT APPLICATION",
-                    "Are you sure you want to quit Proctor?",
-                    "",
-                    "Quit",
-                    "Cancel",
-                    quitConfirmFocused
-            );
+            return TuiHelper.quitConfirmationModal(quitConfirmFocused);
         }
         return AuthViews.renderStartup(focusedButton);
     }

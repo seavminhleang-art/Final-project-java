@@ -1,5 +1,8 @@
 package com.proctor.util;
 
+import com.proctor.model.entity.Session;
+import com.proctor.model.entity.User;
+
 import java.util.List;
 
 public class TuiHelper {
@@ -201,8 +204,17 @@ public class TuiHelper {
         "██╔════╝██╔════╝██╔════╝██║   ██║██╔══██╗██║╚══██╔══╝╚██╗ ██╔╝",
         "███████╗█████╗  ██║     ██║   ██║██████╔╝██║   ██║    ╚████╔╝ ",
         "╚════██║██╔══╝  ██║     ██║   ██║██╔══██╗██║   ██║     ╚██╔╝  ",
-        "███████║███████╗╚██████╗╚██████╔╝██║  ██║██║   ██║      ██║   ",
+        "███████╗███████╗╚██████╗╚██████╔╝██║  ██║██║   ██║      ██║   ",
         "╚══════╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚═╝   ╚═╝      ╚═╝   "
+    };
+
+    private static final String[] ASCII_GOODBYE = new String[]{
+        " ██████╗  ██████╗  ██████╗ ██████╗ ██████╗ ██╗   ██╗███████╗",
+        "██╔════╝ ██╔═══██╗██╔═══██╗██╔══██╗██╔══██╗╚██╗ ██╔╝██╔════╝",
+        "██║  ███╗██║   ██║██║   ██║██║  ██║██████╔╝ ╚████╔╝ █████╗  ",
+        "██║   ██║██║   ██║██║   ██║██║  ██║██╔══██╗  ╚██╔╝  ██╔══╝  ",
+        "╚██████╔╝╚██████╔╝╚██████╔╝██████╔╝██████╔╝   ██║   ███████╗",
+        " ╚═════╝  ╚═════╝  ╚═════╝ ╚═════╝ ╚═════╝    ╚═╝   ╚══════╝"
     };
 
     public static final String BOX_TITLE_MARKER = "\u001B[8888m";
@@ -288,6 +300,9 @@ public class TuiHelper {
         }
         if (upper.contains("SUBJECT") || upper.contains("TEACHER ASSIGNMENT")) {
             return asciiBannerBox(ASCII_SUBJECTS);
+        }
+        if (upper.contains("QUIT") || upper.contains("GOODBYE") || upper.contains("EXIT")) {
+            return asciiBannerBox(ASCII_GOODBYE);
         }
 
         StringBuilder sb = new StringBuilder();
@@ -454,6 +469,34 @@ public class TuiHelper {
 
         sb.append(" ".repeat(leftPad)).append(btn1).append("    ").append(btn2).append(CLEAR_EOL).append("\n\n");
         sb.append(dim(padCenter("[←/→] Select Option  •  [Enter] Confirm  •  [Esc] Cancel", 116))).append(CLEAR_EOL).append("\n");
+        return sb.toString();
+    }
+
+    public static String quitConfirmationModal(boolean quitConfirmFocused) {
+        return quitConfirmationModal(Session.getCurrentUser().orElse(null), quitConfirmFocused);
+    }
+
+    public static String quitConfirmationModal(User currentUser, boolean quitConfirmFocused) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(header("GOODBYE"));
+        sb.append("\n");
+
+        String subtitle = (currentUser != null)
+                ? "Logged in as " + currentUser.getDisplayNameWithHonorific() + " (" + currentUser.getRole() + ")"
+                : "Main Menu";
+        sb.append(boxTitle("Quit Proctor", subtitle)).append("\n\n");
+
+        sb.append(bold(padCenter("Are you sure you want to exit Proctor?", 116))).append(CLEAR_EOL).append("\n\n");
+        sb.append(dim(padCenter("All session progress and data have been safely saved.", 116))).append(CLEAR_EOL).append("\n\n");
+        sb.append(dim(padCenter("─".repeat(112), 116))).append(CLEAR_EOL).append("\n\n");
+
+        String btn1 = quitConfirmFocused ? bold(RED + "[ ▶ Quit Application ]") : dim("[   Quit Application   ]");
+        String btn2 = !quitConfirmFocused ? bold(NAVY_BLUE + "[ ▶ Return to App ]") : dim("[   Return to App   ]");
+        int textWidth = "Quit Application".length() + "Return to App".length() + 18;
+        int leftPad = Math.max(0, (116 - textWidth) / 2);
+
+        sb.append(" ".repeat(leftPad)).append(btn1).append("    ").append(btn2).append(CLEAR_EOL).append("\n\n");
+        sb.append(dim(padCenter("[←/→] Select Option  •  [Enter] Confirm  •  [Esc] Return to App", 116))).append(CLEAR_EOL).append("\n");
         return sb.toString();
     }
 
