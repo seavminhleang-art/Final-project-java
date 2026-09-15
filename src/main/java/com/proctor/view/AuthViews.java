@@ -22,21 +22,11 @@ public class AuthViews {
                 ? TuiHelper.bold(TuiHelper.RED + "[ ▶ Exit ]")
                 : TuiHelper.dim("[   Exit   ]");
 
-        int midWidth = TuiHelper.visibleLength(btnLogin) + 12 + TuiHelper.visibleLength(btnRegister);
-        int midPad = Math.max(0, (100 - midWidth) / 2);
-        sb.append(" ".repeat(midPad))
-          .append(btnLogin)
-          .append("            ")
-          .append(btnRegister)
-          .append("\n\n\n");
+        sb.append(btnLogin).append("\n\n\n\n");
+        sb.append(btnRegister).append("\n\n\n\n");
+        sb.append(btnExit).append("\n\n");
 
-        int exitWidth = TuiHelper.visibleLength(btnExit);
-        int exitPad = Math.max(0, (100 - exitWidth) / 2);
-        sb.append(" ".repeat(exitPad))
-          .append(btnExit)
-          .append("\n\n");
-
-        sb.append(TuiHelper.dim("  [←/→] Select  •  [↑/↓] Move  •  [Enter] Confirm  •  [Esc] Exit\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Navigate  •  [Enter] Confirm  •  [Esc] Exit\n"));
         return sb.toString();
     }
 
@@ -92,21 +82,11 @@ public class AuthViews {
                 ? TuiHelper.bold(TuiHelper.RED + "[ ▶ Back ]")
                 : TuiHelper.dim("[   Back   ]");
 
-        int midWidth = TuiHelper.visibleLength(btnStudent) + 12 + TuiHelper.visibleLength(btnTeacher);
-        int midPad = Math.max(0, (100 - midWidth) / 2);
-        sb.append(" ".repeat(midPad))
-          .append(btnStudent)
-          .append("            ")
-          .append(btnTeacher)
-          .append("\n\n\n");
+        sb.append(btnStudent).append("\n\n\n\n");
+        sb.append(btnTeacher).append("\n\n\n\n");
+        sb.append(btnBack).append("\n\n");
 
-        int backWidth = TuiHelper.visibleLength(btnBack);
-        int backPad = Math.max(0, (100 - backWidth) / 2);
-        sb.append(" ".repeat(backPad))
-          .append(btnBack)
-          .append("\n\n");
-
-        sb.append(TuiHelper.dim("  [←/→] Select  •  [↑/↓] Move  •  [Enter] Confirm  •  [Esc] Back\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Navigate  •  [Enter] Confirm  •  [Esc] Back\n"));
         return sb.toString();
     }
 

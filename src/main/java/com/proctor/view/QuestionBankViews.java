@@ -31,7 +31,7 @@ public class QuestionBankViews {
             sb.append("  Search: [ ").append(searchBuffer).append(" ] (Press '/' to edit)\n\n");
         }
 
-        sb.append(String.format("  %-4s  %-10s  %-12s  %-8s  %-5s  %-4s  %-79s%n",
+        sb.append(String.format("  %-4s  %-10s  %-12s  %-8s  %-5s  %-4s  %-75s%n",
                 "#", "SUBJ", "TYPE", "DIFF", "PTS", "AI?", "QUESTION TEXT")).append("\n");
         sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
@@ -48,14 +48,14 @@ public class QuestionBankViews {
                 String subj = q.getSubjectCode() != null ? q.getSubjectCode() : "-";
                 String aiMark = q.isAiGenerated() ? TuiHelper.cyan("AI") : TuiHelper.dim("--");
 
-                String line = String.format("%-4d  %-10s  %-12s  %-8s  %-5.1f  %-4s  %-79s",
+                String line = String.format("%-4d  %-10s  %-12s  %-8s  %-5.1f  %-4s  %-75s",
                         (i + 1),
                         truncate(subj, 10),
                         q.getQuestionType().name(),
                         q.getDifficulty().name(),
                         q.getPoints(),
                         aiMark,
-                        truncate(q.getQuestionText(), 79));
+                        truncate(q.getQuestionText(), 75));
 
                 if (i == selectedIndex) {
                     sb.append(cursor).append(TuiHelper.bold(line)).append("\n");
@@ -127,7 +127,7 @@ public class QuestionBankViews {
             sb.append("  ").append(TuiHelper.dim(filterSummary)).append("\n\n");
         }
 
-        sb.append(String.format("    %-14s  %-4s  %-12s  %-8s  %-5s  %-79s%n",
+        sb.append(String.format("    %-14s  %-4s  %-12s  %-8s  %-5s  %-75s%n",
                 "SELECT", "#", "TYPE", "DIFF", "PTS", "QUESTION TEXT")).append("\n");
         sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
@@ -152,13 +152,13 @@ public class QuestionBankViews {
                 }
                 String cursor = (i == selectedIndex) ? TuiHelper.cyan("▶ ") : "  ";
 
-                String line = String.format("%s  %-4d  %-12s  %-8s  %-5.1f  %-79s",
+                String line = String.format("%s  %-4d  %-12s  %-8s  %-5.1f  %-75s",
                         checkbox,
                         (i + 1),
                         truncate(q.getQuestionType().name(), 12),
                         truncate(q.getDifficulty().name(), 8),
                         q.getPoints(),
-                        truncate(q.getQuestionText(), 79));
+                        truncate(q.getQuestionText(), 75));
 
                 if (i == selectedIndex) {
                     sb.append(TuiHelper.cyan(cursor + line)).append("\n");
@@ -185,8 +185,10 @@ public class QuestionBankViews {
         }
 
         List<String> hints = List.of(
-                "[↑/↓] Move",
+                "[↑/↓] Navigate",
                 "[←/→] Page",
+                "[Tab] Filter",
+                "[/] Search",
                 "[Space/Enter] Toggle",
                 "[c] Confirm Import",
                 "[Esc] Cancel"
@@ -197,6 +199,8 @@ public class QuestionBankViews {
 
     private static String truncate(String text, int max) {
         if (text == null) return "";
-        return text.length() <= max ? text : text.substring(0, max - 1) + "\u2026";
+        if (text.length() <= max) return text;
+        if (max <= 3) return text.substring(0, max);
+        return text.substring(0, max - 3) + "...";
     }
 }

@@ -23,6 +23,9 @@ public class TuiHelper {
     public static final String HEADER_END = "\u001B[?9901l";
     public static final int PAGE_SIZE = 10;
     public static final int TABLE_WIDTH = 132;
+    public static final int MIN_BODY_ROWS = 16;
+    public static final int MIN_INNER_WIDTH = 76;
+    public static final int MAX_INNER_WIDTH = TABLE_WIDTH + 2;
 
     public static String tableSeparator() {
         return "  " + "─".repeat(TABLE_WIDTH) + "\n\n";
@@ -218,6 +221,14 @@ public class TuiHelper {
     };
 
     public static final String BOX_TITLE_MARKER = "\u001B[8888m";
+    public static final String CENTER_MARKER = "\u001B[8889m";
+
+    public static String centerText(String text) {
+        if (text == null || text.isBlank()) {
+            return "";
+        }
+        return CENTER_MARKER + text;
+    }
 
     public static String boxTitle(String title) {
         if (title == null || title.isBlank()) {
@@ -456,19 +467,17 @@ public class TuiHelper {
         sb.append(header("CONFIRM ACTION"));
         sb.append("\n");
         sb.append(boxTitle(title)).append("\n\n");
-        sb.append(bold(padCenter(message, 116))).append(CLEAR_EOL).append("\n\n");
+        sb.append(bold(centerText(message))).append(CLEAR_EOL).append("\n\n");
         if (warningDetail != null && !warningDetail.isBlank()) {
-            sb.append(dim(padCenter(warningDetail, 116))).append(CLEAR_EOL).append("\n\n");
+            sb.append(dim(centerText(warningDetail))).append(CLEAR_EOL).append("\n\n");
         }
-        sb.append(dim(padCenter("─".repeat(112), 116))).append(CLEAR_EOL).append("\n\n");
+        sb.append(dim(centerText("─".repeat(56)))).append(CLEAR_EOL).append("\n\n");
 
         String btn1 = confirmFocused ? bold(NAVY_BLUE + "[ ▶ " + confirmLabel + " ]") : dim("[   " + confirmLabel + "   ]");
         String btn2 = !confirmFocused ? bold(RED + "[ ▶ " + cancelLabel + " ]") : dim("[   " + cancelLabel + "   ]");
-        int textWidth = confirmLabel.length() + cancelLabel.length() + 18;
-        int leftPad = Math.max(0, (116 - textWidth) / 2);
 
-        sb.append(" ".repeat(leftPad)).append(btn1).append("    ").append(btn2).append(CLEAR_EOL).append("\n\n");
-        sb.append(dim(padCenter("[←/→] Select Option  •  [Enter] Confirm  •  [Esc] Cancel", 116))).append(CLEAR_EOL).append("\n");
+        sb.append(btn1).append("    ").append(btn2).append(CLEAR_EOL).append("\n\n");
+        sb.append(dim("[←/→] Select Option  •  [Enter] Confirm  •  [Esc] Cancel")).append(CLEAR_EOL).append("\n");
         return sb.toString();
     }
 
@@ -486,17 +495,15 @@ public class TuiHelper {
                 : "Main Menu";
         sb.append(boxTitle("Quit Proctor", subtitle)).append("\n\n");
 
-        sb.append(bold(padCenter("Are you sure you want to exit Proctor?", 116))).append(CLEAR_EOL).append("\n\n");
-        sb.append(dim(padCenter("All session progress and data have been safely saved.", 116))).append(CLEAR_EOL).append("\n\n");
-        sb.append(dim(padCenter("─".repeat(112), 116))).append(CLEAR_EOL).append("\n\n");
+        sb.append(bold(centerText("Are you sure you want to exit Proctor?"))).append(CLEAR_EOL).append("\n\n");
+        sb.append(dim(centerText("All session progress and data have been safely saved."))).append(CLEAR_EOL).append("\n\n");
+        sb.append(dim(centerText("─".repeat(56)))).append(CLEAR_EOL).append("\n\n");
 
         String btn1 = quitConfirmFocused ? bold(RED + "[ ▶ Quit Application ]") : dim("[   Quit Application   ]");
         String btn2 = !quitConfirmFocused ? bold(NAVY_BLUE + "[ ▶ Return to App ]") : dim("[   Return to App   ]");
-        int textWidth = "Quit Application".length() + "Return to App".length() + 18;
-        int leftPad = Math.max(0, (116 - textWidth) / 2);
 
-        sb.append(" ".repeat(leftPad)).append(btn1).append("    ").append(btn2).append(CLEAR_EOL).append("\n\n");
-        sb.append(dim(padCenter("[←/→] Select Option  •  [Enter] Confirm  •  [Esc] Return to App", 116))).append(CLEAR_EOL).append("\n");
+        sb.append(btn1).append("    ").append(btn2).append(CLEAR_EOL).append("\n\n");
+        sb.append(dim("[←/→] Select Option  •  [Enter] Confirm  •  [Esc] Return to App")).append(CLEAR_EOL).append("\n");
         return sb.toString();
     }
 
@@ -741,13 +748,13 @@ private static String stripAnsi(String str) {
         }
         for (int idx : hintIndices) {
             String clean = rawLines[idx].replace(CLEAR_EOL, "");
-            int len = visibleLength(clean);
+            int len = visibleLength(clean.trim());
             if (len > maxLineLen) {
                 maxLineLen = len;
             }
         }
 
-        int innerWidth = Math.max(TABLE_WIDTH + 2, maxLineLen);
+        int innerWidth = Math.max(MIN_INNER_WIDTH, Math.min(MAX_INNER_WIDTH, maxLineLen));
         if (termWidth > 30) {
             innerWidth = Math.min(innerWidth, termWidth - 8);
         }
@@ -779,8 +786,12 @@ private static String stripAnsi(String str) {
         int hintRows = hintIndices.size();
 
         int contentHeight = (headerRows > 0 ? (headerRows + 1) : 0)
-                + (bodyRows > 0 ? (bodyRows + 4 + (hintRows > 0 ? 1 : 0)) : 0)
+                + (bodyRows > 0 ? (Math.max(bodyRows, MIN_BODY_ROWS) + 4 + (hintRows > 0 ? 1 : 0)) : 0)
                 + (hintRows > 0 ? (hintRows + 2) : 0);
+
+        int extraPadding = (bodyRows > 0 && bodyRows < MIN_BODY_ROWS) ? (MIN_BODY_ROWS - bodyRows) : 0;
+        int extraTopPad = extraPadding / 2;
+        int extraBotPad = extraPadding - extraTopPad;
 
         int targetFrameHeight;
         int topMarginOutside;
@@ -858,76 +869,37 @@ private static String stripAnsi(String str) {
               .append(rightMargin)
               .append(CLEAR_EOL).append("\n");
 
-            sb.append(indent)
-              .append(borderCol).append("┃").append(RESET)
-              .append(" ".repeat(contentLeftPad))
-              .append(borderCol).append("┃").append(RESET)
-              .append(" ".repeat(targetInnerWidth))
-              .append(borderCol).append("┃").append(RESET)
-              .append(" ".repeat(contentRightPad))
-              .append(borderCol).append("┃").append(RESET)
-              .append(rightMargin)
-              .append(CLEAR_EOL).append("\n");
+            boolean hasBoxTitleAtTop = rawLines[startBody].contains(BOX_TITLE_MARKER);
+            if (hasBoxTitleAtTop) {
+                appendCardEmptyRow(sb, indent, borderCol, contentLeftPad, targetInnerWidth, contentRightPad, rightMargin);
 
-            for (int i = startBody; i <= endBody; i++) {
-                String cleanLine = rawLines[i].replace(CLEAR_EOL, "");
-                int visLen = visibleLength(cleanLine);
-                String stripped = cleanLine.replaceAll("\u001B\\[[;?0-9]*[a-zA-Z]", "");
+                String titleClean = rawLines[startBody].replace(CLEAR_EOL, "");
+                String trimmedTitle = stripSpaces(titleClean.replace(BOX_TITLE_MARKER, "").replace(CENTER_MARKER, ""));
+                int titleVisLen = visibleLength(trimmedTitle);
+                int titleLeftPad = Math.max(0, (innerWidth - titleVisLen) / 2);
+                int titleRightPad = Math.max(0, innerWidth - (titleLeftPad + titleVisLen));
+                appendCardContentRow(sb, indent, borderCol, contentLeftPad, titleLeftPad, trimmedTitle, titleRightPad, contentRightPad, rightMargin);
 
-                boolean isBoxTitle = cleanLine.contains(BOX_TITLE_MARKER);
-                boolean isTabsRow = stripped.trim().startsWith("Tabs:") || cleanLine.contains("Tabs:");
-                boolean isButtonRow = !isTabsRow && (stripped.contains("[ ▶ ") || stripped.contains("[   "))
-                        && (stripped.contains("Sign In") || stripped.contains("Log In") || stripped.contains("Sign Up") || stripped.contains("Submit")
-                        || stripped.contains("Cancel") || stripped.contains("Register") || stripped.contains("Approve")
-                        || stripped.contains("Reject") || stripped.contains("Generate") || stripped.contains("Exit")
-                        || stripped.contains("Back") || stripped.contains("Forgot Password")
-                        || stripped.contains("Student") || stripped.contains("Teacher"));
-
-                int leftPad;
-                int rightPad;
-                if (isBoxTitle) {
-                    String trimmedClean = stripSpaces(cleanLine.replace(BOX_TITLE_MARKER, ""));
-                    int trimmedVisLen = visibleLength(trimmedClean);
-                    leftPad = Math.max(0, (innerWidth - trimmedVisLen) / 2);
-                    rightPad = Math.max(0, innerWidth - (leftPad + trimmedVisLen));
-                    cleanLine = trimmedClean;
-                } else if (isButtonRow) {
-                    String trimmedClean = stripSpaces(cleanLine);
-                    int trimmedVisLen = visibleLength(trimmedClean);
-                    leftPad = Math.max(0, (innerWidth - trimmedVisLen) / 2);
-                    rightPad = Math.max(0, innerWidth - (leftPad + trimmedVisLen));
-                    cleanLine = trimmedClean;
-                } else {
-                    leftPad = contentBlockOffset;
-                    rightPad = Math.max(0, innerWidth - (leftPad + visLen));
+                for (int p = 0; p < extraTopPad; p++) {
+                    appendCardEmptyRow(sb, indent, borderCol, contentLeftPad, targetInnerWidth, contentRightPad, rightMargin);
                 }
 
-                sb.append(indent)
-                  .append(borderCol).append("┃").append(RESET)
-                  .append(" ".repeat(contentLeftPad))
-                  .append(borderCol).append("┃").append(RESET)
-                  .append(" ")
-                  .append(" ".repeat(leftPad))
-                  .append(cleanLine)
-                  .append(" ".repeat(rightPad))
-                  .append(" ")
-                  .append(borderCol).append("┃").append(RESET)
-                  .append(" ".repeat(contentRightPad))
-                  .append(borderCol).append("┃").append(RESET)
-                  .append(rightMargin)
-                  .append(CLEAR_EOL).append("\n");
+                for (int i = startBody + 1; i <= endBody; i++) {
+                    renderCardBodyLine(sb, rawLines[i], innerWidth, contentBlockOffset, indent, borderCol, contentLeftPad, contentRightPad, rightMargin);
+                }
+            } else {
+                for (int p = 0; p < 1 + extraTopPad; p++) {
+                    appendCardEmptyRow(sb, indent, borderCol, contentLeftPad, targetInnerWidth, contentRightPad, rightMargin);
+                }
+
+                for (int i = startBody; i <= endBody; i++) {
+                    renderCardBodyLine(sb, rawLines[i], innerWidth, contentBlockOffset, indent, borderCol, contentLeftPad, contentRightPad, rightMargin);
+                }
             }
 
-            sb.append(indent)
-              .append(borderCol).append("┃").append(RESET)
-              .append(" ".repeat(contentLeftPad))
-              .append(borderCol).append("┃").append(RESET)
-              .append(" ".repeat(targetInnerWidth))
-              .append(borderCol).append("┃").append(RESET)
-              .append(" ".repeat(contentRightPad))
-              .append(borderCol).append("┃").append(RESET)
-              .append(rightMargin)
-              .append(CLEAR_EOL).append("\n");
+            for (int p = 0; p < 1 + extraBotPad; p++) {
+                appendCardEmptyRow(sb, indent, borderCol, contentLeftPad, targetInnerWidth, contentRightPad, rightMargin);
+            }
 
             sb.append(indent)
               .append(borderCol).append("┃").append(RESET)
@@ -961,25 +933,12 @@ private static String stripAnsi(String str) {
 
             for (int idx : hintIndices) {
                 String cleanLine = rawLines[idx].replace(CLEAR_EOL, "");
-                String trimmedClean = stripSpaces(cleanLine);
+                String trimmedClean = stripSpaces(cleanLine.replace(BOX_TITLE_MARKER, "").replace(CENTER_MARKER, ""));
                 int trimmedVisLen = visibleLength(trimmedClean);
                 int leftPad = Math.max(0, (innerWidth - trimmedVisLen) / 2);
                 int rightPad = Math.max(0, innerWidth - (leftPad + trimmedVisLen));
 
-                sb.append(indent)
-                  .append(borderCol).append("┃").append(RESET)
-                  .append(" ".repeat(contentLeftPad))
-                  .append(borderCol).append("┃").append(RESET)
-                  .append(" ")
-                  .append(" ".repeat(leftPad))
-                  .append(trimmedClean)
-                  .append(" ".repeat(rightPad))
-                  .append(" ")
-                  .append(borderCol).append("┃").append(RESET)
-                  .append(" ".repeat(contentRightPad))
-                  .append(borderCol).append("┃").append(RESET)
-                  .append(rightMargin)
-                  .append(CLEAR_EOL).append("\n");
+                appendCardContentRow(sb, indent, borderCol, contentLeftPad, leftPad, trimmedClean, rightPad, contentRightPad, rightMargin);
             }
 
             sb.append(indent)
@@ -1013,5 +972,72 @@ private static String stripAnsi(String str) {
         }
 
         return sb.toString();
+    }
+
+    private static void appendCardEmptyRow(StringBuilder sb, String indent, String borderCol,
+                                           int contentLeftPad, int targetInnerWidth,
+                                           int contentRightPad, String rightMargin) {
+        sb.append(indent)
+          .append(borderCol).append("┃").append(RESET)
+          .append(" ".repeat(contentLeftPad))
+          .append(borderCol).append("┃").append(RESET)
+          .append(" ".repeat(targetInnerWidth))
+          .append(borderCol).append("┃").append(RESET)
+          .append(" ".repeat(contentRightPad))
+          .append(borderCol).append("┃").append(RESET)
+          .append(rightMargin)
+          .append(CLEAR_EOL).append("\n");
+    }
+
+    private static void appendCardContentRow(StringBuilder sb, String indent, String borderCol,
+                                             int contentLeftPad, int leftPad, String content,
+                                             int rightPad, int contentRightPad, String rightMargin) {
+        sb.append(indent)
+          .append(borderCol).append("┃").append(RESET)
+          .append(" ".repeat(contentLeftPad))
+          .append(borderCol).append("┃").append(RESET)
+          .append(" ")
+          .append(" ".repeat(leftPad))
+          .append(content)
+          .append(" ".repeat(rightPad))
+          .append(" ")
+          .append(borderCol).append("┃").append(RESET)
+          .append(" ".repeat(contentRightPad))
+          .append(borderCol).append("┃").append(RESET)
+          .append(rightMargin)
+          .append(CLEAR_EOL).append("\n");
+    }
+
+    private static void renderCardBodyLine(StringBuilder sb, String rawLine, int innerWidth,
+                                           int contentBlockOffset, String indent, String borderCol,
+                                           int contentLeftPad, int contentRightPad, String rightMargin) {
+        String cleanLine = rawLine.replace(CLEAR_EOL, "");
+        int visLen = visibleLength(cleanLine);
+        String stripped = cleanLine.replaceAll("\u001B\\[[;?0-9]*[a-zA-Z]", "");
+
+        boolean isCentered = cleanLine.contains(BOX_TITLE_MARKER) || cleanLine.contains(CENTER_MARKER);
+        boolean isTabsRow = stripped.trim().startsWith("Tabs:") || cleanLine.contains("Tabs:");
+        boolean isButtonRow = !isTabsRow && (stripped.contains("[ ▶ ") || stripped.contains("[   ")) && stripped.trim().endsWith("]");
+
+        int leftPad;
+        int rightPad;
+        if (isCentered) {
+            String trimmedClean = stripSpaces(cleanLine.replace(BOX_TITLE_MARKER, "").replace(CENTER_MARKER, ""));
+            int trimmedVisLen = visibleLength(trimmedClean);
+            leftPad = Math.max(0, (innerWidth - trimmedVisLen) / 2);
+            rightPad = Math.max(0, innerWidth - (leftPad + trimmedVisLen));
+            cleanLine = trimmedClean;
+        } else if (isButtonRow) {
+            String trimmedClean = stripSpaces(cleanLine);
+            int trimmedVisLen = visibleLength(trimmedClean);
+            leftPad = Math.max(0, (innerWidth - trimmedVisLen) / 2);
+            rightPad = Math.max(0, innerWidth - (leftPad + trimmedVisLen));
+            cleanLine = trimmedClean;
+        } else {
+            leftPad = contentBlockOffset;
+            rightPad = Math.max(0, innerWidth - (leftPad + visLen));
+        }
+
+        appendCardContentRow(sb, indent, borderCol, contentLeftPad, leftPad, cleanLine, rightPad, contentRightPad, rightMargin);
     }
 }

@@ -23,39 +23,23 @@ public class RegisterRoleScreen implements Screen {
                 return ScreenResult.navigate(new StartupScreen(authService));
             }
 
-            if (KeyUtil.isLeft(k)) {
-                if (focusedButton == 1) {
-                    focusedButton = 0;
-                } else if (focusedButton == 0) {
-                    focusedButton = 1;
-                }
-                return ScreenResult.stay(this);
-            }
-
-            if (KeyUtil.isRight(k)) {
-                if (focusedButton == 0) {
-                    focusedButton = 1;
-                } else if (focusedButton == 1) {
-                    focusedButton = 0;
-                }
+            if (KeyUtil.isUp(k)) {
+                focusedButton = (focusedButton - 1 + 3) % 3;
                 return ScreenResult.stay(this);
             }
 
             if (KeyUtil.isDown(k)) {
-                if (focusedButton == 0 || focusedButton == 1) {
-                    focusedButton = 2;
-                } else {
-                    focusedButton = 0;
-                }
+                focusedButton = (focusedButton + 1) % 3;
                 return ScreenResult.stay(this);
             }
 
-            if (KeyUtil.isUp(k)) {
-                if (focusedButton == 2) {
-                    focusedButton = 0;
-                } else {
-                    focusedButton = 2;
-                }
+            if (KeyUtil.isLeft(k)) {
+                focusedButton = (focusedButton - 1 + 3) % 3;
+                return ScreenResult.stay(this);
+            }
+
+            if (KeyUtil.isRight(k)) {
+                focusedButton = (focusedButton + 1) % 3;
                 return ScreenResult.stay(this);
             }
 

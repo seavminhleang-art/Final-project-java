@@ -184,7 +184,7 @@ public class ExamViews {
         List<String> rightLines = buildSpacedCard("RULES & COMMUNITY STATS", rightItems, cardW, innerW);
 
         for (int i = 0; i < leftLines.size(); i++) {
-            sb.append("  ").append(leftLines.get(i)).append("    ").append(rightLines.get(i)).append("\n");
+            sb.append(leftLines.get(i)).append("    ").append(rightLines.get(i)).append("\n");
         }
         sb.append("\n");
 
@@ -194,14 +194,14 @@ public class ExamViews {
 
         int boxW = 116;
         int boxInnerW = boxW - 4;
-        sb.append("  ┌─ INSTRUCTIONS & TOPIC ").append("─".repeat(boxW - "INSTRUCTIONS & TOPIC".length() - 5)).append("┐\n");
-        sb.append("  │ ").append(" ".repeat(boxInnerW)).append(" │\n");
+        sb.append("┌─ INSTRUCTIONS & TOPIC ").append("─".repeat(boxW - "INSTRUCTIONS & TOPIC".length() - 5)).append("┐\n");
+        sb.append("│ ").append(" ".repeat(boxInnerW)).append(" │\n");
         List<String> wrappedDesc = wrapText(desc, boxInnerW);
         for (String line : wrappedDesc) {
-            sb.append("  │ ").append(padRight(line, boxInnerW)).append(" │\n");
+            sb.append("│ ").append(padRight(line, boxInnerW)).append(" │\n");
         }
-        sb.append("  │ ").append(" ".repeat(boxInnerW)).append(" │\n");
-        sb.append("  └").append("─".repeat(boxW - 2)).append("┘\n\n");
+        sb.append("│ ").append(" ".repeat(boxInnerW)).append(" │\n");
+        sb.append("└").append("─".repeat(boxW - 2)).append("┘\n\n");
 
         if (buttonLabels.size() == 2) {
             sb.append(TuiHelper.buttonRow(buttonLabels.get(0), focusedButtonIndex == 0, buttonLabels.get(1), focusedButtonIndex == 1, 120)).append("\n\n");
@@ -210,10 +210,10 @@ public class ExamViews {
         }
 
         if (!bannerMessage.isBlank()) {
-            sb.append("  ").append(bannerMessage).append("\n\n");
+            sb.append(TuiHelper.centerText(bannerMessage)).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [←/→] Select Action  •  [Enter] Confirm  •  [Esc] Back to List\n"));
+        sb.append(TuiHelper.dim("[←/→] Select Action  •  [Enter] Confirm  •  [Esc] Back to List\n"));
         return sb.toString();
     }
 
@@ -444,7 +444,7 @@ public class ExamViews {
             sb.append("  Search: [ ").append(searchBuffer).append(" ] (Press '/' to edit)\n\n");
         }
 
-        sb.append(String.format("  %-4s  %-8s  %-60s  %-14s  %-8s  %-10s  %-18s%n",
+        sb.append(String.format("  %-4s  %-8s  %-50s  %-14s  %-8s  %-10s  %-18s%n",
                 "#", "TYPE", "TITLE", "SCORE", "PCT", "STATUS", "DATE")).append("\n");
         sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
@@ -479,10 +479,10 @@ public class ExamViews {
                 String dateStr = r.getGradedAt() != null ? dateFormat.format(r.getGradedAt()) : "-";
                 String typeStr = (r.getAssessmentType() == AssessmentType.EXAM) ? "EXAM" : (r.getAssessmentType() == AssessmentType.SPEED ? "SPEED" : "QUIZ");
 
-                String line = String.format("%-4d  %-8s  %-60s  %-14s  %-8s  %s  %-18s",
+                String line = String.format("%-4d  %-8s  %-50s  %-14s  %-8s  %s  %-18s",
                         (i + 1),
                         typeStr,
-                        truncate(r.getQuizTitle(), 60),
+                        truncate(r.getQuizTitle(), 50),
                         scoreStr,
                         pctStr,
                         status,
@@ -513,6 +513,8 @@ public class ExamViews {
 
     private static String truncate(String text, int max) {
         if (text == null) return "";
-        return text.length() <= max ? text : text.substring(0, max - 1) + "…";
+        if (text.length() <= max) return text;
+        if (max <= 3) return text.substring(0, max);
+        return text.substring(0, max - 3) + "...";
     }
 }

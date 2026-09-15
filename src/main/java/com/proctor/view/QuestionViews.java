@@ -237,6 +237,7 @@ public class QuestionViews {
 
     private static String truncate(String text, int max) {
         if (text == null) return "";
-        return text.length() <= max ? text : text.substring(0, max - 1) + "…";
+        if (text.length() <= max) return text;
+        return text.substring(0, Math.max(0, max - 3)) + "...";
     }
 }
