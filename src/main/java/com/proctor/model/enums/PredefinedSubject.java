@@ -3,9 +3,6 @@ package com.proctor.model.enums;
 import java.util.Arrays;
 import java.util.Optional;
 
-/**
- * Predefined subjects provided by default in the Proctor application.
- */
 public enum PredefinedSubject {
     JAVASCRIPT("JS", "JavaScript", "JavaScript Programming & Web Scripting"),
     HTML("HTML", "HTML", "HyperText Markup Language & Web Structure"),

@@ -80,7 +80,6 @@ public class SpeedQuizTakerScreen implements Screen {
 
         if (msg instanceof TickMessage t) {
             if (t.generation() != -1 && t.generation() != this.tickGeneration) {
-                // Ignore stale tick from a previous state or question
                 return ScreenResult.stay(this);
             }
 
@@ -178,7 +177,6 @@ public class SpeedQuizTakerScreen implements Screen {
                     return ScreenResult.stay(this);
                 }
 
-                // Quick pick 1-4
                 if (k.key() != null && k.key().length() == 1) {
                     char c = k.key().charAt(0);
                     if (c >= '1' && c <= '9') {

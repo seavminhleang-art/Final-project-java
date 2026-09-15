@@ -56,8 +56,6 @@ public class UserFormScreen implements Screen {
         return userToEdit != null;
     }
 
-    // Create: 0=fullName, 1=gender, 2=birthday, 3=email, 4=username, 5=password, 6=role  → 7 input fields
-    // Edit:   0=fullName, 1=gender, 2=birthday, 3=role, 4=status                          → 5 input fields
     private int getNumInputFields() {
         return isEditMode() ? 5 : 7;
     }

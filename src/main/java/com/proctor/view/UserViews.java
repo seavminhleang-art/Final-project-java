@@ -113,7 +113,6 @@ public class UserViews {
         String genderVal = (gender != null && !gender.isBlank()) ? gender : "Male";
 
         if (isEditMode) {
-            // Edit: 0=fullName, 1=gender, 2=birthday, 3=role, 4=status
             sb.append(TuiHelper.inputBox("Full Name", fullName, focusedField == 0, 102, false, "enter full name"));
             sb.append("\n");
             sb.append(TuiHelper.selectBox("Gender", genderVal, focusedField == 1, 102, "Space to cycle"));
@@ -127,7 +126,6 @@ public class UserViews {
             sb.append(TuiHelper.selectBox("Account Status", statusText, focusedField == 4, 102, "Space to toggle (Enabled/Disabled)"));
             sb.append("\n");
         } else {
-            // Create: 0=fullName, 1=gender, 2=birthday, 3=email, 4=username, 5=password, 6=role
             sb.append(TuiHelper.inputBox("Full Name", fullName, focusedField == 0, 102, false, "enter full name"));
             sb.append("\n");
             sb.append(TuiHelper.selectBox("Gender", genderVal, focusedField == 1, 102, "Space to cycle"));

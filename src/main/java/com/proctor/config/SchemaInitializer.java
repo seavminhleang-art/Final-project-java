@@ -72,7 +72,6 @@ public class SchemaInitializer {
                 stmt.execute("UPDATE quizzes SET subject_id = 3 WHERE subject_id = 4;");
                 stmt.execute("DELETE FROM subjects WHERE id = 4 AND code = 'CPP';");
                 stmt.execute("DELETE FROM subjects WHERE code IN ('SDJFSDF', 'FRONTED');");
-                // Seed HTML and CSS if not present
                 stmt.execute("INSERT INTO subjects (code, name, description, is_enabled) " +
                         "SELECT 'HTML', 'HTML', 'HyperText Markup Language & Web Structure', TRUE " +
                         "WHERE NOT EXISTS (SELECT 1 FROM subjects WHERE code = 'HTML');");
@@ -80,7 +79,6 @@ public class SchemaInitializer {
                         "SELECT 'CSS', 'CSS', 'Cascading Style Sheets & Responsive Styling', TRUE " +
                         "WHERE NOT EXISTS (SELECT 1 FROM subjects WHERE code = 'CSS');");
 
-                // Remap HTML/CSS questions and quizzes to distinct HTML or CSS
                 stmt.execute("UPDATE questions SET subject_id = (SELECT id FROM subjects WHERE code = 'CSS' LIMIT 1) " +
                         "WHERE subject_id = (SELECT id FROM subjects WHERE code = 'HTML/CSS' LIMIT 1) AND (LOWER(question_text) LIKE '%css%' OR LOWER(COALESCE(explanation, '')) LIKE '%css%');");
                 stmt.execute("UPDATE questions SET subject_id = (SELECT id FROM subjects WHERE code = 'HTML' LIMIT 1) " +
@@ -90,17 +88,13 @@ public class SchemaInitializer {
                 stmt.execute("UPDATE quizzes SET subject_id = (SELECT id FROM subjects WHERE code = 'HTML' LIMIT 1) " +
                         "WHERE subject_id = (SELECT id FROM subjects WHERE code = 'HTML/CSS' LIMIT 1);");
 
-                // Remove legacy combined entry
                 stmt.execute("DELETE FROM subjects WHERE code = 'HTML/CSS';");
 
-                // Ensure quizzes foreign key cascades with SET NULL on subject deletion
                 stmt.execute("ALTER TABLE quizzes DROP CONSTRAINT IF EXISTS quizzes_subject_id_fkey;");
                 stmt.execute("ALTER TABLE quizzes ADD CONSTRAINT quizzes_subject_id_fkey FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE SET NULL;");
 
-                // Drop obsolete user_subjects table
                 stmt.execute("DROP TABLE IF EXISTS user_subjects CASCADE;");
 
-                // Drop redundant max_attempts column from quizzes
                 stmt.execute("ALTER TABLE quizzes DROP COLUMN IF EXISTS max_attempts;");
             }
         } catch (Exception e) {

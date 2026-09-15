@@ -20,10 +20,6 @@ import com.williamcallahan.tui4j.compat.bubbletea.input.key.KeyType;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Screen for browsing and managing the teacher's personal question bank.
- * Bank questions have quiz_id = NULL and belong to the logged-in teacher.
- */
 public class QuestionBankScreen implements Screen {
     private final QuestionService questionService;
     private final SubjectService subjectService;
@@ -32,19 +28,16 @@ public class QuestionBankScreen implements Screen {
     private List<Question> questions = new ArrayList<>();
     private int selectedIndex = 0;
 
-    // Subject filter cycling
     private final List<Subject> allSubjects;
-    private int subjectFilterIndex = 0; // 0 = All, 1..N = allSubjects.get(i-1)
+    private int subjectFilterIndex = 0;
 
-    // Other filters
     private QuestionType typeFilter = null;
     private Difficulty diffFilter = null;
     private final StringBuilder searchBuffer = new StringBuilder();
     private boolean searchMode = false;
 
-    // Delete confirmation
     private boolean confirmingDelete = false;
-    private boolean confirmDeleteFocused = false; // true = confirm, false = cancel
+    private boolean confirmDeleteFocused = false;
     private Question pendingDeleteQuestion = null;
 
     private String bannerMessage = "";
@@ -72,7 +65,6 @@ public class QuestionBankScreen implements Screen {
     public ScreenResult update(Message msg) {
         if (msg instanceof KeyPressMessage k) {
 
-            // --- Delete confirmation modal ---
             if (confirmingDelete) {
                 if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {
                     confirmDeleteFocused = !confirmDeleteFocused;
@@ -98,7 +90,6 @@ public class QuestionBankScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
-            // --- Search mode ---
             if (searchMode) {
                 if (KeyUtil.isEsc(k) || KeyUtil.isEnter(k)) {
                     searchMode = false;
@@ -117,7 +108,6 @@ public class QuestionBankScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
-            // --- Normal navigation ---
             bannerMessage = "";
 
             if (KeyUtil.isEsc(k)) {
@@ -143,22 +133,17 @@ public class QuestionBankScreen implements Screen {
                     }
                 }
             } else if ("n".equalsIgnoreCase(k.key())) {
-                // New bank question (no quiz context)
                 return ScreenResult.navigate(new QuestionFormScreen(questionService, subjectService, authService, null, null));
             } else if ("g".equalsIgnoreCase(k.key())) {
-                // AI generate to bank (no quiz context)
                 return ScreenResult.navigate(new AIQuestionGeneratorScreen(new AIService(), questionService, subjectService, authService, null));
             } else if (("e".equalsIgnoreCase(k.key()) || KeyUtil.isEnter(k)) && !questions.isEmpty()) {
-                // Edit selected bank question
                 return ScreenResult.navigate(new QuestionFormScreen(questionService, subjectService, authService, questions.get(selectedIndex), null));
             } else if (("d".equalsIgnoreCase(k.key()) || KeyUtil.isDelete(k)) && !questions.isEmpty()) {
-                // Delete with confirmation
                 pendingDeleteQuestion = questions.get(selectedIndex);
                 confirmingDelete = true;
                 confirmDeleteFocused = false;
                 return ScreenResult.stay(this);
             } else if (KeyUtil.isTab(k) || "f".equalsIgnoreCase(k.key())) {
-                // Cycle type filter
                 if (typeFilter == null) typeFilter = QuestionType.MCQ;
                 else if (typeFilter == QuestionType.MCQ) typeFilter = QuestionType.TRUE_FALSE;
                 else if (typeFilter == QuestionType.TRUE_FALSE) typeFilter = QuestionType.SHORT_ANSWER;
@@ -166,12 +151,10 @@ public class QuestionBankScreen implements Screen {
                 selectedIndex = 0;
                 refreshData();
             } else if ("s".equalsIgnoreCase(k.key())) {
-                // Cycle subject filter
                 subjectFilterIndex = (subjectFilterIndex + 1) % (allSubjects.size() + 1);
                 selectedIndex = 0;
                 refreshData();
             } else if ("x".equalsIgnoreCase(k.key())) {
-                // Cycle difficulty filter
                 if (diffFilter == null) diffFilter = Difficulty.EASY;
                 else if (diffFilter == Difficulty.EASY) diffFilter = Difficulty.MEDIUM;
                 else if (diffFilter == Difficulty.MEDIUM) diffFilter = Difficulty.HARD;

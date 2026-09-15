@@ -77,13 +77,11 @@ public class SpeedQuizSession {
             return null;
         }
 
-        // Try current target tier first
         Question chosen = findUnusedInTier(currentTier);
         if (chosen != null) {
             return chosen;
         }
 
-        // Tier exhaustion fallback
         if (currentTier == Difficulty.HARD) {
             chosen = findUnusedInTier(Difficulty.MEDIUM);
             if (chosen == null) {
@@ -101,7 +99,7 @@ public class SpeedQuizSession {
                     chosen = findUnusedInTier(Difficulty.HARD);
                 }
             }
-        } else { // EASY
+        } else {
             chosen = findUnusedInTier(Difficulty.MEDIUM);
             if (chosen == null) {
                 chosen = findUnusedInTier(Difficulty.HARD);
@@ -112,7 +110,6 @@ public class SpeedQuizSession {
             return chosen;
         }
 
-        // If not found in primary fallback paths, find ANY remaining question
         for (Question q : allQuestions) {
             if (!answeredQuestionIds.contains(q.getId())) {
                 return q;
@@ -201,7 +198,6 @@ public class SpeedQuizSession {
         answerRecords.add(record);
         answeredQuestionIds.add(q.getId());
 
-        // Prepare for next question
         questionSecondsRemaining = secondsPerQuestion;
         currentQuestion = pickNextQuestion();
 

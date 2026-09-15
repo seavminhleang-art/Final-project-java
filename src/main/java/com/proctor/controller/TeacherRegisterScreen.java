@@ -33,7 +33,6 @@ public class TeacherRegisterScreen implements Screen {
         this.userService = userService;
     }
 
-    // 0=fullName, 1=gender, 2=birthday, 3=email, 4=username, 5=password, 6=confirmPassword, 7=register, 8=back
     private int getFieldCount() {
         return 9;
     }

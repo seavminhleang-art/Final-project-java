@@ -234,7 +234,6 @@ public class TuiHelper {
         return sb.toString();
     }
 
-
     public static String header(String title) {
         return header(title, null);
     }
@@ -335,14 +334,8 @@ public class TuiHelper {
         return sb.toString();
     }
 
-    /**
-     * Renders a masked date input in "DD - MM - YYYY" format.
-     * {@code digits} contains the raw digit characters typed so far (0–8 chars).
-     * When {@code focused} the next empty slot shows an underscore cursor.
-     */
     public static String birthdayMask(String digits, boolean focused) {
         char[] tpl = "DD - MM - YYYY".toCharArray();
-        // positions of the 8 digit slots within the template
         int[] slots = {0, 1, 5, 6, 10, 11, 12, 13};
         int len = (digits == null) ? 0 : Math.min(digits.length(), 8);
         for (int i = 0; i < len; i++) {
@@ -718,9 +711,8 @@ private static String stripAnsi(String str) {
 
         int contentBlockOffset = Math.max(0, (innerWidth - maxLineLen) / 2);
         int targetInnerWidth = innerWidth + 2;
-        int boxWidth = innerWidth + 4; // 138
+        int boxWidth = innerWidth + 4;
 
-        // Constant Outer Viewport Monitor Frame (hugging the terminal screen like a monitor bezel)
         int outerMarginX = (termWidth > 146) ? 2 : 0;
         int outerWidth = termWidth - (outerMarginX * 2);
         if (outerWidth < 144) {
@@ -736,7 +728,6 @@ private static String stripAnsi(String str) {
         String indent = (leftIndent > 0) ? " ".repeat(leftIndent) : "";
         String rightMargin = (rightMarginLen > 0) ? " ".repeat(rightMarginLen) : "";
 
-        // Strictly even horizontal padding inside the frame
         int contentLeftPad = Math.max(0, (outerInnerWidth - boxWidth) / 2);
         int contentRightPad = Math.max(0, outerInnerWidth - (contentLeftPad + boxWidth));
 
@@ -748,18 +739,15 @@ private static String stripAnsi(String str) {
                 + (bodyRows > 0 ? (bodyRows + 4 + (hintRows > 0 ? 1 : 0)) : 0)
                 + (hintRows > 0 ? (hintRows + 2) : 0);
 
-        // CONSTANT FRAME HEIGHT: fixed across ALL screens so the outer border never shifts!
         int targetFrameHeight;
         int topMarginOutside;
         int botMarginOutside;
 
         if (termHeight >= 60) {
-            // Keep 1 line outside margin at top and bottom, frame hugs the screen with even margins
             targetFrameHeight = termHeight - 2;
             topMarginOutside = 1;
             botMarginOutside = 1;
         } else {
-            // Fits the maximum screen height (58 lines)
             targetFrameHeight = 58;
             topMarginOutside = Math.max(0, (termHeight - targetFrameHeight) / 2);
             botMarginOutside = Math.max(0, termHeight - targetFrameHeight - topMarginOutside);
@@ -774,18 +762,15 @@ private static String stripAnsi(String str) {
 
         StringBuilder sb = new StringBuilder();
 
-        // Top outside margin
         for (int r = 0; r < topMarginOutside; r++) {
             sb.append(" ".repeat(termWidth)).append(CLEAR_EOL).append("\n");
         }
 
-        // 1. Outer Monitor Frame Top Border
         sb.append(indent)
           .append(borderCol).append("┏").append("━".repeat(outerInnerWidth)).append("┓").append(RESET)
           .append(rightMargin)
           .append(CLEAR_EOL).append("\n");
 
-        // 2. Interior Top Padding Rows inside Monitor Frame
         for (int p = 0; p < topPadInside; p++) {
             sb.append(indent)
               .append(borderCol).append("┃").append(RESET)
@@ -795,7 +780,6 @@ private static String stripAnsi(String str) {
               .append(CLEAR_EOL).append("\n");
         }
 
-        // 3. ASCII Header Rows
         if (!headerLines.isEmpty()) {
             for (String hLine : headerLines) {
                 String cleanHLine = hLine.replace(CLEAR_EOL, "");
@@ -821,7 +805,6 @@ private static String stripAnsi(String str) {
             }
         }
 
-        // 4. Inner Main Box
         if (bodyRows > 0) {
             sb.append(indent)
               .append(borderCol).append("┃").append(RESET)
@@ -860,7 +843,6 @@ private static String stripAnsi(String str) {
                 int leftPad;
                 int rightPad;
                 if (isBoxTitle) {
-                    // Box title / text line above tabs is ALWAYS centered across all pages
                     String trimmedClean = stripSpaces(cleanLine.replace(BOX_TITLE_MARKER, ""));
                     int trimmedVisLen = visibleLength(trimmedClean);
                     leftPad = Math.max(0, (innerWidth - trimmedVisLen) / 2);
@@ -873,7 +855,6 @@ private static String stripAnsi(String str) {
                     rightPad = Math.max(0, innerWidth - (leftPad + trimmedVisLen));
                     cleanLine = trimmedClean;
                 } else {
-                    // Normal content and Tabs row ALWAYS start on the left
                     leftPad = contentBlockOffset;
                     rightPad = Math.max(0, innerWidth - (leftPad + visLen));
                 }
@@ -925,7 +906,6 @@ private static String stripAnsi(String str) {
             }
         }
 
-        // 5. Inner Hint Box
         if (hintRows > 0) {
             sb.append(indent)
               .append(borderCol).append("┃").append(RESET)
@@ -969,7 +949,6 @@ private static String stripAnsi(String str) {
               .append(CLEAR_EOL);
         }
 
-        // 6. Interior Bottom Padding Rows inside Monitor Frame
         for (int p = 0; p < botPadInside; p++) {
             sb.append("\n")
               .append(indent)
@@ -980,14 +959,12 @@ private static String stripAnsi(String str) {
               .append(CLEAR_EOL);
         }
 
-        // 7. Outer Monitor Frame Bottom Border
         sb.append("\n")
           .append(indent)
           .append(borderCol).append("┗").append("━".repeat(outerInnerWidth)).append("┛").append(RESET)
           .append(rightMargin)
           .append(CLEAR_EOL);
 
-        // Bottom outside margin
         for (int r = 0; r < botMarginOutside; r++) {
             sb.append("\n").append(" ".repeat(termWidth)).append(CLEAR_EOL);
         }

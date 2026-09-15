@@ -9,7 +9,7 @@ import com.williamcallahan.tui4j.compat.bubbletea.Message;
 
 public class StartupScreen implements Screen {
     private final AuthService authService;
-    private int focusedButton = 0; // 0 = Log In, 1 = Register, 2 = Exit
+    private int focusedButton = 0;
     private boolean showQuitModal = false;
     private boolean quitConfirmFocused = false;
 

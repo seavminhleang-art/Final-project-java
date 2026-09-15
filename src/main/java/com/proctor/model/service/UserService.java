@@ -23,8 +23,6 @@ public class UserService {
         return userRepository.findAll(search, role);
     }
 
-
-    /** Convenience overload used by SeedService and admin quick-create (no birthday/gender). */
     public User createUser(String emailOrUsername, String rawPassword, String fullName, Role role) {
         if (emailOrUsername == null || emailOrUsername.isBlank()) {
             throw new ValidationException("Email or username is required.");
@@ -42,7 +40,6 @@ public class UserService {
         return createUser(email, username, rawPassword, fullName, role, null, "Other");
     }
 
-    /** Overload without birthday or gender — delegates to the main overload. */
     public User createUser(String email, String username, String rawPassword, String fullName, Role role) {
         return createUser(email, username, rawPassword, fullName, role, null, "Other");
     }

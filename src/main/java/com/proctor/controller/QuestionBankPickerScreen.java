@@ -18,11 +18,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Picker screen shown when a teacher presses [b] inside QuizQuestionEditorScreen.
- * Loads the teacher's bank questions (auto-filtered by the quiz's subject and question type)
- * and lets the teacher check which ones to import as copies into the quiz.
- */
 public class QuestionBankPickerScreen implements Screen {
     private final Quiz quiz;
     private final QuizService quizService;
@@ -45,10 +40,9 @@ public class QuestionBankPickerScreen implements Screen {
         this.subjectService = subjectService;
         this.authService = authService;
 
-        // Auto-filter: current teacher's bank questions matching the quiz's subject and question type
         Integer currentUserId = Session.getCurrentUser().map(User::getId).orElse(null);
         Integer subjectId = quiz.getSubjectId();
-        com.proctor.model.enums.QuestionType typeFilter = quiz.getQuizQuestionType(); // null for exams and speed quizzes
+        com.proctor.model.enums.QuestionType typeFilter = quiz.getQuizQuestionType();
 
         List<Question> rawQuestions = questionService.getBankQuestions(currentUserId, subjectId, typeFilter, null, null);
         if (quiz.getAssessmentType() == com.proctor.model.enums.AssessmentType.SPEED) {
@@ -73,7 +67,6 @@ public class QuestionBankPickerScreen implements Screen {
             }
         }
 
-        // Build filter summary string
         StringBuilder fs = new StringBuilder("Auto-filter: Your bank questions");
         if (subjectId != null) {
             subjectService.getSubjectById(subjectId).ifPresent(s ->
@@ -96,7 +89,6 @@ public class QuestionBankPickerScreen implements Screen {
         if (msg instanceof com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage k) {
 
             if (KeyUtil.isEsc(k)) {
-                // Cancel — go back without changes
                 return ScreenResult.navigate(new QuizQuestionEditorScreen(
                         quiz, new QuizService(new QuizRepository()), questionService, subjectService, authService));
             }
@@ -121,7 +113,6 @@ public class QuestionBankPickerScreen implements Screen {
                     }
                 }
             } else if ((KeyUtil.isSpace(k) || KeyUtil.isEnter(k)) && !bankQuestions.isEmpty()) {
-                // Toggle checkbox
                 int qid = bankQuestions.get(selectedIndex).getId();
                 if (alreadyAddedIds.contains(qid)) {
                     bannerMessage = TuiHelper.yellow("● This question is already in the quiz.");
@@ -133,7 +124,6 @@ public class QuestionBankPickerScreen implements Screen {
                     selectedIds.add(qid);
                 }
             } else if ("c".equalsIgnoreCase(k.key())) {
-                // Confirm import — copy each selected bank question into the quiz
                 if (selectedIds.isEmpty()) {
                     bannerMessage = TuiHelper.yellow("⚠ No questions selected. Use Space/Enter to toggle.");
                     return ScreenResult.stay(this);
@@ -152,7 +142,6 @@ public class QuestionBankPickerScreen implements Screen {
                 if (!errors.isEmpty()) {
                     msg2 += " " + TuiHelper.red("Errors: " + String.join(", ", errors));
                 }
-                // Navigate back to quiz question editor with a success banner
                 QuizQuestionEditorScreen editor = new QuizQuestionEditorScreen(
                         quiz, new QuizService(new QuizRepository()), questionService, subjectService, authService);
                 editor.setBannerMessage(msg2);

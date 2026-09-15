@@ -127,7 +127,6 @@ public class SpeedQuizViews {
                 curQNum, totalQ, session.getTotalScore(), session.getCurrentStreak());
         sb.append(TuiHelper.boxTitle(session.getQuiz().getTitle(), subInfo)).append("\n\n");
 
-        // Difficulty badge
         Difficulty diff = (toastRecord != null && toastRecord.getTierShown() != null)
                 ? toastRecord.getTierShown()
                 : (q.getDifficulty() != null ? q.getDifficulty() : Difficulty.MEDIUM);
@@ -138,7 +137,6 @@ public class SpeedQuizViews {
         };
         sb.append("  Difficulty Tier: [ ").append(diffBadge).append(" ]\n\n");
 
-        // Visual Countdown Timer Bar
         int totalSec = session.getSecondsPerQuestion() > 0 ? session.getSecondsPerQuestion() : 15;
         int remSec = (toastRecord != null)
                 ? Math.max(0, toastRecord.getSecondsRemaining())
@@ -166,11 +164,9 @@ public class SpeedQuizViews {
         }
         sb.append("  Timer: ").append(timerColored).append("\n\n");
 
-        // Question text
         sb.append("  ").append(TuiHelper.bold(String.format("Q%d. %s", curQNum, q.getQuestionText()))).append(" ")
                 .append(TuiHelper.dim(String.format("(%.1f base pts)", q.getPoints()))).append("\n\n");
 
-        // Options
         if (q.getOptions() != null) {
             Integer pickedId = (toastRecord != null) ? toastRecord.getSelectedOptionId() : null;
             for (int i = 0; i < q.getOptions().size(); i++) {
@@ -206,7 +202,6 @@ public class SpeedQuizViews {
             sb.append("\n");
         }
 
-        // In-place countdown message
         if (toastRecord != null) {
             if (session.isCompleted() || session.getCurrentQuestion() == null) {
                 sb.append("  ").append(TuiHelper.cyan(TuiHelper.bold(String.format("Finishing quiz in %d...", revealSecondsRemaining)))).append("\n\n");
@@ -283,7 +278,6 @@ public class SpeedQuizViews {
 
         sb.append("\n");
 
-        // Adaptive Difficulty Ladder Status
         Difficulty oldTier = record.getTierShown();
         Difficulty newTier = session.getCurrentTier();
         if (record.isCorrect()) {

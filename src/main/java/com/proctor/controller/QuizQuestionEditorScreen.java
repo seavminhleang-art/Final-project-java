@@ -53,7 +53,6 @@ public class QuizQuestionEditorScreen implements Screen {
         }
     }
 
-    /** Called by QuestionBankPickerScreen to display an import success message. */
     public void setBannerMessage(String message) {
         this.bannerMessage = message;
     }

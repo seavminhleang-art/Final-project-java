@@ -10,7 +10,7 @@ import com.williamcallahan.tui4j.compat.bubbletea.Message;
 
 public class RegisterRoleScreen implements Screen {
     private final AuthService authService;
-    private int focusedButton = 0; // 0 = Student, 1 = Teacher, 2 = Back
+    private int focusedButton = 0;
 
     public RegisterRoleScreen(AuthService authService) {
         this.authService = authService;

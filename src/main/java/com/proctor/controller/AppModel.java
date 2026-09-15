@@ -46,7 +46,6 @@ public class AppModel implements Model {
                 }
                 return new UpdateResult<>(this, result.command());
             } catch (Throwable t) {
-                // Safeguard against unhandled runtime errors: keep application running!
                 this.runtimeError = t.getMessage() != null ? t.getMessage() : t.getClass().getSimpleName();
                 return new UpdateResult<>(this, null);
             }

@@ -126,7 +126,6 @@ public class AuthViews {
         sb.append(TuiHelper.selectBox("Gender", genderVal, focusedField == 1, 102, genderHelp));
         sb.append("\n");
 
-        // Birthday masked input — show DD - MM - YYYY template with typed digits filled in
         String birthdayDisplay = TuiHelper.birthdayMask(birthday, focusedField == 2);
         sb.append(TuiHelper.inputBox("Date of Birth", birthdayDisplay, focusedField == 2, 102, false, "DD - MM - YYYY"));
         sb.append("\n");
