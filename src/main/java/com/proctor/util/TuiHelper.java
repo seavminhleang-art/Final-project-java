@@ -234,7 +234,11 @@ public class TuiHelper {
         if (title == null || title.isBlank()) {
             return "";
         }
-        return BOX_TITLE_MARKER + bold(title.trim()) + RESET;
+        String t = title.trim();
+        if (t.length() > 126) {
+            t = t.substring(0, 123) + "...";
+        }
+        return BOX_TITLE_MARKER + bold(t) + RESET;
     }
 
     public static String boxTitle(String title, String subtitle) {
@@ -244,7 +248,20 @@ public class TuiHelper {
         if (subtitle == null || subtitle.isBlank()) {
             return boxTitle(title);
         }
-        return BOX_TITLE_MARKER + bold(title.trim()) + dim("  •  " + subtitle.trim()) + RESET;
+        String t = title.trim();
+        String s = subtitle.trim();
+        int maxTotal = 126;
+        int sepLen = 5;
+        if (t.length() > 60) {
+            t = t.substring(0, 57) + "...";
+        }
+        if (t.length() + sepLen + s.length() > maxTotal) {
+            int maxSub = Math.max(10, maxTotal - sepLen - t.length());
+            if (s.length() > maxSub) {
+                s = s.substring(0, Math.max(0, maxSub - 3)) + "...";
+            }
+        }
+        return BOX_TITLE_MARKER + bold(t) + dim("  •  " + s) + RESET;
     }
 
     public static String asciiBannerBox(String[] asciiLines) {
@@ -386,7 +403,7 @@ public class TuiHelper {
             } else {
                 String ph = (placeholder != null) ? placeholder : "";
                 if (ph.length() > maxInner) {
-                    ph = ph.substring(0, maxInner - 1) + "…";
+                    ph = ph.substring(0, Math.max(0, maxInner - 3)) + "...";
                 }
                 displayVal = dim(ph) + " ".repeat(Math.max(0, maxInner - ph.length()));
             }
@@ -396,13 +413,13 @@ public class TuiHelper {
                 if (txt.length() < maxInner) {
                     displayVal = txt + "_" + " ".repeat(maxInner - txt.length() - 1);
                 } else {
-                    displayVal = "…" + txt.substring(txt.length() - (maxInner - 2)) + "_";
+                    displayVal = "..." + txt.substring(txt.length() - Math.max(0, maxInner - 4)) + "_";
                 }
             } else {
                 if (txt.length() <= maxInner) {
                     displayVal = txt + " ".repeat(maxInner - txt.length());
                 } else {
-                    displayVal = txt.substring(0, maxInner - 1) + "…";
+                    displayVal = txt.substring(0, Math.max(0, maxInner - 3)) + "...";
                 }
             }
         }

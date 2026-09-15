@@ -34,9 +34,9 @@ public class InboxViews {
         sb.append(TuiHelper.tabBar(new String[]{"All", "Unread", "Actionable"}, activeTab)).append("\n\n");
 
         if (searchMode) {
-            sb.append("  Search: [ ").append(TuiHelper.cyan(searchBuffer + "_")).append(" ] (Press Enter to finish)\n\n");
+            sb.append("  Search: [ ").append(TuiHelper.cyan(truncate(searchBuffer, 50) + "_")).append(" ] (Press Enter to finish)\n\n");
         } else if (searchBuffer != null && !searchBuffer.isEmpty()) {
-            sb.append("  Search: [ ").append(searchBuffer).append(" ] (Press '/' to edit)\n\n");
+            sb.append("  Search: [ ").append(truncate(searchBuffer, 50)).append(" ] (Press '/' to edit)\n\n");
         }
 
         sb.append(String.format("    %-4s  %-14s  %-16s  %-22s  %-46s  %-16s%n",
@@ -90,7 +90,7 @@ public class InboxViews {
         }
 
         if (!bannerMessage.isBlank()) {
-            sb.append("  ").append(bannerMessage).append("\n\n");
+            sb.append("  ").append(truncate(bannerMessage, 128)).append("\n\n");
         }
 
         sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [Tab] Tab  •  [Enter] Open  •  [d] Delete  •  [m] Mark All Read  •  [Esc] Back\n"));
@@ -115,20 +115,33 @@ public class InboxViews {
         StringBuilder sb = new StringBuilder();
         sb.append(TuiHelper.header("INBOX"));
         sb.append("\n");
-        sb.append(TuiHelper.boxTitle("Message Details", "Type: " + msg.getType().name())).append("\n\n");
+        String typeName = (msg.getType() != null) ? msg.getType().name() : "UNKNOWN";
+        sb.append(TuiHelper.boxTitle("Message Details", "Type: " + typeName)).append("\n\n");
 
-        String sender = msg.getSenderName() != null ? msg.getSenderName() : "System";
+        String sender = msg.getSenderName() != null ? truncate(msg.getSenderName(), 30) : "System";
         String dateStr = msg.getCreatedAt() != null ? DATE_FMT.format(msg.getCreatedAt()) : "-";
 
-        sb.append("  ").append(TuiHelper.bold("Subject:  ")).append(msg.getTitle()).append("\n\n");
+        sb.append("  ").append(TuiHelper.bold("Subject:  ")).append(truncate(msg.getTitle(), 114)).append("\n\n");
         sb.append("  ").append(TuiHelper.bold("From:     ")).append(sender);
         sb.append("   ").append(TuiHelper.bold("Received: ")).append(dateStr);
         sb.append("   ").append(TuiHelper.bold("Status:   ")).append(formatStatusBadge(msg.getStatus(), false)).append("\n\n");
         sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
-        for (String line : msg.getBody().split("\n")) {
-            if (line.startsWith("[HASH:")) continue;
-            sb.append("  ").append(line).append("\n");
+        if (msg.getBody() != null) {
+            String cleanBody = msg.getBody()
+                    .replace("Student's Justification:", "Student's Reason:")
+                    .replace("Justification Reason:", "Reason:")
+                    .replace("Justification:", "Reason:");
+            for (String rawLine : cleanBody.split("\n", -1)) {
+                if (rawLine.startsWith("[HASH:")) continue;
+                if (rawLine.isBlank()) {
+                    sb.append("  \n");
+                    continue;
+                }
+                for (String wrapped : wrapText(rawLine, 126)) {
+                    sb.append("  ").append(truncate(wrapped, 126)).append("\n");
+                }
+            }
         }
         sb.append("\n  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
@@ -138,10 +151,10 @@ public class InboxViews {
         }
 
         if (!errorMessage.isBlank()) {
-            sb.append("  ").append(TuiHelper.red("✖ " + errorMessage)).append("\n\n");
+            sb.append("  ").append(TuiHelper.red("✖ " + truncate(errorMessage, 120))).append("\n\n");
         }
         if (!bannerMessage.isBlank()) {
-            sb.append("  ").append(bannerMessage).append("\n\n");
+            sb.append("  ").append(truncate(bannerMessage, 128)).append("\n\n");
         }
 
         if (msg.isActionable()) {
@@ -166,6 +179,9 @@ public class InboxViews {
     }
 
     private static String formatStatusBadge(InboxStatus status, boolean unread) {
+        if (status == null) {
+            return unread ? TuiHelper.cyan(String.format("%-14s", "[NEW]")) : TuiHelper.dim(String.format("%-14s", "[READ]"));
+        }
         if (status == InboxStatus.PENDING) {
             return TuiHelper.yellow(String.format("%-14s", "[PENDING]"));
         } else if (status == InboxStatus.APPROVED) {
@@ -180,12 +196,41 @@ public class InboxViews {
     }
 
     private static String formatTypeBadge(InboxMessageType type) {
+        if (type == null) return "[NOTICE]";
         return switch (type) {
             case PASSWORD_RESET -> "[PASSWORD]";
             case QUIZ_RETAKE -> "[QUIZ RETAKE]";
             case EXAM_RETAKE -> "[EXAM RETAKE]";
             case NOTIFICATION -> "[NOTICE]";
         };
+    }
+
+    private static List<String> wrapText(String text, int maxLen) {
+        List<String> result = new java.util.ArrayList<>();
+        if (text == null || text.isBlank()) {
+            result.add("");
+            return result;
+        }
+        String[] words = text.split(" ");
+        StringBuilder current = new StringBuilder();
+        for (String word : words) {
+            if (word.isEmpty()) continue;
+            if (word.length() > maxLen) {
+                word = truncate(word, maxLen);
+            }
+            if (current.isEmpty()) {
+                current.append(word);
+            } else if (current.length() + 1 + word.length() <= maxLen) {
+                current.append(" ").append(word);
+            } else {
+                result.add(current.toString());
+                current = new StringBuilder(word);
+            }
+        }
+        if (!current.isEmpty()) {
+            result.add(current.toString());
+        }
+        return result;
     }
 
     private static String truncate(String text, int maxLen) {

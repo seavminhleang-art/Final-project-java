@@ -134,7 +134,7 @@ public class InboxService {
         }
 
         if (reason == null || reason.trim().isBlank()) {
-            throw new ValidationException("A justification reason is required for exam makeup requests.");
+            throw new ValidationException("A reason is required for exam makeup requests.");
         }
 
         if (examTimestamp != null) {
@@ -153,7 +153,7 @@ public class InboxService {
                 .recipientId(teacherId)
                 .type(InboxMessageType.EXAM_RETAKE)
                 .title("Exam Makeup Request: " + examTitle)
-                .body(String.format("Student %s %s and requested a makeup for exam \"%s\".\n\nStudent's Justification:\n\"%s\"",
+                .body(String.format("Student %s %s and requested a makeup for exam \"%s\".\n\nStudent's Reason:\n\"%s\"",
                         studentName, cause, examTitle, reason.trim()))
                 .targetId(quizId)
                 .status(InboxStatus.PENDING)

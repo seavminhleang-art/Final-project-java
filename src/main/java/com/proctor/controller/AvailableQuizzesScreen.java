@@ -326,7 +326,7 @@ public class AvailableQuizzesScreen implements Screen {
             }
 
             if (examReasonBuffer.toString().trim().isBlank()) {
-                bannerMessage = TuiHelper.red("✖ A justification reason is required.");
+                bannerMessage = TuiHelper.red("✖ A reason is required.");
                 return ScreenResult.stay(this);
             }
 
@@ -441,7 +441,7 @@ public class AvailableQuizzesScreen implements Screen {
             sb.append(TuiHelper.header("EXAMS"));
             sb.append("\n");
             sb.append(TuiHelper.boxTitle("Request Exam Makeup", q.getTitle())).append("\n\n");
-            sb.append("  ").append(TuiHelper.bold("Justification Reason (Required for Teacher Review):")).append("\n\n");
+            sb.append("  ").append(TuiHelper.bold("Reason (Required for Teacher Review):")).append("\n\n");
             sb.append(TuiHelper.inputBox("Reason", examReasonBuffer.toString(), examReasonFocusIndex == 0, 102, false, "e.g. Illness, technical malfunction, etc."));
             sb.append("\n");
             sb.append(TuiHelper.buttonRow("Submit Request", examReasonFocusIndex == 1, "Cancel", examReasonFocusIndex == 2)).append("\n\n");
