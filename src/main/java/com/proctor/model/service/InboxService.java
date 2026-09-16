@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.Optional;
 
 public class InboxService {
+    public static final long THREE_DAYS_MILLIS = 3L * 24 * 60 * 60 * 1000;
+
     private final InboxRepository inboxRepository;
     private final UserRepository userRepository;
     private final AttemptRepository attemptRepository;
@@ -138,8 +140,7 @@ public class InboxService {
         }
 
         if (examTimestamp != null) {
-            long threeDaysMillis = 3L * 24 * 60 * 60 * 1000;
-            if (System.currentTimeMillis() - examTimestamp.getTime() > threeDaysMillis) {
+            if (System.currentTimeMillis() - examTimestamp.getTime() > THREE_DAYS_MILLIS) {
                 throw new ValidationException("Exam retake requests must be submitted within 3 days (72 hours) of the exam.");
             }
         }
@@ -184,6 +185,10 @@ public class InboxService {
         User requester = userOpt.get();
         if (requester.getRole() == Role.ADMIN || SeedService.ADMIN_USERNAME.equalsIgnoreCase(requester.getUsername())) {
             throw new ValidationException("The administrator account is hardcoded and cannot be reset.");
+        }
+
+        if (inboxRepository.hasPendingRequest(requester.getId(), InboxMessageType.PASSWORD_RESET, requester.getId())) {
+            throw new ValidationException("You already have a pending password reset request.");
         }
 
         PasswordUtils.validatePassword(newPassword);

@@ -25,9 +25,9 @@ public class UserViews {
         sb.append(TuiHelper.tabBar(new String[]{"All Roles", "Students", "Teachers", "Admins"}, activeTab)).append("\n\n");
 
         if (searchMode) {
-            sb.append("  Search: [ ").append(TuiHelper.cyan(searchBuffer + "_")).append(" ] (Press Enter to finish)\n\n");
+            sb.append("  Search: [ ").append(TuiHelper.cyan(TuiHelper.truncate(searchBuffer, 50) + "_")).append(" ] (Press Enter to finish)\n\n");
         } else if (!searchBuffer.isEmpty()) {
-            sb.append("  Search: [ ").append(searchBuffer).append(" ] (Press '/' to edit)\n\n");
+            sb.append("  Search: [ ").append(TuiHelper.truncate(searchBuffer, 50)).append(" ] (Press '/' to edit)\n\n");
         }
         sb.append(String.format("  %-4s  %-6s  %-18s  %-28s  %-20s  %-8s  %-12s  %-10s  %-9s%n",
                 "#", "ID", "USERNAME", "EMAIL", "FULL NAME", "GENDER", "BIRTHDAY", "ROLE", "STATUS")).append("\n");
@@ -154,8 +154,6 @@ public class UserViews {
     }
 
     private static String truncate(String text, int max) {
-        if (text == null) return "";
-        if (text.length() <= max) return text;
-        return text.substring(0, Math.max(0, max - 3)) + "...";
+        return TuiHelper.truncate(text, max);
     }
 }

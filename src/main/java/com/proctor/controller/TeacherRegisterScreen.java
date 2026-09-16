@@ -107,6 +107,13 @@ public class TeacherRegisterScreen implements Screen {
                     default -> confirmPassword;
                 };
 
+                int maxLen = switch (focusedField) {
+                    case 0 -> 100;
+                    case 3 -> 254;
+                    case 4 -> 50;
+                    default -> 128;
+                };
+
                 if (KeyUtil.isBackspace(k)) {
                     if (!active.isEmpty()) active.deleteCharAt(active.length() - 1);
                     return ScreenResult.stay(this);
@@ -114,11 +121,13 @@ public class TeacherRegisterScreen implements Screen {
 
                 if (k.type() == KeyType.KeyRunes && k.runes() != null) {
                     for (char c : k.runes()) {
-                        if (!Character.isISOControl(c)) active.append(c);
+                        if (!Character.isISOControl(c) && active.length() < maxLen) active.append(c);
                     }
                     errorMessage = "";
                 } else if (k.key() != null && k.key().length() == 1 && !Character.isISOControl(k.key().charAt(0))) {
-                    active.append(k.key());
+                    if (active.length() < maxLen) {
+                        active.append(k.key());
+                    }
                     errorMessage = "";
                 }
             }

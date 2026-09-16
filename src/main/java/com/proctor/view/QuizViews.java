@@ -42,9 +42,9 @@ public class QuizViews {
         }
 
         if (searchMode) {
-            sb.append("  Search: [ ").append(TuiHelper.cyan(searchBuffer + "_")).append(" ] (Press Enter to finish)\n\n");
+            sb.append("  Search: [ ").append(TuiHelper.cyan(TuiHelper.truncate(searchBuffer, 50) + "_")).append(" ] (Press Enter to finish)\n\n");
         } else if (!searchBuffer.isEmpty()) {
-            sb.append("  Search: [ ").append(searchBuffer).append(" ] (Press '/' to edit)\n\n");
+            sb.append("  Search: [ ").append(TuiHelper.truncate(searchBuffer, 50)).append(" ] (Press '/' to edit)\n\n");
         }
 
         String timeColHeader = (assessmentType == AssessmentType.SPEED) ? "SEC/Q" : "TIME";
@@ -434,8 +434,6 @@ public class QuizViews {
     }
 
     private static String truncate(String text, int max) {
-        if (text == null) return "";
-        if (text.length() <= max) return text;
-        return text.substring(0, Math.max(0, max - 3)) + "...";
+        return TuiHelper.truncate(text, max);
     }
 }

@@ -43,6 +43,7 @@ public class AvailableQuizzesScreen implements Screen {
     private int subjectFilterIndex = 0;
     private final List<String> subjectCodes = new java.util.ArrayList<>();
     private final Map<Integer, String> subjects = new java.util.HashMap<>();
+    private final Map<Integer, Attempt> attempts = new java.util.HashMap<>();
 
     private boolean requestingExamReason = false;
     private final StringBuilder examReasonBuffer = new StringBuilder();
@@ -95,6 +96,16 @@ public class AvailableQuizzesScreen implements Screen {
         }
         java.util.Collections.sort(subjectCodes);
         applyFilters();
+        refreshAttempts();
+    }
+
+    private void refreshAttempts() {
+        attempts.clear();
+        User student = Session.getCurrentUser().orElse(null);
+        int studentId = (student != null && student.getId() != null) ? student.getId() : 0;
+        for (Quiz q : allQuizzes) {
+            examService.getStudentAttempt(q.getId(), studentId).ifPresent(att -> attempts.put(q.getId(), att));
+        }
     }
 
     private void applyFilters() {
@@ -250,6 +261,7 @@ public class AvailableQuizzesScreen implements Screen {
             try {
                 inboxService.sendQuizRetakeRequest(studentId, q.getCreatedBy(), q.getId(), q.getTitle());
                 bannerMessage = TuiHelper.green("✔ Quiz retake request sent to teacher's inbox!");
+                refreshAttempts();
             } catch (ValidationException e) {
                 bannerMessage = TuiHelper.yellow("● " + e.getMessage());
             }
@@ -280,8 +292,7 @@ public class AvailableQuizzesScreen implements Screen {
             }
 
             long now = System.currentTimeMillis();
-            long threeDaysMillis = 3L * 24 * 3600 * 1000;
-            if (refTime != null && (now - refTime.getTime() > threeDaysMillis)) {
+            if (refTime != null && (now - refTime.getTime() > InboxService.THREE_DAYS_MILLIS)) {
                 bannerMessage = TuiHelper.red("✖ Exam makeup request rejected: must be requested within 3 days of the exam.");
                 return ScreenResult.stay(this);
             }
@@ -299,7 +310,7 @@ public class AvailableQuizzesScreen implements Screen {
     private ScreenResult handleReasonDialogInput(KeyPressMessage k) {
         if (KeyUtil.isEsc(k)) {
             requestingExamReason = false;
-            bannerMessage = TuiHelper.yellow("Makeup request cancelled.");
+            bannerMessage = TuiHelper.yellow("● Makeup request cancelled.");
             return ScreenResult.stay(this);
         }
 
@@ -321,7 +332,7 @@ public class AvailableQuizzesScreen implements Screen {
         if (KeyUtil.isEnter(k)) {
             if (examReasonFocusIndex == 2) {
                 requestingExamReason = false;
-                bannerMessage = TuiHelper.yellow("Makeup request cancelled.");
+                bannerMessage = TuiHelper.yellow("● Makeup request cancelled.");
                 return ScreenResult.stay(this);
             }
 
@@ -351,6 +362,7 @@ public class AvailableQuizzesScreen implements Screen {
                         examReferenceTime
                 );
                 bannerMessage = TuiHelper.green("✔ Exam makeup request sent to teacher's inbox!");
+                refreshAttempts();
             } catch (ValidationException e) {
                 bannerMessage = TuiHelper.yellow("● " + e.getMessage());
             }
@@ -368,10 +380,12 @@ public class AvailableQuizzesScreen implements Screen {
 
             if (k.type() == KeyType.KeyRunes && k.runes() != null) {
                 for (char c : k.runes()) {
-                    if (!Character.isISOControl(c)) examReasonBuffer.append(c);
+                    if (!Character.isISOControl(c) && examReasonBuffer.length() < 500) examReasonBuffer.append(c);
                 }
             } else if (k.key() != null && k.key().length() == 1 && !Character.isISOControl(k.key().charAt(0))) {
-                examReasonBuffer.append(k.key());
+                if (examReasonBuffer.length() < 500) {
+                    examReasonBuffer.append(k.key());
+                }
             }
         }
 
@@ -437,27 +451,9 @@ public class AvailableQuizzesScreen implements Screen {
     public String view() {
         if (requestingExamReason && !quizzes.isEmpty()) {
             Quiz q = quizzes.get(selectedIndex);
-            StringBuilder sb = new StringBuilder();
-            sb.append(TuiHelper.header("EXAMS"));
-            sb.append("\n");
-            sb.append(TuiHelper.boxTitle("Request Exam Makeup", q.getTitle())).append("\n\n");
-            sb.append("  ").append(TuiHelper.bold("Reason (Required for Teacher Review):")).append("\n\n");
-            sb.append(TuiHelper.inputBox("Reason", examReasonBuffer.toString(), examReasonFocusIndex == 0, 102, false, "e.g. Illness, technical malfunction, etc."));
-            sb.append("\n");
-            sb.append(TuiHelper.buttonRow("Submit Request", examReasonFocusIndex == 1, "Cancel", examReasonFocusIndex == 2)).append("\n\n");
-            if (!bannerMessage.isBlank()) {
-                sb.append("  ").append(bannerMessage).append("\n\n");
-            }
-            sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Confirm  •  [Esc] Cancel\n"));
-            return sb.toString();
+            return ExamViews.renderExamReasonDialog(q.getTitle(), examReasonBuffer.toString(), examReasonFocusIndex, bannerMessage);
         }
 
-        User student = Session.getCurrentUser().orElse(null);
-        int studentId = (student != null && student.getId() != null) ? student.getId() : 0;
-        Map<Integer, Attempt> attempts = new java.util.HashMap<>();
-        for (Quiz q : quizzes) {
-            examService.getStudentAttempt(q.getId(), studentId).ifPresent(att -> attempts.put(q.getId(), att));
-        }
         String subjectFilterDisplay = (subjectFilterIndex > 0 && subjectFilterIndex <= subjectCodes.size())
                 ? subjectCodes.get(subjectFilterIndex - 1) : "ALL";
         return ExamViews.renderAvailableQuizzes(assessmentType, quizzes, subjects, attempts, selectedIndex,

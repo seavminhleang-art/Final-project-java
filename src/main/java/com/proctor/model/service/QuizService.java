@@ -159,6 +159,12 @@ public class QuizService {
         if (quiz.getTitle() == null || quiz.getTitle().isBlank()) {
             throw new ValidationException("Title is required.");
         }
+        if (quiz.getTitle().trim().length() > 100) {
+            throw new ValidationException("Title cannot exceed 100 characters.");
+        }
+        if (quiz.getDescription() != null && quiz.getDescription().trim().length() > 500) {
+            throw new ValidationException("Description cannot exceed 500 characters.");
+        }
         if (quiz.getAssessmentType() == null) {
             quiz.setAssessmentType(AssessmentType.QUIZ);
         }

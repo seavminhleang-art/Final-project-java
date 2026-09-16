@@ -45,9 +45,9 @@ public class TeacherSubmissionViews {
         sb.append(TuiHelper.tabBar(new String[]{"All", "Pending Review", "Graded"}, activeTab)).append("\n\n");
 
         if (searchMode) {
-            sb.append("  Search: [ ").append(TuiHelper.cyan(searchBuffer + "_")).append(" ] (Press Enter to finish)\n\n");
+            sb.append("  Search: [ ").append(TuiHelper.cyan(TuiHelper.truncate(searchBuffer, 50) + "_")).append(" ] (Press Enter to finish)\n\n");
         } else if (searchBuffer != null && !searchBuffer.isEmpty()) {
-            sb.append("  Search: [ ").append(searchBuffer).append(" ] (Press '/' to edit)\n\n");
+            sb.append("  Search: [ ").append(TuiHelper.truncate(searchBuffer, 50)).append(" ] (Press '/' to edit)\n\n");
         }
 
         if (specificQuiz == null) {
@@ -248,8 +248,6 @@ public class TeacherSubmissionViews {
     }
 
     private static String truncate(String text, int max) {
-        if (text == null) return "";
-        if (text.length() <= max) return text;
-        return text.substring(0, Math.max(0, max - 3)) + "...";
+        return TuiHelper.truncate(text, max);
     }
 }

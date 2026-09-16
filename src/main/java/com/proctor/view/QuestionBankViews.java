@@ -26,9 +26,9 @@ public class QuestionBankViews {
                         subjLabel, tf, df, questions.size()))).append("\n\n");
 
         if (searchMode) {
-            sb.append("  Search: [ ").append(TuiHelper.cyan(searchBuffer + "_")).append(" ] (Press Enter to finish)\n\n");
+            sb.append("  Search: [ ").append(TuiHelper.cyan(TuiHelper.truncate(searchBuffer, 50) + "_")).append(" ] (Press Enter to finish)\n\n");
         } else if (!searchBuffer.isEmpty()) {
-            sb.append("  Search: [ ").append(searchBuffer).append(" ] (Press '/' to edit)\n\n");
+            sb.append("  Search: [ ").append(TuiHelper.truncate(searchBuffer, 50)).append(" ] (Press '/' to edit)\n\n");
         }
 
         sb.append(String.format("  %-4s  %-10s  %-12s  %-8s  %-5s  %-4s  %-75s%n",
@@ -198,9 +198,6 @@ public class QuestionBankViews {
     }
 
     private static String truncate(String text, int max) {
-        if (text == null) return "";
-        if (text.length() <= max) return text;
-        if (max <= 3) return text.substring(0, max);
-        return text.substring(0, max - 3) + "...";
+        return TuiHelper.truncate(text, max);
     }
 }

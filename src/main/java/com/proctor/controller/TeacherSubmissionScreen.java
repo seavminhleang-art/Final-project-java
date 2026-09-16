@@ -45,6 +45,7 @@ public class TeacherSubmissionScreen implements Screen {
     private boolean searchMode = false;
     private int statusFilterIndex = 0;
     private static final String[] STATUS_FILTERS = {"ALL", "PENDING REVIEW", "GRADED"};
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
     private boolean isGrading = false;
     private int spinnerTick = 0;
 
@@ -337,14 +338,11 @@ public class TeacherSubmissionScreen implements Screen {
             }
             return TeacherSubmissionViews.renderAnswerSheet(currentQuiz, attempt, answerMap, inspectingAnswerIndex, bannerMessage);
         }
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
         return TeacherSubmissionViews.renderSubmissionList(specificQuiz, submissions, java.util.Collections.emptyMap(),
-                selectedIndex, sdf, STATUS_FILTERS[statusFilterIndex], searchBuffer.toString(), searchMode, bannerMessage);
+                selectedIndex, dateFormat, STATUS_FILTERS[statusFilterIndex], searchBuffer.toString(), searchMode, bannerMessage);
     }
 
     private String truncate(String text, int max) {
-        if (text == null) return "";
-        if (text.length() <= max) return text;
-        return text.substring(0, Math.max(0, max - 3)) + "...";
+        return TuiHelper.truncate(text, max);
     }
 }

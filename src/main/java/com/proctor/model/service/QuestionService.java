@@ -77,6 +77,12 @@ public class QuestionService {
         if (q.getQuestionText() == null || q.getQuestionText().isBlank()) {
             throw new ValidationException("Question text is required.");
         }
+        if (q.getQuestionText().trim().length() > 500) {
+            throw new ValidationException("Question text cannot exceed 500 characters.");
+        }
+        if (q.getExplanation() != null && q.getExplanation().trim().length() > 300) {
+            throw new ValidationException("Explanation cannot exceed 300 characters.");
+        }
         if (q.getPoints() <= 0) {
             q.setPoints(1.0);
         }

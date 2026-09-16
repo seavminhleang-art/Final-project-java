@@ -104,15 +104,18 @@ public class LoginScreen implements Screen {
                     return ScreenResult.stay(this);
                 }
 
+                int maxLen = (focusedField == 0) ? 254 : 128;
                 if (k.type() == KeyType.KeyRunes && k.runes() != null) {
                     for (char c : k.runes()) {
-                        if (!Character.isISOControl(c)) {
+                        if (!Character.isISOControl(c) && active.length() < maxLen) {
                             active.append(c);
                         }
                     }
                     errorMessage = "";
                 } else if (k.key() != null && k.key().length() == 1 && !Character.isISOControl(k.key().charAt(0))) {
-                    active.append(k.key());
+                    if (active.length() < maxLen) {
+                        active.append(k.key());
+                    }
                     errorMessage = "";
                 }
             }
@@ -198,13 +201,16 @@ public class LoginScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
+            int maxLen = (forgotFocusIndex == 0) ? 254 : 128;
             if (k.type() == KeyType.KeyRunes && k.runes() != null) {
                 for (char c : k.runes()) {
-                    if (!Character.isISOControl(c)) active.append(c);
+                    if (!Character.isISOControl(c) && active.length() < maxLen) active.append(c);
                 }
                 forgotMessage = "";
             } else if (k.key() != null && k.key().length() == 1 && !Character.isISOControl(k.key().charAt(0))) {
-                active.append(k.key());
+                if (active.length() < maxLen) {
+                    active.append(k.key());
+                }
                 forgotMessage = "";
             }
         }

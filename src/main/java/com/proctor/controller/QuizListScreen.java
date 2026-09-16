@@ -322,8 +322,6 @@ public class QuizListScreen implements Screen {
     }
 
     private String truncate(String text, int max) {
-        if (text == null) return "";
-        if (text.length() <= max) return text;
-        return text.substring(0, Math.max(0, max - 3)) + "...";
+        return TuiHelper.truncate(text, max);
     }
 }

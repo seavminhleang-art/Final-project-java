@@ -26,7 +26,7 @@ public class AuthViews {
         sb.append(btnRegister).append("\n\n\n\n");
         sb.append(btnExit).append("\n\n");
 
-        sb.append(TuiHelper.dim("  [↑/↓] Navigate  •  [Enter] Confirm  •  [Esc] Exit\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Navigate  •  [Enter] Confirm  •  [Esc] Quit\n"));
         return sb.toString();
     }
 

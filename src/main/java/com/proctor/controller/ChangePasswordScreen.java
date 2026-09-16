@@ -6,6 +6,7 @@ import com.proctor.util.PasswordUtils;
 import com.proctor.util.TuiHelper;
 import com.proctor.model.entity.Session;
 import com.proctor.model.entity.User;
+import com.proctor.model.enums.Role;
 import com.proctor.model.service.AuthService;
 import com.proctor.model.service.UserService;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
@@ -81,12 +82,14 @@ public class ChangePasswordScreen implements Screen {
 
                 if (k.type() == KeyType.KeyRunes && k.runes() != null) {
                     for (char c : k.runes()) {
-                        if (!Character.isISOControl(c)) active.append(c);
+                        if (!Character.isISOControl(c) && active.length() < 128) active.append(c);
                     }
                     errorMessage = "";
                     successBanner = "";
                 } else if (k.key() != null && k.key().length() == 1 && !Character.isISOControl(k.key().charAt(0))) {
-                    active.append(k.key());
+                    if (active.length() < 128) {
+                        active.append(k.key());
+                    }
                     errorMessage = "";
                     successBanner = "";
                 }
@@ -144,10 +147,10 @@ public class ChangePasswordScreen implements Screen {
         if (returnScreen != null) {
             return ScreenResult.navigate(returnScreen);
         }
-        com.proctor.model.entity.User u = Session.getCurrentUser().orElse(null);
-        if (u != null && u.getRole() == com.proctor.model.enums.Role.ADMIN) {
+        User u = Session.getCurrentUser().orElse(null);
+        if (u != null && u.getRole() == Role.ADMIN) {
             return ScreenResult.navigate(new AdminDashboardScreen(authService));
-        } else if (u != null && u.getRole() == com.proctor.model.enums.Role.TEACHER) {
+        } else if (u != null && u.getRole() == Role.TEACHER) {
             return ScreenResult.navigate(new TeacherDashboardScreen(authService));
         } else {
             return ScreenResult.navigate(new StudentDashboardScreen(authService));

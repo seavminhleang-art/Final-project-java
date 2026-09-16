@@ -577,6 +577,13 @@ public class TuiHelper {
         return stripped.length();
     }
 
+    public static String truncate(String text, int max) {
+        if (text == null) return "";
+        if (text.length() <= max) return text;
+        if (max <= 3) return text.substring(0, Math.max(0, max));
+        return text.substring(0, max - 3) + "...";
+    }
+
     public static String stripSpaces(String s) {
         if (s == null || s.isEmpty()) return "";
         String res = s.strip();

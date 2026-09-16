@@ -37,9 +37,9 @@ public class ExamViews {
                 String.format("Subject: [ %s ]  •  Total: %d", subjLabel, quizzes.size()))).append("\n\n");
 
         if (searchMode) {
-            sb.append("  Search: [ ").append(TuiHelper.cyan(searchBuffer + "_")).append(" ] (Press Enter to finish)\n\n");
+            sb.append("  Search: [ ").append(TuiHelper.cyan(TuiHelper.truncate(searchBuffer, 50) + "_")).append(" ] (Press Enter to finish)\n\n");
         } else if (!searchBuffer.isEmpty()) {
-            sb.append("  Search: [ ").append(searchBuffer).append(" ] (Press '/' to edit)\n\n");
+            sb.append("  Search: [ ").append(TuiHelper.truncate(searchBuffer, 50)).append(" ] (Press '/' to edit)\n\n");
         }
 
         sb.append(String.format("  %-4s  %-14s  %-64s  %-20s  %-16s%n",
@@ -210,10 +210,10 @@ public class ExamViews {
         }
 
         if (!bannerMessage.isBlank()) {
-            sb.append(TuiHelper.centerText(bannerMessage)).append("\n\n");
+            sb.append("  ").append(bannerMessage).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("[←/→] Select Action  •  [Enter] Confirm  •  [Esc] Back to List\n"));
+        sb.append(TuiHelper.dim("  [←/→] Select Action  •  [Enter] Confirm  •  [Esc] Back to List\n"));
         return sb.toString();
     }
 
@@ -323,7 +323,7 @@ public class ExamViews {
         }
 
         sb.append("\n  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
-        sb.append(TuiHelper.dim("  [↑/↓] Move Focus  •  [Space] Select  •  [Enter] Confirm & Next  •  [←/→] Prev/Next  •  [Esc] Submit\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Move Focus  •  [Space] Select  •  [Enter] Confirm & Next  •  [←/→] Prev/Next  •  [Esc] Review & Submit\n"));
         return sb.toString();
     }
 
@@ -370,10 +370,10 @@ public class ExamViews {
                     : TuiHelper.red(TuiHelper.bold("  ✖ FAILED  "));
         }
 
-        sb.append("   Student:            ").append(result.getStudentName() != null ? result.getStudentName() : "Student #" + result.getStudentId()).append("\n\n");
-        sb.append("   Result Status:      ").append(badge).append("\n\n");
-        sb.append("   Score:              ").append(TuiHelper.bold(String.format("%.1f / %.1f points", result.getTotalPoints(), result.getMaxPoints()))).append("\n\n");
-        sb.append("   Percentage:         ").append(TuiHelper.bold(String.format("%.1f%%", result.getPercentage()))).append("\n\n");
+        sb.append("  Student:            ").append(result.getStudentName() != null ? result.getStudentName() : "Student #" + result.getStudentId()).append("\n\n");
+        sb.append("  Result Status:      ").append(badge).append("\n\n");
+        sb.append("  Score:              ").append(TuiHelper.bold(String.format("%.1f / %.1f points", result.getTotalPoints(), result.getMaxPoints()))).append("\n\n");
+        sb.append("  Percentage:         ").append(TuiHelper.bold(String.format("%.1f%%", result.getPercentage()))).append("\n\n");
 
         if (session != null && session.getQuiz().isShowAnswersAfter()) {
             sb.append("  " + TuiHelper.bold("Question-by-Question Review:") + "\n\n");
@@ -405,7 +405,7 @@ public class ExamViews {
                 } else {
                     sb.append("     Your Answer: ").append(textAns != null ? textAns : "(No answer provided)").append("\n");
                     if (q.getExplanation() != null && !q.getExplanation().isBlank()) {
-                        sb.append("     Model Context: ").append(TuiHelper.dim(q.getExplanation())).append("\n");
+                        sb.append("     Explanation: ").append(TuiHelper.dim(q.getExplanation())).append("\n");
                     }
                 }
                 sb.append("\n");
@@ -439,9 +439,9 @@ public class ExamViews {
         sb.append(TuiHelper.tabBar(new String[]{"All", "Passed", "Failed", "Pending"}, activeTab)).append("\n\n");
 
         if (searchMode) {
-            sb.append("  Search: [ ").append(TuiHelper.cyan(searchBuffer + "_")).append(" ] (Press Enter to finish)\n\n");
+            sb.append("  Search: [ ").append(TuiHelper.cyan(TuiHelper.truncate(searchBuffer, 50) + "_")).append(" ] (Press Enter to finish)\n\n");
         } else if (searchBuffer != null && !searchBuffer.isEmpty()) {
-            sb.append("  Search: [ ").append(searchBuffer).append(" ] (Press '/' to edit)\n\n");
+            sb.append("  Search: [ ").append(TuiHelper.truncate(searchBuffer, 50)).append(" ] (Press '/' to edit)\n\n");
         }
 
         sb.append(String.format("  %-4s  %-8s  %-50s  %-14s  %-8s  %-10s  %-18s%n",
@@ -511,10 +511,23 @@ public class ExamViews {
         return sb.toString();
     }
 
+    public static String renderExamReasonDialog(String quizTitle, String reason, int focusIndex, String bannerMessage) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(TuiHelper.header("EXAMS"));
+        sb.append("\n");
+        sb.append(TuiHelper.boxTitle("Request Exam Makeup", quizTitle)).append("\n\n");
+        sb.append("  ").append(TuiHelper.bold("Reason (Required for Teacher Review):")).append("\n\n");
+        sb.append(TuiHelper.inputBox("Reason", reason, focusIndex == 0, 102, false, "e.g. Illness, technical malfunction, etc."));
+        sb.append("\n");
+        sb.append(TuiHelper.buttonRow("Submit Request", focusIndex == 1, "Cancel", focusIndex == 2)).append("\n\n");
+        if (bannerMessage != null && !bannerMessage.isBlank()) {
+            sb.append("  ").append(bannerMessage).append("\n\n");
+        }
+        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Confirm  •  [Esc] Cancel\n"));
+        return sb.toString();
+    }
+
     private static String truncate(String text, int max) {
-        if (text == null) return "";
-        if (text.length() <= max) return text;
-        if (max <= 3) return text.substring(0, max);
-        return text.substring(0, max - 3) + "...";
+        return TuiHelper.truncate(text, max);
     }
 }
