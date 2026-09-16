@@ -108,6 +108,7 @@ public class QuestionViews {
 
     public static String renderAIQuestionLoading(String topic, int spinnerTick) {
         StringBuilder sb = new StringBuilder();
+        sb.append(TuiHelper.DIALOG_MARKER);
         sb.append(TuiHelper.header("AI QUESTION GENERATOR"));
         sb.append("\n");
         sb.append(TuiHelper.boxTitle("AI Question Generator", "Generating with Local Ollama LLM")).append("\n\n");

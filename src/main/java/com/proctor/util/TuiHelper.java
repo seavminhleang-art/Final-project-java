@@ -23,6 +23,9 @@ public class TuiHelper {
     public static final String HEADER_END = "\u001B[?9901l";
     public static final int PAGE_SIZE = 10;
     public static final int TABLE_WIDTH = 132;
+    public static final String DIALOG_MARKER = "\u001B[?9904h";
+    public static final int DIALOG_INNER_WIDTH = 64;
+    public static final int DIALOG_MIN_BODY_ROWS = 8;
     public static final int MIN_BODY_ROWS = 16;
     public static final int MIN_INNER_WIDTH = 76;
     public static final int MAX_INNER_WIDTH = TABLE_WIDTH + 2;
@@ -481,6 +484,7 @@ public class TuiHelper {
 
     public static String confirmationModal(String title, String message, String warningDetail, String confirmLabel, String cancelLabel, boolean confirmFocused) {
         StringBuilder sb = new StringBuilder();
+        sb.append(DIALOG_MARKER);
         sb.append(header("CONFIRM ACTION"));
         sb.append("\n");
         sb.append(boxTitle(title)).append("\n\n");
@@ -504,6 +508,7 @@ public class TuiHelper {
 
     public static String quitConfirmationModal(User currentUser, boolean quitConfirmFocused) {
         StringBuilder sb = new StringBuilder();
+        sb.append(DIALOG_MARKER);
         sb.append(header("GOODBYE"));
         sb.append("\n");
 
@@ -520,7 +525,7 @@ public class TuiHelper {
         String btn2 = !quitConfirmFocused ? bold(NAVY_BLUE + "[ ▶ Return to App ]") : dim("[   Return to App   ]");
 
         sb.append(btn1).append("    ").append(btn2).append(CLEAR_EOL).append("\n\n");
-        sb.append(dim("[←/→] Select Option  •  [Enter] Confirm  •  [Esc] Return to App")).append(CLEAR_EOL).append("\n");
+        sb.append(dim("[←/→] Select Option  •  [Enter] Confirm  •  [Esc] Cancel")).append(CLEAR_EOL).append("\n");
         return sb.toString();
     }
 
@@ -650,10 +655,17 @@ private static String stripAnsi(String str) {
     public static String centerLayout(String content) {
         if (content == null || content.isEmpty()) return "";
 
+        boolean isDialog = content.contains(DIALOG_MARKER);
+
         int termWidth = getTerminalWidth();
         int termHeight = getTerminalHeight();
 
         String[] rawLines = content.split("\n", -1);
+        for (int i = 0; i < rawLines.length; i++) {
+            if (rawLines[i].contains(DIALOG_MARKER)) {
+                rawLines[i] = rawLines[i].replace(DIALOG_MARKER, "");
+            }
+        }
         int lastNonBlank = rawLines.length - 1;
         while (lastNonBlank >= 0 && stripAnsi(rawLines[lastNonBlank]).isEmpty()) {
             lastNonBlank--;
@@ -778,7 +790,10 @@ private static String stripAnsi(String str) {
             }
         }
 
-        int innerWidth = Math.max(MIN_INNER_WIDTH, Math.min(MAX_INNER_WIDTH, maxLineLen));
+        int minInnerWidth = isDialog ? DIALOG_INNER_WIDTH : MIN_INNER_WIDTH;
+        int minBodyRows = isDialog ? DIALOG_MIN_BODY_ROWS : MIN_BODY_ROWS;
+
+        int innerWidth = Math.max(minInnerWidth, Math.min(MAX_INNER_WIDTH, maxLineLen));
         if (termWidth > 30) {
             innerWidth = Math.min(innerWidth, termWidth - 8);
         }
@@ -810,10 +825,10 @@ private static String stripAnsi(String str) {
         int hintRows = hintIndices.size();
 
         int contentHeight = (headerRows > 0 ? (headerRows + 1) : 0)
-                + (bodyRows > 0 ? (Math.max(bodyRows, MIN_BODY_ROWS) + 4 + (hintRows > 0 ? 1 : 0)) : 0)
+                + (bodyRows > 0 ? (Math.max(bodyRows, minBodyRows) + 4 + (hintRows > 0 ? 1 : 0)) : 0)
                 + (hintRows > 0 ? (hintRows + 2) : 0);
 
-        int extraPadding = (bodyRows > 0 && bodyRows < MIN_BODY_ROWS) ? (MIN_BODY_ROWS - bodyRows) : 0;
+        int extraPadding = (bodyRows > 0 && bodyRows < minBodyRows) ? (minBodyRows - bodyRows) : 0;
         int extraTopPad = extraPadding / 2;
         int extraBotPad = extraPadding - extraTopPad;
 

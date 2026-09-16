@@ -328,7 +328,12 @@ public class ExamViews {
     }
 
     public static String renderExamResult(Result result, ExamSession session, boolean hasReturnScreen) {
+        return renderExamResult(result, session, hasReturnScreen, "", false);
+    }
+
+    public static String renderExamResult(Result result, ExamSession session, boolean hasReturnScreen, String bannerMessage, boolean canRequestRetake) {
         StringBuilder sb = new StringBuilder();
+        sb.append(TuiHelper.DIALOG_MARKER);
         String typeLabel = (result != null && result.getAssessmentType() == AssessmentType.EXAM) ? "EXAM" : "QUIZ";
 
         if (result != null && result.isPendingReview()) {
@@ -336,18 +341,22 @@ public class ExamViews {
             sb.append("\n");
             String titleStr = (result.getQuizTitle() != null && !result.getQuizTitle().isBlank())
                     ? result.getQuizTitle() : (typeLabel + " Submission");
-            sb.append(TuiHelper.boxTitle(titleStr, "Assessment Submitted - Pending Teacher Evaluation")).append("\n\n");
+            sb.append(TuiHelper.boxTitle(titleStr, "Pending Evaluation")).append("\n\n");
 
             String badge = TuiHelper.yellow(TuiHelper.bold("  ⏳ UNDER REVIEW  "));
 
-            sb.append("   Student:            ").append(result.getStudentName() != null ? result.getStudentName() : "Student #" + result.getStudentId()).append("\n\n");
-            sb.append("   Result Status:      ").append(badge).append("\n\n");
-            sb.append("   ").append(TuiHelper.bold("Notice:")).append("\n");
-            sb.append("   Your assessment has been submitted. Because this assessment includes written response\n");
-            sb.append("   (short answer) questions, your submission requires grading by your teacher.\n");
-            sb.append("   Your final score and question review will be available in History once all written questions\n");
-            sb.append("   have been evaluated and returned.\n\n");
-            sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
+            sb.append("  Student:            ").append(result.getStudentName() != null ? result.getStudentName() : "Student #" + result.getStudentId()).append("\n\n");
+            sb.append("  Result Status:      ").append(badge).append("\n\n");
+            sb.append("  ").append(TuiHelper.bold("Notice:")).append("\n");
+            sb.append("  Your assessment has been submitted. Because this assessment\n");
+            sb.append("  includes written response questions, your submission requires\n");
+            sb.append("  grading by your teacher.\n\n");
+            sb.append("  Your final score and review will be available in History\n");
+            sb.append("  once all written questions have been evaluated.\n\n");
+            if (bannerMessage != null && !bannerMessage.isBlank()) {
+                sb.append("  ").append(bannerMessage).append("\n\n");
+            }
+            sb.append("  " + "─".repeat(56) + "\n\n");
 
             String returnMsg = hasReturnScreen ? "Back" : "Back to Dashboard";
             sb.append(TuiHelper.dim("  [Enter / Esc] " + returnMsg + "\n"));
@@ -377,7 +386,7 @@ public class ExamViews {
 
         if (session != null && session.getQuiz().isShowAnswersAfter()) {
             sb.append("  " + TuiHelper.bold("Question-by-Question Review:") + "\n\n");
-            sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
+            sb.append("  " + "─".repeat(56) + "\n\n");
 
             for (int i = 0; i < session.getQuestions().size(); i++) {
                 Question q = session.getQuestions().get(i);
@@ -410,11 +419,21 @@ public class ExamViews {
                 }
                 sb.append("\n");
             }
-            sb.append("\n  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
+            sb.append("\n  " + "─".repeat(56) + "\n\n");
+        } else {
+            sb.append("  " + "─".repeat(56) + "\n\n");
+        }
+
+        if (bannerMessage != null && !bannerMessage.isBlank()) {
+            sb.append("  ").append(bannerMessage).append("\n\n");
         }
 
         String returnMsg = hasReturnScreen ? "Back" : "Back to Portal";
-        sb.append(TuiHelper.dim("  [Enter / Esc] " + returnMsg + "\n"));
+        if (canRequestRetake) {
+            sb.append(TuiHelper.dim("  [Enter / Esc] " + returnMsg + "  •  [r] Request Retake\n"));
+        } else {
+            sb.append(TuiHelper.dim("  [Enter / Esc] " + returnMsg + "\n"));
+        }
         return sb.toString();
     }
 

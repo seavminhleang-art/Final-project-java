@@ -90,15 +90,12 @@ public class ExamResultScreen implements Screen {
 
     @Override
     public String view() {
-        StringBuilder sb = new StringBuilder(ExamViews.renderExamResult(result, session, returnScreen != null));
-        if (session != null && session.getAttempt() != null && session.getAttempt().getStatus() == AttemptStatus.AUTO_SUBMITTED) {
-            if (result != null && !result.isPassed() && result.getAssessmentType() == AssessmentType.QUIZ) {
-                sb.append("\n  ").append(TuiHelper.yellow("● Timer expired. Press [r] to request a retake from your teacher.")).append("\n");
-            }
+        boolean canRetake = session != null && session.getAttempt() != null && session.getAttempt().getStatus() == AttemptStatus.AUTO_SUBMITTED && result != null && !result.isPassed() && result.getAssessmentType() == AssessmentType.QUIZ;
+        String retakeNotice = "";
+        if (canRetake && bannerMessage.isBlank()) {
+            retakeNotice = TuiHelper.yellow("● Timer expired. Press [r] to request a retake from your teacher.");
         }
-        if (!bannerMessage.isBlank()) {
-            sb.append("\n  ").append(bannerMessage).append("\n");
-        }
-        return sb.toString();
+        String msg = !bannerMessage.isBlank() ? bannerMessage : retakeNotice;
+        return ExamViews.renderExamResult(result, session, returnScreen != null, msg, canRetake);
     }
 }

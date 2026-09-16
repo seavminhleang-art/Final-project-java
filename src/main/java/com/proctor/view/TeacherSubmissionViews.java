@@ -230,6 +230,7 @@ public class TeacherSubmissionViews {
 
     public static String renderAIGradingLoading(String studentName, String quizTitle, int spinnerTick) {
         StringBuilder sb = new StringBuilder();
+        sb.append(TuiHelper.DIALOG_MARKER);
         sb.append(TuiHelper.header("SUBMISSIONS"));
         sb.append("\n");
         sb.append(TuiHelper.boxTitle("AI Grading & Evaluation", "Local Ollama LLM is evaluating short answers...")).append("\n\n");
