@@ -849,7 +849,9 @@ private static String stripAnsi(String str) {
           .append(rightMargin)
           .append(CLEAR_EOL).append("\n");
 
-        for (int p = 0; p < topPadInside; p++) {
+        int asciiLift = (!headerLines.isEmpty() && topPadInside >= 4) ? 2 : 0;
+
+        for (int p = 0; p < topPadInside - asciiLift; p++) {
             sb.append(indent)
               .append(borderCol).append("┃").append(RESET)
               .append(" ".repeat(outerInnerWidth))
@@ -874,12 +876,14 @@ private static String stripAnsi(String str) {
                   .append(CLEAR_EOL).append("\n");
             }
             if (bodyRows > 0 || hintRows > 0) {
-                sb.append(indent)
-                  .append(borderCol).append("┃").append(RESET)
-                  .append(" ".repeat(outerInnerWidth))
-                  .append(borderCol).append("┃").append(RESET)
-                  .append(rightMargin)
-                  .append(CLEAR_EOL).append("\n");
+                for (int g = 0; g < 1 + asciiLift; g++) {
+                    sb.append(indent)
+                      .append(borderCol).append("┃").append(RESET)
+                      .append(" ".repeat(outerInnerWidth))
+                      .append(borderCol).append("┃").append(RESET)
+                      .append(rightMargin)
+                      .append(CLEAR_EOL).append("\n");
+                }
             }
         }
 
