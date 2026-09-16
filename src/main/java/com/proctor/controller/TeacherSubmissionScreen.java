@@ -16,6 +16,7 @@ import com.proctor.model.entity.Quiz;
 import com.proctor.model.service.QuizService;
 import com.proctor.model.entity.Result;
 import com.proctor.model.service.SubjectService;
+import com.proctor.model.enums.QuestionType;
 import com.proctor.util.KeyUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.TeacherSubmissionViews;
@@ -24,6 +25,7 @@ import com.williamcallahan.tui4j.compat.bubbletea.Message;
 import com.williamcallahan.tui4j.compat.bubbletea.input.key.KeyType;
 
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -66,7 +68,7 @@ public class TeacherSubmissionScreen implements Screen {
             this.allSubmissions = examService.getSubmissionsForQuiz(specificQuiz.getId());
         } else {
             User teacher = Session.getCurrentUser().orElse(null);
-            Integer teacherId = teacher != null ? teacher.getId() : null;
+            Integer teacherId = (teacher != null && teacher.getRole() != Role.ADMIN) ? teacher.getId() : null;
             this.allSubmissions = examService.getAllSubmissions(teacherId);
         }
         applyFilters();
@@ -78,12 +80,14 @@ public class TeacherSubmissionScreen implements Screen {
 
         this.submissions = allSubmissions.stream().filter(a -> {
             if ("PENDING REVIEW".equals(filter)) {
-                if (a.getStatus() != com.proctor.model.enums.AttemptStatus.AUTO_SUBMITTED
-                        && a.getStatus() != com.proctor.model.enums.AttemptStatus.TURNED_IN) {
+                if (a.isGraded() || a.getStatus() == AttemptStatus.GRADED) {
+                    return false;
+                }
+                if (a.getStatus() != AttemptStatus.AUTO_SUBMITTED && a.getStatus() != AttemptStatus.TURNED_IN) {
                     return false;
                 }
             } else if ("GRADED".equals(filter)) {
-                if (a.getStatus() != com.proctor.model.enums.AttemptStatus.GRADED) {
+                if (!a.isGraded() && a.getStatus() != AttemptStatus.GRADED) {
                     return false;
                 }
             }
@@ -100,6 +104,8 @@ public class TeacherSubmissionScreen implements Screen {
 
         if (submissions.isEmpty()) {
             selectedIndex = 0;
+            inspectingAnswerSheet = false;
+            inspectingAnswerIndex = 0;
         } else if (selectedIndex >= submissions.size()) {
             selectedIndex = submissions.size() - 1;
         }
@@ -252,7 +258,7 @@ public class TeacherSubmissionScreen implements Screen {
             bannerMessage = TuiHelper.yellow("● Speed Quizzes are auto-scored objective assessments. Grade is already finalized.");
             return;
         }
-        if (att.getStatus() == AttemptStatus.GRADED) {
+        if (att.getStatus() == AttemptStatus.GRADED || att.isGraded()) {
             bannerMessage = TuiHelper.yellow("● Grade has already been returned for this submission.");
             return;
         }
@@ -260,11 +266,44 @@ public class TeacherSubmissionScreen implements Screen {
             bannerMessage = TuiHelper.yellow("● Cannot return grade for an assessment that is still in progress.");
             return;
         }
+
+        Quiz quiz = specificQuiz;
+        if (quiz == null) {
+            quiz = quizService.getQuizById(att.getQuizId()).orElse(null);
+        } else if (quiz.getQuestions() == null || quiz.getQuestions().isEmpty()) {
+            quiz = quizService.getQuizById(quiz.getId()).orElse(quiz);
+        }
+        if (quiz != null && quiz.getQuestions() != null) {
+            List<AttemptAnswer> answers = examService.getAttemptAnswers(att.getId());
+            Map<Integer, AttemptAnswer> ansMap = new HashMap<>();
+            for (AttemptAnswer a : answers) {
+                ansMap.put(a.getQuestionId(), a);
+            }
+            boolean hasUnevaluatedShortAnswer = false;
+            for (Question q : quiz.getQuestions()) {
+                if (q.getQuestionType() == QuestionType.SHORT_ANSWER) {
+                    AttemptAnswer ans = ansMap.get(q.getId());
+                    if (ans != null && ans.getTextAnswer() != null && !ans.getTextAnswer().isBlank()) {
+                        if (ans.getAiScore() == null && ans.getTeacherFeedback() == null && ans.getPointsAwarded() == 0.0) {
+                            hasUnevaluatedShortAnswer = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (hasUnevaluatedShortAnswer) {
+                bannerMessage = TuiHelper.yellow("● Written answers have not been evaluated. Press [g] to grade with AI first.");
+                return;
+            }
+        }
+
         try {
             Result res = examService.returnGrade(att.getId());
             bannerMessage = TuiHelper.green(String.format("✔ Grade returned: %.1f/%.1f points (%.1f%%) - %s",
                     res.getTotalPoints(), res.getMaxPoints(), res.getPercentage(),
                     res.isPassed() ? "PASSED" : "FAILED"));
+            inspectingAnswerSheet = false;
+            inspectingAnswerIndex = 0;
             refreshList();
         } catch (ValidationException e) {
             bannerMessage = TuiHelper.red("✖ " + e.getMessage());

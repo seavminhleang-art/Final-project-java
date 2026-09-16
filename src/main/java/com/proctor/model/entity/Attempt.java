@@ -23,4 +23,5 @@ public class Attempt {
     private Timestamp startedAt;
     private Timestamp submittedAt;
     private AttemptStatus status;
+    private boolean graded;
 }

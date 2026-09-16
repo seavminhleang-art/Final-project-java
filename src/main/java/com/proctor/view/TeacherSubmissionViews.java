@@ -10,6 +10,7 @@ import com.proctor.model.enums.AssessmentType;
 import com.proctor.util.TuiHelper;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -79,7 +80,13 @@ public class TeacherSubmissionViews {
                 String statusStr;
                 if (a.getStatus() == com.proctor.model.enums.AttemptStatus.GRADED) {
                     statusStr = TuiHelper.green(String.format("%-" + statusWidth + "s", "GRADED"));
-                } else if (a.getStatus() == com.proctor.model.enums.AttemptStatus.AUTO_SUBMITTED || a.getStatus() == com.proctor.model.enums.AttemptStatus.TURNED_IN) {
+                } else if (a.getStatus() == com.proctor.model.enums.AttemptStatus.AUTO_SUBMITTED) {
+                    if (a.isGraded()) {
+                        statusStr = TuiHelper.green(String.format("%-" + statusWidth + "s", "AUTO (GRADED)"));
+                    } else {
+                        statusStr = TuiHelper.yellow(String.format("%-" + statusWidth + "s", "AUTO (PENDING)"));
+                    }
+                } else if (a.getStatus() == com.proctor.model.enums.AttemptStatus.TURNED_IN) {
                     statusStr = TuiHelper.yellow(String.format("%-" + statusWidth + "s", "PENDING REVIEW"));
                 } else {
                     statusStr = TuiHelper.dim(String.format("%-" + statusWidth + "s", "IN PROGRESS"));
@@ -166,7 +173,16 @@ public class TeacherSubmissionViews {
             Question q = questions.get(currentPage);
             AttemptAnswer ans = answerMap.get(q.getId());
 
-            sb.append(TuiHelper.cyan("▶ ")).append(TuiHelper.bold(String.format("Q%d. %s [%s, %.1f pts]", currentPage + 1, q.getQuestionText(), q.getDifficulty().name(), q.getPoints()))).append("\n\n");
+            String qHeader = String.format("Q%d. %s [%s, %.1f pts]", currentPage + 1, q.getQuestionText(), q.getDifficulty().name(), q.getPoints());
+            List<String> qLines = wrapText(qHeader, 120);
+            for (int k = 0; k < qLines.size(); k++) {
+                if (k == 0) {
+                    sb.append(TuiHelper.cyan("▶ ")).append(TuiHelper.bold(qLines.get(k))).append("\n");
+                } else {
+                    sb.append("  ").append(TuiHelper.bold(qLines.get(k))).append("\n");
+                }
+            }
+            sb.append("\n");
 
             if (q.getQuestionType() == com.proctor.model.enums.QuestionType.MCQ || q.getQuestionType() == com.proctor.model.enums.QuestionType.TRUE_FALSE) {
                 Integer chosenOptId = (ans != null) ? ans.getSelectedOptionId() : null;
@@ -174,12 +190,19 @@ public class TeacherSubmissionViews {
                     for (int i = 0; i < q.getOptions().size(); i++) {
                         QuestionOption opt = q.getOptions().get(i);
                         boolean isChosen = chosenOptId != null && chosenOptId.equals(opt.getId());
-                        if (opt.isCorrect()) {
-                            sb.append("     ").append(TuiHelper.green("✔ [Model Answer] " + opt.getOptionText() + (isChosen ? " (Student Choice)" : ""))).append("\n");
-                        } else if (isChosen) {
-                            sb.append("     ").append(TuiHelper.red("✖ [Student Choice] " + opt.getOptionText())).append("\n");
-                        } else {
-                            sb.append("     ").append(TuiHelper.dim("• " + opt.getOptionText())).append("\n");
+                        String prefix = opt.isCorrect()
+                                ? "✔ [Model Answer] " + opt.getOptionText() + (isChosen ? " (Student Choice)" : "")
+                                : (isChosen ? "✖ [Student Choice] " + opt.getOptionText() : "• " + opt.getOptionText());
+                        List<String> optLines = wrapText(prefix, 118);
+                        for (int j = 0; j < optLines.size(); j++) {
+                            String formatted = (j == 0 ? "     " : "       ") + optLines.get(j);
+                            if (opt.isCorrect()) {
+                                sb.append(TuiHelper.green(formatted)).append("\n");
+                            } else if (isChosen) {
+                                sb.append(TuiHelper.red(formatted)).append("\n");
+                            } else {
+                                sb.append(TuiHelper.dim(formatted)).append("\n");
+                            }
                         }
                         if (i < q.getOptions().size() - 1) {
                             sb.append("\n");
@@ -188,9 +211,15 @@ public class TeacherSubmissionViews {
                 }
             } else {
                 String textAns = (ans != null && ans.getTextAnswer() != null) ? ans.getTextAnswer() : "(No answer provided)";
-                sb.append("     ").append(TuiHelper.cyan("Student Answer: ")).append(textAns).append("\n");
+                sb.append("     ").append(TuiHelper.cyan("Student Answer:")).append("\n");
+                for (String line : wrapText(textAns, 116)) {
+                    sb.append("       ").append(line).append("\n");
+                }
                 if (q.getExplanation() != null && !q.getExplanation().isBlank()) {
-                    sb.append("     ").append(TuiHelper.dim("Grading Context: " + q.getExplanation())).append("\n");
+                    sb.append("     ").append(TuiHelper.dim("Grading Context:")).append("\n");
+                    for (String line : wrapText(q.getExplanation(), 116)) {
+                        sb.append("       ").append(TuiHelper.dim(line)).append("\n");
+                    }
                 }
             }
 
@@ -201,9 +230,14 @@ public class TeacherSubmissionViews {
                     String scoreText = String.format("Score: %.1f pts (%s)", ans.getPointsAwarded(), statusText);
                     sb.append("\n     ").append(isCorrect ? TuiHelper.green(TuiHelper.bold(scoreText)) : TuiHelper.red(TuiHelper.bold(scoreText))).append("\n");
                 } else {
-                    String feedback = ans.getAiFeedback() != null ? " - " + ans.getAiFeedback() : "";
-                    String scoreText = String.format("Score: %.1f / %.1f pts%s", ans.getPointsAwarded(), q.getPoints(), feedback);
-                    sb.append("\n     ").append(isCorrect ? TuiHelper.green(TuiHelper.bold(scoreText)) : TuiHelper.dim(scoreText)).append("\n");
+                    String scoreHeader = String.format("Score: %.1f / %.1f pts", ans.getPointsAwarded(), q.getPoints());
+                    sb.append("\n     ").append(isCorrect ? TuiHelper.green(TuiHelper.bold(scoreHeader)) : TuiHelper.dim(scoreHeader)).append("\n");
+                    if (ans.getAiFeedback() != null && !ans.getAiFeedback().isBlank()) {
+                        sb.append("     ").append(TuiHelper.dim("Feedback:")).append("\n");
+                        for (String fLine : wrapText(ans.getAiFeedback(), 116)) {
+                            sb.append("       ").append(TuiHelper.dim(fLine)).append("\n");
+                        }
+                    }
                 }
             } else {
                 sb.append("\n     ").append(TuiHelper.dim("(Not attempted or reached)")).append("\n");
@@ -250,5 +284,30 @@ public class TeacherSubmissionViews {
 
     private static String truncate(String text, int max) {
         return TuiHelper.truncate(text, max);
+    }
+
+    private static List<String> wrapText(String text, int maxLen) {
+        List<String> lines = new ArrayList<>();
+        if (text == null || text.isBlank()) {
+            lines.add("");
+            return lines;
+        }
+        String[] words = text.split("\\s+");
+        StringBuilder cur = new StringBuilder();
+        for (String w : words) {
+            if (cur.length() == 0) {
+                cur.append(w);
+            } else if (cur.length() + 1 + w.length() <= maxLen) {
+                cur.append(" ").append(w);
+            } else {
+                lines.add(cur.toString());
+                cur.setLength(0);
+                cur.append(w);
+            }
+        }
+        if (cur.length() > 0) {
+            lines.add(cur.toString());
+        }
+        return lines;
     }
 }

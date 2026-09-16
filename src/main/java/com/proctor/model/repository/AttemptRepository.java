@@ -41,8 +41,12 @@ public class AttemptRepository {
     }
 
     public Optional<Attempt> getAttempt(int attemptId) {
-        String sql = "SELECT a.id, a.quiz_id, q.title AS quiz_title, q.assessment_type, a.student_id, a.started_at, a.submitted_at, a.status " +
-                     "FROM attempts a LEFT JOIN quizzes q ON a.quiz_id = q.id WHERE a.id = ?";
+        String sql = "SELECT a.id, a.quiz_id, q.title AS quiz_title, q.assessment_type, a.student_id, a.started_at, a.submitted_at, a.status, " +
+                     "(r.id IS NOT NULL) AS is_graded " +
+                     "FROM attempts a " +
+                     "LEFT JOIN quizzes q ON a.quiz_id = q.id " +
+                     "LEFT JOIN results r ON a.id = r.attempt_id " +
+                     "WHERE a.id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, attemptId);
@@ -58,8 +62,11 @@ public class AttemptRepository {
     }
 
     public Optional<Attempt> findLatestAttempt(int quizId, int studentId) {
-        String sql = "SELECT a.id, a.quiz_id, q.title AS quiz_title, q.assessment_type, a.student_id, a.started_at, a.submitted_at, a.status " +
-                     "FROM attempts a LEFT JOIN quizzes q ON a.quiz_id = q.id " +
+        String sql = "SELECT a.id, a.quiz_id, q.title AS quiz_title, q.assessment_type, a.student_id, a.started_at, a.submitted_at, a.status, " +
+                     "(r.id IS NOT NULL) AS is_graded " +
+                     "FROM attempts a " +
+                     "LEFT JOIN quizzes q ON a.quiz_id = q.id " +
+                     "LEFT JOIN results r ON a.id = r.attempt_id " +
                      "WHERE a.quiz_id = ? AND a.student_id = ? ORDER BY a.id DESC LIMIT 1";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -79,11 +86,12 @@ public class AttemptRepository {
     public List<Attempt> getAttemptsByQuiz(int quizId) {
         List<Attempt> list = new ArrayList<>();
         String sql = "SELECT a.id, a.quiz_id, q.title AS quiz_title, q.assessment_type, a.student_id, u.full_name AS student_name, " +
-                     "a.started_at, a.submitted_at, a.status " +
+                     "a.started_at, a.submitted_at, a.status, (r.id IS NOT NULL) AS is_graded " +
                      "FROM attempts a " +
                      "LEFT JOIN quizzes q ON a.quiz_id = q.id " +
                      "LEFT JOIN users u ON a.student_id = u.id " +
-                     "WHERE a.quiz_id = ? ORDER BY a.id DESC";
+                     "LEFT JOIN results r ON a.id = r.attempt_id " +
+                     "WHERE a.quiz_id = ? AND a.status != 'IN_PROGRESS' ORDER BY a.id DESC";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, quizId);
@@ -103,10 +111,11 @@ public class AttemptRepository {
         List<Attempt> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT a.id, a.quiz_id, q.title AS quiz_title, q.assessment_type, a.student_id, u.full_name AS student_name, " +
-                "a.started_at, a.submitted_at, a.status " +
+                "a.started_at, a.submitted_at, a.status, (r.id IS NOT NULL) AS is_graded " +
                 "FROM attempts a " +
                 "LEFT JOIN quizzes q ON a.quiz_id = q.id " +
                 "LEFT JOIN users u ON a.student_id = u.id " +
+                "LEFT JOIN results r ON a.id = r.attempt_id " +
                 "WHERE a.status != 'IN_PROGRESS'"
         );
         if (teacherId != null) {
@@ -219,7 +228,7 @@ public class AttemptRepository {
     }
 
     public boolean finalizeAttempt(int attemptId, AttemptStatus status) {
-        String sql = "UPDATE attempts SET submitted_at = NOW(), status = ? WHERE id = ?";
+        String sql = "UPDATE attempts SET submitted_at = COALESCE(submitted_at, NOW()), status = ? WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, status.name());
@@ -279,6 +288,14 @@ public class AttemptRepository {
             }
         } catch (Exception ignored) {}
 
+        boolean graded = false;
+        try {
+            graded = rs.getBoolean("is_graded");
+        } catch (SQLException ignored) {}
+        if (status == AttemptStatus.GRADED) {
+            graded = true;
+        }
+
         return Attempt.builder()
                 .id(rs.getInt("id"))
                 .quizId(rs.getInt("quiz_id"))
@@ -289,6 +306,7 @@ public class AttemptRepository {
                 .startedAt(rs.getTimestamp("started_at"))
                 .submittedAt(rs.getTimestamp("submitted_at"))
                 .status(status)
+                .graded(graded)
                 .build();
     }
 }
