@@ -3,6 +3,9 @@ package com.proctor.view;
 import com.proctor.model.enums.Role;
 import com.proctor.util.TuiHelper;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class AuthViews {
 
     public static String renderStartup(int focusedButton) {
@@ -123,6 +126,64 @@ public class AuthViews {
         sb.append("\n\n");
 
         sb.append(TuiHelper.buttonRow("Register", focusedField == 7, "Back", focusedField == 8)).append("\n\n");
+
+        if (!errorMessage.isBlank()) {
+            sb.append("  ").append(TuiHelper.red("✖ " + errorMessage)).append("\n\n");
+        }
+
+        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Confirm / Submit  •  [Esc] Back\n"));
+        return sb.toString();
+    }
+
+    public static String renderTeacherRegister(String fullName, String email, String username, String password,
+                                               String confirmPassword, String birthday, String gender,
+                                               String academicDegree, String educationBackground, String specialization,
+                                               int focusedField, String errorMessage) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(TuiHelper.header("REGISTER"));
+        sb.append("\n");
+
+        int numInputFields = 10;
+        int activeFieldDisplay = Math.min(numInputFields, focusedField + 1);
+        sb.append(TuiHelper.boxTitle("Teacher Registration", String.format("Field %d of %d", activeFieldDisplay, numInputFields))).append("\n\n");
+
+        List<String> fieldWidgets = new ArrayList<>();
+        fieldWidgets.add(TuiHelper.inputBox("Full Name", fullName, focusedField == 0, 102, false, "e.g. Jane Doe"));
+
+        String genderVal = (gender != null && !gender.isBlank()) ? gender : "Male";
+        String genderHelp = "Press Space or ←/→ to switch";
+        fieldWidgets.add(TuiHelper.selectBox("Gender", genderVal, focusedField == 1, 102, genderHelp));
+
+        String birthdayDisplay = TuiHelper.birthdayMask(birthday, focusedField == 2);
+        fieldWidgets.add(TuiHelper.inputBox("Date of Birth", birthdayDisplay, focusedField == 2, 102, false, "DD - MM - YYYY"));
+
+        fieldWidgets.add(TuiHelper.inputBox("Academic Degree / Qualification", academicDegree, focusedField == 3, 102, false, "e.g. Ph.D. in Computer Science, Master of Science"));
+        fieldWidgets.add(TuiHelper.inputBox("Education Background (University)", educationBackground, focusedField == 4, 102, false, "e.g. Stanford University, MIT, RUPP"));
+        fieldWidgets.add(TuiHelper.inputBox("Primary Subject / Specialization", specialization, focusedField == 5, 102, false, "e.g. Software Engineering, Mathematics, Java"));
+
+        fieldWidgets.add(TuiHelper.inputBox("Email Address", email, focusedField == 6, 102, false, "e.g. jane@proctor.edu"));
+        fieldWidgets.add(TuiHelper.inputBox("Username", username, focusedField == 7, 102, false, "e.g. janedoe"));
+        fieldWidgets.add(TuiHelper.inputBox("Password", password, focusedField == 8, 102, true, "create a secure password"));
+        fieldWidgets.add(TuiHelper.inputBox("Confirm Password", confirmPassword, focusedField == 9, 102, true, "re-enter your password"));
+
+        int windowSize = 5;
+        int startField = Math.max(0, Math.min(Math.min(focusedField, numInputFields - 1) - 1, numInputFields - windowSize));
+        int endField = Math.min(numInputFields, startField + windowSize);
+
+        if (startField > 0) {
+            sb.append(TuiHelper.dim(String.format("  ▲ %d more fields above (Press ↑ to scroll)", startField))).append("\n");
+        }
+
+        for (int f = startField; f < endField; f++) {
+            sb.append(fieldWidgets.get(f)).append("\n");
+        }
+
+        if (endField < numInputFields) {
+            sb.append(TuiHelper.dim(String.format("  ▼ %d more fields below (Press ↓ to scroll)", numInputFields - endField))).append("\n");
+        }
+
+        sb.append("\n");
+        sb.append(TuiHelper.buttonRow("Register", focusedField == 10, "Back", focusedField == 11)).append("\n\n");
 
         if (!errorMessage.isBlank()) {
             sb.append("  ").append(TuiHelper.red("✖ " + errorMessage)).append("\n\n");

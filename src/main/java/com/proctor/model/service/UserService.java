@@ -49,12 +49,27 @@ public class UserService {
     }
 
     public User createUser(String email, String username, String rawPassword, String fullName, Role role, LocalDate dateOfBirth, String gender) {
+        return createUser(email, username, rawPassword, fullName, role, dateOfBirth, gender, null, null, null);
+    }
+
+    public User createUser(String email, String username, String rawPassword, String fullName, Role role, LocalDate dateOfBirth, String gender, String academicDegree, String educationBackground, String specialization) {
         if (email == null || email.isBlank() || username == null || username.isBlank() ||
                 rawPassword == null || rawPassword.isBlank() || fullName == null || fullName.isBlank()) {
             throw new ValidationException("All fields are required.");
         }
         if (gender == null || gender.trim().isBlank()) {
             throw new ValidationException("Gender is required.");
+        }
+        if (role == Role.TEACHER && (academicDegree != null || educationBackground != null || specialization != null)) {
+            if (academicDegree == null || academicDegree.trim().isBlank()) {
+                throw new ValidationException("Academic degree / qualification is required.");
+            }
+            if (educationBackground == null || educationBackground.trim().isBlank()) {
+                throw new ValidationException("Education background (university) is required.");
+            }
+            if (specialization == null || specialization.trim().isBlank()) {
+                throw new ValidationException("Primary subject / specialization is required.");
+            }
         }
 
         PasswordUtils.validatePassword(rawPassword);
@@ -87,6 +102,9 @@ public class UserService {
                 .gender(gender.trim())
                 .role(role != null ? role : Role.STUDENT)
                 .enabled(true)
+                .academicDegree(academicDegree != null ? academicDegree.trim() : null)
+                .educationBackground(educationBackground != null ? educationBackground.trim() : null)
+                .specialization(specialization != null ? specialization.trim() : null)
                 .build();
 
         boolean created = userRepository.create(user);
@@ -103,6 +121,14 @@ public class UserService {
     }
 
     public User updateUser(int id, String fullName, Role role, boolean enabled, LocalDate dateOfBirth, String gender) {
+        Optional<User> existing = userRepository.findById(id);
+        String deg = existing.map(User::getAcademicDegree).orElse(null);
+        String edu = existing.map(User::getEducationBackground).orElse(null);
+        String spec = existing.map(User::getSpecialization).orElse(null);
+        return updateUser(id, fullName, role, enabled, dateOfBirth, gender, deg, edu, spec);
+    }
+
+    public User updateUser(int id, String fullName, Role role, boolean enabled, LocalDate dateOfBirth, String gender, String academicDegree, String educationBackground, String specialization) {
         if (fullName == null || fullName.isBlank()) {
             throw new ValidationException("Full name cannot be blank.");
         }
@@ -119,6 +145,10 @@ public class UserService {
         user.setFullName(fullName.trim());
         user.setDateOfBirth(dateOfBirth);
         user.setGender(gender.trim());
+        user.setAcademicDegree(academicDegree != null && !academicDegree.isBlank() ? academicDegree.trim() : null);
+        user.setEducationBackground(educationBackground != null && !educationBackground.isBlank() ? educationBackground.trim() : null);
+        user.setSpecialization(specialization != null && !specialization.isBlank() ? specialization.trim() : null);
+
         if (SeedService.ADMIN_USERNAME.equalsIgnoreCase(user.getUsername())) {
             role = Role.ADMIN;
             enabled = true;

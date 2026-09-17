@@ -20,6 +20,9 @@ public class TeacherRegisterScreen implements Screen {
     private final StringBuilder fullName = new StringBuilder();
     private String selectedGender = "Male";
     private final StringBuilder birthday = new StringBuilder();
+    private final StringBuilder academicDegree = new StringBuilder();
+    private final StringBuilder educationBackground = new StringBuilder();
+    private final StringBuilder specialization = new StringBuilder();
     private final StringBuilder email = new StringBuilder();
     private final StringBuilder username = new StringBuilder();
     private final StringBuilder password = new StringBuilder();
@@ -34,7 +37,7 @@ public class TeacherRegisterScreen implements Screen {
     }
 
     private int getFieldCount() {
-        return 9;
+        return 12;
     }
 
     @Override
@@ -55,19 +58,19 @@ public class TeacherRegisterScreen implements Screen {
             }
 
             if (KeyUtil.isEnter(k)) {
-                if (focusedField >= 0 && focusedField <= 5) {
+                if (focusedField >= 0 && focusedField <= 8) {
                     focusedField++;
                     return ScreenResult.stay(this);
-                } else if (focusedField == 6 || focusedField == 7) {
+                } else if (focusedField == 9 || focusedField == 10) {
                     return attemptRegister();
-                } else if (focusedField == 8) {
+                } else if (focusedField == 11) {
                     return ScreenResult.navigate(new RegisterRoleScreen(authService));
                 }
             }
 
-            if (focusedField == 7 || focusedField == 8) {
+            if (focusedField == 10 || focusedField == 11) {
                 if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {
-                    focusedField = (focusedField == 7) ? 8 : 7;
+                    focusedField = (focusedField == 10) ? 11 : 10;
                     return ScreenResult.stay(this);
                 }
             }
@@ -98,19 +101,25 @@ public class TeacherRegisterScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
-            if (focusedField == 0 || (focusedField >= 3 && focusedField <= 6)) {
+            if (focusedField == 0 || (focusedField >= 3 && focusedField <= 9)) {
                 StringBuilder active = switch (focusedField) {
                     case 0 -> fullName;
-                    case 3 -> email;
-                    case 4 -> username;
-                    case 5 -> password;
+                    case 3 -> academicDegree;
+                    case 4 -> educationBackground;
+                    case 5 -> specialization;
+                    case 6 -> email;
+                    case 7 -> username;
+                    case 8 -> password;
                     default -> confirmPassword;
                 };
 
                 int maxLen = switch (focusedField) {
                     case 0 -> 100;
-                    case 3 -> 254;
-                    case 4 -> 50;
+                    case 3 -> 100;
+                    case 4 -> 150;
+                    case 5 -> 100;
+                    case 6 -> 254;
+                    case 7 -> 50;
                     default -> 128;
                 };
 
@@ -160,6 +169,15 @@ public class TeacherRegisterScreen implements Screen {
             if (fullName.toString().trim().isBlank()) {
                 throw new ValidationException("Full name is required.");
             }
+            if (academicDegree.toString().trim().isBlank()) {
+                throw new ValidationException("Academic degree / qualification is required.");
+            }
+            if (educationBackground.toString().trim().isBlank()) {
+                throw new ValidationException("Education background (university) is required.");
+            }
+            if (specialization.toString().trim().isBlank()) {
+                throw new ValidationException("Primary subject / specialization is required.");
+            }
             if (email.toString().trim().isBlank()) {
                 throw new ValidationException("Email is required.");
             }
@@ -175,8 +193,18 @@ public class TeacherRegisterScreen implements Screen {
 
             LocalDate dob = parseBirthday();
 
-            userService.createUser(email.toString().trim(), username.toString().trim(),
-                    password.toString(), fullName.toString().trim(), Role.TEACHER, dob, selectedGender);
+            userService.createUser(
+                    email.toString().trim(),
+                    username.toString().trim(),
+                    password.toString(),
+                    fullName.toString().trim(),
+                    Role.TEACHER,
+                    dob,
+                    selectedGender,
+                    academicDegree.toString().trim(),
+                    educationBackground.toString().trim(),
+                    specialization.toString().trim()
+            );
             User loggedIn = authService.login(email.toString().trim(), password.toString());
 
             return ScreenResult.navigate(new TeacherDashboardScreen(authService));
@@ -206,10 +234,19 @@ public class TeacherRegisterScreen implements Screen {
 
     @Override
     public String view() {
-        return AuthViews.renderRegister(
-                Role.TEACHER,
-                fullName.toString(), email.toString(), username.toString(),
-                password.toString(), confirmPassword.toString(),
-                birthday.toString(), selectedGender, focusedField, errorMessage);
+        return AuthViews.renderTeacherRegister(
+                fullName.toString(),
+                email.toString(),
+                username.toString(),
+                password.toString(),
+                confirmPassword.toString(),
+                birthday.toString(),
+                selectedGender,
+                academicDegree.toString(),
+                educationBackground.toString(),
+                specialization.toString(),
+                focusedField,
+                errorMessage
+        );
     }
 }

@@ -8,6 +8,9 @@ CREATE TABLE IF NOT EXISTS users (
     is_enabled BOOLEAN DEFAULT TRUE,
     date_of_birth DATE,
     gender VARCHAR(20),
+    academic_degree VARCHAR(100),
+    education_background VARCHAR(150),
+    specialization VARCHAR(100),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

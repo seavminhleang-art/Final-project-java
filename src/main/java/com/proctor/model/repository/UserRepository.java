@@ -13,7 +13,7 @@ public class UserRepository {
 
     public Optional<User> findByEmail(String email) {
         if (email == null || email.isBlank()) return Optional.empty();
-        String sql = "SELECT id, email, username, password_hash, full_name, role, is_enabled, date_of_birth, gender, created_at, updated_at " +
+        String sql = "SELECT id, email, username, password_hash, full_name, role, is_enabled, date_of_birth, gender, academic_degree, education_background, specialization, created_at, updated_at " +
                      "FROM users WHERE LOWER(email) = LOWER(?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -31,7 +31,7 @@ public class UserRepository {
 
     public Optional<User> findByUsername(String username) {
         if (username == null || username.isBlank()) return Optional.empty();
-        String sql = "SELECT id, email, username, password_hash, full_name, role, is_enabled, date_of_birth, gender, created_at, updated_at " +
+        String sql = "SELECT id, email, username, password_hash, full_name, role, is_enabled, date_of_birth, gender, academic_degree, education_background, specialization, created_at, updated_at " +
                      "FROM users WHERE LOWER(username) = LOWER(?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -50,7 +50,7 @@ public class UserRepository {
     public Optional<User> findByEmailOrUsername(String identifier) {
         if (identifier == null || identifier.isBlank()) return Optional.empty();
         String clean = identifier.trim();
-        String sql = "SELECT id, email, username, password_hash, full_name, role, is_enabled, date_of_birth, gender, created_at, updated_at " +
+        String sql = "SELECT id, email, username, password_hash, full_name, role, is_enabled, date_of_birth, gender, academic_degree, education_background, specialization, created_at, updated_at " +
                      "FROM users WHERE LOWER(email) = LOWER(?) OR LOWER(username) = LOWER(?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -68,7 +68,7 @@ public class UserRepository {
     }
 
     public Optional<User> findById(int id) {
-        String sql = "SELECT id, email, username, password_hash, full_name, role, is_enabled, date_of_birth, gender, created_at, updated_at " +
+        String sql = "SELECT id, email, username, password_hash, full_name, role, is_enabled, date_of_birth, gender, academic_degree, education_background, specialization, created_at, updated_at " +
                      "FROM users WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -87,7 +87,7 @@ public class UserRepository {
     public List<User> findAll(String search, Role role) {
         List<User> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
-                "SELECT id, email, username, password_hash, full_name, role, is_enabled, date_of_birth, gender, created_at, updated_at FROM users WHERE 1=1"
+                "SELECT id, email, username, password_hash, full_name, role, is_enabled, date_of_birth, gender, academic_degree, education_background, specialization, created_at, updated_at FROM users WHERE 1=1"
         );
         List<Object> params = new ArrayList<>();
 
@@ -129,8 +129,8 @@ public class UserRepository {
         if (email.isBlank() && !username.isBlank()) email = username;
         if (username.isBlank() && !email.isBlank()) username = email.contains("@") ? email.split("@")[0] : email;
 
-        String sql = "INSERT INTO users (email, username, password_hash, full_name, role, is_enabled, date_of_birth, gender) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO users (email, username, password_hash, full_name, role, is_enabled, date_of_birth, gender, academic_degree, education_background, specialization) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, email);
@@ -145,6 +145,9 @@ public class UserRepository {
                 stmt.setNull(7, java.sql.Types.DATE);
             }
             stmt.setString(8, user.getGender());
+            stmt.setString(9, user.getAcademicDegree());
+            stmt.setString(10, user.getEducationBackground());
+            stmt.setString(11, user.getSpecialization());
 
             int affected = stmt.executeUpdate();
             if (affected > 0) {
@@ -162,7 +165,7 @@ public class UserRepository {
     }
 
     public boolean update(User user) {
-        String sql = "UPDATE users SET full_name = ?, role = ?, is_enabled = ?, date_of_birth = ?, gender = ?, updated_at = NOW() WHERE id = ?";
+        String sql = "UPDATE users SET full_name = ?, role = ?, is_enabled = ?, date_of_birth = ?, gender = ?, academic_degree = ?, education_background = ?, specialization = ?, updated_at = NOW() WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, user.getFullName());
@@ -174,7 +177,10 @@ public class UserRepository {
                 stmt.setNull(4, java.sql.Types.DATE);
             }
             stmt.setString(5, user.getGender());
-            stmt.setInt(6, user.getId());
+            stmt.setString(6, user.getAcademicDegree());
+            stmt.setString(7, user.getEducationBackground());
+            stmt.setString(8, user.getSpecialization());
+            stmt.setInt(9, user.getId());
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             System.err.println("Error updating user: " + e.getMessage());
@@ -235,6 +241,21 @@ public class UserRepository {
             gender = rs.getString("gender");
         } catch (SQLException ignored) {}
 
+        String academicDegree = null;
+        try {
+            academicDegree = rs.getString("academic_degree");
+        } catch (SQLException ignored) {}
+
+        String educationBackground = null;
+        try {
+            educationBackground = rs.getString("education_background");
+        } catch (SQLException ignored) {}
+
+        String specialization = null;
+        try {
+            specialization = rs.getString("specialization");
+        } catch (SQLException ignored) {}
+
         return User.builder()
                 .id(rs.getInt("id"))
                 .email(email != null ? email : username)
@@ -245,6 +266,9 @@ public class UserRepository {
                 .gender(gender)
                 .role(Role.valueOf(rs.getString("role")))
                 .enabled(rs.getBoolean("is_enabled"))
+                .academicDegree(academicDegree)
+                .educationBackground(educationBackground)
+                .specialization(specialization)
                 .createdAt(rs.getTimestamp("created_at"))
                 .updatedAt(rs.getTimestamp("updated_at"))
                 .build();

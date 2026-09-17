@@ -23,6 +23,9 @@ public class User {
     private String gender;
     private Role role;
     private boolean enabled;
+    private String academicDegree;
+    private String educationBackground;
+    private String specialization;
     private Timestamp createdAt;
     private Timestamp updatedAt;
 

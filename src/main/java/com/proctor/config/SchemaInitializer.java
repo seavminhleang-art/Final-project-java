@@ -68,6 +68,9 @@ public class SchemaInitializer {
                 stmt.execute("ALTER TABLE quizzes ALTER COLUMN randomize_answers SET DEFAULT TRUE;");
                 stmt.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS date_of_birth DATE;");
                 stmt.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS gender VARCHAR(20);");
+                stmt.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS academic_degree VARCHAR(100);");
+                stmt.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS education_background VARCHAR(150);");
+                stmt.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS specialization VARCHAR(100);");
                 stmt.execute("UPDATE subjects SET code = 'C++' WHERE id = 3 AND code = 'C' AND name = 'C++';");
                 stmt.execute("UPDATE quizzes SET subject_id = 3 WHERE subject_id = 4;");
                 stmt.execute("DELETE FROM subjects WHERE id = 4 AND code = 'CPP';");
