@@ -15,19 +15,22 @@ public class AuthViews {
 
         sb.append(TuiHelper.boxTitle("Digital Assessment Platform")).append("\n\n");
 
-        String btnLogin = (focusedButton == 0)
-                ? TuiHelper.bold(TuiHelper.NAVY_BLUE + "[ ▶ Log In ]")
-                : TuiHelper.dim("[   Log In   ]");
-        String btnRegister = (focusedButton == 1)
-                ? TuiHelper.bold(TuiHelper.NAVY_BLUE + "[ ▶ Register ]")
-                : TuiHelper.dim("[   Register   ]");
-        String btnExit = (focusedButton == 2)
-                ? TuiHelper.bold(TuiHelper.RED + "[ ▶ Exit ]")
-                : TuiHelper.dim("[   Exit   ]");
+        int btnWidth = 26;
+        String[] bLogin = TuiHelper.boxButtonLines("Log In", focusedButton == 0, TuiHelper.NAVY_BLUE, btnWidth);
+        String[] bRegister = TuiHelper.boxButtonLines("Register", focusedButton == 1, TuiHelper.NAVY_BLUE, btnWidth);
+        String[] bExit = TuiHelper.boxButtonLines("Exit", focusedButton == 2, TuiHelper.RED, btnWidth);
 
-        sb.append(btnLogin).append("\n\n\n\n");
-        sb.append(btnRegister).append("\n\n\n\n");
-        sb.append(btnExit).append("\n\n");
+        sb.append(TuiHelper.CENTER_MARKER).append(bLogin[0]).append("\n");
+        sb.append(TuiHelper.CENTER_MARKER).append(bLogin[1]).append("\n");
+        sb.append(TuiHelper.CENTER_MARKER).append(bLogin[2]).append("\n\n");
+
+        sb.append(TuiHelper.CENTER_MARKER).append(bRegister[0]).append("\n");
+        sb.append(TuiHelper.CENTER_MARKER).append(bRegister[1]).append("\n");
+        sb.append(TuiHelper.CENTER_MARKER).append(bRegister[2]).append("\n\n");
+
+        sb.append(TuiHelper.CENTER_MARKER).append(bExit[0]).append("\n");
+        sb.append(TuiHelper.CENTER_MARKER).append(bExit[1]).append("\n");
+        sb.append(TuiHelper.CENTER_MARKER).append(bExit[2]).append("\n\n");
 
         sb.append(TuiHelper.dim("  [↑/↓] Navigate  •  [Enter] Confirm  •  [Esc] Quit\n"));
         return sb.toString();
@@ -46,15 +49,11 @@ public class AuthViews {
         sb.append(TuiHelper.inputBox("Password", password, focusedField == 1, 102, true, "enter password"));
         sb.append("\n\n");
 
-        String btnSignIn = (focusedField == 2) ? TuiHelper.bold(TuiHelper.NAVY_BLUE + "[ ▶ Log In ]") : TuiHelper.dim("[   Log In   ]");
-        String btnForgot = (focusedField == 3) ? TuiHelper.bold(TuiHelper.NAVY_BLUE + "[ ▶ Forgot Password ]") : TuiHelper.dim("[   Forgot Password   ]");
-        String btnExit = (focusedField == 4) ? TuiHelper.bold(TuiHelper.RED + "[ ▶ Back ]") : TuiHelper.dim("[   Back   ]");
-
-        int totalBtnsWidth = TuiHelper.visibleLength(btnSignIn) + 2
-                           + TuiHelper.visibleLength(btnForgot) + 2
-                           + TuiHelper.visibleLength(btnExit);
-        int btnPad = Math.max(0, (116 - totalBtnsWidth) / 2);
-        sb.append(" ".repeat(btnPad)).append(btnSignIn).append("  ").append(btnForgot).append("  ").append(btnExit).append("\n\n");
+        sb.append(TuiHelper.buttonRow(
+                "Log In", focusedField == 2, TuiHelper.NAVY_BLUE,
+                "Forgot Password", focusedField == 3, TuiHelper.NAVY_BLUE,
+                "Back", focusedField == 4, TuiHelper.RED, 116
+        )).append("\n\n");
 
         if (infoBanner != null && !infoBanner.isBlank()) {
             sb.append("  ").append(infoBanner).append("\n\n");
@@ -75,19 +74,22 @@ public class AuthViews {
 
         sb.append(TuiHelper.boxTitle("Choose Account Type")).append("\n\n");
 
-        String btnStudent = (focusedButton == 0)
-                ? TuiHelper.bold(TuiHelper.NAVY_BLUE + "[ ▶ Student ]")
-                : TuiHelper.dim("[   Student   ]");
-        String btnTeacher = (focusedButton == 1)
-                ? TuiHelper.bold(TuiHelper.NAVY_BLUE + "[ ▶ Teacher ]")
-                : TuiHelper.dim("[   Teacher   ]");
-        String btnBack = (focusedButton == 2)
-                ? TuiHelper.bold(TuiHelper.RED + "[ ▶ Back ]")
-                : TuiHelper.dim("[   Back   ]");
+        int btnWidth = 26;
+        String[] bStudent = TuiHelper.boxButtonLines("Student", focusedButton == 0, TuiHelper.NAVY_BLUE, btnWidth);
+        String[] bTeacher = TuiHelper.boxButtonLines("Teacher", focusedButton == 1, TuiHelper.NAVY_BLUE, btnWidth);
+        String[] bBack = TuiHelper.boxButtonLines("Back", focusedButton == 2, TuiHelper.RED, btnWidth);
 
-        sb.append(btnStudent).append("\n\n\n\n");
-        sb.append(btnTeacher).append("\n\n\n\n");
-        sb.append(btnBack).append("\n\n");
+        sb.append(TuiHelper.CENTER_MARKER).append(bStudent[0]).append("\n");
+        sb.append(TuiHelper.CENTER_MARKER).append(bStudent[1]).append("\n");
+        sb.append(TuiHelper.CENTER_MARKER).append(bStudent[2]).append("\n\n");
+
+        sb.append(TuiHelper.CENTER_MARKER).append(bTeacher[0]).append("\n");
+        sb.append(TuiHelper.CENTER_MARKER).append(bTeacher[1]).append("\n");
+        sb.append(TuiHelper.CENTER_MARKER).append(bTeacher[2]).append("\n\n");
+
+        sb.append(TuiHelper.CENTER_MARKER).append(bBack[0]).append("\n");
+        sb.append(TuiHelper.CENTER_MARKER).append(bBack[1]).append("\n");
+        sb.append(TuiHelper.CENTER_MARKER).append(bBack[2]).append("\n\n");
 
         sb.append(TuiHelper.dim("  [↑/↓] Navigate  •  [Enter] Confirm  •  [Esc] Back\n"));
         return sb.toString();

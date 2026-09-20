@@ -311,7 +311,7 @@ public class ExamViews {
                 String optText = radio + opt.getOptionText();
 
                 if (isFocused) {
-                    sb.append("  ").append(TuiHelper.cyan("▶ ")).append(TuiHelper.bold(optText)).append("\n");
+                    sb.append("    ").append(TuiHelper.bold(TuiHelper.NAVY_BLUE + optText)).append("\n");
                 } else {
                     sb.append("    ").append(optText).append("\n");
                 }

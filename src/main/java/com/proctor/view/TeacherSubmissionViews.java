@@ -177,7 +177,7 @@ public class TeacherSubmissionViews {
             List<String> qLines = wrapText(qHeader, 120);
             for (int k = 0; k < qLines.size(); k++) {
                 if (k == 0) {
-                    sb.append(TuiHelper.cyan("▶ ")).append(TuiHelper.bold(qLines.get(k))).append("\n");
+                    sb.append("  ").append(TuiHelper.bold(TuiHelper.NAVY_BLUE + qLines.get(k))).append("\n");
                 } else {
                     sb.append("  ").append(TuiHelper.bold(qLines.get(k))).append("\n");
                 }

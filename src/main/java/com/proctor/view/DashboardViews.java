@@ -22,7 +22,7 @@ public class DashboardViews {
         for (int i = 0; i < safeItems.length; i++) {
             String item = safeItems[i] != null ? safeItems[i] : "";
             if (i == selectedIndex) {
-                sb.append(TuiHelper.cyan("  ▶ " + TuiHelper.bold(item))).append("\n\n");
+                sb.append("    ").append(TuiHelper.bold(TuiHelper.NAVY_BLUE + item)).append("\n\n");
             } else {
                 sb.append("    ").append(item).append("\n\n");
             }

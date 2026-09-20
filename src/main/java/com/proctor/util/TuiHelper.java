@@ -392,7 +392,7 @@ public class TuiHelper {
     public static String inputBox(String label, String value, boolean focused, int width, boolean masked, String placeholder) {
         StringBuilder sb = new StringBuilder();
         String borderCol = focused ? NAVY_BLUE : DIM;
-        String labelCol = focused ? bold(NAVY_BLUE + "▶ " + label) : dim("  " + label);
+        String labelCol = focused ? bold(NAVY_BLUE + "  " + label) : dim("  " + label);
 
         int maxInner = Math.max(10, width - 4);
         String displayVal;
@@ -436,7 +436,7 @@ public class TuiHelper {
     public static String selectBox(String label, String value, boolean focused, int width, String helpText) {
         StringBuilder sb = new StringBuilder();
         String borderCol = focused ? NAVY_BLUE : DIM;
-        String labelCol = focused ? bold(NAVY_BLUE + "▶ " + label) : dim("  " + label);
+        String labelCol = focused ? bold(NAVY_BLUE + "  " + label) : dim("  " + label);
 
         String valDisplay = focused ? navyBlue("< " + value + " >") + (helpText != null ? dim(" (" + helpText + ")") : "") : value;
         String rawLenText = focused ? ("< " + value + " >" + (helpText != null ? " (" + helpText + ")" : "")) : (value != null ? value : "");
@@ -449,16 +449,51 @@ public class TuiHelper {
         return sb.toString();
     }
 
+    public static String[] boxButtonLines(String label, boolean focused, String focusColor, int width) {
+        String text = (label != null) ? label.trim() : "";
+        int innerW = Math.max(text.length() + 4, width - 2);
+        int pad = innerW - text.length();
+        int padLeft = pad / 2;
+        int padRight = pad - padLeft;
+
+        String col = (focusColor != null) ? focusColor : NAVY_BLUE;
+        String top;
+        String mid;
+        String bot;
+
+        if (focused) {
+            top = col + "┌" + "─".repeat(innerW) + "┐" + RESET;
+            mid = col + "│" + RESET + " ".repeat(padLeft) + bold(col + text) + " ".repeat(padRight) + col + "│" + RESET;
+            bot = col + "└" + "─".repeat(innerW) + "┘" + RESET;
+        } else {
+            top = dim("┌" + "─".repeat(innerW) + "┐");
+            mid = dim("│") + " ".repeat(padLeft) + dim(text) + " ".repeat(padRight) + dim("│");
+            bot = dim("└" + "─".repeat(innerW) + "┘");
+        }
+        return new String[]{top, mid, bot};
+    }
+
+    public static String boxButton(String label, boolean focused, String focusColor, int width) {
+        String[] lines = boxButtonLines(label, focused, focusColor, width);
+        return CENTER_MARKER + lines[0] + "\n" + CENTER_MARKER + lines[1] + "\n" + CENTER_MARKER + lines[2];
+    }
+
     public static String buttonRow(String primaryLabel, boolean primaryFocused, String secondaryLabel, boolean secondaryFocused) {
         return buttonRow(primaryLabel, primaryFocused, secondaryLabel, secondaryFocused, 106);
     }
 
     public static String buttonRow(String primaryLabel, boolean primaryFocused, String secondaryLabel, boolean secondaryFocused, int width) {
-        String btn1 = primaryFocused ? bold(NAVY_BLUE + "[ ▶ " + primaryLabel + " ]") : dim("[   " + primaryLabel + "   ]");
-        String btn2 = secondaryFocused ? bold(RED + "[ ▶ " + secondaryLabel + " ]") : dim("[   " + secondaryLabel + "   ]");
-        int totalBtnWidth = visibleLength(btn1) + 4 + visibleLength(btn2);
-        int leftPad = Math.max(0, (width - totalBtnWidth) / 2);
-        return " ".repeat(leftPad) + btn1 + "    " + btn2 + CLEAR_EOL;
+        int btnWidth = Math.max(16, Math.max(primaryLabel.length(), secondaryLabel.length()) + 6);
+        String[] b1 = boxButtonLines(primaryLabel, primaryFocused, NAVY_BLUE, btnWidth);
+        String[] b2 = boxButtonLines(secondaryLabel, secondaryFocused, RED, btnWidth);
+
+        int rowWidth = visibleLength(b1[0]) + 4 + visibleLength(b2[0]);
+        int leftPad = Math.max(0, (width - rowWidth) / 2);
+        String padStr = " ".repeat(leftPad);
+
+        return CENTER_MARKER + padStr + b1[0] + "    " + b2[0] + CLEAR_EOL + "\n"
+             + CENTER_MARKER + padStr + b1[1] + "    " + b2[1] + CLEAR_EOL + "\n"
+             + CENTER_MARKER + padStr + b1[2] + "    " + b2[2] + CLEAR_EOL;
     }
 
     public static String buttonRow(String primaryLabel, boolean primaryFocused,
@@ -470,12 +505,26 @@ public class TuiHelper {
     public static String buttonRow(String primaryLabel, boolean primaryFocused,
                                    String dangerLabel, boolean dangerFocused,
                                    String secondaryLabel, boolean secondaryFocused, int width) {
-        String btn1 = primaryFocused ? bold(NAVY_BLUE + "[ ▶ " + primaryLabel + " ]") : dim("[   " + primaryLabel + "   ]");
-        String btn2 = dangerFocused ? bold(RED + "[ ▶ " + dangerLabel + " ]") : dim("[   " + dangerLabel + "   ]");
-        String btn3 = secondaryFocused ? bold(YELLOW + "[ ▶ " + secondaryLabel + " ]") : dim("[   " + secondaryLabel + "   ]");
-        int totalBtnWidth = visibleLength(btn1) + 4 + visibleLength(btn2) + 4 + visibleLength(btn3);
-        int leftPad = Math.max(0, (width - totalBtnWidth) / 2);
-        return " ".repeat(leftPad) + btn1 + "    " + btn2 + "    " + btn3 + CLEAR_EOL;
+        return buttonRow(primaryLabel, primaryFocused, NAVY_BLUE,
+                         dangerLabel, dangerFocused, RED,
+                         secondaryLabel, secondaryFocused, YELLOW, width);
+    }
+
+    public static String buttonRow(String label1, boolean focused1, String color1,
+                                   String label2, boolean focused2, String color2,
+                                   String label3, boolean focused3, String color3, int width) {
+        int btnWidth = Math.max(16, Math.max(label1.length(), Math.max(label2.length(), label3.length())) + 6);
+        String[] b1 = boxButtonLines(label1, focused1, color1, btnWidth);
+        String[] b2 = boxButtonLines(label2, focused2, color2, btnWidth);
+        String[] b3 = boxButtonLines(label3, focused3, color3, btnWidth);
+
+        int rowWidth = visibleLength(b1[0]) + 4 + visibleLength(b2[0]) + 4 + visibleLength(b3[0]);
+        int leftPad = Math.max(0, (width - rowWidth) / 2);
+        String padStr = " ".repeat(leftPad);
+
+        return CENTER_MARKER + padStr + b1[0] + "    " + b2[0] + "    " + b3[0] + CLEAR_EOL + "\n"
+             + CENTER_MARKER + padStr + b1[1] + "    " + b2[1] + "    " + b3[1] + CLEAR_EOL + "\n"
+             + CENTER_MARKER + padStr + b1[2] + "    " + b2[2] + "    " + b3[2] + CLEAR_EOL;
     }
 
     public static String confirmationModal(String title, String message, String warningDetail, String confirmLabel, String cancelLabel, boolean confirmFocused) {
@@ -490,10 +539,13 @@ public class TuiHelper {
         }
         sb.append(dim(centerText("─".repeat(56)))).append(CLEAR_EOL).append("\n\n");
 
-        String btn1 = confirmFocused ? bold(NAVY_BLUE + "[ ▶ " + confirmLabel + " ]") : dim("[   " + confirmLabel + "   ]");
-        String btn2 = !confirmFocused ? bold(RED + "[ ▶ " + cancelLabel + " ]") : dim("[   " + cancelLabel + "   ]");
+        int btnWidth = Math.max(16, Math.max(confirmLabel.length(), cancelLabel.length()) + 6);
+        String[] b1 = boxButtonLines(confirmLabel, confirmFocused, NAVY_BLUE, btnWidth);
+        String[] b2 = boxButtonLines(cancelLabel, !confirmFocused, RED, btnWidth);
 
-        sb.append(btn1).append("    ").append(btn2).append(CLEAR_EOL).append("\n\n");
+        sb.append(CENTER_MARKER).append(b1[0]).append("    ").append(b2[0]).append(CLEAR_EOL).append("\n");
+        sb.append(CENTER_MARKER).append(b1[1]).append("    ").append(b2[1]).append(CLEAR_EOL).append("\n");
+        sb.append(CENTER_MARKER).append(b1[2]).append("    ").append(b2[2]).append(CLEAR_EOL).append("\n\n");
         sb.append(dim("[←/→] Select Option  •  [Enter] Confirm  •  [Esc] Cancel")).append(CLEAR_EOL).append("\n");
         return sb.toString();
     }
@@ -517,10 +569,13 @@ public class TuiHelper {
         sb.append(dim(centerText("All session progress and data have been safely saved."))).append(CLEAR_EOL).append("\n\n");
         sb.append(dim(centerText("─".repeat(56)))).append(CLEAR_EOL).append("\n\n");
 
-        String btn1 = quitConfirmFocused ? bold(RED + "[ ▶ Quit Application ]") : dim("[   Quit Application   ]");
-        String btn2 = !quitConfirmFocused ? bold(NAVY_BLUE + "[ ▶ Return to App ]") : dim("[   Return to App   ]");
+        int btnWidth = 22;
+        String[] b1 = boxButtonLines("Quit Application", quitConfirmFocused, RED, btnWidth);
+        String[] b2 = boxButtonLines("Return to App", !quitConfirmFocused, NAVY_BLUE, btnWidth);
 
-        sb.append(btn1).append("    ").append(btn2).append(CLEAR_EOL).append("\n\n");
+        sb.append(CENTER_MARKER).append(b1[0]).append("    ").append(b2[0]).append(CLEAR_EOL).append("\n");
+        sb.append(CENTER_MARKER).append(b1[1]).append("    ").append(b2[1]).append(CLEAR_EOL).append("\n");
+        sb.append(CENTER_MARKER).append(b1[2]).append("    ").append(b2[2]).append(CLEAR_EOL).append("\n\n");
         sb.append(dim("[←/→] Select Option  •  [Enter] Confirm  •  [Esc] Cancel")).append(CLEAR_EOL).append("\n");
         return sb.toString();
     }
@@ -1057,7 +1112,12 @@ private static String stripAnsi(String str) {
 
         boolean isCentered = cleanLine.contains(BOX_TITLE_MARKER) || cleanLine.contains(CENTER_MARKER);
         boolean isTabsRow = stripped.trim().startsWith("Tabs:") || cleanLine.contains("Tabs:");
-        boolean isButtonRow = !isTabsRow && (stripped.contains("[ ▶ ") || stripped.contains("[   ")) && stripped.trim().endsWith("]");
+        boolean isButtonRow = !isTabsRow && (
+                ((stripped.contains("[ ▶ ") || stripped.contains("[   ")) && stripped.trim().endsWith("]"))
+                || ((stripped.contains("┌") && stripped.contains("┐"))
+                    || (stripped.contains("│") && !stripped.contains("┃") && !stripped.contains("Email") && !stripped.contains("Password") && !stripped.contains("Search:") && !stripped.contains("Page "))
+                    || (stripped.contains("└") && stripped.contains("┘")))
+        );
 
         int leftPad;
         int rightPad;
