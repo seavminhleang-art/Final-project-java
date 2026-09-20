@@ -323,7 +323,11 @@ public class ExamViews {
         }
 
         sb.append("\n  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
-        sb.append(TuiHelper.dim("  [↑/↓] Move Focus  •  [Space] Select  •  [Enter] Confirm & Next  •  [←/→] Prev/Next  •  [Esc] Review & Submit\n"));
+        if (q.getQuestionType() == com.proctor.model.enums.QuestionType.SHORT_ANSWER) {
+            sb.append(TuiHelper.dim("  [Type] Answer  •  [Enter / Tab] Next  •  [↑] Prev  •  [Esc] Review & Submit\n"));
+        } else {
+            sb.append(TuiHelper.dim("  [↑/↓] Move Focus  •  [Space] Select  •  [Enter] Confirm & Next  •  [←/→ or p/n] Prev/Next  •  [Esc] Review & Submit\n"));
+        }
         return sb.toString();
     }
 
@@ -333,7 +337,11 @@ public class ExamViews {
 
     public static String renderExamResult(Result result, ExamSession session, boolean hasReturnScreen, String bannerMessage, boolean canRequestRetake) {
         StringBuilder sb = new StringBuilder();
-        sb.append(TuiHelper.DIALOG_MARKER);
+        boolean isCompactScorecard = (result != null && result.isPendingReview())
+                || (session == null || !session.getQuiz().isShowAnswersAfter());
+        if (isCompactScorecard) {
+            sb.append(TuiHelper.DIALOG_MARKER);
+        }
         String typeLabel = (result != null && result.getAssessmentType() == AssessmentType.EXAM) ? "EXAM" : "QUIZ";
 
         if (result != null && result.isPendingReview()) {
@@ -386,7 +394,7 @@ public class ExamViews {
 
         if (session != null && session.getQuiz().isShowAnswersAfter()) {
             sb.append("  " + TuiHelper.bold("Question-by-Question Review:") + "\n\n");
-            sb.append("  " + "─".repeat(56) + "\n\n");
+            sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
             for (int i = 0; i < session.getQuestions().size(); i++) {
                 Question q = session.getQuestions().get(i);
@@ -419,7 +427,7 @@ public class ExamViews {
                 }
                 sb.append("\n");
             }
-            sb.append("\n  " + "─".repeat(56) + "\n\n");
+            sb.append("\n  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
         } else {
             sb.append("  " + "─".repeat(56) + "\n\n");
         }

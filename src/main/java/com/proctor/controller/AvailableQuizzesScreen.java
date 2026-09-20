@@ -146,18 +146,9 @@ public class AvailableQuizzesScreen implements Screen {
                 if (KeyUtil.isEsc(k) || KeyUtil.isEnter(k)) {
                     searchMode = false;
                     applyFilters();
-                } else if (KeyUtil.isBackspace(k)) {
-                    if (!searchBuffer.isEmpty()) {
-                        searchBuffer.deleteCharAt(searchBuffer.length() - 1);
-                        applyFilters();
-                    }
-                } else if (k.type() == KeyType.KeyRunes && k.runes() != null) {
-                    for (char c : k.runes()) {
-                        if (!Character.isISOControl(c)) searchBuffer.append(c);
-                    }
+                } else if (KeyUtil.handleBackspace(searchBuffer, k)) {
                     applyFilters();
-                } else if (k.key() != null && k.key().length() == 1 && !Character.isISOControl(k.key().charAt(0))) {
-                    searchBuffer.append(k.key());
+                } else if (KeyUtil.appendInput(searchBuffer, k)) {
                     applyFilters();
                 }
                 return ScreenResult.stay(this);
@@ -371,22 +362,11 @@ public class AvailableQuizzesScreen implements Screen {
         }
 
         if (examReasonFocusIndex == 0) {
-            if (KeyUtil.isBackspace(k)) {
-                if (!examReasonBuffer.isEmpty()) {
-                    examReasonBuffer.deleteCharAt(examReasonBuffer.length() - 1);
-                }
+            if (KeyUtil.handleBackspace(examReasonBuffer, k)) {
                 return ScreenResult.stay(this);
             }
 
-            if (k.type() == KeyType.KeyRunes && k.runes() != null) {
-                for (char c : k.runes()) {
-                    if (!Character.isISOControl(c) && examReasonBuffer.length() < 500) examReasonBuffer.append(c);
-                }
-            } else if (k.key() != null && k.key().length() == 1 && !Character.isISOControl(k.key().charAt(0))) {
-                if (examReasonBuffer.length() < 500) {
-                    examReasonBuffer.append(k.key());
-                }
-            }
+            KeyUtil.appendInput(examReasonBuffer, k, 500);
         }
 
         return ScreenResult.stay(this);

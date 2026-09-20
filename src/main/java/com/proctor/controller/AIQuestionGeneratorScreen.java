@@ -271,14 +271,8 @@ public class AIQuestionGeneratorScreen implements Screen {
     }
 
     private void handleTextInput(StringBuilder buffer, KeyPressMessage k) {
-        if (KeyUtil.isBackspace(k)) {
-            if (!buffer.isEmpty()) buffer.deleteCharAt(buffer.length() - 1);
-        } else if (k.type() == KeyType.KeyRunes && k.runes() != null) {
-            for (char c : k.runes()) {
-                if (!Character.isISOControl(c)) buffer.append(c);
-            }
-        } else if (k.key() != null && k.key().length() == 1 && !Character.isISOControl(k.key().charAt(0))) {
-            buffer.append(k.key());
+        if (!KeyUtil.handleBackspace(buffer, k)) {
+            KeyUtil.appendInput(buffer, k);
         }
     }
 

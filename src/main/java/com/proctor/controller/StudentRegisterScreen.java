@@ -114,20 +114,12 @@ public class StudentRegisterScreen implements Screen {
                     default -> 128;
                 };
 
-                if (KeyUtil.isBackspace(k)) {
-                    if (!active.isEmpty()) active.deleteCharAt(active.length() - 1);
+                if (KeyUtil.handleBackspace(active, k)) {
+                    errorMessage = "";
                     return ScreenResult.stay(this);
                 }
 
-                if (k.type() == KeyType.KeyRunes && k.runes() != null) {
-                    for (char c : k.runes()) {
-                        if (!Character.isISOControl(c) && active.length() < maxLen) active.append(c);
-                    }
-                    errorMessage = "";
-                } else if (k.key() != null && k.key().length() == 1 && !Character.isISOControl(k.key().charAt(0))) {
-                    if (active.length() < maxLen) {
-                        active.append(k.key());
-                    }
+                if (KeyUtil.appendInput(active, k, maxLen)) {
                     errorMessage = "";
                 }
             }

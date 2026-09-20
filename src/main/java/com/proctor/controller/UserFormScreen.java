@@ -169,15 +169,9 @@ public class UserFormScreen implements Screen {
                 default -> password;
             };
 
-            if (KeyUtil.isBackspace(k)) {
-                if (!focusedBuffer.isEmpty()) focusedBuffer.deleteCharAt(focusedBuffer.length() - 1);
-            } else if (k.type() == KeyType.KeyRunes && k.runes() != null) {
-                for (char c : k.runes()) {
-                    if (!Character.isISOControl(c)) focusedBuffer.append(c);
-                }
+            if (KeyUtil.handleBackspace(focusedBuffer, k)) {
                 errorMessage = "";
-            } else if (k.key() != null && k.key().length() == 1 && !Character.isISOControl(k.key().charAt(0))) {
-                focusedBuffer.append(k.key());
+            } else if (KeyUtil.appendInput(focusedBuffer, k)) {
                 errorMessage = "";
             }
         }
@@ -185,15 +179,9 @@ public class UserFormScreen implements Screen {
 
     private void handleEditModeInput(KeyPressMessage k) {
         if (focusedField == 0) {
-            if (KeyUtil.isBackspace(k)) {
-                if (!fullName.isEmpty()) fullName.deleteCharAt(fullName.length() - 1);
-            } else if (k.type() == KeyType.KeyRunes && k.runes() != null) {
-                for (char c : k.runes()) {
-                    if (!Character.isISOControl(c)) fullName.append(c);
-                }
+            if (KeyUtil.handleBackspace(fullName, k)) {
                 errorMessage = "";
-            } else if (k.key() != null && k.key().length() == 1 && !Character.isISOControl(k.key().charAt(0))) {
-                fullName.append(k.key());
+            } else if (KeyUtil.appendInput(fullName, k)) {
                 errorMessage = "";
             }
         } else if (focusedField == 1) {

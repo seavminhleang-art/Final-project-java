@@ -44,4 +44,43 @@ public class KeyUtil {
     public static boolean isDelete(KeyPressMessage k) {
         return "delete".equalsIgnoreCase(k.key()) || k.type() == KeyType.KeyDelete;
     }
+
+    public static boolean handleBackspace(StringBuilder buffer, KeyPressMessage k) {
+        if (isBackspace(k) && !buffer.isEmpty()) {
+            buffer.deleteCharAt(buffer.length() - 1);
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean appendInput(StringBuilder buffer, KeyPressMessage k) {
+        return appendInput(buffer, k, Integer.MAX_VALUE);
+    }
+
+    public static boolean appendInput(StringBuilder buffer, KeyPressMessage k, int maxLen) {
+        if (isSpace(k)) {
+            if (buffer.length() < maxLen) {
+                buffer.append(' ');
+                return true;
+            }
+            return false;
+        }
+        if (k.type() == KeyType.KeyRunes && k.runes() != null) {
+            boolean added = false;
+            for (char c : k.runes()) {
+                if (!Character.isISOControl(c) && buffer.length() < maxLen) {
+                    buffer.append(c);
+                    added = true;
+                }
+            }
+            return added;
+        }
+        if (k.key() != null && k.key().length() == 1 && !Character.isISOControl(k.key().charAt(0))) {
+            if (buffer.length() < maxLen) {
+                buffer.append(k.key());
+                return true;
+            }
+        }
+        return false;
+    }
 }

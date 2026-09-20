@@ -248,15 +248,9 @@ public class QuestionFormScreen implements Screen {
     }
 
     private void handleTextInput(StringBuilder buffer, KeyPressMessage k) {
-        if (KeyUtil.isBackspace(k)) {
-            if (!buffer.isEmpty()) buffer.deleteCharAt(buffer.length() - 1);
-        } else if (k.type() == KeyType.KeyRunes && k.runes() != null) {
-            for (char c : k.runes()) {
-                if (!Character.isISOControl(c)) buffer.append(c);
-            }
+        if (KeyUtil.handleBackspace(buffer, k)) {
             errorMessage = "";
-        } else if (k.key() != null && k.key().length() == 1 && !Character.isISOControl(k.key().charAt(0))) {
-            buffer.append(k.key());
+        } else if (KeyUtil.appendInput(buffer, k)) {
             errorMessage = "";
         }
     }

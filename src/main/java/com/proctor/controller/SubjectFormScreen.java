@@ -166,15 +166,9 @@ public class SubjectFormScreen implements Screen {
 
     private void handleTextInput(KeyPressMessage k) {
         StringBuilder focusedBuffer = (focusedField == 0) ? code : (focusedField == 1 ? name : description);
-        if (KeyUtil.isBackspace(k)) {
-            if (!focusedBuffer.isEmpty()) focusedBuffer.deleteCharAt(focusedBuffer.length() - 1);
-        } else if (k.type() == KeyType.KeyRunes && k.runes() != null) {
-            for (char c : k.runes()) {
-                if (!Character.isISOControl(c)) focusedBuffer.append(c);
-            }
+        if (KeyUtil.handleBackspace(focusedBuffer, k)) {
             errorMessage = "";
-        } else if (k.key() != null && k.key().length() == 1 && !Character.isISOControl(k.key().charAt(0))) {
-            focusedBuffer.append(k.key());
+        } else if (KeyUtil.appendInput(focusedBuffer, k)) {
             errorMessage = "";
         }
     }

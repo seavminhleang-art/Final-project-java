@@ -836,14 +836,15 @@ private static String stripAnsi(String str) {
         int topMarginOutside;
         int botMarginOutside;
 
-        if (termHeight >= 60) {
-            targetFrameHeight = termHeight - 2;
+        int usableTermHeight = (termHeight > 10) ? termHeight : 30;
+        if (usableTermHeight >= contentHeight + 4) {
+            targetFrameHeight = usableTermHeight - 2;
             topMarginOutside = 1;
             botMarginOutside = 1;
         } else {
-            targetFrameHeight = 58;
-            topMarginOutside = Math.max(0, (termHeight - targetFrameHeight) / 2);
-            botMarginOutside = Math.max(0, termHeight - targetFrameHeight - topMarginOutside);
+            targetFrameHeight = Math.max(usableTermHeight - 2, contentHeight + 2);
+            topMarginOutside = Math.max(0, (usableTermHeight - targetFrameHeight) / 2);
+            botMarginOutside = Math.max(0, usableTermHeight - targetFrameHeight - topMarginOutside);
         }
 
         int interiorHeight = targetFrameHeight - 2;

@@ -137,83 +137,84 @@ public class ExamTakerScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
-            if (KeyUtil.isLeft(k) || "p".equalsIgnoreCase(k.key())) {
-                saveCurrentAnswer();
-                if (currentQuestionIndex > 0) {
-                    currentQuestionIndex--;
-                    loadCurrentQuestionState();
-                }
-                return ScreenResult.stay(this);
-            }
-
-            if (KeyUtil.isRight(k) || "n".equalsIgnoreCase(k.key())) {
-                saveCurrentAnswer();
-                if (currentQuestionIndex < session.getQuestions().size() - 1) {
-                    currentQuestionIndex++;
-                    loadCurrentQuestionState();
-                }
-                return ScreenResult.stay(this);
-            }
-
             Question q = session.getQuestions().get(currentQuestionIndex);
-            if (q.getQuestionType() != QuestionType.SHORT_ANSWER && q.getOptions() != null) {
+            if (q.getQuestionType() != QuestionType.SHORT_ANSWER) {
+                if (KeyUtil.isLeft(k) || "p".equalsIgnoreCase(k.key())) {
+                    saveCurrentAnswer();
+                    if (currentQuestionIndex > 0) {
+                        currentQuestionIndex--;
+                        loadCurrentQuestionState();
+                    }
+                    return ScreenResult.stay(this);
+                }
+
+                if (KeyUtil.isRight(k) || "n".equalsIgnoreCase(k.key())) {
+                    saveCurrentAnswer();
+                    if (currentQuestionIndex < session.getQuestions().size() - 1) {
+                        currentQuestionIndex++;
+                        loadCurrentQuestionState();
+                    }
+                    return ScreenResult.stay(this);
+                }
+
+                if (q.getOptions() != null) {
+                    if (KeyUtil.isUp(k)) {
+                        focusedOptionIndex = (focusedOptionIndex - 1 + q.getOptions().size()) % q.getOptions().size();
+                        return ScreenResult.stay(this);
+                    } else if (KeyUtil.isDown(k)) {
+                        focusedOptionIndex = (focusedOptionIndex + 1) % q.getOptions().size();
+                        return ScreenResult.stay(this);
+                    } else if (KeyUtil.isSpace(k)) {
+                        if (focusedOptionIndex >= 0 && focusedOptionIndex < q.getOptions().size()) {
+                            QuestionOption opt = q.getOptions().get(focusedOptionIndex);
+                            session.getSelectedOptions().put(q.getId(), opt.getId());
+                            saveCurrentAnswer();
+                        }
+                        return ScreenResult.stay(this);
+                    } else if (KeyUtil.isEnter(k)) {
+                        if (focusedOptionIndex >= 0 && focusedOptionIndex < q.getOptions().size()) {
+                            QuestionOption opt = q.getOptions().get(focusedOptionIndex);
+                            session.getSelectedOptions().put(q.getId(), opt.getId());
+                            saveCurrentAnswer();
+                        }
+                        if (currentQuestionIndex < session.getQuestions().size() - 1) {
+                            currentQuestionIndex++;
+                            loadCurrentQuestionState();
+                        } else {
+                            confirmSubmitMode = true;
+                            confirmSubmitFocused = false;
+                        }
+                        return ScreenResult.stay(this);
+                    }
+                }
+            } else {
+                if (KeyUtil.handleBackspace(shortAnswerBuffer, k)) {
+                    saveCurrentAnswer();
+                    return ScreenResult.stay(this);
+                }
+
+                if (KeyUtil.isEnter(k) || KeyUtil.isTab(k) || KeyUtil.isDown(k)) {
+                    saveCurrentAnswer();
+                    if (currentQuestionIndex < session.getQuestions().size() - 1) {
+                        currentQuestionIndex++;
+                        loadCurrentQuestionState();
+                    } else {
+                        confirmSubmitMode = true;
+                        confirmSubmitFocused = false;
+                    }
+                    return ScreenResult.stay(this);
+                }
+
                 if (KeyUtil.isUp(k)) {
-                    focusedOptionIndex = (focusedOptionIndex - 1 + q.getOptions().size()) % q.getOptions().size();
-                    return ScreenResult.stay(this);
-                } else if (KeyUtil.isDown(k)) {
-                    focusedOptionIndex = (focusedOptionIndex + 1) % q.getOptions().size();
-                    return ScreenResult.stay(this);
-                } else if (KeyUtil.isSpace(k)) {
-                    if (focusedOptionIndex >= 0 && focusedOptionIndex < q.getOptions().size()) {
-                        QuestionOption opt = q.getOptions().get(focusedOptionIndex);
-                        session.getSelectedOptions().put(q.getId(), opt.getId());
-                        saveCurrentAnswer();
-                    }
-                    return ScreenResult.stay(this);
-                } else if (KeyUtil.isEnter(k)) {
-                    if (focusedOptionIndex >= 0 && focusedOptionIndex < q.getOptions().size()) {
-                        QuestionOption opt = q.getOptions().get(focusedOptionIndex);
-                        session.getSelectedOptions().put(q.getId(), opt.getId());
-                        saveCurrentAnswer();
-                    }
-                    if (currentQuestionIndex < session.getQuestions().size() - 1) {
-                        currentQuestionIndex++;
+                    saveCurrentAnswer();
+                    if (currentQuestionIndex > 0) {
+                        currentQuestionIndex--;
                         loadCurrentQuestionState();
-                    } else {
-                        confirmSubmitMode = true;
-                        confirmSubmitFocused = false;
-                    }
-                    return ScreenResult.stay(this);
-                }
-            } else if (q.getQuestionType() == QuestionType.SHORT_ANSWER) {
-                if (KeyUtil.isBackspace(k)) {
-                    if (!shortAnswerBuffer.isEmpty()) {
-                        shortAnswerBuffer.deleteCharAt(shortAnswerBuffer.length() - 1);
-                        saveCurrentAnswer();
                     }
                     return ScreenResult.stay(this);
                 }
 
-                if (KeyUtil.isEnter(k)) {
-                    saveCurrentAnswer();
-                    if (currentQuestionIndex < session.getQuestions().size() - 1) {
-                        currentQuestionIndex++;
-                        loadCurrentQuestionState();
-                    } else {
-                        confirmSubmitMode = true;
-                        confirmSubmitFocused = false;
-                    }
-                    return ScreenResult.stay(this);
-                }
-
-                if (k.type() == KeyType.KeyRunes && k.runes() != null) {
-                    for (char c : k.runes()) {
-                        if (!Character.isISOControl(c)) shortAnswerBuffer.append(c);
-                    }
-                    saveCurrentAnswer();
-                    return ScreenResult.stay(this);
-                } else if (k.key() != null && k.key().length() == 1 && !Character.isISOControl(k.key().charAt(0))) {
-                    shortAnswerBuffer.append(k.key());
+                if (KeyUtil.appendInput(shortAnswerBuffer, k)) {
                     saveCurrentAnswer();
                     return ScreenResult.stay(this);
                 }

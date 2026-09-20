@@ -222,6 +222,16 @@ public class InboxListScreen implements Screen {
 
     @Override
     public String view() {
+        if (showDeleteModal) {
+            return TuiHelper.confirmationModal(
+                    "DELETE MESSAGE",
+                    "Are you sure you want to delete this message?",
+                    "This message will be permanently removed from your inbox.",
+                    "Delete",
+                    "Cancel",
+                    deleteConfirmFocused
+            );
+        }
         if (!searchMode) {
             refreshMessages();
         }
@@ -232,9 +242,7 @@ public class InboxListScreen implements Screen {
                 FILTERS[filterIndex],
                 searchBuffer.toString(),
                 searchMode,
-                bannerMessage,
-                showDeleteModal,
-                deleteConfirmFocused
+                bannerMessage
         );
     }
 }

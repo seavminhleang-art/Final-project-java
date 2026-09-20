@@ -158,10 +158,18 @@ public class InboxDetailScreen implements Screen {
 
     @Override
     public String view() {
+        if (showDeleteModal) {
+            return TuiHelper.confirmationModal(
+                    "DELETE MESSAGE",
+                    "Are you sure you want to delete this message?",
+                    "This message will be permanently removed from your inbox.",
+                    "Delete",
+                    "Cancel",
+                    deleteConfirmFocused
+            );
+        }
         return InboxViews.renderInboxDetail(
                 message,
-                showDeleteModal,
-                deleteConfirmFocused,
                 focusedActionIndex,
                 errorMessage,
                 bannerMessage

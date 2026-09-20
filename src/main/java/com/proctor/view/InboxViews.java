@@ -13,13 +13,13 @@ public class InboxViews {
     private static final SimpleDateFormat DATE_FMT = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
     public static String renderInboxList(List<InboxMessage> messages, int selectedIndex, int unreadCount,
-                                         String bannerMessage, boolean showDeleteModal, boolean deleteConfirmFocused) {
-        return renderInboxList(messages, selectedIndex, unreadCount, "ALL", "", false, bannerMessage, showDeleteModal, deleteConfirmFocused);
+                                         String bannerMessage) {
+        return renderInboxList(messages, selectedIndex, unreadCount, "ALL", "", false, bannerMessage);
     }
 
     public static String renderInboxList(List<InboxMessage> messages, int selectedIndex, int unreadCount,
                                          String filterStatusDisplay, String searchBuffer, boolean searchMode,
-                                         String bannerMessage, boolean showDeleteModal, boolean deleteConfirmFocused) {
+                                         String bannerMessage) {
         StringBuilder sb = new StringBuilder();
         String filterLabel = (filterStatusDisplay == null || filterStatusDisplay.isBlank()) ? "ALL" : filterStatusDisplay;
         int activeTab = switch (filterLabel.toUpperCase()) {
@@ -95,22 +95,10 @@ public class InboxViews {
 
         sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [Tab] Tab  •  [Enter] Open  •  [d] Delete  •  [m] Mark All Read  •  [Esc] Back\n"));
 
-        if (showDeleteModal) {
-            sb.append("\n");
-            sb.append(TuiHelper.confirmationModal(
-                    "DELETE MESSAGE",
-                    "Are you sure you want to delete this message?",
-                    "This message will be permanently removed from your inbox.",
-                    "Delete",
-                    "Cancel",
-                    deleteConfirmFocused
-            ));
-        }
-
         return sb.toString();
     }
 
-    public static String renderInboxDetail(InboxMessage msg, boolean showDeleteModal, boolean deleteConfirmFocused,
+    public static String renderInboxDetail(InboxMessage msg,
                                            int focusedActionBtn, String errorMessage, String bannerMessage) {
         StringBuilder sb = new StringBuilder();
         sb.append(TuiHelper.header("INBOX"));
@@ -161,18 +149,6 @@ public class InboxViews {
             sb.append(TuiHelper.dim("  [←/→] Switch Action  •  [Enter] Confirm Action  •  [d] Delete  •  [Esc] Back\n"));
         } else {
             sb.append(TuiHelper.dim("  [d] Delete Message  •  [Esc] Back\n"));
-        }
-
-        if (showDeleteModal) {
-            sb.append("\n");
-            sb.append(TuiHelper.confirmationModal(
-                    "DELETE MESSAGE",
-                    "Are you sure you want to delete this message?",
-                    "This message will be permanently removed from your inbox.",
-                    "Delete",
-                    "Cancel",
-                    deleteConfirmFocused
-            ));
         }
 
         return sb.toString();
