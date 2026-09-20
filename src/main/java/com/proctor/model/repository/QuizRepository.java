@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import com.proctor.exception.DatabaseException;
 
 public class QuizRepository {
 
@@ -93,7 +94,7 @@ public class QuizRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error querying quizzes: " + e.getMessage());
+            throw new DatabaseException("Failed to query quizzes", e);
         }
         return list;
     }
@@ -118,7 +119,7 @@ public class QuizRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error finding quiz by id: " + e.getMessage());
+            throw new DatabaseException("Failed to find quiz by id: " + id, e);
         }
         return Optional.empty();
     }
@@ -168,10 +169,10 @@ public class QuizRepository {
                 }
                 return true;
             }
+            return affected > 0;
         } catch (SQLException e) {
-            System.err.println("Error creating quiz: " + e.getMessage());
+            throw new DatabaseException("Failed to create quiz", e);
         }
-        return false;
     }
 
     public boolean update(Quiz quiz) {
@@ -210,9 +211,8 @@ public class QuizRepository {
 
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("Error updating quiz: " + e.getMessage());
+            throw new DatabaseException("Failed to update quiz with id: " + quiz.getId(), e);
         }
-        return false;
     }
 
     public boolean delete(int quizId) {
@@ -257,17 +257,16 @@ public class QuizRepository {
                 int affected = s7.executeUpdate();
 
                 conn.commit();
-                conn.setAutoCommit(true);
                 return affected > 0;
             } catch (SQLException e) {
                 conn.rollback();
-                conn.setAutoCommit(true);
                 throw e;
+            } finally {
+                conn.setAutoCommit(true);
             }
         } catch (SQLException e) {
-            System.err.println("Error deleting quiz: " + e.getMessage());
+            throw new DatabaseException("Failed to delete quiz id: " + quizId, e);
         }
-        return false;
     }
 
     public boolean togglePublished(int quizId) {
@@ -277,9 +276,8 @@ public class QuizRepository {
             stmt.setInt(1, quizId);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("Error toggling quiz published status: " + e.getMessage());
+            throw new DatabaseException("Failed to toggle published status for quiz id: " + quizId, e);
         }
-        return false;
     }
 
     public List<Integer> getAssignedQuestionIds(int quizId) {
@@ -297,7 +295,7 @@ public class QuizRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error querying assigned question ids: " + e.getMessage());
+            throw new DatabaseException("Failed to query assigned question ids for quiz id: " + quizId, e);
         }
         return ids;
     }
@@ -307,28 +305,33 @@ public class QuizRepository {
         String insSql = "INSERT INTO quiz_questions (quiz_id, question_id, question_order) VALUES (?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection()) {
             conn.setAutoCommit(false);
-            try (PreparedStatement delStmt = conn.prepareStatement(delSql)) {
-                delStmt.setInt(1, quizId);
-                delStmt.executeUpdate();
-            }
-            if (questionIds != null && !questionIds.isEmpty()) {
-                try (PreparedStatement insStmt = conn.prepareStatement(insSql)) {
-                    for (int i = 0; i < questionIds.size(); i++) {
-                        insStmt.setInt(1, quizId);
-                        insStmt.setInt(2, questionIds.get(i));
-                        insStmt.setInt(3, i + 1);
-                        insStmt.addBatch();
-                    }
-                    insStmt.executeBatch();
+            try {
+                try (PreparedStatement delStmt = conn.prepareStatement(delSql)) {
+                    delStmt.setInt(1, quizId);
+                    delStmt.executeUpdate();
                 }
+                if (questionIds != null && !questionIds.isEmpty()) {
+                    try (PreparedStatement insStmt = conn.prepareStatement(insSql)) {
+                        for (int i = 0; i < questionIds.size(); i++) {
+                            insStmt.setInt(1, quizId);
+                            insStmt.setInt(2, questionIds.get(i));
+                            insStmt.setInt(3, i + 1);
+                            insStmt.addBatch();
+                        }
+                        insStmt.executeBatch();
+                    }
+                }
+                conn.commit();
+                return true;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
             }
-            conn.commit();
-            conn.setAutoCommit(true);
-            return true;
         } catch (SQLException e) {
-            System.err.println("Error assigning questions to quiz: " + e.getMessage());
+            throw new DatabaseException("Failed to assign questions to quiz id: " + quizId, e);
         }
-        return false;
     }
 
     private List<Question> loadAssignedQuestions(Connection conn, int quizId) throws SQLException {
@@ -392,31 +395,18 @@ public class QuizRepository {
         AssessmentType aType = aTypeStr != null ? AssessmentType.valueOf(aTypeStr) : AssessmentType.QUIZ;
         String qTypeStr = rs.getString("quiz_question_type");
         QuestionType qType = qTypeStr != null ? QuestionType.valueOf(qTypeStr) : null;
-        String creatorName = null;
-        try {
-            creatorName = rs.getString("creator_name");
-        } catch (SQLException ignored) {}
-        String creatorGender = null;
-        try {
-            creatorGender = rs.getString("creator_gender");
-        } catch (SQLException ignored) {}
+        String creatorName = rs.getString("creator_name");
+        String creatorGender = rs.getString("creator_gender");
         Role creatorRole = null;
-        try {
-            String roleStr = rs.getString("creator_role");
-            if (roleStr != null) creatorRole = Role.valueOf(roleStr);
-        } catch (Exception ignored) {}
+        String roleStr = rs.getString("creator_role");
+        if (roleStr != null) {
+            try {
+                creatorRole = Role.valueOf(roleStr);
+            } catch (IllegalArgumentException ignored) {}
+        }
 
-        Integer speedSeconds = null;
-        try {
-            if (rs.getObject("speed_quiz_seconds_per_question") != null) {
-                speedSeconds = rs.getInt("speed_quiz_seconds_per_question");
-            }
-        } catch (SQLException ignored) {}
-
-        String subjectName = null;
-        try {
-            subjectName = rs.getString("subject_name");
-        } catch (SQLException ignored) {}
+        Integer speedSeconds = rs.getObject("speed_quiz_seconds_per_question") != null ? rs.getInt("speed_quiz_seconds_per_question") : null;
+        String subjectName = rs.getString("subject_name");
 
         return Quiz.builder()
                 .id(rs.getInt("id"))
@@ -471,7 +461,7 @@ public class QuizRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error querying quiz question stats: " + e.getMessage());
+            throw new DatabaseException("Failed to query quiz question stats for quiz id: " + quizId, e);
         }
         return stats;
     }
@@ -498,7 +488,7 @@ public class QuizRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error querying quiz community stats: " + e.getMessage());
+            throw new DatabaseException("Failed to query quiz community stats for quiz id: " + quizId, e);
         }
         return stats;
     }

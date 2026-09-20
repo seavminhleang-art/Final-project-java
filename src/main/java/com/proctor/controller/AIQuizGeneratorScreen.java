@@ -396,41 +396,154 @@ public class AIQuizGeneratorScreen implements Screen {
         int mcqC = 0, tfC = 0, saC = 0, singleC = 5;
         int timeLimit = 30;
         if (assessmentType == AssessmentType.SPEED) {
-            try { mcqC = Integer.parseInt(mcqCountBuffer.toString().trim()); } catch (Exception ignored) {}
-            try { tfC = Integer.parseInt(tfCountBuffer.toString().trim()); } catch (Exception ignored) {}
-            mcqC = Math.max(0, Math.min(10, mcqC));
-            tfC = Math.max(0, Math.min(10, tfC));
+            String mcqStr = mcqCountBuffer.toString().trim();
+            if (!mcqStr.isEmpty()) {
+                try {
+                    mcqC = Integer.parseInt(mcqStr);
+                } catch (NumberFormatException e) {
+                    bannerMessage = TuiHelper.red("✖ MCQ count must be a valid number.");
+                    return ScreenResult.stay(this);
+                }
+            }
+            String tfStr = tfCountBuffer.toString().trim();
+            if (!tfStr.isEmpty()) {
+                try {
+                    tfC = Integer.parseInt(tfStr);
+                } catch (NumberFormatException e) {
+                    bannerMessage = TuiHelper.red("✖ True-False count must be a valid number.");
+                    return ScreenResult.stay(this);
+                }
+            }
+            if (mcqC < 0 || mcqC > 10 || tfC < 0 || tfC > 10) {
+                bannerMessage = TuiHelper.red("✖ Question counts must be between 0 and 10.");
+                return ScreenResult.stay(this);
+            }
             if (mcqC + tfC == 0) {
                 bannerMessage = TuiHelper.red("✖ Please specify at least 1 question across MCQ / True-False.");
                 return ScreenResult.stay(this);
             }
             int speedSecs = 15;
-            try { speedSecs = Integer.parseInt(timeLimitBuffer.toString().trim()); } catch (Exception ignored) {}
-            if (speedSecs < 5) speedSecs = 5;
+            String speedStr = timeLimitBuffer.toString().trim();
+            if (!speedStr.isEmpty()) {
+                try {
+                    speedSecs = Integer.parseInt(speedStr);
+                } catch (NumberFormatException e) {
+                    bannerMessage = TuiHelper.red("✖ Seconds per question must be a valid number.");
+                    return ScreenResult.stay(this);
+                }
+            }
+            if (speedSecs < 5) {
+                bannerMessage = TuiHelper.red("✖ Seconds per question must be at least 5 seconds.");
+                return ScreenResult.stay(this);
+            }
             timeLimit = speedSecs;
         } else if (assessmentType == AssessmentType.EXAM && isExamMixed) {
-            try { mcqC = Integer.parseInt(mcqCountBuffer.toString().trim()); } catch (Exception ignored) {}
-            try { tfC = Integer.parseInt(tfCountBuffer.toString().trim()); } catch (Exception ignored) {}
-            try { saC = Integer.parseInt(saCountBuffer.toString().trim()); } catch (Exception ignored) {}
-            mcqC = Math.max(0, Math.min(10, mcqC));
-            tfC = Math.max(0, Math.min(10, tfC));
-            saC = Math.max(0, Math.min(10, saC));
+            String mcqStr = mcqCountBuffer.toString().trim();
+            if (!mcqStr.isEmpty()) {
+                try {
+                    mcqC = Integer.parseInt(mcqStr);
+                } catch (NumberFormatException e) {
+                    bannerMessage = TuiHelper.red("✖ MCQ count must be a valid number.");
+                    return ScreenResult.stay(this);
+                }
+            }
+            String tfStr = tfCountBuffer.toString().trim();
+            if (!tfStr.isEmpty()) {
+                try {
+                    tfC = Integer.parseInt(tfStr);
+                } catch (NumberFormatException e) {
+                    bannerMessage = TuiHelper.red("✖ True-False count must be a valid number.");
+                    return ScreenResult.stay(this);
+                }
+            }
+            String saStr = saCountBuffer.toString().trim();
+            if (!saStr.isEmpty()) {
+                try {
+                    saC = Integer.parseInt(saStr);
+                } catch (NumberFormatException e) {
+                    bannerMessage = TuiHelper.red("✖ Short Answer count must be a valid number.");
+                    return ScreenResult.stay(this);
+                }
+            }
+            if (mcqC < 0 || mcqC > 10 || tfC < 0 || tfC > 10 || saC < 0 || saC > 10) {
+                bannerMessage = TuiHelper.red("✖ Question counts must be between 0 and 10.");
+                return ScreenResult.stay(this);
+            }
             if (mcqC + tfC + saC == 0) {
                 bannerMessage = TuiHelper.red("✖ Please specify at least 1 question across types.");
                 return ScreenResult.stay(this);
             }
-            try { timeLimit = Integer.parseInt(timeLimitBuffer.toString().trim()); } catch (Exception ignored) {}
+            String tlStr = timeLimitBuffer.toString().trim();
+            if (!tlStr.isEmpty()) {
+                try {
+                    timeLimit = Integer.parseInt(tlStr);
+                    if (timeLimit <= 0) {
+                        bannerMessage = TuiHelper.red("✖ Time limit must be a positive number of minutes.");
+                        return ScreenResult.stay(this);
+                    }
+                } catch (NumberFormatException e) {
+                    bannerMessage = TuiHelper.red("✖ Time limit must be a valid number of minutes.");
+                    return ScreenResult.stay(this);
+                }
+            }
         } else {
-            try { singleC = Integer.parseInt(countBuffer.toString().trim()); } catch (Exception ignored) {}
-            singleC = Math.max(1, Math.min(10, singleC));
-            try { timeLimit = Integer.parseInt(timeLimitBuffer.toString().trim()); } catch (Exception ignored) {}
+            String singleStr = countBuffer.toString().trim();
+            if (!singleStr.isEmpty()) {
+                try {
+                    singleC = Integer.parseInt(singleStr);
+                } catch (NumberFormatException e) {
+                    bannerMessage = TuiHelper.red("✖ Question count must be a valid number.");
+                    return ScreenResult.stay(this);
+                }
+            }
+            if (singleC < 1 || singleC > 10) {
+                bannerMessage = TuiHelper.red("✖ Question count must be between 1 and 10.");
+                return ScreenResult.stay(this);
+            }
+            String tlStr = timeLimitBuffer.toString().trim();
+            if (!tlStr.isEmpty()) {
+                try {
+                    timeLimit = Integer.parseInt(tlStr);
+                    if (timeLimit <= 0) {
+                        bannerMessage = TuiHelper.red("✖ Time limit must be a positive number of minutes.");
+                        return ScreenResult.stay(this);
+                    }
+                } catch (NumberFormatException e) {
+                    bannerMessage = TuiHelper.red("✖ Time limit must be a valid number of minutes.");
+                    return ScreenResult.stay(this);
+                }
+            }
         }
 
         int hours = 0;
-        try { hours = Integer.parseInt(activeHours.toString().trim()); } catch (Exception ignored) {}
+        String hoursStr = activeHours.toString().trim();
+        if (!hoursStr.isEmpty()) {
+            try {
+                hours = Integer.parseInt(hoursStr);
+                if (hours < 0) {
+                    bannerMessage = TuiHelper.red("✖ Active duration must be a non-negative number of hours.");
+                    return ScreenResult.stay(this);
+                }
+            } catch (NumberFormatException e) {
+                bannerMessage = TuiHelper.red("✖ Active duration must be a valid number of hours.");
+                return ScreenResult.stay(this);
+            }
+        }
 
         int score = 60;
-        try { score = Integer.parseInt(passScore.toString().trim()); } catch (Exception ignored) {}
+        String scoreStr = passScore.toString().trim();
+        if (!scoreStr.isEmpty()) {
+            try {
+                score = Integer.parseInt(scoreStr);
+            } catch (NumberFormatException e) {
+                bannerMessage = TuiHelper.red("✖ Passing score must be a valid number.");
+                return ScreenResult.stay(this);
+            }
+        }
+        if (score < 1 || score > 100) {
+            bannerMessage = TuiHelper.red("✖ Passing score must be between 1 and 100.");
+            return ScreenResult.stay(this);
+        }
 
         isGenerating = true;
         bannerMessage = "";

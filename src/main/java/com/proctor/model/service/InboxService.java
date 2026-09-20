@@ -236,7 +236,10 @@ public class InboxService {
         String hash = msg.getEffectivePasswordHash();
         if (hash == null) return false;
 
-        userRepository.updatePassword(msg.getTargetId(), hash);
+        boolean pwdUpdated = userRepository.updatePassword(msg.getTargetId(), hash);
+        if (!pwdUpdated) {
+            throw new ValidationException("Failed to update user password.");
+        }
         boolean updated = inboxRepository.updateStatus(messageId, InboxStatus.RESOLVED, new Timestamp(System.currentTimeMillis()));
         if (updated && msg.getSenderId() != null) {
             sendNotification(msg.getSenderId(), "Password Reset Approved",

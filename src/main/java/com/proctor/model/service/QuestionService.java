@@ -84,7 +84,10 @@ public class QuestionService {
             throw new ValidationException("Explanation cannot exceed 300 characters.");
         }
         if (q.getPoints() <= 0) {
-            q.setPoints(1.0);
+            throw new ValidationException("Question points must be greater than 0.");
+        }
+        if (q.getPoints() > 999.0) {
+            throw new ValidationException("Question points cannot exceed 999.");
         }
         if (q.getDifficulty() == null) {
             q.setDifficulty(Difficulty.MEDIUM);

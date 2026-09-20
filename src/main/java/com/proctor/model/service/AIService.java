@@ -227,7 +227,7 @@ public class AIService {
                 );
                 if (text.isBlank()) continue;
 
-                double points = node.path("points").asDouble(2.0);
+                double points = Math.max(0.5, Math.min(100.0, node.path("points").asDouble(2.0)));
                 String explanation = node.path("explanation").asText(node.path("rubric").asText(""));
 
                 List<QuestionOption> options = new ArrayList<>();

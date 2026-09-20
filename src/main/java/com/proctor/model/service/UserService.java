@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 public class UserService {
     private final UserRepository userRepository;
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
+    private static final Pattern USERNAME_PATTERN = Pattern.compile("^[a-z0-9._-]+$");
 
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -60,6 +61,9 @@ public class UserService {
         if (gender == null || gender.trim().isBlank()) {
             throw new ValidationException("Gender is required.");
         }
+        if (fullName.trim().length() > 100) {
+            throw new ValidationException("Full name cannot exceed 100 characters.");
+        }
         if (role == Role.TEACHER && (academicDegree != null || educationBackground != null || specialization != null)) {
             if (academicDegree == null || academicDegree.trim().isBlank()) {
                 throw new ValidationException("Academic degree / qualification is required.");
@@ -71,11 +75,18 @@ public class UserService {
                 throw new ValidationException("Primary subject / specialization is required.");
             }
         }
+        if (dateOfBirth != null) {
+            validateDateOfBirth(dateOfBirth, role != null ? role : Role.STUDENT);
+        }
 
         PasswordUtils.validatePassword(rawPassword);
 
         String cleanEmail = email.trim().toLowerCase();
         String cleanUsername = username.trim().toLowerCase();
+
+        if (cleanEmail.length() > 100) {
+            throw new ValidationException("Email cannot exceed 100 characters.");
+        }
 
         if (!EMAIL_PATTERN.matcher(cleanEmail).matches()) {
             throw new ValidationException("Invalid email format (e.g. user@proctor.edu).");
@@ -83,6 +94,18 @@ public class UserService {
 
         if (cleanUsername.length() < 3) {
             throw new ValidationException("Username must be at least 3 characters long.");
+        }
+
+        if (cleanUsername.length() > 50) {
+            throw new ValidationException("Username cannot exceed 50 characters.");
+        }
+
+        if (cleanUsername.contains(" ")) {
+            throw new ValidationException("Username cannot contain spaces.");
+        }
+
+        if (!USERNAME_PATTERN.matcher(cleanUsername).matches()) {
+            throw new ValidationException("Username can only contain letters, numbers, dots, underscores, and hyphens.");
         }
 
         if (userRepository.findByEmail(cleanEmail).isPresent()) {
@@ -132,8 +155,15 @@ public class UserService {
         if (fullName == null || fullName.isBlank()) {
             throw new ValidationException("Full name cannot be blank.");
         }
+        if (fullName.trim().length() > 100) {
+            throw new ValidationException("Full name cannot exceed 100 characters.");
+        }
         if (gender == null || gender.trim().isBlank()) {
             throw new ValidationException("Gender is required.");
+        }
+
+        if (dateOfBirth != null) {
+            validateDateOfBirth(dateOfBirth, role != null ? role : Role.STUDENT);
         }
 
         Optional<User> existing = userRepository.findById(id);
@@ -202,5 +232,24 @@ public class UserService {
             throw new ValidationException("Failed to update password.");
         }
         return true;
+    }
+
+    private void validateDateOfBirth(LocalDate dateOfBirth, Role role) {
+        if (dateOfBirth == null) return;
+        if (!dateOfBirth.isBefore(LocalDate.now())) {
+            throw new ValidationException("Date of birth must be in the past.");
+        }
+        if (dateOfBirth.isBefore(LocalDate.now().minusYears(120))) {
+            throw new ValidationException("Invalid date of birth — year is too far in the past.");
+        }
+        if (role == Role.TEACHER || role == Role.ADMIN) {
+            if (dateOfBirth.isAfter(LocalDate.now().minusYears(18))) {
+                throw new ValidationException("Teachers and administrators must be at least 18 years old.");
+            }
+        } else if (role == Role.STUDENT) {
+            if (dateOfBirth.isAfter(LocalDate.now().minusYears(5))) {
+                throw new ValidationException("Students must be at least 5 years old.");
+            }
+        }
     }
 }

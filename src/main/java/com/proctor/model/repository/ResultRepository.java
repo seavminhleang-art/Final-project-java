@@ -1,6 +1,7 @@
 package com.proctor.model.repository;
 
 import com.proctor.config.DatabaseConnection;
+import com.proctor.exception.DatabaseException;
 import com.proctor.model.entity.Result;
 import com.proctor.model.enums.AssessmentType;
 
@@ -34,10 +35,10 @@ public class ResultRepository {
                 }
                 return true;
             }
+            return false;
         } catch (SQLException e) {
-            System.err.println("Error saving result: " + e.getMessage());
+            throw new DatabaseException("Failed to save result for attempt id: " + result.getAttemptId(), e);
         }
-        return false;
     }
 
     public Optional<Result> findByAttemptId(int attemptId) {
@@ -56,16 +57,13 @@ public class ResultRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error finding result by attempt id: " + e.getMessage());
+            throw new DatabaseException("Failed to find result by attempt id: " + attemptId, e);
         }
         return Optional.empty();
     }
 
     private Result mapRow(ResultSet rs) throws SQLException {
-        String typeStr = null;
-        try {
-            typeStr = rs.getString("assessment_type");
-        } catch (SQLException ignored) {}
+        String typeStr = rs.getString("assessment_type");
         AssessmentType type = AssessmentType.QUIZ;
         if (typeStr != null) {
             try {

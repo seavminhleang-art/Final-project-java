@@ -43,7 +43,8 @@ public class Quiz {
     private String description;
     private Integer timeLimitMins;
     private Integer speedSecondsPerQuestion;
-    private int passScore;
+    @Builder.Default
+    private int passScore = 60;
     private boolean randomizeQuestions;
     private boolean randomizeAnswers;
     private boolean showAnswersAfter;

@@ -1,8 +1,9 @@
 package com.proctor.model.repository;
 
+import com.proctor.config.DatabaseConnection;
+import com.proctor.exception.DatabaseException;
 import com.proctor.model.entity.User;
 import com.proctor.model.enums.Role;
-import com.proctor.config.DatabaseConnection;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -24,7 +25,7 @@ public class UserRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error finding user by email: " + e.getMessage());
+            throw new DatabaseException("Failed to find user by email: " + email, e);
         }
         return Optional.empty();
     }
@@ -42,7 +43,7 @@ public class UserRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error finding user by username: " + e.getMessage());
+            throw new DatabaseException("Failed to find user by username: " + username, e);
         }
         return Optional.empty();
     }
@@ -62,7 +63,7 @@ public class UserRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error finding user: " + e.getMessage());
+            throw new DatabaseException("Failed to find user by email or username: " + identifier, e);
         }
         return Optional.empty();
     }
@@ -79,7 +80,7 @@ public class UserRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error finding user by id: " + e.getMessage());
+            throw new DatabaseException("Failed to find user by id: " + id, e);
         }
         return Optional.empty();
     }
@@ -117,7 +118,7 @@ public class UserRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error querying users: " + e.getMessage());
+            throw new DatabaseException("Failed to query users", e);
         }
         return list;
     }
@@ -158,10 +159,10 @@ public class UserRepository {
                 }
                 return true;
             }
+            return false;
         } catch (SQLException e) {
-            System.err.println("Error creating user: " + e.getMessage());
+            throw new DatabaseException("Failed to create user: " + username, e);
         }
-        return false;
     }
 
     public boolean update(User user) {
@@ -183,9 +184,8 @@ public class UserRepository {
             stmt.setInt(9, user.getId());
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("Error updating user: " + e.getMessage());
+            throw new DatabaseException("Failed to update user id: " + user.getId(), e);
         }
-        return false;
     }
 
     public boolean updatePassword(int userId, String newPasswordHash) {
@@ -196,9 +196,8 @@ public class UserRepository {
             stmt.setInt(2, userId);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("Error updating password: " + e.getMessage());
+            throw new DatabaseException("Failed to update password for user id: " + userId, e);
         }
-        return false;
     }
 
     public boolean toggleEnabled(int userId) {
@@ -208,9 +207,8 @@ public class UserRepository {
             stmt.setInt(1, userId);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("Error toggling user status: " + e.getMessage());
+            throw new DatabaseException("Failed to toggle enabled for user id: " + userId, e);
         }
-        return false;
     }
 
     public boolean delete(int userId) {
@@ -220,41 +218,17 @@ public class UserRepository {
             stmt.setInt(1, userId);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("Error deleting user: " + e.getMessage());
+            throw new DatabaseException("Failed to delete user id: " + userId, e);
         }
-        return false;
     }
 
     private User mapRow(ResultSet rs) throws SQLException {
-        String email = null;
-        try {
-            email = rs.getString("email");
-        } catch (SQLException ignored) {}
-
-        String username = null;
-        try {
-            username = rs.getString("username");
-        } catch (SQLException ignored) {}
-
-        String gender = null;
-        try {
-            gender = rs.getString("gender");
-        } catch (SQLException ignored) {}
-
-        String academicDegree = null;
-        try {
-            academicDegree = rs.getString("academic_degree");
-        } catch (SQLException ignored) {}
-
-        String educationBackground = null;
-        try {
-            educationBackground = rs.getString("education_background");
-        } catch (SQLException ignored) {}
-
-        String specialization = null;
-        try {
-            specialization = rs.getString("specialization");
-        } catch (SQLException ignored) {}
+        String email = rs.getString("email");
+        String username = rs.getString("username");
+        String gender = rs.getString("gender");
+        String academicDegree = rs.getString("academic_degree");
+        String educationBackground = rs.getString("education_background");
+        String specialization = rs.getString("specialization");
 
         return User.builder()
                 .id(rs.getInt("id"))

@@ -25,8 +25,24 @@ public class ExamTakerScreen implements Screen {
     private boolean confirmSubmitMode = false;
     private boolean confirmSubmitFocused = false;
     private boolean isSubmitted = false;
+    private int tickGeneration = 0;
 
-    public record TickMessage() implements Message {}
+    public record TickMessage(int generation) implements Message {
+        public TickMessage() {
+            this(-1);
+        }
+    }
+
+    public static Message tick() {
+        return tick(-1);
+    }
+
+    public static Message tick(int generation) {
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException ignored) {}
+        return new TickMessage(generation);
+    }
 
     public ExamTakerScreen(ExamSession session, ExamService examService, AuthService authService) {
         this.session = session;
@@ -58,16 +74,12 @@ public class ExamTakerScreen implements Screen {
         }
     }
 
-    public static Message tick() {
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException ignored) {}
-        return new TickMessage();
-    }
-
     @Override
     public Command init() {
-        return session.isTimed() ? ExamTakerScreen::tick : null;
+        if (!session.isTimed()) return null;
+        tickGeneration = 1;
+        int gen = tickGeneration;
+        return () -> tick(gen);
     }
 
     private void saveCurrentAnswer() {
@@ -91,7 +103,10 @@ public class ExamTakerScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
-        if (msg instanceof TickMessage) {
+        if (msg instanceof TickMessage t) {
+            if (t.generation() != -1 && t.generation() != this.tickGeneration) {
+                return ScreenResult.stay(this);
+            }
             if (session.isTimed()) {
                 session.setRemainingSeconds(session.getRemainingSeconds() - 1);
                 if (session.getRemainingSeconds() <= 0) {
@@ -100,7 +115,9 @@ public class ExamTakerScreen implements Screen {
                     Result result = examService.submitExam(session, true);
                     return ScreenResult.navigate(new ExamResultScreen(result, session, examService, authService));
                 }
-                return ScreenResult.stay(this, ExamTakerScreen::tick);
+                tickGeneration++;
+                int nextGen = tickGeneration;
+                return ScreenResult.stay(this, () -> tick(nextGen));
             }
         }
 
@@ -108,7 +125,7 @@ public class ExamTakerScreen implements Screen {
             if (confirmSubmitMode) {
                 if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {
                     confirmSubmitFocused = !confirmSubmitFocused;
-                    return ScreenResult.stay(this, session.isTimed() ? ExamTakerScreen::tick : null);
+                    return ScreenResult.stay(this);
                 } else if (KeyUtil.isEnter(k)) {
                     if (confirmSubmitFocused) {
                         isSubmitted = true;
@@ -117,7 +134,7 @@ public class ExamTakerScreen implements Screen {
                         return ScreenResult.navigate(new ExamResultScreen(result, session, examService, authService));
                     } else {
                         confirmSubmitMode = false;
-                        return ScreenResult.stay(this, session.isTimed() ? ExamTakerScreen::tick : null);
+                        return ScreenResult.stay(this);
                     }
                 } else if ("y".equalsIgnoreCase(k.key())) {
                     isSubmitted = true;
@@ -126,7 +143,7 @@ public class ExamTakerScreen implements Screen {
                     return ScreenResult.navigate(new ExamResultScreen(result, session, examService, authService));
                 } else if ("n".equalsIgnoreCase(k.key()) || KeyUtil.isEsc(k)) {
                     confirmSubmitMode = false;
-                    return ScreenResult.stay(this, session.isTimed() ? ExamTakerScreen::tick : null);
+                    return ScreenResult.stay(this);
                 }
                 return ScreenResult.stay(this);
             }

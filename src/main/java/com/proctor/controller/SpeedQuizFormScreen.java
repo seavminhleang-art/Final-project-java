@@ -162,17 +162,30 @@ public class SpeedQuizFormScreen implements Screen {
             Subject subj = subjects.get(selectedSubjectIndex - 1);
 
             int seconds = 15;
-            try {
-                seconds = Integer.parseInt(secondsPerQuestion.toString().trim());
-            } catch (Exception ignored) {}
+            String secStr = secondsPerQuestion.toString().trim();
+            if (!secStr.isEmpty()) {
+                try {
+                    seconds = Integer.parseInt(secStr);
+                } catch (NumberFormatException e) {
+                    throw new ValidationException("Seconds per question must be a valid number.");
+                }
+            }
             if (seconds < 5) {
                 throw new ValidationException("Seconds per question must be at least 5 seconds.");
             }
 
             int hours = 0;
-            try {
-                hours = Integer.parseInt(activeHours.toString().trim());
-            } catch (Exception ignored) {}
+            String hoursStr = activeHours.toString().trim();
+            if (!hoursStr.isEmpty()) {
+                try {
+                    hours = Integer.parseInt(hoursStr);
+                    if (hours < 0) {
+                        throw new ValidationException("Active duration must be a non-negative number of hours.");
+                    }
+                } catch (NumberFormatException e) {
+                    throw new ValidationException("Active duration must be a valid number of hours.");
+                }
+            }
 
             User currentTeacher = Session.getCurrentUser().orElse(null);
             Integer teacherId = currentTeacher != null ? currentTeacher.getId() : null;

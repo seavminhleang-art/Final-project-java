@@ -1,5 +1,6 @@
 package com.proctor.model.repository;
 
+import com.proctor.exception.DatabaseException;
 import com.proctor.model.enums.AssessmentType;
 import com.proctor.model.enums.AttemptStatus;
 import com.proctor.config.DatabaseConnection;
@@ -35,16 +36,17 @@ public class AttemptRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error creating attempt: " + e.getMessage());
+            throw new DatabaseException("Failed to create attempt: " + e.getMessage(), e);
         }
         return null;
     }
 
     public Optional<Attempt> getAttempt(int attemptId) {
-        String sql = "SELECT a.id, a.quiz_id, q.title AS quiz_title, q.assessment_type, a.student_id, a.started_at, a.submitted_at, a.status, " +
-                     "(r.id IS NOT NULL) AS is_graded " +
+        String sql = "SELECT a.id, a.quiz_id, q.title AS quiz_title, q.assessment_type, a.student_id, u.full_name AS student_name, " +
+                     "a.started_at, a.submitted_at, a.status, (r.id IS NOT NULL) AS is_graded " +
                      "FROM attempts a " +
                      "LEFT JOIN quizzes q ON a.quiz_id = q.id " +
+                     "LEFT JOIN users u ON a.student_id = u.id " +
                      "LEFT JOIN results r ON a.id = r.attempt_id " +
                      "WHERE a.id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -56,16 +58,17 @@ public class AttemptRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error finding attempt: " + e.getMessage());
+            throw new DatabaseException("Error finding attempt: " + e.getMessage(), e);
         }
         return Optional.empty();
     }
 
     public Optional<Attempt> findLatestAttempt(int quizId, int studentId) {
-        String sql = "SELECT a.id, a.quiz_id, q.title AS quiz_title, q.assessment_type, a.student_id, a.started_at, a.submitted_at, a.status, " +
-                     "(r.id IS NOT NULL) AS is_graded " +
+        String sql = "SELECT a.id, a.quiz_id, q.title AS quiz_title, q.assessment_type, a.student_id, u.full_name AS student_name, " +
+                     "a.started_at, a.submitted_at, a.status, (r.id IS NOT NULL) AS is_graded " +
                      "FROM attempts a " +
                      "LEFT JOIN quizzes q ON a.quiz_id = q.id " +
+                     "LEFT JOIN users u ON a.student_id = u.id " +
                      "LEFT JOIN results r ON a.id = r.attempt_id " +
                      "WHERE a.quiz_id = ? AND a.student_id = ? ORDER BY a.id DESC LIMIT 1";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -78,7 +81,7 @@ public class AttemptRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error finding latest attempt: " + e.getMessage());
+            throw new DatabaseException("Error finding latest attempt: " + e.getMessage(), e);
         }
         return Optional.empty();
     }
@@ -102,7 +105,7 @@ public class AttemptRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error querying quiz attempts: " + e.getMessage());
+            throw new DatabaseException("Error querying quiz attempts: " + e.getMessage(), e);
         }
         return list;
     }
@@ -134,7 +137,7 @@ public class AttemptRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error querying all submissions: " + e.getMessage());
+            throw new DatabaseException("Error querying all submissions: " + e.getMessage(), e);
         }
         return list;
     }
@@ -175,9 +178,8 @@ public class AttemptRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error saving answer: " + e.getMessage());
+            throw new DatabaseException("Error saving answer: " + e.getMessage(), e);
         }
-        return false;
     }
 
     public List<AttemptAnswer> getAttemptAnswers(int attemptId) {
@@ -204,7 +206,7 @@ public class AttemptRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error querying attempt answers: " + e.getMessage());
+            throw new DatabaseException("Error querying attempt answers: " + e.getMessage(), e);
         }
         return list;
     }
@@ -222,9 +224,8 @@ public class AttemptRepository {
             stmt.setInt(6, answerId);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("Error updating answer grade: " + e.getMessage());
+            throw new DatabaseException("Error updating answer grade: " + e.getMessage(), e);
         }
-        return false;
     }
 
     public boolean finalizeAttempt(int attemptId, AttemptStatus status) {
@@ -235,9 +236,8 @@ public class AttemptRepository {
             stmt.setInt(2, attemptId);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("Error finalizing attempt: " + e.getMessage());
+            throw new DatabaseException("Error finalizing attempt: " + e.getMessage(), e);
         }
-        return false;
     }
 
     public boolean deleteAttemptsForStudent(int quizId, int studentId) {
@@ -246,25 +246,36 @@ public class AttemptRepository {
         String deleteAttempts = "DELETE FROM attempts WHERE quiz_id = ? AND student_id = ?";
 
         try (Connection conn = DatabaseConnection.getConnection()) {
-            try (PreparedStatement stmt = conn.prepareStatement(deleteAnswers)) {
-                stmt.setInt(1, quizId);
-                stmt.setInt(2, studentId);
-                stmt.executeUpdate();
-            }
-            try (PreparedStatement stmt = conn.prepareStatement(deleteResults)) {
-                stmt.setInt(1, quizId);
-                stmt.setInt(2, studentId);
-                stmt.executeUpdate();
-            }
-            try (PreparedStatement stmt = conn.prepareStatement(deleteAttempts)) {
-                stmt.setInt(1, quizId);
-                stmt.setInt(2, studentId);
-                return stmt.executeUpdate() > 0;
+            boolean originalAutoCommit = conn.getAutoCommit();
+            conn.setAutoCommit(false);
+            try {
+                try (PreparedStatement stmt = conn.prepareStatement(deleteAnswers)) {
+                    stmt.setInt(1, quizId);
+                    stmt.setInt(2, studentId);
+                    stmt.executeUpdate();
+                }
+                try (PreparedStatement stmt = conn.prepareStatement(deleteResults)) {
+                    stmt.setInt(1, quizId);
+                    stmt.setInt(2, studentId);
+                    stmt.executeUpdate();
+                }
+                boolean result;
+                try (PreparedStatement stmt = conn.prepareStatement(deleteAttempts)) {
+                    stmt.setInt(1, quizId);
+                    stmt.setInt(2, studentId);
+                    result = stmt.executeUpdate() > 0;
+                }
+                conn.commit();
+                return result;
+            } catch (SQLException ex) {
+                conn.rollback();
+                throw new DatabaseException("Failed to delete attempts for student: " + ex.getMessage(), ex);
+            } finally {
+                conn.setAutoCommit(originalAutoCommit);
             }
         } catch (SQLException e) {
-            System.err.println("Error deleting attempts for student: " + e.getMessage());
+            throw new DatabaseException("Database error deleting attempts for student: " + e.getMessage(), e);
         }
-        return false;
     }
 
     private Attempt mapRow(ResultSet rs) throws SQLException {
@@ -275,23 +286,17 @@ public class AttemptRepository {
         } catch (Exception e) {
             status = AttemptStatus.TURNED_IN;
         }
-        String studentName = null;
-        try {
-            studentName = rs.getString("student_name");
-        } catch (SQLException ignored) {}
+        String studentName = rs.getString("student_name");
 
         AssessmentType assessmentType = null;
-        try {
-            String atStr = rs.getString("assessment_type");
-            if (atStr != null) {
+        String atStr = rs.getString("assessment_type");
+        if (atStr != null) {
+            try {
                 assessmentType = AssessmentType.valueOf(atStr);
-            }
-        } catch (Exception ignored) {}
+            } catch (Exception ignored) {}
+        }
 
-        boolean graded = false;
-        try {
-            graded = rs.getBoolean("is_graded");
-        } catch (SQLException ignored) {}
+        boolean graded = rs.getBoolean("is_graded");
         if (status == AttemptStatus.GRADED) {
             graded = true;
         }

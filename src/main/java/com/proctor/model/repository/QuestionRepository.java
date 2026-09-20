@@ -1,5 +1,6 @@
 package com.proctor.model.repository;
 
+import com.proctor.exception.DatabaseException;
 import com.proctor.model.enums.Difficulty;
 import com.proctor.model.enums.QuestionType;
 import com.proctor.config.DatabaseConnection;
@@ -32,7 +33,7 @@ public class QuestionRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error querying quiz questions: " + e.getMessage());
+            throw new DatabaseException("Error querying quiz questions: " + e.getMessage(), e);
         }
         return list;
     }
@@ -52,7 +53,7 @@ public class QuestionRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error finding question by id: " + e.getMessage());
+            throw new DatabaseException("Error finding question by id: " + e.getMessage(), e);
         }
         return Optional.empty();
     }
@@ -60,70 +61,88 @@ public class QuestionRepository {
     public boolean create(Question question) {
         String sql = "INSERT INTO questions (quiz_id, subject_id, created_by, question_text, question_type, difficulty, points, explanation, ai_generated, is_enabled) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            if (question.getQuizId() != null) stmt.setInt(1, question.getQuizId());
-            else stmt.setNull(1, Types.INTEGER);
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            boolean originalAutoCommit = conn.getAutoCommit();
+            conn.setAutoCommit(false);
+            try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                if (question.getQuizId() != null) stmt.setInt(1, question.getQuizId());
+                else stmt.setNull(1, Types.INTEGER);
 
-            if (question.getSubjectId() != null) stmt.setInt(2, question.getSubjectId());
-            else stmt.setNull(2, Types.INTEGER);
+                if (question.getSubjectId() != null) stmt.setInt(2, question.getSubjectId());
+                else stmt.setNull(2, Types.INTEGER);
 
-            if (question.getCreatedBy() != null) stmt.setInt(3, question.getCreatedBy());
-            else stmt.setNull(3, Types.INTEGER);
+                if (question.getCreatedBy() != null) stmt.setInt(3, question.getCreatedBy());
+                else stmt.setNull(3, Types.INTEGER);
 
-            stmt.setString(4, question.getQuestionText().trim());
-            stmt.setString(5, question.getQuestionType().name());
-            stmt.setString(6, question.getDifficulty().name());
-            stmt.setDouble(7, question.getPoints());
-            stmt.setString(8, question.getExplanation());
-            stmt.setBoolean(9, question.isAiGenerated());
-            stmt.setBoolean(10, question.isEnabled());
+                stmt.setString(4, question.getQuestionText().trim());
+                stmt.setString(5, question.getQuestionType().name());
+                stmt.setString(6, question.getDifficulty().name());
+                stmt.setDouble(7, question.getPoints());
+                stmt.setString(8, question.getExplanation());
+                stmt.setBoolean(9, question.isAiGenerated());
+                stmt.setBoolean(10, question.isEnabled());
 
-            int affected = stmt.executeUpdate();
-            if (affected > 0) {
-                try (ResultSet rs = stmt.getGeneratedKeys()) {
-                    if (rs.next()) {
-                        question.setId(rs.getInt(1));
+                int affected = stmt.executeUpdate();
+                if (affected > 0) {
+                    try (ResultSet rs = stmt.getGeneratedKeys()) {
+                        if (rs.next()) {
+                            question.setId(rs.getInt(1));
+                        }
                     }
+                    saveOptions(conn, question.getId(), question.getOptions());
+                    conn.commit();
+                    return true;
                 }
-                saveOptions(conn, question.getId(), question.getOptions());
-                return true;
+                conn.commit();
+                return false;
+            } catch (SQLException ex) {
+                conn.rollback();
+                throw new DatabaseException("Error creating question: " + ex.getMessage(), ex);
+            } finally {
+                conn.setAutoCommit(originalAutoCommit);
             }
         } catch (SQLException e) {
-            System.err.println("Error creating question: " + e.getMessage());
+            throw new DatabaseException("Database connection error: " + e.getMessage(), e);
         }
-        return false;
     }
 
     public boolean update(Question question) {
         String sql = "UPDATE questions SET quiz_id = ?, subject_id = ?, question_text = ?, question_type = ?, " +
                      "difficulty = ?, points = ?, explanation = ?, is_enabled = ? WHERE id = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            if (question.getQuizId() != null) stmt.setInt(1, question.getQuizId());
-            else stmt.setNull(1, Types.INTEGER);
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            boolean originalAutoCommit = conn.getAutoCommit();
+            conn.setAutoCommit(false);
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                if (question.getQuizId() != null) stmt.setInt(1, question.getQuizId());
+                else stmt.setNull(1, Types.INTEGER);
 
-            if (question.getSubjectId() != null) stmt.setInt(2, question.getSubjectId());
-            else stmt.setNull(2, Types.INTEGER);
+                if (question.getSubjectId() != null) stmt.setInt(2, question.getSubjectId());
+                else stmt.setNull(2, Types.INTEGER);
 
-            stmt.setString(3, question.getQuestionText().trim());
-            stmt.setString(4, question.getQuestionType().name());
-            stmt.setString(5, question.getDifficulty().name());
-            stmt.setDouble(6, question.getPoints());
-            stmt.setString(7, question.getExplanation());
-            stmt.setBoolean(8, question.isEnabled());
-            stmt.setInt(9, question.getId());
+                stmt.setString(3, question.getQuestionText().trim());
+                stmt.setString(4, question.getQuestionType().name());
+                stmt.setString(5, question.getDifficulty().name());
+                stmt.setDouble(6, question.getPoints());
+                stmt.setString(7, question.getExplanation());
+                stmt.setBoolean(8, question.isEnabled());
+                stmt.setInt(9, question.getId());
 
-            int affected = stmt.executeUpdate();
-            if (affected > 0) {
-                deleteOptions(conn, question.getId());
-                saveOptions(conn, question.getId(), question.getOptions());
-                return true;
+                int affected = stmt.executeUpdate();
+                if (affected > 0) {
+                    deleteOptions(conn, question.getId());
+                    saveOptions(conn, question.getId(), question.getOptions());
+                }
+                conn.commit();
+                return affected > 0;
+            } catch (SQLException ex) {
+                conn.rollback();
+                throw new DatabaseException("Error updating question: " + ex.getMessage(), ex);
+            } finally {
+                conn.setAutoCommit(originalAutoCommit);
             }
         } catch (SQLException e) {
-            System.err.println("Error updating question: " + e.getMessage());
+            throw new DatabaseException("Database connection error: " + e.getMessage(), e);
         }
-        return false;
     }
 
     public boolean delete(int questionId) {
@@ -132,6 +151,7 @@ public class QuestionRepository {
         String deleteQuestionSql = "DELETE FROM questions WHERE id = ?";
 
         try (Connection conn = DatabaseConnection.getConnection()) {
+            boolean originalAutoCommit = conn.getAutoCommit();
             conn.setAutoCommit(false);
             try (PreparedStatement stmtOptions = conn.prepareStatement(unlinkOptionsSql);
                  PreparedStatement stmtQuestion = conn.prepareStatement(unlinkQuestionSql);
@@ -150,14 +170,13 @@ public class QuestionRepository {
                 return affected > 0;
             } catch (SQLException e) {
                 conn.rollback();
-                throw e;
+                throw new DatabaseException("Error deleting question: " + e.getMessage(), e);
             } finally {
-                conn.setAutoCommit(true);
+                conn.setAutoCommit(originalAutoCommit);
             }
         } catch (SQLException e) {
-            System.err.println("Error deleting question: " + e.getMessage());
+            throw new DatabaseException("Database connection error: " + e.getMessage(), e);
         }
-        return false;
     }
 
     public List<Question> findBankQuestions(Integer createdBy, Integer subjectId, QuestionType type, Difficulty difficulty, String search) {
@@ -206,7 +225,7 @@ public class QuestionRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error querying bank questions: " + e.getMessage());
+            throw new DatabaseException("Error querying bank questions: " + e.getMessage(), e);
         }
         return list;
     }
@@ -217,49 +236,57 @@ public class QuestionRepository {
 
         String insertQ = "INSERT INTO questions (quiz_id, subject_id, created_by, question_text, question_type, " +
                 "difficulty, points, explanation, ai_generated, is_enabled) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(insertQ, Statement.RETURN_GENERATED_KEYS)) {
-            stmt.setInt(1, quizId);
-            if (source.getSubjectId() != null) stmt.setInt(2, source.getSubjectId());
-            else stmt.setNull(2, Types.INTEGER);
-            if (source.getCreatedBy() != null) stmt.setInt(3, source.getCreatedBy());
-            else stmt.setNull(3, Types.INTEGER);
-            stmt.setString(4, source.getQuestionText());
-            stmt.setString(5, source.getQuestionType().name());
-            stmt.setString(6, source.getDifficulty().name());
-            stmt.setDouble(7, source.getPoints());
-            stmt.setString(8, source.getExplanation());
-            stmt.setBoolean(9, source.isAiGenerated());
-            stmt.setBoolean(10, true);
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            boolean originalAutoCommit = conn.getAutoCommit();
+            conn.setAutoCommit(false);
+            try (PreparedStatement stmt = conn.prepareStatement(insertQ, Statement.RETURN_GENERATED_KEYS)) {
+                stmt.setInt(1, quizId);
+                if (source.getSubjectId() != null) stmt.setInt(2, source.getSubjectId());
+                else stmt.setNull(2, Types.INTEGER);
+                if (source.getCreatedBy() != null) stmt.setInt(3, source.getCreatedBy());
+                else stmt.setNull(3, Types.INTEGER);
+                stmt.setString(4, source.getQuestionText());
+                stmt.setString(5, source.getQuestionType().name());
+                stmt.setString(6, source.getDifficulty().name());
+                stmt.setDouble(7, source.getPoints());
+                stmt.setString(8, source.getExplanation());
+                stmt.setBoolean(9, source.isAiGenerated());
+                stmt.setBoolean(10, true);
 
-            stmt.executeUpdate();
-            int newId;
-            try (ResultSet rs = stmt.getGeneratedKeys()) {
-                if (!rs.next()) throw new com.proctor.exception.ValidationException("Failed to copy question.");
-                newId = rs.getInt(1);
-            }
-
-            saveOptions(conn, newId, source.getOptions());
-
-            String countSql = "SELECT COUNT(*) FROM quiz_questions WHERE quiz_id = ?";
-            int order;
-            try (PreparedStatement countStmt = conn.prepareStatement(countSql)) {
-                countStmt.setInt(1, quizId);
-                try (ResultSet rs = countStmt.executeQuery()) {
-                    order = rs.next() ? rs.getInt(1) + 1 : 1;
+                stmt.executeUpdate();
+                int newId;
+                try (ResultSet rs = stmt.getGeneratedKeys()) {
+                    if (!rs.next()) throw new DatabaseException("Failed to copy question (no generated ID).");
+                    newId = rs.getInt(1);
                 }
+
+                saveOptions(conn, newId, source.getOptions());
+
+                String countSql = "SELECT COUNT(*) FROM quiz_questions WHERE quiz_id = ?";
+                int order;
+                try (PreparedStatement countStmt = conn.prepareStatement(countSql)) {
+                    countStmt.setInt(1, quizId);
+                    try (ResultSet rs = countStmt.executeQuery()) {
+                        order = rs.next() ? rs.getInt(1) + 1 : 1;
+                    }
+                }
+                String qqSql = "INSERT INTO quiz_questions (quiz_id, question_id, question_order) VALUES (?, ?, ?)";
+                try (PreparedStatement qqStmt = conn.prepareStatement(qqSql)) {
+                    qqStmt.setInt(1, quizId);
+                    qqStmt.setInt(2, newId);
+                    qqStmt.setInt(3, order);
+                    qqStmt.executeUpdate();
+                }
+                conn.commit();
+                return newId;
+            } catch (SQLException ex) {
+                conn.rollback();
+                throw new DatabaseException("Error copying bank question to quiz: " + ex.getMessage(), ex);
+            } finally {
+                conn.setAutoCommit(originalAutoCommit);
             }
-            String qqSql = "INSERT INTO quiz_questions (quiz_id, question_id, question_order) VALUES (?, ?, ?)";
-            try (PreparedStatement qqStmt = conn.prepareStatement(qqSql)) {
-                qqStmt.setInt(1, quizId);
-                qqStmt.setInt(2, newId);
-                qqStmt.setInt(3, order);
-                qqStmt.executeUpdate();
-            }
-            return newId;
         } catch (SQLException e) {
-            System.err.println("Error copying bank question to quiz: " + e.getMessage());
-            throw new com.proctor.exception.ValidationException("Failed to copy question: " + e.getMessage());
+            throw new DatabaseException("Database connection error: " + e.getMessage(), e);
         }
     }
 

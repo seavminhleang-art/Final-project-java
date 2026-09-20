@@ -11,6 +11,7 @@ import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
 import com.williamcallahan.tui4j.compat.bubbletea.Message;
 import com.williamcallahan.tui4j.compat.bubbletea.input.key.KeyType;
 
+import java.time.DateTimeException;
 import java.time.LocalDate;
 
 public class UserFormScreen implements Screen {
@@ -232,14 +233,27 @@ public class UserFormScreen implements Screen {
         if (digits.length() != 8) {
             throw new ValidationException("Date of birth is required (DD - MM - YYYY).");
         }
+        LocalDate parsed;
         try {
             int day   = Integer.parseInt(digits.substring(0, 2));
             int month = Integer.parseInt(digits.substring(2, 4));
             int year  = Integer.parseInt(digits.substring(4, 8));
-            return LocalDate.of(year, month, day);
-        } catch (IllegalArgumentException e) {
+            parsed = LocalDate.of(year, month, day);
+        } catch (DateTimeException | IllegalArgumentException e) {
             throw new ValidationException("Invalid date of birth — please check day, month and year.");
         }
+        if (!parsed.isBefore(LocalDate.now())) {
+            throw new ValidationException("Date of birth must be in the past.");
+        }
+        if (parsed.isBefore(LocalDate.now().minusYears(120))) {
+            throw new ValidationException("Invalid date of birth — year is too far in the past.");
+        }
+        if ((selectedRole == Role.TEACHER || selectedRole == Role.ADMIN) && parsed.isAfter(LocalDate.now().minusYears(18))) {
+            throw new ValidationException("Teachers and administrators must be at least 18 years old.");
+        } else if (selectedRole == Role.STUDENT && parsed.isAfter(LocalDate.now().minusYears(5))) {
+            throw new ValidationException("Students must be at least 5 years old.");
+        }
+        return parsed;
     }
 
     private ScreenResult handleSave() {

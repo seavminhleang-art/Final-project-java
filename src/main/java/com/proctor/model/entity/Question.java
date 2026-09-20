@@ -24,7 +24,8 @@ public class Question {
     private String questionText;
     private QuestionType questionType;
     private Difficulty difficulty;
-    private double points;
+    @Builder.Default
+    private double points = 1.0;
     private String explanation;
     private boolean aiGenerated;
     private boolean enabled;

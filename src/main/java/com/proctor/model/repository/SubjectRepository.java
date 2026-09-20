@@ -1,6 +1,7 @@
 package com.proctor.model.repository;
 
 import com.proctor.config.DatabaseConnection;
+import com.proctor.exception.DatabaseException;
 import com.proctor.model.entity.Subject;
 
 import java.sql.*;
@@ -35,7 +36,7 @@ public class SubjectRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error querying subjects: " + e.getMessage());
+            throw new DatabaseException("Failed to query subjects", e);
         }
         return list;
     }
@@ -51,7 +52,7 @@ public class SubjectRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error finding subject by id: " + e.getMessage());
+            throw new DatabaseException("Failed to find subject by id: " + id, e);
         }
         return Optional.empty();
     }
@@ -67,7 +68,7 @@ public class SubjectRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error finding subject by code: " + e.getMessage());
+            throw new DatabaseException("Failed to find subject by code: " + code, e);
         }
         return Optional.empty();
     }
@@ -83,7 +84,7 @@ public class SubjectRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error finding subject by name: " + e.getMessage());
+            throw new DatabaseException("Failed to find subject by name: " + name, e);
         }
         return Optional.empty();
     }
@@ -106,10 +107,10 @@ public class SubjectRepository {
                 }
                 return true;
             }
+            return false;
         } catch (SQLException e) {
-            System.err.println("Error creating subject: " + e.getMessage());
+            throw new DatabaseException("Failed to create subject: " + subject.getCode(), e);
         }
-        return false;
     }
 
     public boolean update(Subject subject) {
@@ -123,9 +124,8 @@ public class SubjectRepository {
             stmt.setInt(5, subject.getId());
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("Error updating subject: " + e.getMessage());
+            throw new DatabaseException("Failed to update subject id: " + subject.getId(), e);
         }
-        return false;
     }
 
     public boolean toggleEnabled(int subjectId) {
@@ -135,9 +135,8 @@ public class SubjectRepository {
             stmt.setInt(1, subjectId);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("Error toggling subject status: " + e.getMessage());
+            throw new DatabaseException("Failed to toggle enabled for subject id: " + subjectId, e);
         }
-        return false;
     }
 
     public boolean delete(int subjectId) {
@@ -158,17 +157,16 @@ public class SubjectRepository {
                 s3.setInt(1, subjectId);
                 int affected = s3.executeUpdate();
                 conn.commit();
-                conn.setAutoCommit(true);
                 return affected > 0;
             } catch (SQLException e) {
                 conn.rollback();
-                conn.setAutoCommit(true);
                 throw e;
+            } finally {
+                conn.setAutoCommit(true);
             }
         } catch (SQLException e) {
-            System.err.println("Error deleting subject: " + e.getMessage());
+            throw new DatabaseException("Failed to delete subject id: " + subjectId, e);
         }
-        return false;
     }
 
     private Subject mapRow(ResultSet rs) throws SQLException {

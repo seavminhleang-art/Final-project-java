@@ -1,6 +1,7 @@
 package com.proctor.model.repository;
 
 import com.proctor.config.DatabaseConnection;
+import com.proctor.exception.DatabaseException;
 import com.proctor.model.entity.LeaderboardEntry;
 import com.proctor.model.entity.Result;
 import com.proctor.model.enums.AssessmentType;
@@ -67,24 +68,24 @@ public class PortalRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error querying student history: " + e.getMessage());
+            throw new DatabaseException("Failed to get student history for student id: " + studentId, e);
         }
         return list;
     }
 
     public List<LeaderboardEntry> getQuizLeaderboard() {
-        return queryStandardLeaderboard("QUIZ");
+        return queryStandardLeaderboard(AssessmentType.QUIZ);
     }
 
     public List<LeaderboardEntry> getExamLeaderboard() {
-        return queryStandardLeaderboard("EXAM");
+        return queryStandardLeaderboard(AssessmentType.EXAM);
     }
 
     public List<LeaderboardEntry> getGlobalLeaderboard() {
         return getQuizLeaderboard();
     }
 
-    private List<LeaderboardEntry> queryStandardLeaderboard(String assessmentType) {
+    private List<LeaderboardEntry> queryStandardLeaderboard(AssessmentType assessmentType) {
         List<LeaderboardEntry> leaderboard = new ArrayList<>();
         String sql = "SELECT r.student_id, u.full_name, u.username, " +
                      "COUNT(r.id) AS total_quizzes, " +
@@ -98,7 +99,7 @@ public class PortalRepository {
                      "ORDER BY total_points DESC, avg_percentage DESC, r.student_id ASC LIMIT 50";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, assessmentType);
+            stmt.setString(1, assessmentType != null ? assessmentType.name() : AssessmentType.QUIZ.name());
             try (ResultSet rs = stmt.executeQuery()) {
                 int rank = 1;
                 while (rs.next()) {
@@ -114,7 +115,7 @@ public class PortalRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error querying " + assessmentType + " leaderboard: " + e.getMessage());
+            throw new DatabaseException("Failed to query " + assessmentType + " leaderboard", e);
         }
         return leaderboard;
     }
@@ -127,12 +128,13 @@ public class PortalRepository {
                      "FROM results r " +
                      "INNER JOIN quizzes q ON r.quiz_id = q.id " +
                      "INNER JOIN users u ON r.student_id = u.id " +
-                     "WHERE q.assessment_type = 'SPEED' AND u.is_enabled = TRUE AND u.role = 'STUDENT' " +
+                     "WHERE q.assessment_type = ? AND u.is_enabled = TRUE AND u.role = 'STUDENT' " +
                      "GROUP BY r.student_id, u.full_name, u.username " +
                      "ORDER BY highest_score DESC, total_runs DESC, r.student_id ASC LIMIT 50";
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, AssessmentType.SPEED.name());
+            try (ResultSet rs = stmt.executeQuery()) {
             int rank = 1;
             while (rs.next()) {
                 double highScore = Math.round(rs.getDouble("highest_score") * 10.0) / 10.0;
@@ -146,9 +148,10 @@ public class PortalRepository {
                         .totalPoints(highScore)
                         .build());
             }
-        } catch (SQLException e) {
-            System.err.println("Error querying speed quiz leaderboard: " + e.getMessage());
         }
-        return leaderboard;
+    } catch (SQLException e) {
+        throw new DatabaseException("Failed to query speed quiz leaderboard", e);
     }
+    return leaderboard;
+}
 }

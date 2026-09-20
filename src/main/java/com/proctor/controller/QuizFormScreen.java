@@ -185,12 +185,44 @@ public class QuizFormScreen implements Screen {
 
             Subject subj = subjects.get(selectedSubjectIndex - 1);
 
-            int mins = 0;
-            try { mins = Integer.parseInt(timeLimit.toString().trim()); } catch (Exception ignored) {}
+            Integer mins = null;
+            String minsStr = timeLimit.toString().trim();
+            if (!minsStr.isEmpty()) {
+                try {
+                    mins = Integer.parseInt(minsStr);
+                    if (mins <= 0) {
+                        throw new ValidationException("Time limit must be a positive number of minutes.");
+                    }
+                } catch (NumberFormatException e) {
+                    throw new ValidationException("Time limit must be a valid number of minutes.");
+                }
+            }
+
             int hours = 0;
-            try { hours = Integer.parseInt(activeHours.toString().trim()); } catch (Exception ignored) {}
+            String hoursStr = activeHours.toString().trim();
+            if (!hoursStr.isEmpty()) {
+                try {
+                    hours = Integer.parseInt(hoursStr);
+                    if (hours < 0) {
+                        throw new ValidationException("Active duration must be a non-negative number of hours.");
+                    }
+                } catch (NumberFormatException e) {
+                    throw new ValidationException("Active duration must be a valid number of hours.");
+                }
+            }
+
             int score = 60;
-            try { score = Integer.parseInt(passScore.toString().trim()); } catch (Exception ignored) {}
+            String scoreStr = passScore.toString().trim();
+            if (!scoreStr.isEmpty()) {
+                try {
+                    score = Integer.parseInt(scoreStr);
+                } catch (NumberFormatException e) {
+                    throw new ValidationException("Passing score must be a valid number.");
+                }
+            }
+            if (score < 1 || score > 100) {
+                throw new ValidationException("Passing score must be between 1 and 100.");
+            }
 
             User currentTeacher = Session.getCurrentUser().orElse(null);
             Integer teacherId = currentTeacher != null ? currentTeacher.getId() : null;
@@ -204,7 +236,7 @@ public class QuizFormScreen implements Screen {
                     .title(title.toString().trim())
                     .topic(title.toString().trim())
                     .description(description.toString().trim())
-                    .timeLimitMins(mins > 0 ? mins : null)
+                    .timeLimitMins(mins)
                     .activeDurationHours(hours)
                     .passScore(score)
                     .randomizeQuestions(randomizeQuestions)

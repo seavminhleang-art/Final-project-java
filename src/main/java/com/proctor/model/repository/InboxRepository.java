@@ -1,6 +1,7 @@
 package com.proctor.model.repository;
 
 import com.proctor.config.DatabaseConnection;
+import com.proctor.exception.DatabaseException;
 import com.proctor.model.entity.InboxMessage;
 import com.proctor.model.enums.InboxMessageType;
 import com.proctor.model.enums.InboxStatus;
@@ -45,10 +46,10 @@ public class InboxRepository {
                 }
                 return true;
             }
+            return false;
         } catch (SQLException e) {
-            System.err.println("Error creating inbox message: " + e.getMessage());
+            throw new DatabaseException("Failed to create inbox message", e);
         }
-        return false;
     }
 
     public Optional<InboxMessage> findById(int id) {
@@ -66,7 +67,7 @@ public class InboxRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error finding inbox message by id: " + e.getMessage());
+            throw new DatabaseException("Failed to find inbox message by id: " + id, e);
         }
         return Optional.empty();
     }
@@ -88,7 +89,7 @@ public class InboxRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error querying inbox messages: " + e.getMessage());
+            throw new DatabaseException("Failed to query inbox messages for recipient id: " + recipientId, e);
         }
         return list;
     }
@@ -104,7 +105,7 @@ public class InboxRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error counting unread messages: " + e.getMessage());
+            throw new DatabaseException("Failed to count unread inbox messages for recipient id: " + recipientId, e);
         }
         return 0;
     }
@@ -116,9 +117,8 @@ public class InboxRepository {
             stmt.setInt(1, id);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("Error marking message as read: " + e.getMessage());
+            throw new DatabaseException("Failed to mark inbox message as read for id: " + id, e);
         }
-        return false;
     }
 
     public boolean markAllAsRead(int recipientId) {
@@ -128,9 +128,8 @@ public class InboxRepository {
             stmt.setInt(1, recipientId);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("Error marking all messages as read: " + e.getMessage());
+            throw new DatabaseException("Failed to mark all inbox messages as read for recipient id: " + recipientId, e);
         }
-        return false;
     }
 
     public boolean updateStatus(int id, InboxStatus status, Timestamp resolvedAt) {
@@ -142,9 +141,8 @@ public class InboxRepository {
             stmt.setInt(3, id);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("Error updating message status: " + e.getMessage());
+            throw new DatabaseException("Failed to update status for inbox message id: " + id, e);
         }
-        return false;
     }
 
     public boolean delete(int id) {
@@ -154,9 +152,8 @@ public class InboxRepository {
             stmt.setInt(1, id);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("Error deleting inbox message: " + e.getMessage());
+            throw new DatabaseException("Failed to delete inbox message id: " + id, e);
         }
-        return false;
     }
 
     public boolean hasPendingRequest(int senderId, InboxMessageType type, int targetId) {
@@ -172,7 +169,7 @@ public class InboxRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error checking pending request: " + e.getMessage());
+            throw new DatabaseException("Failed to check pending request for sender id: " + senderId, e);
         }
         return false;
     }
@@ -181,11 +178,7 @@ public class InboxRepository {
         String senderName = rs.getString("sender_name");
         String senderUsername = rs.getString("sender_username");
         String displaySender = senderUsername != null ? "@" + senderUsername : (senderName != null ? senderName : "System");
-
-        String proposedHash = null;
-        try {
-            proposedHash = rs.getString("proposed_password_hash");
-        } catch (SQLException ignored) {}
+        String proposedHash = rs.getString("proposed_password_hash");
 
         return InboxMessage.builder()
                 .id(rs.getInt("id"))

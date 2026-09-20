@@ -306,9 +306,17 @@ public class QuestionFormScreen implements Screen {
             }
 
             double pts = 1.0;
-            try {
-                pts = Double.parseDouble(pointsBuffer.toString().trim());
-            } catch (Exception ignored) {}
+            String ptsStr = pointsBuffer.toString().trim();
+            if (!ptsStr.isEmpty()) {
+                try {
+                    pts = Double.parseDouble(ptsStr);
+                } catch (NumberFormatException e) {
+                    throw new ValidationException("Points must be a valid number.");
+                }
+            }
+            if (pts <= 0) {
+                throw new ValidationException("Points must be greater than 0.");
+            }
 
             User currentTeacher = Session.getCurrentUser().orElse(null);
             Integer teacherId = currentTeacher != null ? currentTeacher.getId() : null;

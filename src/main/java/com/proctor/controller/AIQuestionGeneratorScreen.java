@@ -287,8 +287,19 @@ public class AIQuestionGeneratorScreen implements Screen {
         }
 
         int count = 3;
-        try { count = Integer.parseInt(countBuffer.toString().trim()); } catch (Exception ignored) {}
-        count = Math.max(1, Math.min(10, count));
+        String countStr = countBuffer.toString().trim();
+        if (!countStr.isEmpty()) {
+            try {
+                count = Integer.parseInt(countStr);
+            } catch (NumberFormatException e) {
+                bannerMessage = TuiHelper.red("✖ Question count must be a valid number (1-10).");
+                return ScreenResult.stay(this);
+            }
+        }
+        if (count < 1 || count > 10) {
+            bannerMessage = TuiHelper.red("✖ Question count must be between 1 and 10.");
+            return ScreenResult.stay(this);
+        }
 
         isGenerating = true;
         bannerMessage = "";

@@ -1,6 +1,7 @@
 package com.proctor.model.repository;
 
 import com.proctor.config.DatabaseConnection;
+import com.proctor.exception.DatabaseException;
 import com.proctor.model.entity.QuizPerformanceDTO;
 import com.proctor.model.entity.SubjectReportDTO;
 import com.proctor.model.entity.SystemOverviewDTO;
@@ -51,7 +52,7 @@ public class ReportRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error querying quiz performance report: " + e.getMessage());
+            throw new DatabaseException("Failed to get quiz performance report data", e);
         }
         return list;
     }
@@ -80,10 +81,10 @@ public class ReportRepository {
                         .overallPassRate(Math.round(rs.getDouble("overall_pass_rate") * 10.0) / 10.0)
                         .build();
             }
+            return new SystemOverviewDTO();
         } catch (SQLException e) {
-            System.err.println("Error querying system overview report: " + e.getMessage());
+            throw new DatabaseException("Failed to get system overview report data", e);
         }
-        return new SystemOverviewDTO();
     }
 
     public List<SubjectReportDTO> getSubjectSummaryData() {
@@ -113,7 +114,7 @@ public class ReportRepository {
                         .build());
             }
         } catch (SQLException e) {
-            System.err.println("Error querying subject report: " + e.getMessage());
+            throw new DatabaseException("Failed to get subject report summary data", e);
         }
         return list;
     }

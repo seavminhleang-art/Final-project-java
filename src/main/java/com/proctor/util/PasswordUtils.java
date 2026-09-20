@@ -35,6 +35,9 @@ public class PasswordUtils {
         if (password.length() < 8) {
             throw new ValidationException("Password must be at least 8 characters long.");
         }
+        if (password.length() > 72) {
+            throw new ValidationException("Password cannot exceed 72 characters.");
+        }
         if (!hasUpper) {
             throw new ValidationException("Password must contain at least one uppercase letter.");
         }
