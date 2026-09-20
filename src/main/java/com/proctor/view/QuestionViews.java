@@ -68,7 +68,7 @@ public class QuestionViews {
         int idx = fieldIndex;
         if (!isPinnedQuiz) {
             if (idx == 0) {
-                sb.append(TuiHelper.selectBox("Subject (Required)", subjectName, focusedField == 0, 102, "Space or ←/→ to cycle"));
+                sb.append(TuiHelper.selectBox("Subject (Required)", subjectName, focusedField == 0, 102, "Type to search • Tab / ← / → to cycle"));
                 return;
             }
             idx -= 1;
@@ -141,7 +141,7 @@ public class QuestionViews {
         List<String> fieldWidgets = new ArrayList<>();
         int actualField = 0;
         if (!isPinnedQuiz) {
-            fieldWidgets.add(TuiHelper.selectBox("Subject (Required)", subjectName, focusedField == actualField++, 102, "Space or ←/→ to cycle"));
+            fieldWidgets.add(TuiHelper.selectBox("Subject (Required)", subjectName, focusedField == actualField++, 102, "Type to search • Tab / ← / → to cycle"));
         }
 
         fieldWidgets.add(TuiHelper.inputBox("Topic / Focus Area (Required)", topicBuffer, focusedField == actualField++, 102, false, "e.g. Dynamic Programming or Recursion"));

@@ -11,6 +11,7 @@ import com.proctor.model.service.QuestionService;
 import com.proctor.model.service.QuizService;
 import com.proctor.model.service.SubjectService;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.TuiHelper;
 import com.proctor.view.SpeedQuizViews;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
 import com.williamcallahan.tui4j.compat.bubbletea.Message;
@@ -36,9 +37,9 @@ public class SpeedQuizFormScreen implements Screen {
 
     private int focusedField = 0;
     private String errorMessage = "";
+    private final InlineSubjectFilter<Subject> subjectFilter;
 
-    public SpeedQuizFormScreen(QuizService quizService, QuestionService questionService, SubjectService subjectService,
-                               AuthService authService, Quiz quizToEdit) {
+    public SpeedQuizFormScreen(QuizService quizService, QuestionService questionService, SubjectService subjectService, AuthService authService, Quiz quizToEdit) {
         this.quizService = quizService;
         this.questionService = questionService;
         this.subjectService = subjectService;
@@ -57,9 +58,7 @@ public class SpeedQuizFormScreen implements Screen {
                 }
             }
             this.title.append(quizToEdit.getTitle());
-            if (quizToEdit.getDescription() != null) {
-                this.description.append(quizToEdit.getDescription());
-            }
+            if (quizToEdit.getDescription() != null) this.description.append(quizToEdit.getDescription());
             this.secondsPerQuestion.setLength(0);
             this.secondsPerQuestion.append(quizToEdit.getSpeedSecondsPerQuestion() != null ? quizToEdit.getSpeedSecondsPerQuestion() : 15);
             this.activeHours.setLength(0);
@@ -67,6 +66,14 @@ public class SpeedQuizFormScreen implements Screen {
             this.randomizeAnswers = quizToEdit.isRandomizeAnswers();
             this.showAnswersAfter = quizToEdit.isShowAnswersAfter();
         }
+
+        List<InlineSubjectFilter.Item<Subject>> items = new java.util.ArrayList<>();
+        items.add(new InlineSubjectFilter.Item<>(null, "", "(No Subject)"));
+        for (Subject s : this.subjects) {
+            items.add(new InlineSubjectFilter.Item<>(s, s.getCode(), s.getCode() + " - " + s.getName()));
+        }
+        this.subjectFilter = new InlineSubjectFilter<>(items);
+        this.subjectFilter.setSelectedOriginalIndex(this.selectedSubjectIndex);
     }
 
     private int getFieldCount() {
@@ -76,16 +83,27 @@ public class SpeedQuizFormScreen implements Screen {
     @Override
     public ScreenResult update(Message msg) {
         if (msg instanceof KeyPressMessage k) {
-            if (KeyUtil.isEsc(k)) {
+            if (focusedField == 0) {
+                if (KeyUtil.isEsc(k)) {
+                    if (subjectFilter.getQuery().length() > 0) {
+                        subjectFilter.cancelSearch();
+                        selectedSubjectIndex = subjectFilter.getSelectedOriginalIndex();
+                        return ScreenResult.stay(this);
+                    }
+                    return ScreenResult.navigate(new QuizListScreen(quizService, questionService, subjectService, authService, AssessmentType.SPEED));
+                }
+            } else if (KeyUtil.isEsc(k)) {
                 return ScreenResult.navigate(new QuizListScreen(quizService, questionService, subjectService, authService, AssessmentType.SPEED));
             }
 
             if (KeyUtil.isDown(k)) {
+                subjectFilter.confirmSearch();
                 focusedField = (focusedField + 1) % getFieldCount();
                 return ScreenResult.stay(this);
             }
 
             if (KeyUtil.isUp(k)) {
+                subjectFilter.confirmSearch();
                 focusedField = (focusedField - 1 + getFieldCount()) % getFieldCount();
                 return ScreenResult.stay(this);
             }
@@ -96,6 +114,7 @@ public class SpeedQuizFormScreen implements Screen {
                 } else if (focusedField == 8) {
                     return ScreenResult.navigate(new QuizListScreen(quizService, questionService, subjectService, authService, AssessmentType.SPEED));
                 } else {
+                    subjectFilter.confirmSearch();
                     focusedField = (focusedField + 1) % getFieldCount();
                     return ScreenResult.stay(this);
                 }
@@ -116,9 +135,21 @@ public class SpeedQuizFormScreen implements Screen {
     private void handleFieldInput(KeyPressMessage k) {
         switch (focusedField) {
             case 0 -> {
-                int size = subjects.size() + 1;
-                if (KeyUtil.isLeft(k)) selectedSubjectIndex = (selectedSubjectIndex - 1 + size) % size;
-                else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) selectedSubjectIndex = (selectedSubjectIndex + 1) % size;
+                if (KeyUtil.isTab(k) || KeyUtil.isRight(k)) {
+                    subjectFilter.cycleNext();
+                    selectedSubjectIndex = subjectFilter.getSelectedOriginalIndex();
+                } else if (KeyUtil.isLeft(k)) {
+                    subjectFilter.cyclePrev();
+                    selectedSubjectIndex = subjectFilter.getSelectedOriginalIndex();
+                } else if (KeyUtil.isBackspace(k)) {
+                    subjectFilter.handleKey(k);
+                    selectedSubjectIndex = subjectFilter.getSelectedOriginalIndex();
+                } else {
+                    boolean handled = subjectFilter.handleKey(k);
+                    if (handled) {
+                        selectedSubjectIndex = subjectFilter.getSelectedOriginalIndex();
+                    }
+                }
             }
             case 1 -> handleTextInput(title, k);
             case 2 -> handleTextInput(description, k);
@@ -228,9 +259,7 @@ public class SpeedQuizFormScreen implements Screen {
 
     @Override
     public String view() {
-        String subjectDisplay = (subjects.isEmpty() || selectedSubjectIndex == 0)
-                ? "(No Subject)"
-                : subjects.get(selectedSubjectIndex - 1).getCode() + " - " + subjects.get(selectedSubjectIndex - 1).getName();
+        String subjectDisplay = subjectFilter.getFormDisplay("(No Subject)");
         return SpeedQuizViews.renderSpeedQuizForm(
                 quizToEdit != null,
                 subjectDisplay,

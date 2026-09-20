@@ -15,6 +15,7 @@ import com.proctor.model.service.QuizService;
 import com.proctor.model.entity.Subject;
 import com.proctor.model.service.SubjectService;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.TuiHelper;
 import com.proctor.view.QuestionViews;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
 import com.williamcallahan.tui4j.compat.bubbletea.Message;
@@ -48,6 +49,7 @@ public class QuestionFormScreen implements Screen {
 
     private int focusedField = 0;
     private String errorMessage = "";
+    private final InlineSubjectFilter<Subject> subjectFilter;
 
     public QuestionFormScreen(QuestionService questionService, SubjectService subjectService, AuthService authService, Question questionToEdit) {
         this(questionService, subjectService, authService, questionToEdit, null);
@@ -108,6 +110,14 @@ public class QuestionFormScreen implements Screen {
         } else if (isLockedQuizType()) {
             this.selectedType = quizContext.getQuizQuestionType();
         }
+
+        List<InlineSubjectFilter.Item<Subject>> items = new java.util.ArrayList<>();
+        items.add(new InlineSubjectFilter.Item<>(null, "", "(No Subject)"));
+        for (Subject s : this.subjects) {
+            items.add(new InlineSubjectFilter.Item<>(s, s.getCode(), s.getCode() + " - " + s.getName()));
+        }
+        this.subjectFilter = new InlineSubjectFilter<>(items);
+        this.subjectFilter.setSelectedOriginalIndex(this.selectedSubjectIndex);
     }
 
     private boolean isLockedQuizType() {
@@ -152,16 +162,27 @@ public class QuestionFormScreen implements Screen {
     @Override
     public ScreenResult update(Message msg) {
         if (msg instanceof KeyPressMessage k) {
-            if (KeyUtil.isEsc(k)) {
+            if (!isPinnedQuiz() && focusedField == 0) {
+                if (KeyUtil.isEsc(k)) {
+                    if (subjectFilter.getQuery().length() > 0) {
+                        subjectFilter.cancelSearch();
+                        selectedSubjectIndex = subjectFilter.getSelectedOriginalIndex();
+                        return ScreenResult.stay(this);
+                    }
+                    return returnToPreviousScreen();
+                }
+            } else if (KeyUtil.isEsc(k)) {
                 return returnToPreviousScreen();
             }
 
             if (KeyUtil.isDown(k)) {
+                if (!isPinnedQuiz()) subjectFilter.confirmSearch();
                 focusedField = (focusedField + 1) % getFieldCount();
                 return ScreenResult.stay(this);
             }
 
             if (KeyUtil.isUp(k)) {
+                if (!isPinnedQuiz()) subjectFilter.confirmSearch();
                 focusedField = (focusedField - 1 + getFieldCount()) % getFieldCount();
                 return ScreenResult.stay(this);
             }
@@ -172,6 +193,7 @@ public class QuestionFormScreen implements Screen {
                 } else if (focusedField == getCancelButtonIndex()) {
                     return returnToPreviousScreen();
                 } else {
+                    if (!isPinnedQuiz()) subjectFilter.confirmSearch();
                     focusedField = (focusedField + 1) % getFieldCount();
                     return ScreenResult.stay(this);
                 }
@@ -193,9 +215,21 @@ public class QuestionFormScreen implements Screen {
         int idx = focusedField;
         if (!isPinnedQuiz()) {
             if (idx == 0) {
-                int size = subjects.size() + 1;
-                if (KeyUtil.isLeft(k)) selectedSubjectIndex = (selectedSubjectIndex - 1 + size) % size;
-                else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) selectedSubjectIndex = (selectedSubjectIndex + 1) % size;
+                if (KeyUtil.isTab(k) || KeyUtil.isRight(k)) {
+                    subjectFilter.cycleNext();
+                    selectedSubjectIndex = subjectFilter.getSelectedOriginalIndex();
+                } else if (KeyUtil.isLeft(k)) {
+                    subjectFilter.cyclePrev();
+                    selectedSubjectIndex = subjectFilter.getSelectedOriginalIndex();
+                } else if (KeyUtil.isBackspace(k)) {
+                    subjectFilter.handleKey(k);
+                    selectedSubjectIndex = subjectFilter.getSelectedOriginalIndex();
+                } else {
+                    boolean handled = subjectFilter.handleKey(k);
+                    if (handled) {
+                        selectedSubjectIndex = subjectFilter.getSelectedOriginalIndex();
+                    }
+                }
                 return;
             }
             idx -= 1;
@@ -365,9 +399,11 @@ public class QuestionFormScreen implements Screen {
 
     @Override
     public String view() {
-        String subjectDisplay = (subjects.isEmpty() || selectedSubjectIndex == 0)
-                ? "(No Subject)"
-                : subjects.get(selectedSubjectIndex - 1).getCode() + " - " + subjects.get(selectedSubjectIndex - 1).getName();
+        String subjectDisplay = !isPinnedQuiz()
+                ? subjectFilter.getFormDisplay("(No Subject)")
+                : (subjects.isEmpty() || selectedSubjectIndex == 0
+                    ? "(No Subject)"
+                    : subjects.get(selectedSubjectIndex - 1).getCode() + " - " + subjects.get(selectedSubjectIndex - 1).getName());
         List<StringBuilder> options = List.of(optionA, optionB, optionC, optionD);
         int correctIdx = (selectedType == QuestionType.TRUE_FALSE) ? (tfCorrectIsTrue ? 0 : 1) : correctMcqIndex;
         return QuestionViews.renderQuestionForm(

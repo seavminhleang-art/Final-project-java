@@ -48,6 +48,7 @@ public class QuizListScreen implements Screen {
     private boolean confirmDeleteFocused = false;
     private Quiz pendingDeleteQuiz = null;
     private String bannerMessage = "";
+    private final InlineSubjectFilter<Subject> subjectFilter;
 
     public QuizListScreen(QuizService quizService, QuestionService questionService, SubjectService subjectService, AuthService authService) {
         this(quizService, questionService, subjectService, authService, AssessmentType.QUIZ);
@@ -65,6 +66,14 @@ public class QuizListScreen implements Screen {
         if (user != null && user.getRole() == Role.ADMIN) {
             this.currentScope = QuizScope.ALL_GLOBAL;
         }
+
+        List<InlineSubjectFilter.Item<Subject>> items = new java.util.ArrayList<>();
+        items.add(new InlineSubjectFilter.Item<>(null, "ALL", "All Subjects"));
+        for (Subject s : this.allSubjects) {
+            items.add(new InlineSubjectFilter.Item<>(s, s.getCode(), s.getName()));
+        }
+        this.subjectFilter = new InlineSubjectFilter<>(items);
+
         refreshList();
     }
 
@@ -94,6 +103,16 @@ public class QuizListScreen implements Screen {
     @Override
     public ScreenResult update(Message msg) {
         if (msg instanceof KeyPressMessage k) {
+            if (subjectFilter.isActive()) {
+                boolean handled = subjectFilter.handleKey(k);
+                if (handled) {
+                    subjectFilterIndex = subjectFilter.getSelectedOriginalIndex();
+                    selectedIndex = 0;
+                    refreshList();
+                    return ScreenResult.stay(this);
+                }
+            }
+
             if (confirmingDelete) {
                 if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {
                     confirmDeleteFocused = !confirmDeleteFocused;
@@ -218,11 +237,7 @@ public class QuizListScreen implements Screen {
                     return ScreenResult.navigate(new TeacherSubmissionScreen(quizzes.get(selectedIndex), examService, quizService, questionService, subjectService, authService));
                 }
             } else if ("s".equalsIgnoreCase(k.key())) {
-                if (!allSubjects.isEmpty()) {
-                    subjectFilterIndex = (subjectFilterIndex + 1) % (allSubjects.size() + 1);
-                } else {
-                    subjectFilterIndex = 0;
-                }
+                subjectFilter.startSearch(subjectFilterIndex);
                 selectedIndex = 0;
                 refreshList();
             } else if ("p".equalsIgnoreCase(k.key()) || KeyUtil.isSpace(k)) {
@@ -315,8 +330,7 @@ public class QuizListScreen implements Screen {
 
         User user = Session.getCurrentUser().orElse(null);
         boolean isAdmin = user != null && user.getRole() == Role.ADMIN;
-        String subjectFilterDisplay = (subjectFilterIndex > 0 && subjectFilterIndex <= allSubjects.size())
-                ? allSubjects.get(subjectFilterIndex - 1).getCode() : "ALL";
+        String subjectFilterDisplay = subjectFilter.getHeaderDisplay();
         return QuizViews.renderQuizList(assessmentType, quizzes, selectedIndex, currentScope == QuizScope.MY_QUIZZES,
                 subjectFilterDisplay, searchBuffer.toString(), searchMode, bannerMessage, isAdmin);
     }

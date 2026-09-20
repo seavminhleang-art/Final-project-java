@@ -30,6 +30,7 @@ public class QuestionBankScreen implements Screen {
 
     private final List<Subject> allSubjects;
     private int subjectFilterIndex = 0;
+    private final InlineSubjectFilter<Subject> subjectFilter;
 
     private QuestionType typeFilter = null;
     private Difficulty diffFilter = null;
@@ -47,6 +48,14 @@ public class QuestionBankScreen implements Screen {
         this.subjectService = subjectService;
         this.authService = authService;
         this.allSubjects = subjectService.getSubjects(null);
+
+        List<InlineSubjectFilter.Item<Subject>> items = new java.util.ArrayList<>();
+        items.add(new InlineSubjectFilter.Item<>(null, "ALL", "All Subjects"));
+        for (Subject s : this.allSubjects) {
+            items.add(new InlineSubjectFilter.Item<>(s, s.getCode(), s.getName()));
+        }
+        this.subjectFilter = new InlineSubjectFilter<>(items);
+
         refreshData();
     }
 
@@ -64,6 +73,15 @@ public class QuestionBankScreen implements Screen {
     @Override
     public ScreenResult update(Message msg) {
         if (msg instanceof KeyPressMessage k) {
+            if (subjectFilter.isActive()) {
+                boolean handled = subjectFilter.handleKey(k);
+                if (handled) {
+                    subjectFilterIndex = subjectFilter.getSelectedOriginalIndex();
+                    selectedIndex = 0;
+                    refreshData();
+                    return ScreenResult.stay(this);
+                }
+            }
 
             if (confirmingDelete) {
                 if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {
@@ -151,7 +169,7 @@ public class QuestionBankScreen implements Screen {
                 selectedIndex = 0;
                 refreshData();
             } else if ("s".equalsIgnoreCase(k.key())) {
-                subjectFilterIndex = (subjectFilterIndex + 1) % (allSubjects.size() + 1);
+                subjectFilter.startSearch(subjectFilterIndex);
                 selectedIndex = 0;
                 refreshData();
             } else if ("x".equalsIgnoreCase(k.key())) {
@@ -182,9 +200,7 @@ public class QuestionBankScreen implements Screen {
             );
         }
 
-        String subjectFilterDisplay = (subjectFilterIndex > 0 && subjectFilterIndex <= allSubjects.size())
-                ? allSubjects.get(subjectFilterIndex - 1).getCode()
-                : "";
+        String subjectFilterDisplay = subjectFilter.getHeaderDisplay();
 
         return QuestionBankViews.renderBankList(
                 questions, selectedIndex, subjectFilterDisplay, typeFilter, diffFilter,

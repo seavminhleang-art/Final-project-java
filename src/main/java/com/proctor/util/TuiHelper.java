@@ -251,12 +251,15 @@ public class TuiHelper {
         String s = subtitle.trim();
         int maxTotal = 126;
         int sepLen = 5;
-        if (t.length() > 60) {
+        int tLen = stripAnsi(t).length();
+        int sLen = stripAnsi(s).length();
+        if (tLen > 60) {
             t = t.substring(0, 57) + "...";
+            tLen = 60;
         }
-        if (t.length() + sepLen + s.length() > maxTotal) {
-            int maxSub = Math.max(10, maxTotal - sepLen - t.length());
-            if (s.length() > maxSub) {
+        if (tLen + sepLen + sLen > maxTotal) {
+            int maxSub = Math.max(10, maxTotal - sepLen - tLen);
+            if (sLen > maxSub) {
                 s = s.substring(0, Math.max(0, maxSub - 3)) + "...";
             }
         }

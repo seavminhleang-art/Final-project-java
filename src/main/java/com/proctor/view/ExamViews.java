@@ -31,10 +31,13 @@ public class ExamViews {
         String typeLabel = (assessmentType == AssessmentType.EXAM) ? "EXAMS" : (assessmentType == AssessmentType.SPEED ? "SPEED QUIZZES" : "QUIZZES");
         sb.append(TuiHelper.header(typeLabel));
         sb.append("\n");
-        String subjLabel = (subjectFilterDisplay == null || subjectFilterDisplay.isBlank()) ? "ALL" : subjectFilterDisplay;
+        String subjLabel = (subjectFilterDisplay == null || subjectFilterDisplay.isBlank()) ? "[ ALL ]" : subjectFilterDisplay;
+        if (!subjLabel.startsWith("[")) {
+            subjLabel = "[ " + subjLabel + " ]";
+        }
         String boxTitle = (assessmentType == AssessmentType.EXAM) ? "Exams" : (assessmentType == AssessmentType.SPEED ? "Speed Quizzes" : "Quizzes");
         sb.append(TuiHelper.boxTitle(boxTitle,
-                String.format("Subject: [ %s ]  •  Total: %d", subjLabel, quizzes.size()))).append("\n\n");
+                String.format("Subject: %s  •  Total: %d", subjLabel, quizzes.size()))).append("\n\n");
 
         if (searchMode) {
             sb.append("  Search: [ ").append(TuiHelper.cyan(TuiHelper.truncate(searchBuffer, 50) + "_")).append(" ] (Press Enter to finish)\n\n");
@@ -101,6 +104,11 @@ public class ExamViews {
 
         if (!bannerMessage.isBlank()) {
             sb.append("  ").append(bannerMessage).append("\n\n");
+        }
+
+        if (subjectFilterDisplay != null && subjectFilterDisplay.contains("→")) {
+            sb.append(TuiHelper.dim("  [Type] Search  •  [Tab/←/→] Cycle Matches  •  [Enter] Confirm  •  [Esc] Cancel\n"));
+            return sb.toString();
         }
 
         if (assessmentType == AssessmentType.SPEED) {

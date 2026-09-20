@@ -56,6 +56,7 @@ public class AIQuizGeneratorScreen implements Screen {
     private boolean isGenerating = false;
     private String bannerMessage = "";
     private int spinnerTick = 0;
+    private final InlineSubjectFilter<Subject> subjectFilter;
 
     public record AIQuizGeneratedMessage(Quiz createdQuiz, List<AIQuestionDraft> drafts, String errorMessage) implements Message {}
 
@@ -80,6 +81,13 @@ public class AIQuizGeneratorScreen implements Screen {
             this.timeLimitBuffer.append("15");
         }
         this.subjects = subjectService.getSubjects(null);
+        List<InlineSubjectFilter.Item<Subject>> items = new java.util.ArrayList<>();
+        items.add(new InlineSubjectFilter.Item<>(null, "", "(No Subject)"));
+        for (Subject s : this.subjects) {
+            items.add(new InlineSubjectFilter.Item<>(s, s.getCode(), s.getCode() + " - " + s.getName()));
+        }
+        this.subjectFilter = new InlineSubjectFilter<>(items);
+        this.subjectFilter.setSelectedOriginalIndex(this.selectedSubjectIndex);
     }
 
     private boolean isMcqApplicable() {
@@ -138,16 +146,27 @@ public class AIQuizGeneratorScreen implements Screen {
         }
 
         if (msg instanceof KeyPressMessage k) {
-            if (KeyUtil.isEsc(k)) {
+            if (focusedField == 0) {
+                if (KeyUtil.isEsc(k)) {
+                    if (subjectFilter.getQuery().length() > 0) {
+                        subjectFilter.cancelSearch();
+                        selectedSubjectIndex = subjectFilter.getSelectedOriginalIndex();
+                        return ScreenResult.stay(this);
+                    }
+                    return ScreenResult.navigate(new QuizListScreen(quizService, questionService, subjectService, authService, assessmentType));
+                }
+            } else if (KeyUtil.isEsc(k)) {
                 return ScreenResult.navigate(new QuizListScreen(quizService, questionService, subjectService, authService, assessmentType));
             }
 
             if (KeyUtil.isDown(k)) {
+                subjectFilter.confirmSearch();
                 focusedField = (focusedField + 1) % getFieldCount();
                 return ScreenResult.stay(this);
             }
 
             if (KeyUtil.isUp(k)) {
+                subjectFilter.confirmSearch();
                 focusedField = (focusedField - 1 + getFieldCount()) % getFieldCount();
                 return ScreenResult.stay(this);
             }
@@ -158,6 +177,7 @@ public class AIQuizGeneratorScreen implements Screen {
                 } else if (focusedField == getCancelButtonIndex()) {
                     return ScreenResult.navigate(new QuizListScreen(quizService, questionService, subjectService, authService, assessmentType));
                 } else {
+                    subjectFilter.confirmSearch();
                     focusedField = (focusedField + 1) % getFieldCount();
                     return ScreenResult.stay(this);
                 }
@@ -181,9 +201,21 @@ public class AIQuizGeneratorScreen implements Screen {
             return;
         }
         if (focusedField == 0) {
-            int size = subjects.size() + 1;
-            if (KeyUtil.isLeft(k)) selectedSubjectIndex = (selectedSubjectIndex - 1 + size) % size;
-            else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) selectedSubjectIndex = (selectedSubjectIndex + 1) % size;
+            if (KeyUtil.isTab(k) || KeyUtil.isRight(k)) {
+                subjectFilter.cycleNext();
+                selectedSubjectIndex = subjectFilter.getSelectedOriginalIndex();
+            } else if (KeyUtil.isLeft(k)) {
+                subjectFilter.cyclePrev();
+                selectedSubjectIndex = subjectFilter.getSelectedOriginalIndex();
+            } else if (KeyUtil.isBackspace(k)) {
+                subjectFilter.handleKey(k);
+                selectedSubjectIndex = subjectFilter.getSelectedOriginalIndex();
+            } else {
+                boolean handled = subjectFilter.handleKey(k);
+                if (handled) {
+                    selectedSubjectIndex = subjectFilter.getSelectedOriginalIndex();
+                }
+            }
             return;
         }
         if (focusedField == 1) {
@@ -305,9 +337,21 @@ public class AIQuizGeneratorScreen implements Screen {
 
     private void handleSpeedFormInput(KeyPressMessage k) {
         if (focusedField == 0) {
-            int size = subjects.size() + 1;
-            if (KeyUtil.isLeft(k)) selectedSubjectIndex = (selectedSubjectIndex - 1 + size) % size;
-            else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) selectedSubjectIndex = (selectedSubjectIndex + 1) % size;
+            if (KeyUtil.isTab(k) || KeyUtil.isRight(k)) {
+                subjectFilter.cycleNext();
+                selectedSubjectIndex = subjectFilter.getSelectedOriginalIndex();
+            } else if (KeyUtil.isLeft(k)) {
+                subjectFilter.cyclePrev();
+                selectedSubjectIndex = subjectFilter.getSelectedOriginalIndex();
+            } else if (KeyUtil.isBackspace(k)) {
+                subjectFilter.handleKey(k);
+                selectedSubjectIndex = subjectFilter.getSelectedOriginalIndex();
+            } else {
+                boolean handled = subjectFilter.handleKey(k);
+                if (handled) {
+                    selectedSubjectIndex = subjectFilter.getSelectedOriginalIndex();
+                }
+            }
             return;
         }
         if (focusedField == 1) {
@@ -659,9 +703,7 @@ public class AIQuizGeneratorScreen implements Screen {
         } else {
             typeLabel = selectedType.name();
         }
-        String subjectDisplay = (subjects.isEmpty() || selectedSubjectIndex == 0)
-                ? "(No Subject)"
-                : subjects.get(selectedSubjectIndex - 1).getCode() + " - " + subjects.get(selectedSubjectIndex - 1).getName();
+        String subjectDisplay = subjectFilter.getFormDisplay("(No Subject)");
         return QuizViews.renderAIQuizForm(
                 assessmentType,
                 subjectDisplay,

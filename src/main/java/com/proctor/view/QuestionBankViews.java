@@ -18,11 +18,14 @@ public class QuestionBankViews {
         StringBuilder sb = new StringBuilder();
         String tf = (typeFilter == null) ? "ALL" : typeFilter.name();
         String df = (diffFilter == null) ? "ALL" : diffFilter.name();
-        String subjLabel = (subjectFilterDisplay == null || subjectFilterDisplay.isBlank()) ? "ALL" : subjectFilterDisplay;
+        String subjLabel = (subjectFilterDisplay == null || subjectFilterDisplay.isBlank()) ? "[ALL]" : subjectFilterDisplay;
+        if (!subjLabel.startsWith("[")) {
+            subjLabel = "[" + subjLabel + "]";
+        }
         sb.append(TuiHelper.header("QUESTION BANK"));
         sb.append("\n");
         sb.append(TuiHelper.boxTitle("My Question Bank",
-                String.format("Subj: [%s]  Type: [%s]  Diff: [%s]  Total: %d",
+                String.format("Subj: %s  Type: [%s]  Diff: [%s]  Total: %d",
                         subjLabel, tf, df, questions.size()))).append("\n\n");
 
         if (searchMode) {
@@ -79,6 +82,11 @@ public class QuestionBankViews {
 
         if (!bannerMessage.isBlank()) {
             sb.append("  ").append(bannerMessage).append("\n\n");
+        }
+
+        if (subjectFilterDisplay != null && subjectFilterDisplay.contains("→")) {
+            sb.append(TuiHelper.dim("  [Type] Search  •  [Tab/←/→] Cycle Matches  •  [Enter] Confirm  •  [Esc] Cancel\n"));
+            return sb.toString();
         }
 
         List<String> hints = List.of(

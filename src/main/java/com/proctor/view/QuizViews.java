@@ -30,11 +30,14 @@ public class QuizViews {
         String itemType = (assessmentType == AssessmentType.EXAM) ? "EXAMS" : (assessmentType == AssessmentType.SPEED ? "SPEED QUIZZES" : "QUIZZES");
         String baseItemTitle = (assessmentType == AssessmentType.EXAM) ? "Exams" : (assessmentType == AssessmentType.SPEED ? "Speed Quizzes" : "Quizzes");
         String itemTitle = isAdmin ? "All " + baseItemTitle : baseItemTitle;
-        String subjLabel = (subjectFilterDisplay == null || subjectFilterDisplay.isBlank()) ? "ALL" : subjectFilterDisplay;
+        String subjLabel = (subjectFilterDisplay == null || subjectFilterDisplay.isBlank()) ? "[ ALL ]" : subjectFilterDisplay;
+        if (!subjLabel.startsWith("[")) {
+            subjLabel = "[ " + subjLabel + " ]";
+        }
 
         sb.append(TuiHelper.header(itemType));
         sb.append("\n");
-        sb.append(TuiHelper.boxTitle(itemTitle, String.format("Subject: [ %s ]  •  Total: %d", subjLabel, quizzes.size()))).append("\n\n");
+        sb.append(TuiHelper.boxTitle(itemTitle, String.format("Subject: %s  •  Total: %d", subjLabel, quizzes.size()))).append("\n\n");
         if (!isAdmin) {
             String tabMy = "My " + baseItemTitle;
             String tabAll = "All " + baseItemTitle;
@@ -140,6 +143,11 @@ public class QuizViews {
             sb.append("  ").append(bannerMessage).append("\n\n");
         }
 
+        if (subjectFilterDisplay != null && subjectFilterDisplay.contains("→")) {
+            sb.append(TuiHelper.dim("  [Type] Search  •  [Tab/←/→] Cycle Matches  •  [Enter] Confirm  •  [Esc] Cancel\n"));
+            return sb.toString();
+        }
+
         String aiHint = (assessmentType == AssessmentType.EXAM) ? "[g] AI Exam" : (assessmentType == AssessmentType.SPEED ? "[g] AI Speed" : "[g] AI Quiz");
         List<String> hints;
         if (isAdmin) {
@@ -201,7 +209,7 @@ public class QuizViews {
 
         for (int f = startField; f < endField; f++) {
             switch (f) {
-                case 0 -> sb.append(TuiHelper.selectBox("Subject (Required)", subjectName, focusedField == 0, 102, "Space or ←/→ to cycle"));
+                case 0 -> sb.append(TuiHelper.selectBox("Subject (Required)", subjectName, focusedField == 0, 102, "Type to search • Tab / ← / → to cycle"));
                 case 1 -> sb.append(TuiHelper.inputBox(itemType + " Title (Required)", title, focusedField == 1, 102, false, "e.g. Midterm Assessment"));
                 case 2 -> {
                     if (assessmentType == AssessmentType.QUIZ) {
@@ -355,7 +363,7 @@ public class QuizViews {
         boolean isSpeed = (assessmentType == AssessmentType.SPEED);
 
         List<String> fieldWidgets = new ArrayList<>();
-        fieldWidgets.add(TuiHelper.selectBox("Subject (Required)", subjectName, focusedField == 0, 102, "Space or ←/→ to cycle"));
+        fieldWidgets.add(TuiHelper.selectBox("Subject (Required)", subjectName, focusedField == 0, 102, "Type to search • Tab / ← / → to cycle"));
         fieldWidgets.add(TuiHelper.inputBox(itemLabel + " Title / Topic (Required)", titleBuffer, focusedField == 1, 102, false, "e.g. Basic HTML, OOP Concepts"));
         fieldWidgets.add(TuiHelper.inputBox("Student Instructions / Description (Optional)", descriptionBuffer, focusedField == 2, 102, false, "e.g. Complete all questions, no reference materials"));
         fieldWidgets.add(TuiHelper.inputBox("AI Prompt / Custom Instructions (Optional)", customPrompt, focusedField == 3, 102, false, "e.g. Focus on edge cases, avoid multi-threading, include code snippets"));

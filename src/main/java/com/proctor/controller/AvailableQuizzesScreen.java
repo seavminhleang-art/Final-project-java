@@ -44,6 +44,7 @@ public class AvailableQuizzesScreen implements Screen {
     private final List<String> subjectCodes = new java.util.ArrayList<>();
     private final Map<Integer, String> subjects = new java.util.HashMap<>();
     private final Map<Integer, Attempt> attempts = new java.util.HashMap<>();
+    private InlineSubjectFilter<String> subjectFilter;
 
     private boolean requestingExamReason = false;
     private final StringBuilder examReasonBuffer = new StringBuilder();
@@ -95,6 +96,16 @@ public class AvailableQuizzesScreen implements Screen {
             }
         }
         java.util.Collections.sort(subjectCodes);
+        List<InlineSubjectFilter.Item<String>> items = new java.util.ArrayList<>();
+        items.add(new InlineSubjectFilter.Item<>(null, "ALL", "All Subjects"));
+        for (String code : subjectCodes) {
+            items.add(new InlineSubjectFilter.Item<>(code, code, ""));
+        }
+        if (subjectFilter == null) {
+            this.subjectFilter = new InlineSubjectFilter<>(items);
+        } else {
+            this.subjectFilter.setItems(items);
+        }
         applyFilters();
         refreshAttempts();
     }
@@ -138,6 +149,16 @@ public class AvailableQuizzesScreen implements Screen {
     @Override
     public ScreenResult update(Message msg) {
         if (msg instanceof KeyPressMessage k) {
+            if (subjectFilter != null && subjectFilter.isActive()) {
+                boolean handled = subjectFilter.handleKey(k);
+                if (handled) {
+                    subjectFilterIndex = subjectFilter.getSelectedOriginalIndex();
+                    selectedIndex = 0;
+                    applyFilters();
+                    return ScreenResult.stay(this);
+                }
+            }
+
             if (requestingExamReason) {
                 return handleReasonDialogInput(k);
             }
@@ -189,13 +210,11 @@ public class AvailableQuizzesScreen implements Screen {
             } else if ("r".equalsIgnoreCase(k.key())) {
                 return handleRetakeRequest();
             } else if ("s".equalsIgnoreCase(k.key())) {
-                if (!subjectCodes.isEmpty()) {
-                    subjectFilterIndex = (subjectFilterIndex + 1) % (subjectCodes.size() + 1);
-                } else {
-                    subjectFilterIndex = 0;
+                if (subjectFilter != null) {
+                    subjectFilter.startSearch(subjectFilterIndex);
+                    selectedIndex = 0;
+                    applyFilters();
                 }
-                selectedIndex = 0;
-                applyFilters();
             } else if ("/".equals(k.key())) {
                 searchMode = true;
                 searchBuffer.setLength(0);
@@ -434,8 +453,7 @@ public class AvailableQuizzesScreen implements Screen {
             return ExamViews.renderExamReasonDialog(q.getTitle(), examReasonBuffer.toString(), examReasonFocusIndex, bannerMessage);
         }
 
-        String subjectFilterDisplay = (subjectFilterIndex > 0 && subjectFilterIndex <= subjectCodes.size())
-                ? subjectCodes.get(subjectFilterIndex - 1) : "ALL";
+        String subjectFilterDisplay = (subjectFilter != null) ? subjectFilter.getHeaderDisplay() : "ALL";
         return ExamViews.renderAvailableQuizzes(assessmentType, quizzes, subjects, attempts, selectedIndex,
                 subjectFilterDisplay, searchBuffer.toString(), searchMode, bannerMessage);
     }

@@ -47,6 +47,7 @@ public class AIQuestionGeneratorScreen implements Screen {
     private int selectedDraftIndex = 0;
     private String bannerMessage = "";
     private int spinnerTick = 0;
+    private final InlineSubjectFilter<Subject> subjectFilter;
 
     public record AIQuestionsGeneratedMessage(List<AIQuestionDraft> drafts, String errorMessage) implements Message {}
 
@@ -79,6 +80,14 @@ public class AIQuestionGeneratorScreen implements Screen {
         } else {
             this.topicBuffer.append("General Assessment");
         }
+
+        List<InlineSubjectFilter.Item<Subject>> items = new java.util.ArrayList<>();
+        items.add(new InlineSubjectFilter.Item<>(null, "", "(No Subject)"));
+        for (Subject s : this.subjects) {
+            items.add(new InlineSubjectFilter.Item<>(s, s.getCode(), s.getCode() + " - " + s.getName()));
+        }
+        this.subjectFilter = new InlineSubjectFilter<>(items);
+        this.subjectFilter.setSelectedOriginalIndex(this.selectedSubjectIndex);
     }
 
     private boolean isPinnedQuiz() {
@@ -179,16 +188,27 @@ public class AIQuestionGeneratorScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
-            if (KeyUtil.isEsc(k)) {
+            if (!isPinnedQuiz() && focusedField == 0) {
+                if (KeyUtil.isEsc(k)) {
+                    if (subjectFilter.getQuery().length() > 0) {
+                        subjectFilter.cancelSearch();
+                        selectedSubjectIndex = subjectFilter.getSelectedOriginalIndex();
+                        return ScreenResult.stay(this);
+                    }
+                    return returnToPreviousScreen();
+                }
+            } else if (KeyUtil.isEsc(k)) {
                 return returnToPreviousScreen();
             }
 
             if (KeyUtil.isDown(k)) {
+                if (!isPinnedQuiz()) subjectFilter.confirmSearch();
                 focusedField = (focusedField + 1) % getFieldCount();
                 return ScreenResult.stay(this);
             }
 
             if (KeyUtil.isUp(k)) {
+                if (!isPinnedQuiz()) subjectFilter.confirmSearch();
                 focusedField = (focusedField - 1 + getFieldCount()) % getFieldCount();
                 return ScreenResult.stay(this);
             }
@@ -199,6 +219,7 @@ public class AIQuestionGeneratorScreen implements Screen {
                 } else if (focusedField == getCancelButtonIndex()) {
                     return returnToPreviousScreen();
                 } else {
+                    if (!isPinnedQuiz()) subjectFilter.confirmSearch();
                     focusedField = (focusedField + 1) % getFieldCount();
                     return ScreenResult.stay(this);
                 }
@@ -220,9 +241,21 @@ public class AIQuestionGeneratorScreen implements Screen {
         int idx = focusedField;
         if (!isPinnedQuiz()) {
             if (idx == 0) {
-                int size = subjects.size() + 1;
-                if (KeyUtil.isLeft(k)) selectedSubjectIndex = (selectedSubjectIndex - 1 + size) % size;
-                else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) selectedSubjectIndex = (selectedSubjectIndex + 1) % size;
+                if (KeyUtil.isTab(k) || KeyUtil.isRight(k)) {
+                    subjectFilter.cycleNext();
+                    selectedSubjectIndex = subjectFilter.getSelectedOriginalIndex();
+                } else if (KeyUtil.isLeft(k)) {
+                    subjectFilter.cyclePrev();
+                    selectedSubjectIndex = subjectFilter.getSelectedOriginalIndex();
+                } else if (KeyUtil.isBackspace(k)) {
+                    subjectFilter.handleKey(k);
+                    selectedSubjectIndex = subjectFilter.getSelectedOriginalIndex();
+                } else {
+                    boolean handled = subjectFilter.handleKey(k);
+                    if (handled) {
+                        selectedSubjectIndex = subjectFilter.getSelectedOriginalIndex();
+                    }
+                }
                 return;
             }
             idx -= 1;
@@ -375,9 +408,11 @@ public class AIQuestionGeneratorScreen implements Screen {
             String targetStr = quizContext != null ? "Quiz: " + quizContext.getTitle() : "Question Bank";
             return QuestionViews.renderAIQuestionReview(generatedDrafts, selectedDraftIndex, targetStr, bannerMessage);
         }
-        String subjectDisplay = (subjects.isEmpty() || selectedSubjectIndex == 0)
-                ? "(No Subject)"
-                : subjects.get(selectedSubjectIndex - 1).getCode() + " - " + subjects.get(selectedSubjectIndex - 1).getName();
+        String subjectDisplay = !isPinnedQuiz()
+                ? subjectFilter.getFormDisplay("(No Subject)")
+                : (subjects.isEmpty() || selectedSubjectIndex == 0
+                    ? "(No Subject)"
+                    : subjects.get(selectedSubjectIndex - 1).getCode() + " - " + subjects.get(selectedSubjectIndex - 1).getName());
         return QuestionViews.renderAIQuestionForm(
                 isPinnedQuiz(),
                 isPinnedQuiz() ? quizContext.getTitle() : "",
