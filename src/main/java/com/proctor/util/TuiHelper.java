@@ -8,16 +8,12 @@ import java.util.List;
 public class TuiHelper {
     public static final String RESET = "\u001B[0m";
     public static final String BOLD = "\u001B[1m";
-    public static final String DIM = "\u001B[90m";
-    public static final String RED = "\u001B[31m";
-    public static final String GREEN = "\u001B[32m";
-    public static final String YELLOW = "\u001B[33m";
-    public static final String BLUE = "\u001B[34m";
-    public static final String MAGENTA = "\u001B[35m";
+    public static final String DIM = "\u001B[38;2;100;116;139m";
+    public static final String RED = "\u001B[38;2;185;28;28m";
+    public static final String GREEN = "\u001B[38;2;21;128;61m";
+    public static final String YELLOW = "\u001B[38;2;180;83;9m";
     public static final String NAVY_BLUE = "\u001B[38;2;30;58;138m";
-    public static final String PURPLE = NAVY_BLUE;
     public static final String CYAN = NAVY_BLUE;
-    public static final String WHITE = "\u001B[37m";
     public static final String CLEAR_EOL = "\u001B[K";
     public static final String HEADER_START = "\u001B[?9901h";
     public static final String HEADER_END = "\u001B[?9901l";
@@ -784,7 +780,7 @@ private static String stripAnsi(String str) {
         }
         for (int idx : hintIndices) {
             String clean = rawLines[idx].replace(CLEAR_EOL, "");
-            int len = visibleLength(clean.trim());
+            int len = visibleLength(stripSpaces(clean));
             if (len > maxLineLen) {
                 maxLineLen = len;
             }
