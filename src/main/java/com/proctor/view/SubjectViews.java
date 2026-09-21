@@ -33,7 +33,7 @@ public class SubjectViews {
         } else if (!searchBuffer.isEmpty()) {
             sb.append("  Search: [ ").append(TuiHelper.truncate(searchBuffer, 50)).append(" ] (Press '/' to edit)\n\n");
         }
-        sb.append(String.format("  %-4s  %-6s  %-16s  %-88s  %-9s%n", "#", "ID", "CODE", "SUBJECT NAME", "STATUS")).append("\n");
+        sb.append(String.format("  %-4s  %-6s  %-16s  %-88s  %-9s\n", "#", "ID", "CODE", "SUBJECT NAME", "STATUS"));
         sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         if (subjects.isEmpty()) {
@@ -45,7 +45,6 @@ public class SubjectViews {
 
             for (int i = startRow; i < endRow; i++) {
                 Subject s = subjects.get(i);
-                String cursor = (i == selectedIndex) ? TuiHelper.cyan("▶ ") : "  ";
                 String status = s.isEnabled() ? TuiHelper.green("Enabled") : TuiHelper.red("Disabled");
 
                 String line = String.format("%-4d  %-6d  %-16s  %-88s  %-9s",
@@ -56,9 +55,9 @@ public class SubjectViews {
                         status);
 
                 if (i == selectedIndex) {
-                    sb.append(cursor).append(TuiHelper.bold(line)).append("\n");
+                    sb.append("  ").append(TuiHelper.bold(line)).append("\n");
                 } else {
-                    sb.append(cursor).append(line).append("\n");
+                    sb.append("  ").append(line).append("\n");
                 }
                 if (i < endRow - 1) {
                     sb.append("\n");

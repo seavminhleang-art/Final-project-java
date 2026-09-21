@@ -52,11 +52,11 @@ public class TeacherSubmissionViews {
         }
 
         if (specificQuiz == null) {
-            sb.append(String.format("  %-5s  %-7s  %-36s  %-32s  %-18s  %-19s%n",
-                    "#", "TYPE", "ASSESSMENT", "STUDENT", "STATUS", "SUBMITTED AT")).append("\n");
+            sb.append(String.format("  %-5s  %-7s  %-36s  %-32s  %-18s  %-19s\n",
+                    "#", "TYPE", "ASSESSMENT", "STUDENT", "STATUS", "SUBMITTED AT"));
         } else {
-            sb.append(String.format("  %-7s  %-68s  %-24s  %-25s%n",
-                    "#", "STUDENT", "STATUS", "SUBMITTED AT")).append("\n");
+            sb.append(String.format("  %-7s  %-68s  %-24s  %-25s\n",
+                    "#", "STUDENT", "STATUS", "SUBMITTED AT"));
         }
         sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
@@ -69,7 +69,6 @@ public class TeacherSubmissionViews {
 
             for (int i = startRow; i < endRow; i++) {
                 Attempt a = submissions.get(i);
-                String cursor = (i == selectedIndex) ? TuiHelper.cyan("▶ ") : "  ";
                 User student = studentMap.get(a.getStudentId());
                 String studentName = (a.getStudentName() != null && !a.getStudentName().isBlank())
                         ? a.getStudentName()
@@ -113,9 +112,9 @@ public class TeacherSubmissionViews {
                 }
 
                 if (i == selectedIndex) {
-                    sb.append(cursor).append(TuiHelper.bold(line)).append("\n");
+                    sb.append("  ").append(TuiHelper.bold(line)).append("\n");
                 } else {
-                    sb.append(cursor).append(line).append("\n");
+                    sb.append("  ").append(line).append("\n");
                 }
                 if (i < endRow - 1) {
                     sb.append("\n");
@@ -263,23 +262,28 @@ public class TeacherSubmissionViews {
     }
 
     public static String renderAIGradingLoading(String studentName, String quizTitle, int spinnerTick) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(TuiHelper.DIALOG_MARKER);
-        sb.append(TuiHelper.header("SUBMISSIONS"));
-        sb.append("\n");
-        sb.append(TuiHelper.boxTitle("AI Grading & Evaluation", "Local Ollama LLM is evaluating short answers...")).append("\n\n");
+        return renderAIGradingLoading(studentName, quizTitle, spinnerTick, 0);
+    }
 
+    public static String renderAIGradingLoading(String studentName, String quizTitle, int spinnerTick, int elapsedSeconds) {
         String[] spinners = {"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"};
         String icon = spinners[Math.abs(spinnerTick) % spinners.length];
 
         String studentInfo = (studentName != null && !studentName.isBlank()) ? studentName : "Student Submission";
         String quizInfo = (quizTitle != null && !quizTitle.isBlank()) ? " (" + quizTitle + ")" : "";
 
-        sb.append("  ").append(TuiHelper.cyan(icon)).append(" ").append(TuiHelper.bold("Evaluating: " + studentInfo + quizInfo)).append("\n\n");
-        sb.append("  ").append(TuiHelper.dim("Ollama LLM is assessing short-answer conceptual accuracy against model answers and rubrics...")).append("\n\n");
-        sb.append("  ").append(TuiHelper.dim("Please wait, results and suggested points will appear once evaluation completes.\n\n"));
-        sb.append("  ").append(TuiHelper.dim("[Esc] Cancel evaluation\n"));
-        return sb.toString();
+        return TuiHelper.aiLoadingModal(
+                "SUBMISSIONS",
+                "AI Grading & Evaluation",
+                "Local Ollama LLM is evaluating short answers...",
+                icon,
+                "Evaluating: " + studentInfo + quizInfo,
+                "Local Ollama LLM",
+                "Assessing short answers against model answers and rubrics...",
+                "Suggested scores and actionable feedback will appear once evaluation completes.",
+                "[Esc] Cancel Evaluation",
+                elapsedSeconds
+        );
     }
 
     private static String truncate(String text, int max) {

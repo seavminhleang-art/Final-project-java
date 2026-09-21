@@ -24,6 +24,7 @@ public class Main {
 
         try {
             DatabaseConnection.init();
+            Runtime.getRuntime().addShutdownHook(new Thread(DatabaseConnection::close));
             SchemaInitializer.initialize();
 
             UserRepository userRepository = new UserRepository();

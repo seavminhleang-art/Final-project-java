@@ -107,19 +107,26 @@ public class QuestionViews {
     }
 
     public static String renderAIQuestionLoading(String topic, int spinnerTick) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(TuiHelper.DIALOG_MARKER);
-        sb.append(TuiHelper.header("AI QUESTION GENERATOR"));
-        sb.append("\n");
-        sb.append(TuiHelper.boxTitle("AI Question Generator", "Generating with Local Ollama LLM")).append("\n\n");
+        return renderAIQuestionLoading(topic, spinnerTick, 0);
+    }
 
+    public static String renderAIQuestionLoading(String topic, int spinnerTick, int elapsedSeconds) {
         String[] spinners = {"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"};
-        String icon = spinners[spinnerTick % spinners.length];
+        String icon = spinners[Math.abs(spinnerTick) % spinners.length];
+        String topicDisplay = (topic != null && !topic.isBlank()) ? topic.trim() : "Custom Topic";
 
-        sb.append("  ").append(TuiHelper.cyan(icon + " Generating questions for topic: ")).append(TuiHelper.bold(topic)).append("\n\n");
-        sb.append("  ").append(TuiHelper.dim("Please wait a moment while the local Ollama LLM drafts questions, options, and explanations...")).append("\n\n");
-        sb.append("  ").append(TuiHelper.dim("[Esc] Cancel generation\n"));
-        return sb.toString();
+        return TuiHelper.aiLoadingModal(
+                "QUESTIONS",
+                "AI Question Generator",
+                "Drafting with Local Ollama LLM",
+                icon,
+                "Generating questions for topic: " + topicDisplay,
+                "Local Ollama LLM",
+                "Synthesizing questions, answer options, and explanations...",
+                "Please wait while the model drafts and structures the content.",
+                "[Esc] Cancel Generation",
+                elapsedSeconds
+        );
     }
 
     public static String renderAIQuestionForm(boolean isPinnedQuiz, String pinnedQuizTitle, String subjectName,
@@ -201,8 +208,12 @@ public class QuestionViews {
 
         for (int i = start; i < end; i++) {
             AIQuestionDraft d = generatedDrafts.get(i);
-            String cursor = (i == selectedDraftIndex) ? TuiHelper.cyan("▶ ") : "  ";
-            sb.append(cursor).append(TuiHelper.bold(String.format("Q%d. %s [%s, %.1f pts]", i + 1, d.getQuestionText(), d.getDifficulty().name(), d.getPoints()))).append("\n");
+            String title = String.format("Q%d. %s [%s, %.1f pts]", i + 1, d.getQuestionText(), d.getDifficulty().name(), d.getPoints());
+            if (i == selectedDraftIndex) {
+                sb.append("  ").append(TuiHelper.bold(TuiHelper.navyBlue(title))).append("\n");
+            } else {
+                sb.append("  ").append(TuiHelper.bold(title)).append("\n");
+            }
 
             if (d.getOptions() != null && !d.getOptions().isEmpty()) {
                 sb.append("\n");

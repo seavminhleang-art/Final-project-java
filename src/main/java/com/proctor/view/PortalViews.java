@@ -38,11 +38,11 @@ public class PortalViews {
         sb.append(TuiHelper.tabBar(new String[]{"Quizzes", "Exams", "Speed Quizzes"}, activeTab)).append("\n\n");
 
         if (mode == com.proctor.controller.GlobalLeaderboardScreen.Mode.SPEED) {
-            sb.append(String.format("  %-6s  %-54s  %-32s  %-10s  %-14s%n",
-                    "RANK", "STUDENT NAME", "USERNAME", countColHeader, "HIGH SCORE")).append("\n");
+            sb.append(String.format("  %-6s  %-54s  %-32s  %-10s  %-14s\n",
+                    "RANK", "STUDENT NAME", "USERNAME", countColHeader, "HIGH SCORE"));
         } else {
-            sb.append(String.format("  %-6s  %-54s  %-32s  %-10s  %-12s  %-8s%n",
-                    "RANK", "STUDENT NAME", "USERNAME", countColHeader, "TOTAL PTS", "AVG %")).append("\n");
+            sb.append(String.format("  %-6s  %-54s  %-32s  %-10s  %-12s  %-8s\n",
+                    "RANK", "STUDENT NAME", "USERNAME", countColHeader, "TOTAL PTS", "AVG %"));
         }
         sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
@@ -63,7 +63,6 @@ public class PortalViews {
 
             for (int i = startRow; i < endRow; i++) {
                 LeaderboardEntry entry = leaderboard.get(i);
-                String cursor = (i == selectedIndex) ? TuiHelper.cyan("▶ ") : "  ";
 
                 String rankStr;
                 if (entry.getRank() == 1) rankStr = "#1";
@@ -90,9 +89,9 @@ public class PortalViews {
                 }
 
                 if (i == selectedIndex) {
-                    sb.append(cursor).append(TuiHelper.bold(line)).append("\n");
+                    sb.append("  ").append(TuiHelper.bold(line)).append("\n");
                 } else {
-                    sb.append(cursor).append(line).append("\n");
+                    sb.append("  ").append(line).append("\n");
                 }
                 if (i < endRow - 1) {
                     sb.append("\n");

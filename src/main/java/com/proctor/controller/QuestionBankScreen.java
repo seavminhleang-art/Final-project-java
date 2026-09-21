@@ -139,7 +139,9 @@ public class QuestionBankScreen implements Screen {
                 if (!questions.isEmpty()) {
                     int pageSize = TuiHelper.PAGE_SIZE;
                     int page = selectedIndex / pageSize;
-                    selectedIndex = Math.max(0, (page - 1) * pageSize);
+                    if (page > 0) {
+                        selectedIndex = (page - 1) * pageSize;
+                    }
                 }
             } else if (KeyUtil.isRight(k)) {
                 if (!questions.isEmpty()) {

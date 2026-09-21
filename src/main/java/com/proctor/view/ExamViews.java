@@ -60,7 +60,6 @@ public class ExamViews {
 
             for (int i = startRow; i < endRow; i++) {
                 Quiz q = quizzes.get(i);
-                String cursor = (i == selectedIndex) ? TuiHelper.cyan("▶ ") : "  ";
                 String subj = (q.getSubjectId() != null) ? subjectNames.getOrDefault(q.getSubjectId(), "-") : "-";
                 String teacher = (q.getCreatorName() != null && !q.getCreatorName().isBlank()) ? q.getCreatorName() : "Teacher";
 
@@ -84,9 +83,9 @@ public class ExamViews {
                         statusStr);
 
                 if (i == selectedIndex) {
-                    sb.append(cursor).append(TuiHelper.bold(line)).append("\n");
+                    sb.append("  ").append(TuiHelper.bold(line)).append("\n");
                 } else {
-                    sb.append(cursor).append(line).append("\n");
+                    sb.append("  ").append(line).append("\n");
                 }
                 if (i < endRow - 1) {
                     sb.append("\n");
@@ -211,11 +210,7 @@ public class ExamViews {
         sb.append("│ ").append(" ".repeat(boxInnerW)).append(" │\n");
         sb.append("└").append("─".repeat(boxW - 2)).append("┘\n\n");
 
-        if (buttonLabels.size() == 2) {
-            sb.append(TuiHelper.buttonRow(buttonLabels.get(0), focusedButtonIndex == 0, buttonLabels.get(1), focusedButtonIndex == 1, 120)).append("\n\n");
-        } else if (buttonLabels.size() >= 3) {
-            sb.append(TuiHelper.buttonRow(buttonLabels.get(0), focusedButtonIndex == 0, buttonLabels.get(1), focusedButtonIndex == 1, buttonLabels.get(2), focusedButtonIndex == 2, 120)).append("\n\n");
-        }
+        sb.append(TuiHelper.buttonRow(buttonLabels, focusedButtonIndex, 120)).append("\n\n");
 
         if (!bannerMessage.isBlank()) {
             sb.append("  ").append(bannerMessage).append("\n\n");
@@ -494,7 +489,6 @@ public class ExamViews {
 
             for (int i = startRow; i < endRow; i++) {
                 Result r = historyList.get(i);
-                String cursor = (i == selectedIndex) ? TuiHelper.cyan("▶ ") : "  ";
                 String status;
                 String scoreStr;
                 String pctStr;
@@ -524,9 +518,9 @@ public class ExamViews {
                         dateStr);
 
                 if (i == selectedIndex) {
-                    sb.append(cursor).append(TuiHelper.bold(line)).append("\n");
+                    sb.append("  ").append(TuiHelper.bold(line)).append("\n");
                 } else {
-                    sb.append(cursor).append(line).append("\n");
+                    sb.append("  ").append(line).append("\n");
                 }
                 if (i < endRow - 1) {
                     sb.append("\n");

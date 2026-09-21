@@ -39,8 +39,8 @@ public class InboxViews {
             sb.append("  Search: [ ").append(truncate(searchBuffer, 50)).append(" ] (Press '/' to edit)\n\n");
         }
 
-        sb.append(String.format("    %-4s  %-14s  %-16s  %-22s  %-46s  %-16s%n",
-                "#", "STATUS", "TYPE", "FROM", "SUBJECT", "RECEIVED")).append("\n");
+        sb.append(String.format("    %-4s  %-14s  %-16s  %-22s  %-46s  %-16s\n",
+                "#", "STATUS", "TYPE", "FROM", "SUBJECT", "RECEIVED"));
         sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         if (messages.isEmpty()) {
@@ -52,7 +52,6 @@ public class InboxViews {
 
             for (int i = startRow; i < endRow; i++) {
                 InboxMessage msg = messages.get(i);
-                String cursor = (i == selectedIndex) ? TuiHelper.cyan("▶ ") : "  ";
                 String unreadDot = !msg.isRead() ? TuiHelper.cyan("● ") : "  ";
 
                 String statusBadge = formatStatusBadge(msg.getStatus(), !msg.isRead());
@@ -70,9 +69,9 @@ public class InboxViews {
                         dateStr);
 
                 if (i == selectedIndex) {
-                    sb.append(cursor).append(unreadDot).append(TuiHelper.bold(line)).append("\n");
+                    sb.append("  ").append(unreadDot).append(TuiHelper.bold(line)).append("\n");
                 } else {
-                    sb.append(cursor).append(unreadDot).append(line).append("\n");
+                    sb.append("  ").append(unreadDot).append(line).append("\n");
                 }
                 if (i < endRow - 1) {
                     sb.append("\n");

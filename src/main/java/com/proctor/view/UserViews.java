@@ -29,8 +29,8 @@ public class UserViews {
         } else if (!searchBuffer.isEmpty()) {
             sb.append("  Search: [ ").append(TuiHelper.truncate(searchBuffer, 50)).append(" ] (Press '/' to edit)\n\n");
         }
-        sb.append(String.format("  %-4s  %-6s  %-18s  %-28s  %-20s  %-8s  %-12s  %-10s  %-9s%n",
-                "#", "ID", "USERNAME", "EMAIL", "FULL NAME", "GENDER", "BIRTHDAY", "ROLE", "STATUS")).append("\n");
+        sb.append(String.format("  %-4s  %-6s  %-18s  %-28s  %-20s  %-8s  %-12s  %-10s  %-9s\n",
+                "#", "ID", "USERNAME", "EMAIL", "FULL NAME", "GENDER", "BIRTHDAY", "ROLE", "STATUS"));
         sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         if (users.isEmpty()) {
@@ -42,7 +42,6 @@ public class UserViews {
 
             for (int i = startRow; i < endRow; i++) {
                 User u = users.get(i);
-                String cursor = (i == selectedIndex) ? TuiHelper.cyan("▶ ") : "  ";
                 String status = u.isEnabled() ? TuiHelper.green("Enabled") : TuiHelper.red("Disabled");
                 String dobStr = (u.getDateOfBirth() != null) ? u.getDateOfBirth().format(DISPLAY_FMT) : "-";
                 String genderStr = (u.getGender() != null && !u.getGender().isBlank()) ? u.getGender() : "-";
@@ -62,9 +61,9 @@ public class UserViews {
                         status);
 
                 if (i == selectedIndex) {
-                    sb.append(cursor).append(TuiHelper.bold(line)).append("\n");
+                    sb.append("  ").append(TuiHelper.bold(line)).append("\n");
                 } else {
-                    sb.append(cursor).append(line).append("\n");
+                    sb.append("  ").append(line).append("\n");
                 }
                 if (i < endRow - 1) {
                     sb.append("\n");

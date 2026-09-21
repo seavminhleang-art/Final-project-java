@@ -20,14 +20,17 @@ import com.proctor.model.enums.QuestionType;
 import com.proctor.util.KeyUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.TeacherSubmissionViews;
+import com.williamcallahan.tui4j.compat.bubbletea.Command;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
 import com.williamcallahan.tui4j.compat.bubbletea.Message;
 import com.williamcallahan.tui4j.compat.bubbletea.input.key.KeyType;
 
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class TeacherSubmissionScreen implements Screen {
     private final Quiz specificQuiz;
@@ -50,8 +53,16 @@ public class TeacherSubmissionScreen implements Screen {
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
     private boolean isGrading = false;
     private int spinnerTick = 0;
+    private long gradingStartTime = 0;
+    private int activeGradingId = 0;
+    private AtomicBoolean activeCancellation = null;
 
-    public record AIGradingCompletedMessage(boolean success, String errorMessage) implements Message {}
+    public record GradingTickMessage(int gradingId) implements Message {}
+    public record AIGradingCompletedMessage(int gradingId, boolean success, String errorMessage) implements Message {
+        public AIGradingCompletedMessage(boolean success, String errorMessage) {
+            this(0, success, errorMessage);
+        }
+    }
 
     public TeacherSubmissionScreen(Quiz specificQuiz, ExamService examService, QuizService quizService, QuestionService questionService, SubjectService subjectService, AuthService authService) {
         this.specificQuiz = specificQuiz;
@@ -113,7 +124,18 @@ public class TeacherSubmissionScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        if (msg instanceof GradingTickMessage t) {
+            if (isGrading && t.gradingId() == this.activeGradingId) {
+                spinnerTick++;
+                return ScreenResult.stay(this, Command.tick(Duration.ofMillis(80), time -> new GradingTickMessage(this.activeGradingId)));
+            }
+            return ScreenResult.stay(this);
+        }
+
         if (msg instanceof AIGradingCompletedMessage m) {
+            if (!isGrading || (m.gradingId() != 0 && m.gradingId() != this.activeGradingId)) {
+                return ScreenResult.stay(this);
+            }
             isGrading = false;
             if (m.success()) {
                 bannerMessage = inspectingAnswerSheet
@@ -130,9 +152,12 @@ public class TeacherSubmissionScreen implements Screen {
         }
 
         if (isGrading) {
-            spinnerTick++;
             if (msg instanceof KeyPressMessage k && KeyUtil.isEsc(k)) {
                 isGrading = false;
+                activeGradingId++;
+                if (activeCancellation != null) {
+                    activeCancellation.set(true);
+                }
                 bannerMessage = TuiHelper.yellow("AI grading cancelled.");
             }
             return ScreenResult.stay(this);
@@ -328,12 +353,24 @@ public class TeacherSubmissionScreen implements Screen {
             return ScreenResult.stay(this);
         }
         isGrading = true;
+        spinnerTick = 0;
+        gradingStartTime = System.currentTimeMillis();
+        final int gId = ++activeGradingId;
+        final AtomicBoolean cancelled = new AtomicBoolean(false);
+        this.activeCancellation = cancelled;
         bannerMessage = "";
-        return ScreenResult.stay(this, () -> {
+
+        Command gradeCmd = () -> {
             try {
                 boolean ok = examService.gradeWithAI(att.getId());
-                return new AIGradingCompletedMessage(ok, ok ? null : "AI grading failed. Please check Ollama.");
+                if (cancelled.get()) {
+                    return new AIGradingCompletedMessage(gId, false, "Cancelled");
+                }
+                return new AIGradingCompletedMessage(gId, ok, ok ? null : "AI grading failed. Please check Ollama.");
             } catch (Exception e) {
+                if (cancelled.get()) {
+                    return new AIGradingCompletedMessage(gId, false, "Cancelled");
+                }
                 String err = e.getMessage();
                 if (err == null || err.isBlank()) {
                     Throwable cause = e.getCause();
@@ -343,9 +380,13 @@ public class TeacherSubmissionScreen implements Screen {
                         err = "Failed to grade with AI: " + e.getClass().getSimpleName();
                     }
                 }
-                return new AIGradingCompletedMessage(false, err);
+                return new AIGradingCompletedMessage(gId, false, err);
             }
-        });
+        };
+
+        Command tickCmd = Command.tick(Duration.ofMillis(80), time -> new GradingTickMessage(gId));
+
+        return ScreenResult.stay(this, Command.batch(gradeCmd, tickCmd));
     }
 
     @Override
@@ -360,7 +401,8 @@ public class TeacherSubmissionScreen implements Screen {
                 quizTitle = (specificQuiz != null) ? specificQuiz.getTitle()
                         : (attempt.getQuizTitle() != null ? attempt.getQuizTitle() : "Quiz #" + attempt.getQuizId());
             }
-            return TeacherSubmissionViews.renderAIGradingLoading(studentName, quizTitle, spinnerTick);
+            int elapsedSeconds = (int) Math.max(0, (System.currentTimeMillis() - gradingStartTime) / 1000);
+            return TeacherSubmissionViews.renderAIGradingLoading(studentName, quizTitle, spinnerTick, elapsedSeconds);
         }
         if (inspectingAnswerSheet && !submissions.isEmpty()) {
             Attempt attempt = submissions.get(selectedIndex);

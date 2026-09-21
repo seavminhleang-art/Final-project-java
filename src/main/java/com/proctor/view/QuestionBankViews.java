@@ -34,8 +34,8 @@ public class QuestionBankViews {
             sb.append("  Search: [ ").append(TuiHelper.truncate(searchBuffer, 50)).append(" ] (Press '/' to edit)\n\n");
         }
 
-        sb.append(String.format("  %-4s  %-10s  %-12s  %-8s  %-5s  %-4s  %-75s%n",
-                "#", "SUBJ", "TYPE", "DIFF", "PTS", "AI?", "QUESTION TEXT")).append("\n");
+        sb.append(String.format("  %-4s  %-10s  %-12s  %-8s  %-5s  %-4s  %-75s\n",
+                "#", "SUBJ", "TYPE", "DIFF", "PTS", "AI?", "QUESTION TEXT"));
         sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         if (questions.isEmpty()) {
@@ -47,7 +47,6 @@ public class QuestionBankViews {
 
             for (int i = startRow; i < endRow; i++) {
                 Question q = questions.get(i);
-                String cursor = (i == selectedIndex) ? TuiHelper.cyan("▶ ") : "  ";
                 String subj = q.getSubjectCode() != null ? q.getSubjectCode() : "-";
                 String aiMark = q.isAiGenerated() ? TuiHelper.cyan("AI") : TuiHelper.dim("--");
 
@@ -61,9 +60,9 @@ public class QuestionBankViews {
                         truncate(q.getQuestionText(), 75));
 
                 if (i == selectedIndex) {
-                    sb.append(cursor).append(TuiHelper.bold(line)).append("\n");
+                    sb.append("  ").append(TuiHelper.bold(line)).append("\n");
                 } else {
-                    sb.append(cursor).append(line).append("\n");
+                    sb.append("  ").append(line).append("\n");
                 }
                 if (i < endRow - 1) {
                     sb.append("\n");
@@ -135,8 +134,8 @@ public class QuestionBankViews {
             sb.append("  ").append(TuiHelper.dim(filterSummary)).append("\n\n");
         }
 
-        sb.append(String.format("    %-14s  %-4s  %-12s  %-8s  %-5s  %-75s%n",
-                "SELECT", "#", "TYPE", "DIFF", "PTS", "QUESTION TEXT")).append("\n");
+        sb.append(String.format("    %-14s  %-4s  %-12s  %-8s  %-5s  %-75s\n",
+                "SELECT", "#", "TYPE", "DIFF", "PTS", "QUESTION TEXT"));
         sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         if (bankQuestions.isEmpty()) {
@@ -158,7 +157,6 @@ public class QuestionBankViews {
                 } else {
                     checkbox = TuiHelper.dim("[ ] Unselected");
                 }
-                String cursor = (i == selectedIndex) ? TuiHelper.cyan("▶ ") : "  ";
 
                 String line = String.format("%s  %-4d  %-12s  %-8s  %-5.1f  %-75s",
                         checkbox,
@@ -169,9 +167,9 @@ public class QuestionBankViews {
                         truncate(q.getQuestionText(), 75));
 
                 if (i == selectedIndex) {
-                    sb.append(TuiHelper.cyan(cursor + line)).append("\n");
+                    sb.append("    ").append(TuiHelper.bold(line)).append("\n");
                 } else {
-                    sb.append(cursor).append(line).append("\n");
+                    sb.append("    ").append(line).append("\n");
                 }
                 if (i < endRow - 1) {
                     sb.append("\n");

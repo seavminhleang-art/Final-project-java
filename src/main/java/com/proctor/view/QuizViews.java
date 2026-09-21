@@ -52,11 +52,11 @@ public class QuizViews {
 
         String timeColHeader = (assessmentType == AssessmentType.SPEED) ? "SEC/Q" : "TIME";
         if (isAdmin) {
-            sb.append(String.format("  %-4s  %-6s  %-12s  %-36s  %-18s  %-8s  %-8s  %-4s  %-6s  %-10s%n",
-                    "#", "ID", "SUBJ", "TITLE", "TEACHER", "TYPE", timeColHeader, "Qs", "PTS", "STATUS")).append("\n");
+            sb.append(String.format("  %-4s  %-6s  %-12s  %-36s  %-18s  %-8s  %-8s  %-4s  %-6s  %-10s\n",
+                    "#", "ID", "SUBJ", "TITLE", "TEACHER", "TYPE", timeColHeader, "Qs", "PTS", "STATUS"));
         } else {
-            sb.append(String.format("  %-4s  %-12s  %-44s  %-18s  %-8s  %-8s  %-4s  %-6s  %-10s%n",
-                    "#", "SUBJ", "TITLE", "TEACHER", "TYPE", timeColHeader, "Qs", "PTS", "STATUS")).append("\n");
+            sb.append(String.format("  %-4s  %-12s  %-44s  %-18s  %-8s  %-8s  %-4s  %-6s  %-10s\n",
+                    "#", "SUBJ", "TITLE", "TEACHER", "TYPE", timeColHeader, "Qs", "PTS", "STATUS"));
         }
         sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
@@ -70,7 +70,6 @@ public class QuizViews {
 
             for (int i = startRow; i < endRow; i++) {
                 Quiz q = quizzes.get(i);
-                String cursor = (i == selectedIndex) ? TuiHelper.cyan("▶ ") : "  ";
                 String status = q.isPublished() ? TuiHelper.green("Published") : TuiHelper.dim("Draft");
                 String subj = q.getSubjectCode() != null ? q.getSubjectCode() : "-";
                 String timeStr;
@@ -120,9 +119,9 @@ public class QuizViews {
                 }
 
                 if (i == selectedIndex) {
-                    sb.append(cursor).append(TuiHelper.bold(line)).append("\n");
+                    sb.append("  ").append(TuiHelper.bold(line)).append("\n");
                 } else {
-                    sb.append(cursor).append(line).append("\n");
+                    sb.append("  ").append(line).append("\n");
                 }
                 if (i < endRow - 1) {
                     sb.append("\n");
@@ -270,8 +269,8 @@ public class QuizViews {
         sb.append("\n");
         sb.append(TuiHelper.boxTitle(quiz.getTitle(), subtitle)).append("\n\n");
 
-        sb.append(String.format("  %-4s  %-12s  %-10s  %-6s  %-90s%n",
-                "#", "TYPE", "DIFF", "PTS", "QUESTION TEXT")).append("\n");
+        sb.append(String.format("  %-4s  %-12s  %-10s  %-6s  %-90s\n",
+                "#", "TYPE", "DIFF", "PTS", "QUESTION TEXT"));
         sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         if (questions.isEmpty()) {
@@ -284,7 +283,6 @@ public class QuizViews {
 
             for (int i = startRow; i < endRow; i++) {
                 Question q = questions.get(i);
-                String cursor = (i == selectedIndex) ? TuiHelper.cyan("▶ ") : "  ";
                 String line = String.format("%-4d  %-12s  %-10s  %-6.1f  %-90s",
                         (i + 1),
                         truncate(q.getQuestionType().name(), 12),
@@ -293,9 +291,9 @@ public class QuizViews {
                         truncate(q.getQuestionText(), 90));
 
                 if (i == selectedIndex) {
-                    sb.append(TuiHelper.cyan(cursor + line)).append("\n");
+                    sb.append("  ").append(TuiHelper.bold(line)).append("\n");
                 } else {
-                    sb.append(cursor).append(line).append("\n");
+                    sb.append("  ").append(line).append("\n");
                 }
                 if (i < endRow - 1) {
                     sb.append("\n");
@@ -332,21 +330,28 @@ public class QuizViews {
     }
 
     public static String renderAIQuizLoading(AssessmentType assessmentType, String title, int tick) {
-        StringBuilder sb = new StringBuilder();
+        return renderAIQuizLoading(assessmentType, title, tick, 0);
+    }
+
+    public static String renderAIQuizLoading(AssessmentType assessmentType, String title, int tick, int elapsedSeconds) {
         String itemType = (assessmentType == AssessmentType.EXAM) ? "EXAM" : (assessmentType == AssessmentType.SPEED ? "SPEED QUIZ" : "QUIZ");
         String itemLabel = (assessmentType == AssessmentType.EXAM) ? "Exam" : (assessmentType == AssessmentType.SPEED ? "Speed Quiz" : "Quiz");
-        sb.append(TuiHelper.header(itemType));
-        sb.append("\n");
-        sb.append(TuiHelper.boxTitle("Generating " + itemLabel + ": " + title, "Local Ollama LLM is assembling questions...")).append("\n\n");
-
         String[] spinnerFrames = {"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"};
         String spinner = spinnerFrames[Math.abs(tick) % spinnerFrames.length];
+        String titleDisplay = (title != null && !title.isBlank()) ? title.trim() : ("New " + itemLabel);
 
-        sb.append("  ").append(TuiHelper.cyan(spinner)).append(" ").append(TuiHelper.bold("Crafting high-quality academic questions with AI...")).append("\n\n");
-        sb.append("  ").append(TuiHelper.dim("Synthesizing questions, options, rubrics, and assembling the " + itemLabel.toLowerCase() + " in the database...")).append("\n\n");
-        sb.append("  ").append(TuiHelper.dim("You will be automatically redirected to the Question Editor once complete.\n\n"));
-        sb.append("  ").append(TuiHelper.dim("[Esc] Cancel\n"));
-        return sb.toString();
+        return TuiHelper.aiLoadingModal(
+                itemType,
+                "Generating " + itemLabel + ": " + titleDisplay,
+                "Local Ollama LLM is assembling questions...",
+                spinner,
+                "Crafting Academic Questions for: " + titleDisplay,
+                "Local Ollama LLM",
+                "Assembling assessment questions, options, and grading rubrics...",
+                "You will be automatically redirected to the Question Editor once ready.",
+                "[Esc] Cancel Generation",
+                elapsedSeconds
+        );
     }
 
     public static String renderAIQuizForm(AssessmentType assessmentType, String subjectName, String titleBuffer,

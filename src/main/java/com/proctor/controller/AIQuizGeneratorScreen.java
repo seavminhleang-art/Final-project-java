@@ -17,11 +17,14 @@ import com.proctor.model.service.SubjectService;
 import com.proctor.util.KeyUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.QuizViews;
+import com.williamcallahan.tui4j.compat.bubbletea.Command;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
 import com.williamcallahan.tui4j.compat.bubbletea.Message;
 import com.williamcallahan.tui4j.compat.bubbletea.input.key.KeyType;
 
+import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class AIQuizGeneratorScreen implements Screen {
     private final AIService aiService;
@@ -30,8 +33,8 @@ public class AIQuizGeneratorScreen implements Screen {
     private final SubjectService subjectService;
     private final AuthService authService;
     private final AssessmentType assessmentType;
-
     private final List<Subject> subjects;
+
     private int selectedSubjectIndex = 0;
     private final StringBuilder titleBuffer = new StringBuilder();
     private final StringBuilder descriptionBuffer = new StringBuilder();
@@ -56,9 +59,17 @@ public class AIQuizGeneratorScreen implements Screen {
     private boolean isGenerating = false;
     private String bannerMessage = "";
     private int spinnerTick = 0;
+    private long generationStartTime = 0;
+    private int activeGenerationId = 0;
+    private AtomicBoolean activeCancellation = null;
     private final InlineSubjectFilter<Subject> subjectFilter;
 
-    public record AIQuizGeneratedMessage(Quiz createdQuiz, List<AIQuestionDraft> drafts, String errorMessage) implements Message {}
+    public record QuizGenTickMessage(int generationId) implements Message {}
+    public record AIQuizGeneratedMessage(int generationId, Quiz createdQuiz, List<AIQuestionDraft> drafts, String errorMessage) implements Message {
+        public AIQuizGeneratedMessage(Quiz createdQuiz, List<AIQuestionDraft> drafts, String errorMessage) {
+            this(0, createdQuiz, drafts, errorMessage);
+        }
+    }
 
     public AIQuizGeneratorScreen(AIService aiService, QuizService quizService, QuestionService questionService, SubjectService subjectService, AuthService authService) {
         this(aiService, quizService, questionService, subjectService, authService, AssessmentType.QUIZ);
@@ -124,7 +135,18 @@ public class AIQuizGeneratorScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        if (msg instanceof QuizGenTickMessage t) {
+            if (isGenerating && t.generationId() == this.activeGenerationId) {
+                spinnerTick++;
+                return ScreenResult.stay(this, Command.tick(Duration.ofMillis(80), time -> new QuizGenTickMessage(this.activeGenerationId)));
+            }
+            return ScreenResult.stay(this);
+        }
+
         if (msg instanceof AIQuizGeneratedMessage m) {
+            if (!isGenerating || (m.generationId() != 0 && m.generationId() != this.activeGenerationId)) {
+                return ScreenResult.stay(this);
+            }
             isGenerating = false;
             if (m.errorMessage() != null || m.createdQuiz() == null) {
                 String err = (m.errorMessage() != null && !m.errorMessage().isBlank())
@@ -137,9 +159,12 @@ public class AIQuizGeneratorScreen implements Screen {
         }
 
         if (isGenerating) {
-            spinnerTick++;
             if (msg instanceof KeyPressMessage k && KeyUtil.isEsc(k)) {
                 isGenerating = false;
+                activeGenerationId++;
+                if (activeCancellation != null) {
+                    activeCancellation.set(true);
+                }
                 bannerMessage = TuiHelper.yellow("Generation cancelled.");
             }
             return ScreenResult.stay(this);
@@ -590,6 +615,11 @@ public class AIQuizGeneratorScreen implements Screen {
         }
 
         isGenerating = true;
+        spinnerTick = 0;
+        generationStartTime = System.currentTimeMillis();
+        final int genId = ++activeGenerationId;
+        final AtomicBoolean cancelled = new AtomicBoolean(false);
+        this.activeCancellation = cancelled;
         bannerMessage = "";
 
         final int finalMcqCount = mcqC;
@@ -609,12 +639,30 @@ public class AIQuizGeneratorScreen implements Screen {
         final Difficulty diff = selectedDifficulty;
         final int optsPerMcq = mcqOptionCount;
 
-        return ScreenResult.stay(this, () -> {
+        Command genCmd = () -> {
             Quiz createdQuiz = null;
             User teacher = Session.getCurrentUser().orElse(null);
             try {
                 Subject subj = selectedSubj;
                 Integer teacherId = teacher != null ? teacher.getId() : null;
+
+                String fullPromptTopic = subjStr + ": " + titleTopic;
+                List<AIQuestionDraft> drafts;
+                if (assessmentType == AssessmentType.SPEED) {
+                    drafts = aiService.generateMixedQuestions(fullPromptTopic, finalMcqCount, finalTfCount, 0, diff, optsPerMcq, customPrompt);
+                } else if (assessmentType == AssessmentType.EXAM && mixed) {
+                    drafts = aiService.generateMixedQuestions(fullPromptTopic, finalMcqCount, finalTfCount, finalSaCount, diff, optsPerMcq, customPrompt);
+                } else {
+                    drafts = aiService.generateQuestions(fullPromptTopic, finalSingleCount, type, diff, optsPerMcq, customPrompt);
+                }
+
+                if (cancelled.get()) {
+                    return new AIQuizGeneratedMessage(genId, null, null, "Cancelled");
+                }
+
+                if (drafts.isEmpty()) {
+                    return new AIQuizGeneratedMessage(genId, null, null, "AI model returned 0 questions. Please try again with a clearer topic.");
+                }
 
                 String defaultDesc = "AI Generated " + (assessmentType == AssessmentType.EXAM ? "Exam" : (assessmentType == AssessmentType.SPEED ? "Speed Quiz" : "Quiz")) + " on " + titleTopic;
                 String quizDesc = studentInstructions.isBlank() ? defaultDesc : studentInstructions;
@@ -639,21 +687,6 @@ public class AIQuizGeneratorScreen implements Screen {
 
                 createdQuiz = quizService.createQuiz(quiz);
 
-                String fullPromptTopic = subjStr + ": " + titleTopic;
-                List<AIQuestionDraft> drafts;
-                if (assessmentType == AssessmentType.SPEED) {
-                    drafts = aiService.generateMixedQuestions(fullPromptTopic, finalMcqCount, finalTfCount, 0, diff, optsPerMcq, customPrompt);
-                } else if (assessmentType == AssessmentType.EXAM && mixed) {
-                    drafts = aiService.generateMixedQuestions(fullPromptTopic, finalMcqCount, finalTfCount, finalSaCount, diff, optsPerMcq, customPrompt);
-                } else {
-                    drafts = aiService.generateQuestions(fullPromptTopic, finalSingleCount, type, diff, optsPerMcq, customPrompt);
-                }
-
-                if (drafts.isEmpty()) {
-                    quizService.deleteQuiz(createdQuiz.getId(), teacher);
-                    return new AIQuizGeneratedMessage(null, null, "AI model returned 0 questions. Please try again with a clearer topic.");
-                }
-
                 for (AIQuestionDraft draft : drafts) {
                     Question q = Question.builder()
                             .quizId(createdQuiz.getId())
@@ -671,8 +704,11 @@ public class AIQuizGeneratorScreen implements Screen {
                     questionService.createQuestion(q);
                 }
 
-                return new AIQuizGeneratedMessage(createdQuiz, drafts, null);
+                return new AIQuizGeneratedMessage(genId, createdQuiz, drafts, null);
             } catch (Exception e) {
+                if (cancelled.get()) {
+                    return new AIQuizGeneratedMessage(genId, null, null, "Cancelled");
+                }
                 if (createdQuiz != null) {
                     try { quizService.deleteQuiz(createdQuiz.getId(), teacher); } catch (Exception ignored) {}
                 }
@@ -685,15 +721,20 @@ public class AIQuizGeneratorScreen implements Screen {
                         err = "Failed to generate assessment with AI model: " + e.getClass().getSimpleName();
                     }
                 }
-                return new AIQuizGeneratedMessage(null, null, err);
+                return new AIQuizGeneratedMessage(genId, null, null, err);
             }
-        });
+        };
+
+        Command tickCmd = Command.tick(Duration.ofMillis(80), time -> new QuizGenTickMessage(genId));
+
+        return ScreenResult.stay(this, Command.batch(genCmd, tickCmd));
     }
 
     @Override
     public String view() {
         if (isGenerating) {
-            return QuizViews.renderAIQuizLoading(assessmentType, titleBuffer.toString(), spinnerTick);
+            int elapsedSeconds = (int) Math.max(0, (System.currentTimeMillis() - generationStartTime) / 1000);
+            return QuizViews.renderAIQuizLoading(assessmentType, titleBuffer.toString(), spinnerTick, elapsedSeconds);
         }
         String typeLabel;
         if (assessmentType == AssessmentType.SPEED) {

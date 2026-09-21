@@ -11,6 +11,7 @@ import com.proctor.model.entity.Result;
 import com.proctor.model.enums.InboxMessageType;
 import com.proctor.model.enums.InboxStatus;
 import com.proctor.model.repository.InboxRepository;
+import com.proctor.model.repository.QuizRepository;
 import com.proctor.model.repository.ResultRepository;
 import com.proctor.util.PasswordUtils;
 
@@ -25,20 +26,26 @@ public class InboxService {
     private final UserRepository userRepository;
     private final AttemptRepository attemptRepository;
     private final ResultRepository resultRepository;
+    private final QuizRepository quizRepository;
 
     public InboxService(InboxRepository inboxRepository, UserRepository userRepository) {
-        this(inboxRepository, userRepository, new AttemptRepository(), new ResultRepository());
+        this(inboxRepository, userRepository, new AttemptRepository(), new ResultRepository(), new QuizRepository());
     }
 
     public InboxService(InboxRepository inboxRepository, UserRepository userRepository, AttemptRepository attemptRepository) {
-        this(inboxRepository, userRepository, attemptRepository, new ResultRepository());
+        this(inboxRepository, userRepository, attemptRepository, new ResultRepository(), new QuizRepository());
     }
 
     public InboxService(InboxRepository inboxRepository, UserRepository userRepository, AttemptRepository attemptRepository, ResultRepository resultRepository) {
+        this(inboxRepository, userRepository, attemptRepository, resultRepository, new QuizRepository());
+    }
+
+    public InboxService(InboxRepository inboxRepository, UserRepository userRepository, AttemptRepository attemptRepository, ResultRepository resultRepository, QuizRepository quizRepository) {
         this.inboxRepository = inboxRepository;
         this.userRepository = userRepository;
         this.attemptRepository = attemptRepository;
         this.resultRepository = resultRepository;
+        this.quizRepository = quizRepository;
     }
 
     public List<InboxMessage> getInbox(int userId) {
@@ -256,6 +263,9 @@ public class InboxService {
             throw new ValidationException("This request has already been processed (status: " + msg.getStatus() + ").");
         }
         if (msg.getTargetId() == null || msg.getSenderId() == null) return false;
+        if (quizRepository != null && quizRepository.findById(msg.getTargetId()).isEmpty()) {
+            throw new ValidationException("The assessment associated with this request has been deleted and cannot be retaken.");
+        }
 
         if (attemptRepository != null) {
             attemptRepository.deleteAttemptsForStudent(msg.getTargetId(), msg.getSenderId());
@@ -276,6 +286,9 @@ public class InboxService {
             throw new ValidationException("This request has already been processed (status: " + msg.getStatus() + ").");
         }
         if (msg.getTargetId() == null || msg.getSenderId() == null) return false;
+        if (quizRepository != null && quizRepository.findById(msg.getTargetId()).isEmpty()) {
+            throw new ValidationException("The assessment associated with this request has been deleted and cannot be retaken.");
+        }
 
         if (attemptRepository != null) {
             attemptRepository.deleteAttemptsForStudent(msg.getTargetId(), msg.getSenderId());

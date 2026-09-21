@@ -84,6 +84,10 @@ public class ExamService {
         if (quiz.isExpired()) {
             throw new ValidationException("This assessment has expired.");
         }
+        if (quiz.getQuestions() == null || quiz.getQuestions().isEmpty()) {
+            String itemType = quiz.getAssessmentType() == AssessmentType.EXAM ? "exam" : "quiz";
+            throw new ValidationException("This " + itemType + " has no questions available.");
+        }
 
         Optional<Attempt> existingOpt = attemptRepository.findLatestAttempt(quizId, studentId);
         Attempt attempt;
@@ -506,6 +510,11 @@ public class ExamService {
         }
         if (q.getAssessmentType() == AssessmentType.EXAM && attOpt.isEmpty() && q.isExpired()) {
             canRetake = true;
+        }
+
+        if (q.getQuestions() == null || q.getQuestions().isEmpty() || qCount == 0) {
+            canStart = false;
+            canRetake = false;
         }
 
         AssessmentOverviewDTO dto = AssessmentOverviewDTO.builder()

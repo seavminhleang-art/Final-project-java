@@ -481,6 +481,64 @@ public class TuiHelper {
         return CENTER_MARKER + lines[0] + "\n" + CENTER_MARKER + lines[1] + "\n" + CENTER_MARKER + lines[2];
     }
 
+    public static String buttonRow(java.util.List<String> labels, int focusedIndex) {
+        return buttonRow(labels, focusedIndex, 106);
+    }
+
+    public static String buttonRow(java.util.List<String> labels, int focusedIndex, int width) {
+        if (labels == null || labels.isEmpty()) {
+            return "";
+        }
+        int maxLen = 0;
+        for (String label : labels) {
+            if (label != null && label.length() > maxLen) {
+                maxLen = label.length();
+            }
+        }
+        int btnWidth = Math.max(16, maxLen + 6);
+        java.util.List<String[]> renderedButtons = new java.util.ArrayList<>(labels.size());
+        int totalRowWidth = 0;
+        for (int i = 0; i < labels.size(); i++) {
+            String label = labels.get(i);
+            boolean isFocused = (i == focusedIndex);
+            String lower = label != null ? label.toLowerCase() : "";
+            String color = NAVY_BLUE;
+            if (lower.contains("cancel") || lower.contains("delete") || lower.contains("reject")) {
+                color = RED;
+            }
+            String[] b = boxButtonLines(label, isFocused, color, btnWidth);
+            renderedButtons.add(b);
+            totalRowWidth += visibleLength(b[0]);
+            if (i < labels.size() - 1) {
+                totalRowWidth += 4;
+            }
+        }
+
+        int leftPad = Math.max(0, (width - totalRowWidth) / 2);
+        String padStr = " ".repeat(leftPad);
+
+        StringBuilder line0 = new StringBuilder(CENTER_MARKER).append(padStr);
+        StringBuilder line1 = new StringBuilder(CENTER_MARKER).append(padStr);
+        StringBuilder line2 = new StringBuilder(CENTER_MARKER).append(padStr);
+
+        for (int i = 0; i < renderedButtons.size(); i++) {
+            String[] b = renderedButtons.get(i);
+            line0.append(b[0]);
+            line1.append(b[1]);
+            line2.append(b[2]);
+            if (i < renderedButtons.size() - 1) {
+                line0.append("    ");
+                line1.append("    ");
+                line2.append("    ");
+            }
+        }
+        line0.append(CLEAR_EOL).append("\n");
+        line1.append(CLEAR_EOL).append("\n");
+        line2.append(CLEAR_EOL);
+
+        return line0.toString() + line1.toString() + line2.toString();
+    }
+
     public static String buttonRow(String primaryLabel, boolean primaryFocused, String secondaryLabel, boolean secondaryFocused) {
         return buttonRow(primaryLabel, primaryFocused, secondaryLabel, secondaryFocused, 106);
     }
@@ -580,6 +638,46 @@ public class TuiHelper {
         sb.append(CENTER_MARKER).append(b1[1]).append("    ").append(b2[1]).append(CLEAR_EOL).append("\n");
         sb.append(CENTER_MARKER).append(b1[2]).append("    ").append(b2[2]).append(CLEAR_EOL).append("\n\n");
         sb.append(dim("[←/→] Select Option  •  [Enter] Confirm  •  [Esc] Cancel")).append(CLEAR_EOL).append("\n");
+        return sb.toString();
+    }
+
+    public static String aiLoadingModal(String headerTitle, String title, String subtitle,
+                                        String spinnerIcon, String primaryStatus, String secondaryStatus,
+                                        String description1, String description2,
+                                        String cancelBtnLabel, int elapsedSeconds) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(DIALOG_MARKER);
+        sb.append(header(headerTitle));
+        sb.append("\n");
+        sb.append(boxTitle(title, subtitle)).append("\n\n");
+
+        if (spinnerIcon != null && !spinnerIcon.isBlank()) {
+            sb.append(bold(centerText(cyan(spinnerIcon) + " " + primaryStatus))).append(CLEAR_EOL).append("\n\n");
+        } else {
+            sb.append(bold(centerText(primaryStatus))).append(CLEAR_EOL).append("\n\n");
+        }
+
+        String timerStr = "Elapsed: " + Math.max(0, elapsedSeconds) + "s";
+        String sec = (secondaryStatus != null && !secondaryStatus.isBlank())
+                ? secondaryStatus + "  •  " + timerStr
+                : timerStr;
+        sb.append(dim(centerText(sec))).append(CLEAR_EOL).append("\n\n");
+
+        sb.append(dim(centerText("─".repeat(56)))).append(CLEAR_EOL).append("\n\n");
+
+        if (description1 != null && !description1.isBlank()) {
+            sb.append(dim(centerText(description1))).append(CLEAR_EOL).append("\n");
+        }
+        if (description2 != null && !description2.isBlank()) {
+            sb.append(dim(centerText(description2))).append(CLEAR_EOL).append("\n");
+        }
+        sb.append("\n");
+
+        String cancelLabel = (cancelBtnLabel != null && !cancelBtnLabel.isBlank()) ? cancelBtnLabel : "[Esc] Cancel";
+        int btnWidth = Math.max(26, cancelLabel.length() + 6);
+        sb.append(boxButton(cancelLabel, false, RED, btnWidth)).append("\n\n");
+
+        sb.append(dim("[Esc] Cancel  •  Please wait for Ollama LLM to respond")).append(CLEAR_EOL).append("\n");
         return sb.toString();
     }
 

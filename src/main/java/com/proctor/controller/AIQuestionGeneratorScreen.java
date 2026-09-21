@@ -17,12 +17,15 @@ import com.proctor.model.service.SubjectService;
 import com.proctor.util.KeyUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.QuestionViews;
+import com.williamcallahan.tui4j.compat.bubbletea.Command;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
 import com.williamcallahan.tui4j.compat.bubbletea.Message;
 import com.williamcallahan.tui4j.compat.bubbletea.input.key.KeyType;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class AIQuestionGeneratorScreen implements Screen {
     private final AIService aiService;
@@ -30,8 +33,8 @@ public class AIQuestionGeneratorScreen implements Screen {
     private final SubjectService subjectService;
     private final AuthService authService;
     private final Quiz quizContext;
-
     private final List<Subject> subjects;
+
     private int selectedSubjectIndex = 0;
     private final StringBuilder topicBuffer = new StringBuilder();
     private final StringBuilder customPromptBuffer = new StringBuilder();
@@ -47,9 +50,17 @@ public class AIQuestionGeneratorScreen implements Screen {
     private int selectedDraftIndex = 0;
     private String bannerMessage = "";
     private int spinnerTick = 0;
+    private long generationStartTime = 0;
+    private int activeGenerationId = 0;
+    private AtomicBoolean activeCancellation = null;
     private final InlineSubjectFilter<Subject> subjectFilter;
 
-    public record AIQuestionsGeneratedMessage(List<AIQuestionDraft> drafts, String errorMessage) implements Message {}
+    public record LoadingTickMessage(int generationId) implements Message {}
+    public record AIQuestionsGeneratedMessage(int generationId, List<AIQuestionDraft> drafts, String errorMessage) implements Message {
+        public AIQuestionsGeneratedMessage(List<AIQuestionDraft> drafts, String errorMessage) {
+            this(0, drafts, errorMessage);
+        }
+    }
 
     public AIQuestionGeneratorScreen(AIService aiService, QuestionService questionService, SubjectService subjectService, AuthService authService) {
         this(aiService, questionService, subjectService, authService, null);
@@ -120,7 +131,18 @@ public class AIQuestionGeneratorScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        if (msg instanceof LoadingTickMessage t) {
+            if (isGenerating && t.generationId() == this.activeGenerationId) {
+                spinnerTick++;
+                return ScreenResult.stay(this, Command.tick(Duration.ofMillis(80), time -> new LoadingTickMessage(this.activeGenerationId)));
+            }
+            return ScreenResult.stay(this);
+        }
+
         if (msg instanceof AIQuestionsGeneratedMessage m) {
+            if (!isGenerating || (m.generationId() != 0 && m.generationId() != this.activeGenerationId)) {
+                return ScreenResult.stay(this);
+            }
             isGenerating = false;
             if (m.errorMessage() != null) {
                 bannerMessage = TuiHelper.red("✖ " + m.errorMessage());
@@ -138,9 +160,12 @@ public class AIQuestionGeneratorScreen implements Screen {
         }
 
         if (isGenerating) {
-            spinnerTick++;
             if (msg instanceof KeyPressMessage k && KeyUtil.isEsc(k)) {
                 isGenerating = false;
+                activeGenerationId++;
+                if (activeCancellation != null) {
+                    activeCancellation.set(true);
+                }
                 bannerMessage = TuiHelper.yellow("Generation cancelled.");
             }
             return ScreenResult.stay(this);
@@ -335,6 +360,11 @@ public class AIQuestionGeneratorScreen implements Screen {
         }
 
         isGenerating = true;
+        spinnerTick = 0;
+        generationStartTime = System.currentTimeMillis();
+        final int genId = ++activeGenerationId;
+        final AtomicBoolean cancelled = new AtomicBoolean(false);
+        this.activeCancellation = cancelled;
         bannerMessage = "";
 
         final int finalCount = count;
@@ -348,11 +378,17 @@ public class AIQuestionGeneratorScreen implements Screen {
                 : "";
         final String fullTopic = !subj.isBlank() ? (subj + ": " + topic) : topic;
 
-        return ScreenResult.stay(this, () -> {
+        Command genCmd = () -> {
             try {
                 List<AIQuestionDraft> drafts = aiService.generateQuestions(fullTopic, finalCount, type, diff, optsPerMcq, customPrompt);
-                return new AIQuestionsGeneratedMessage(drafts, null);
+                if (cancelled.get()) {
+                    return new AIQuestionsGeneratedMessage(genId, null, "Cancelled");
+                }
+                return new AIQuestionsGeneratedMessage(genId, drafts, null);
             } catch (Exception e) {
+                if (cancelled.get()) {
+                    return new AIQuestionsGeneratedMessage(genId, null, "Cancelled");
+                }
                 String err = e.getMessage();
                 if (err == null || err.isBlank()) {
                     Throwable cause = e.getCause();
@@ -362,9 +398,13 @@ public class AIQuestionGeneratorScreen implements Screen {
                         err = "Failed to generate questions with AI model: " + e.getClass().getSimpleName();
                     }
                 }
-                return new AIQuestionsGeneratedMessage(null, err);
+                return new AIQuestionsGeneratedMessage(genId, null, err);
             }
-        });
+        };
+
+        Command tickCmd = Command.tick(Duration.ofMillis(80), time -> new LoadingTickMessage(genId));
+
+        return ScreenResult.stay(this, Command.batch(genCmd, tickCmd));
     }
 
     private void saveAllDrafts() {
@@ -402,7 +442,8 @@ public class AIQuestionGeneratorScreen implements Screen {
     @Override
     public String view() {
         if (isGenerating) {
-            return QuestionViews.renderAIQuestionLoading(topicBuffer.toString(), spinnerTick);
+            int elapsedSeconds = (int) Math.max(0, (System.currentTimeMillis() - generationStartTime) / 1000);
+            return QuestionViews.renderAIQuestionLoading(topicBuffer.toString(), spinnerTick, elapsedSeconds);
         }
         if (reviewingDrafts) {
             String targetStr = quizContext != null ? "Quiz: " + quizContext.getTitle() : "Question Bank";

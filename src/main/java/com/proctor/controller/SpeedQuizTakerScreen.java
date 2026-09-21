@@ -83,6 +83,11 @@ public class SpeedQuizTakerScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
+            if (confirmForfeitMode) {
+                int curGen = tickGeneration;
+                return ScreenResult.stay(this, () -> tick(curGen));
+            }
+
             if (state == State.ANSWERING) {
                 int remaining = session.getQuestionSecondsRemaining() - 1;
                 session.setQuestionSecondsRemaining(remaining);
