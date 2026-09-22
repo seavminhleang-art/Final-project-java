@@ -17,6 +17,7 @@ import com.proctor.model.repository.QuizRepository;
 import com.proctor.model.service.QuizService;
 import com.proctor.model.service.SubjectService;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.MouseUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.QuizViews;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
@@ -102,6 +103,100 @@ public class QuizListScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        if (MouseUtil.isWheelUp(msg)) {
+            if (!quizzes.isEmpty() && selectedIndex > 0) {
+                selectedIndex--;
+            }
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isWheelDown(msg)) {
+            if (!quizzes.isEmpty() && selectedIndex < quizzes.size() - 1) {
+                selectedIndex++;
+            }
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isLeftClick(msg)) {
+            if (confirmingDelete) {
+                int line = MouseUtil.getLineIndex(msg);
+                int col = MouseUtil.getColInLine(msg);
+                int btnLine = MouseUtil.findButtonRowLine(view());
+                if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
+                    int btn = MouseUtil.getClickedButtonIndex(col, "Delete", "Cancel");
+                    if (btn == 0) {
+                        executeDelete();
+                    } else if (btn == 1) {
+                        bannerMessage = TuiHelper.yellow("Deletion cancelled.");
+                    }
+                    confirmingDelete = false;
+                    pendingDeleteQuiz = null;
+                } else if (btnLine != -1 && (line < btnLine - 4 || line > btnLine + 4)) {
+                    confirmingDelete = false;
+                    pendingDeleteQuiz = null;
+                    bannerMessage = TuiHelper.yellow("Deletion cancelled.");
+                }
+                return ScreenResult.stay(this);
+            }
+
+            int line = MouseUtil.getLineIndex(msg);
+            int col = MouseUtil.getColInLine(msg);
+
+            int tabLine = MouseUtil.findTabBarLine(view());
+            if (tabLine != -1 && line == tabLine) {
+                String baseItemTitle = (assessmentType == AssessmentType.EXAM) ? "Exams" : (assessmentType == AssessmentType.SPEED ? "Speed Quizzes" : "Quizzes");
+                String tabMy = "My " + baseItemTitle;
+                String tabAll = "All " + baseItemTitle;
+                int clickedTab = MouseUtil.getClickedTabIndex(col, tabMy, tabAll);
+                if (clickedTab >= 0) {
+                    QuizScope targetScope = (clickedTab == 0) ? QuizScope.MY_QUIZZES : QuizScope.ALL_GLOBAL;
+                    if (targetScope != currentScope) {
+                        currentScope = targetScope;
+                        selectedIndex = 0;
+                        bannerMessage = (currentScope == QuizScope.MY_QUIZZES)
+                                ? TuiHelper.cyan("Switched scope to: MY " + baseItemTitle.toUpperCase())
+                                : TuiHelper.cyan("Switched scope to: ALL GLOBAL " + baseItemTitle.toUpperCase());
+                        refreshList();
+                    }
+                }
+                return ScreenResult.stay(this);
+            }
+
+            int itemsStartLine = MouseUtil.findTableStartLine(view());
+            int pageSize = TuiHelper.PAGE_SIZE;
+            int totalPages = Math.max(1, (int) Math.ceil((double) quizzes.size() / pageSize));
+            int currentPage = selectedIndex / pageSize;
+            int startRow = currentPage * pageSize;
+            int endRow = Math.min(quizzes.size(), startRow + pageSize);
+            int displayedRows = endRow - startRow;
+
+            if (itemsStartLine != -1 && line >= itemsStartLine && line < itemsStartLine + displayedRows * 2) {
+                int clickedOffset = (line - itemsStartLine) / 2;
+                int targetIdx = startRow + clickedOffset;
+                if (targetIdx < quizzes.size()) {
+                    if (selectedIndex == targetIdx) {
+                        return ScreenResult.navigate(new QuizQuestionEditorScreen(quizzes.get(selectedIndex), quizService, questionService, subjectService, authService));
+                    } else {
+                        selectedIndex = targetIdx;
+                    }
+                }
+                return ScreenResult.stay(this);
+            }
+
+            int pagLine = MouseUtil.findPaginationLine(view());
+            if (pagLine != -1 && line == pagLine && !quizzes.isEmpty()) {
+                int action = MouseUtil.getClickedPaginationAction(col, currentPage, totalPages);
+                if (action < 0) {
+                    selectedIndex = (currentPage - 1) * pageSize;
+                } else if (action > 0) {
+                    selectedIndex = Math.min(quizzes.size() - 1, (currentPage + 1) * pageSize);
+                }
+                return ScreenResult.stay(this);
+            }
+
+            return ScreenResult.stay(this);
+        }
+
         if (msg instanceof KeyPressMessage k) {
             if (subjectFilter.isActive()) {
                 boolean handled = subjectFilter.handleKey(k);

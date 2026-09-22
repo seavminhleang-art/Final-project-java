@@ -10,6 +10,7 @@ import com.proctor.model.service.QuestionService;
 import com.proctor.model.service.QuizService;
 import com.proctor.model.service.SubjectService;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.MouseUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.QuestionBankViews;
 
@@ -86,6 +87,85 @@ public class QuestionBankPickerScreen implements Screen {
 
     @Override
     public ScreenResult update(com.williamcallahan.tui4j.compat.bubbletea.Message msg) {
+        if (MouseUtil.isWheelUp(msg)) {
+            if (!bankQuestions.isEmpty() && selectedIndex > 0) {
+                selectedIndex--;
+            }
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isWheelDown(msg)) {
+            if (!bankQuestions.isEmpty() && selectedIndex < bankQuestions.size() - 1) {
+                selectedIndex++;
+            }
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isLeftClick(msg)) {
+            int line = MouseUtil.getLineIndex(msg);
+            int col = MouseUtil.getColInLine(msg);
+
+            int itemsStartLine = MouseUtil.findTableStartLine(view());
+            int pageSize = TuiHelper.PAGE_SIZE;
+            int totalPages = Math.max(1, (int) Math.ceil((double) bankQuestions.size() / pageSize));
+            int currentPage = selectedIndex / pageSize;
+            int startRow = currentPage * pageSize;
+            int endRow = Math.min(bankQuestions.size(), startRow + pageSize);
+            int displayedRows = endRow - startRow;
+
+            if (itemsStartLine != -1 && line >= itemsStartLine && line < itemsStartLine + displayedRows * 2) {
+                int clickedOffset = (line - itemsStartLine) / 2;
+                int targetIdx = startRow + clickedOffset;
+                if (targetIdx < bankQuestions.size()) {
+                    selectedIndex = targetIdx;
+                    int qid = bankQuestions.get(selectedIndex).getId();
+                    if (!alreadyAddedIds.contains(qid)) {
+                        if (selectedIds.contains(qid)) {
+                            selectedIds.remove(qid);
+                        } else {
+                            selectedIds.add(qid);
+                        }
+                    }
+                }
+                return ScreenResult.stay(this);
+            }
+
+            int pagLine = MouseUtil.findPaginationLine(view());
+            if (pagLine != -1 && line == pagLine && !bankQuestions.isEmpty()) {
+                int action = MouseUtil.getClickedPaginationAction(col, currentPage, totalPages);
+                if (action < 0) {
+                    selectedIndex = (currentPage - 1) * pageSize;
+                } else if (action > 0) {
+                    selectedIndex = Math.min(bankQuestions.size() - 1, (currentPage + 1) * pageSize);
+                }
+                return ScreenResult.stay(this);
+            }
+
+            String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
+            if (hintAction != null) {
+                if ("Esc".equals(hintAction)) {
+                    return ScreenResult.navigate(new QuizQuestionEditorScreen(
+                            quiz, new QuizService(new QuizRepository()), questionService, subjectService, authService));
+                } else if ("c".equals(hintAction)) {
+                    return confirmImport();
+                } else if ("Space".equals(hintAction) || "Enter".equals(hintAction)) {
+                    if (!bankQuestions.isEmpty() && selectedIndex < bankQuestions.size()) {
+                        int qid = bankQuestions.get(selectedIndex).getId();
+                        if (!alreadyAddedIds.contains(qid)) {
+                            if (selectedIds.contains(qid)) {
+                                selectedIds.remove(qid);
+                            } else {
+                                selectedIds.add(qid);
+                            }
+                        }
+                    }
+                    return ScreenResult.stay(this);
+                }
+            }
+
+            return ScreenResult.stay(this);
+        }
+
         if (msg instanceof com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage k) {
 
             if (KeyUtil.isEsc(k)) {
@@ -126,31 +206,35 @@ public class QuestionBankPickerScreen implements Screen {
                     selectedIds.add(qid);
                 }
             } else if ("c".equalsIgnoreCase(k.key())) {
-                if (selectedIds.isEmpty()) {
-                    bannerMessage = TuiHelper.yellow("⚠ No questions selected. Use Space/Enter to toggle.");
-                    return ScreenResult.stay(this);
-                }
-                int imported = 0;
-                List<String> errors = new ArrayList<>();
-                for (int qid : selectedIds) {
-                    try {
-                        questionService.copyBankQuestionToQuiz(qid, quiz.getId());
-                        imported++;
-                    } catch (Exception e) {
-                        errors.add("Q" + qid + ": " + e.getMessage());
-                    }
-                }
-                String msg2 = TuiHelper.green("✔ Imported " + imported + " question(s) from your bank.");
-                if (!errors.isEmpty()) {
-                    msg2 += " " + TuiHelper.red("Errors: " + String.join(", ", errors));
-                }
-                QuizQuestionEditorScreen editor = new QuizQuestionEditorScreen(
-                        quiz, new QuizService(new QuizRepository()), questionService, subjectService, authService);
-                editor.setBannerMessage(msg2);
-                return ScreenResult.navigate(editor);
+                return confirmImport();
             }
         }
         return ScreenResult.stay(this);
+    }
+
+    private ScreenResult confirmImport() {
+        if (selectedIds.isEmpty()) {
+            bannerMessage = TuiHelper.yellow("⚠ No questions selected. Use Space/Enter to toggle.");
+            return ScreenResult.stay(this);
+        }
+        int imported = 0;
+        List<String> errors = new ArrayList<>();
+        for (int qid : selectedIds) {
+            try {
+                questionService.copyBankQuestionToQuiz(qid, quiz.getId());
+                imported++;
+            } catch (Exception e) {
+                errors.add("Q" + qid + ": " + e.getMessage());
+            }
+        }
+        String msg2 = TuiHelper.green("✔ Imported " + imported + " question(s) from your bank.");
+        if (!errors.isEmpty()) {
+            msg2 += " " + TuiHelper.red("Errors: " + String.join(", ", errors));
+        }
+        QuizQuestionEditorScreen editor = new QuizQuestionEditorScreen(
+                quiz, new QuizService(new QuizRepository()), questionService, subjectService, authService);
+        editor.setBannerMessage(msg2);
+        return ScreenResult.navigate(editor);
     }
 
     @Override

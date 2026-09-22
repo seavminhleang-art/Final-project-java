@@ -6,6 +6,7 @@ import com.proctor.model.service.AuthService;
 import com.proctor.model.enums.Role;
 import com.proctor.model.service.ReportService;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.MouseUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.ReportViews;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
@@ -43,6 +44,31 @@ public class ReportMenuScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        if (MouseUtil.isWheelUp(msg)) {
+            String[] reports = getReports();
+            selectedIndex = (selectedIndex - 1 + reports.length) % reports.length;
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isWheelDown(msg)) {
+            String[] reports = getReports();
+            selectedIndex = (selectedIndex + 1) % reports.length;
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isLeftClick(msg)) {
+            String[] reports = getReports();
+            int line = MouseUtil.getLineIndex(msg);
+            int col = MouseUtil.getColInLine(msg);
+            int itemIdx = MouseUtil.findMenuItemIndex(view(), line);
+            if (itemIdx >= 0 && itemIdx < reports.length && col >= 4 && col < 110) {
+                selectedIndex = itemIdx;
+                generateSelectedReport();
+                return ScreenResult.stay(this);
+            }
+            return ScreenResult.stay(this);
+        }
+
         if (msg instanceof KeyPressMessage k) {
             String[] reports = getReports();
 

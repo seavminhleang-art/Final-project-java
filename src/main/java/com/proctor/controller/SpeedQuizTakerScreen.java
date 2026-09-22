@@ -152,31 +152,58 @@ public class SpeedQuizTakerScreen implements Screen {
             if (confirmForfeitMode) {
                 int line = MouseUtil.getLineIndex(msg);
                 int col = MouseUtil.getColInLine(msg);
-                if (line >= 17 && line <= 19) {
-                    if (col >= 0 && col < 22) {
+                int btnLine = MouseUtil.findButtonRowLine(view());
+                if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
+                    int btn = MouseUtil.getClickedButtonIndex(col, "Forfeit & Submit", "Continue Quiz");
+                    if (btn == 0) {
                         return finishAndSubmit();
-                    } else if (col >= 26 && col < 48) {
+                    } else if (btn == 1) {
                         confirmForfeitMode = false;
                         return ScreenResult.stay(this);
                     }
-                } else if (line < 11 || line > 21) {
+                } else if (btnLine != -1 && (line < btnLine - 4 || line > btnLine + 4)) {
                     confirmForfeitMode = false;
                     return ScreenResult.stay(this);
                 }
                 return ScreenResult.stay(this);
             }
 
+            if (session.getCurrentQuestion() == null) {
+                return finishAndSubmit();
+            }
+
+            if (state == State.REVEAL) {
+                if (session.isCompleted() || session.getCurrentQuestion() == null) {
+                    return finishAndSubmit();
+                } else {
+                    state = State.ANSWERING;
+                    lastAnswerRecord = null;
+                    focusedOptionIndex = 0;
+                    tickGeneration++;
+                    int nextGen = tickGeneration;
+                    return ScreenResult.stay(this, () -> tick(nextGen));
+                }
+            }
+
             if (state == State.ANSWERING) {
                 Question q = session.getCurrentQuestion();
                 if (q != null && q.getOptions() != null) {
                     int line = MouseUtil.getLineIndex(msg);
-                    int optIdx = (line - 15) / 2;
-                    if (line >= 15 && optIdx >= 0 && optIdx < q.getOptions().size()) {
+                    int optIdx = MouseUtil.findOptionIndex(view(), line);
+                    if (optIdx >= 0 && optIdx < q.getOptions().size()) {
                         focusedOptionIndex = optIdx;
                         QuestionOption opt = q.getOptions().get(optIdx);
                         return lockInOption(q, opt.getId());
                     }
                 }
+            }
+            int line = MouseUtil.getLineIndex(msg);
+            int col = MouseUtil.getColInLine(msg);
+            String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
+            if ("Esc".equals(hintAction)) {
+                confirmForfeitMode = true;
+                confirmForfeitFocused = false;
+                return ScreenResult.stay(this);
             }
             return ScreenResult.stay(this);
         }

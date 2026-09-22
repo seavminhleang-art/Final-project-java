@@ -15,6 +15,7 @@ import com.proctor.model.service.QuizService;
 import com.proctor.model.entity.Subject;
 import com.proctor.model.service.SubjectService;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.MouseUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.QuizViews;
 import com.williamcallahan.tui4j.compat.bubbletea.Command;
@@ -166,6 +167,45 @@ public class AIQuizGeneratorScreen implements Screen {
                     activeCancellation.set(true);
                 }
                 bannerMessage = TuiHelper.yellow("Generation cancelled.");
+            } else if (MouseUtil.isLeftClick(msg)) {
+                int line = MouseUtil.getLineIndex(msg);
+                int btnLine = MouseUtil.findButtonRowLine(view());
+                if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
+                    isGenerating = false;
+                    activeGenerationId++;
+                    if (activeCancellation != null) {
+                        activeCancellation.set(true);
+                    }
+                    bannerMessage = TuiHelper.yellow("Generation cancelled.");
+                }
+            }
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isWheelUp(msg)) {
+            subjectFilter.confirmSearch();
+            focusedField = (focusedField - 1 + getFieldCount()) % getFieldCount();
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isWheelDown(msg)) {
+            subjectFilter.confirmSearch();
+            focusedField = (focusedField + 1) % getFieldCount();
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isLeftClick(msg)) {
+            int line = MouseUtil.getLineIndex(msg);
+            int col = MouseUtil.getColInLine(msg);
+            int btnLine = MouseUtil.findButtonRowLine(view());
+            if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
+                String itemLabel = (assessmentType == AssessmentType.EXAM) ? "Exam" : (assessmentType == AssessmentType.SPEED ? "Speed Quiz" : "Quiz");
+                int btn = MouseUtil.getClickedButtonIndex(col, "Generate " + itemLabel, "Cancel");
+                if (btn == 0) {
+                    return startAsyncQuizGeneration();
+                } else if (btn == 1) {
+                    return ScreenResult.navigate(new QuizListScreen(quizService, questionService, subjectService, authService, assessmentType));
+                }
             }
             return ScreenResult.stay(this);
         }

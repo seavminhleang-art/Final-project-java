@@ -5,6 +5,7 @@ import com.proctor.model.entity.User;
 import com.proctor.model.service.AuthService;
 import com.proctor.model.enums.Role;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.MouseUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.UserViews;
 import com.proctor.model.service.UserService;
@@ -42,6 +43,87 @@ public class UserListScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        if (MouseUtil.isWheelUp(msg)) {
+            if (!users.isEmpty() && selectedIndex > 0) {
+                selectedIndex--;
+            }
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isWheelDown(msg)) {
+            if (!users.isEmpty() && selectedIndex < users.size() - 1) {
+                selectedIndex++;
+            }
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isLeftClick(msg)) {
+            int line = MouseUtil.getLineIndex(msg);
+            int col = MouseUtil.getColInLine(msg);
+
+            int tabLine = MouseUtil.findTabBarLine(view());
+            if (tabLine != -1 && line == tabLine) {
+                int clickedTab = MouseUtil.getClickedTabIndex(col, "All Roles", "Students", "Teachers", "Admins");
+                if (clickedTab >= 0) {
+                    Role targetRole = switch (clickedTab) {
+                        case 1 -> Role.STUDENT;
+                        case 2 -> Role.TEACHER;
+                        case 3 -> Role.ADMIN;
+                        default -> null;
+                    };
+                    if (targetRole != filterRole) {
+                        filterRole = targetRole;
+                        selectedIndex = 0;
+                        refreshList();
+                    }
+                }
+                return ScreenResult.stay(this);
+            }
+
+            int itemsStartLine = MouseUtil.findTableStartLine(view());
+            int pageSize = TuiHelper.PAGE_SIZE;
+            int totalPages = Math.max(1, (int) Math.ceil((double) users.size() / pageSize));
+            int currentPage = selectedIndex / pageSize;
+            int startRow = currentPage * pageSize;
+            int endRow = Math.min(users.size(), startRow + pageSize);
+            int displayedRows = endRow - startRow;
+
+            if (itemsStartLine != -1 && line >= itemsStartLine && line < itemsStartLine + displayedRows * 2) {
+                int clickedOffset = (line - itemsStartLine) / 2;
+                int targetIdx = startRow + clickedOffset;
+                if (targetIdx < users.size()) {
+                    if (selectedIndex == targetIdx) {
+                        return ScreenResult.navigate(new UserFormScreen(userService, authService, users.get(selectedIndex)));
+                    } else {
+                        selectedIndex = targetIdx;
+                    }
+                }
+                return ScreenResult.stay(this);
+            }
+
+            int pagLine = MouseUtil.findPaginationLine(view());
+            if (pagLine != -1 && line == pagLine && !users.isEmpty()) {
+                int action = MouseUtil.getClickedPaginationAction(col, currentPage, totalPages);
+                if (action < 0) {
+                    selectedIndex = (currentPage - 1) * pageSize;
+                } else if (action > 0) {
+                    selectedIndex = Math.min(users.size() - 1, (currentPage + 1) * pageSize);
+                }
+                return ScreenResult.stay(this);
+            }
+
+            String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
+            if (hintAction != null) {
+                if ("Esc".equals(hintAction)) {
+                    return ScreenResult.navigate(new AdminDashboardScreen(authService));
+                } else if ("n".equals(hintAction)) {
+                    return ScreenResult.navigate(new UserFormScreen(userService, authService, null));
+                }
+            }
+
+            return ScreenResult.stay(this);
+        }
+
         if (msg instanceof KeyPressMessage k) {
             if (searchMode) {
                 if (KeyUtil.isEnter(k) || KeyUtil.isEsc(k)) {

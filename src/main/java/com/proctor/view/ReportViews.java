@@ -13,9 +13,9 @@ public class ReportViews {
 
         for (int i = 0; i < reports.length; i++) {
             if (i == selectedIndex) {
-                sb.append("    ").append(TuiHelper.bold(TuiHelper.NAVY_BLUE + reports[i])).append("\n\n");
+                sb.append("    ").append(TuiHelper.BUTTON_MARKER).append(TuiHelper.bold(TuiHelper.NAVY_BLUE + reports[i])).append("\n\n");
             } else {
-                sb.append("    ").append(reports[i]).append("\n\n");
+                sb.append("    ").append(TuiHelper.BUTTON_MARKER).append(reports[i]).append("\n\n");
             }
         }
 

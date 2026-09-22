@@ -11,6 +11,7 @@ import com.proctor.model.service.AuthService;
 import com.proctor.model.service.QuestionService;
 import com.proctor.model.service.SubjectService;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.MouseUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.QuestionBankViews;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
@@ -72,6 +73,99 @@ public class QuestionBankScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        if (MouseUtil.isWheelUp(msg)) {
+            if (!questions.isEmpty() && selectedIndex > 0) {
+                selectedIndex--;
+            }
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isWheelDown(msg)) {
+            if (!questions.isEmpty() && selectedIndex < questions.size() - 1) {
+                selectedIndex++;
+            }
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isLeftClick(msg)) {
+            if (confirmingDelete) {
+                int line = MouseUtil.getLineIndex(msg);
+                int col = MouseUtil.getColInLine(msg);
+                int btnLine = MouseUtil.findButtonRowLine(view());
+                if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
+                    int btn = MouseUtil.getClickedButtonIndex(col, "Delete", "Cancel");
+                    if (btn == 0) {
+                        if (pendingDeleteQuestion != null) {
+                            questionService.deleteQuestion(pendingDeleteQuestion.getId());
+                            bannerMessage = TuiHelper.green("✔ Question deleted from bank.");
+                            refreshData();
+                        }
+                    }
+                    confirmingDelete = false;
+                    pendingDeleteQuestion = null;
+                } else if (btnLine != -1 && (line < btnLine - 4 || line > btnLine + 4)) {
+                    confirmingDelete = false;
+                    pendingDeleteQuestion = null;
+                }
+                return ScreenResult.stay(this);
+            }
+
+            int line = MouseUtil.getLineIndex(msg);
+            int col = MouseUtil.getColInLine(msg);
+
+            int itemsStartLine = MouseUtil.findTableStartLine(view());
+            int pageSize = TuiHelper.PAGE_SIZE;
+            int totalPages = Math.max(1, (int) Math.ceil((double) questions.size() / pageSize));
+            int currentPage = selectedIndex / pageSize;
+            int startRow = currentPage * pageSize;
+            int endRow = Math.min(questions.size(), startRow + pageSize);
+            int displayedRows = endRow - startRow;
+
+            if (itemsStartLine != -1 && line >= itemsStartLine && line < itemsStartLine + displayedRows * 2) {
+                int clickedOffset = (line - itemsStartLine) / 2;
+                int targetIdx = startRow + clickedOffset;
+                if (targetIdx < questions.size()) {
+                    if (selectedIndex == targetIdx) {
+                        return ScreenResult.navigate(new QuestionFormScreen(questionService, subjectService, authService, questions.get(selectedIndex)));
+                    } else {
+                        selectedIndex = targetIdx;
+                    }
+                }
+                return ScreenResult.stay(this);
+            }
+
+            int pagLine = MouseUtil.findPaginationLine(view());
+            if (pagLine != -1 && line == pagLine && !questions.isEmpty()) {
+                int action = MouseUtil.getClickedPaginationAction(col, currentPage, totalPages);
+                if (action < 0) {
+                    selectedIndex = (currentPage - 1) * pageSize;
+                } else if (action > 0) {
+                    selectedIndex = Math.min(questions.size() - 1, (currentPage + 1) * pageSize);
+                }
+                return ScreenResult.stay(this);
+            }
+
+            String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
+            if (hintAction != null) {
+                if ("Esc".equals(hintAction)) {
+                    return ScreenResult.navigate(new TeacherDashboardScreen(authService, questionService, subjectService));
+                } else if ("n".equals(hintAction)) {
+                    return ScreenResult.navigate(new QuestionFormScreen(questionService, subjectService, authService, null, null));
+                } else if ("g".equals(hintAction)) {
+                    return ScreenResult.navigate(new AIQuestionGeneratorScreen(new AIService(), questionService, subjectService, authService, null));
+                } else if (("e".equals(hintAction) || "Enter".equals(hintAction)) && !questions.isEmpty() && selectedIndex < questions.size()) {
+                    return ScreenResult.navigate(new QuestionFormScreen(questionService, subjectService, authService, questions.get(selectedIndex), null));
+                } else if ("d".equals(hintAction) && !questions.isEmpty() && selectedIndex < questions.size()) {
+                    pendingDeleteQuestion = questions.get(selectedIndex);
+                    confirmingDelete = true;
+                    confirmDeleteFocused = false;
+                    return ScreenResult.stay(this);
+                }
+            }
+
+            return ScreenResult.stay(this);
+        }
+
         if (msg instanceof KeyPressMessage k) {
             if (subjectFilter.isActive()) {
                 boolean handled = subjectFilter.handleKey(k);

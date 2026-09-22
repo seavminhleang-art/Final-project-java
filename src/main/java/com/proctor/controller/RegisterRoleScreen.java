@@ -34,13 +34,13 @@ public class RegisterRoleScreen implements Screen {
             int col = MouseUtil.getColInLine(msg);
             if (col >= 0 && col < 26) {
                 UserService userService = new UserService(new UserRepository());
-                if (line >= 12 && line <= 14) {
+                if (line >= 11 && line <= 13) {
                     focusedButton = 0;
                     return ScreenResult.navigate(new StudentRegisterScreen(authService, userService));
-                } else if (line >= 16 && line <= 18) {
+                } else if (line >= 15 && line <= 17) {
                     focusedButton = 1;
                     return ScreenResult.navigate(new TeacherRegisterScreen(authService, userService));
-                } else if (line >= 20 && line <= 22) {
+                } else if (line >= 19 && line <= 21) {
                     focusedButton = 2;
                     return ScreenResult.navigate(new StartupScreen(authService));
                 }

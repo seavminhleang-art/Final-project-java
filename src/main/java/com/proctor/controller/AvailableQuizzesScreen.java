@@ -164,13 +164,29 @@ public class AvailableQuizzesScreen implements Screen {
         }
 
         if (MouseUtil.isLeftClick(msg)) {
+            if (requestingExamReason) {
+                int line = MouseUtil.getLineIndex(msg);
+                int col = MouseUtil.getColInLine(msg);
+                int btnLine = MouseUtil.findButtonRowLine(view());
+                if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
+                    int btn = MouseUtil.getClickedButtonIndex(col, "Submit Request", "Cancel");
+                    if (btn == 0) {
+                        return submitExamReason();
+                    } else if (btn == 1) {
+                        requestingExamReason = false;
+                        bannerMessage = TuiHelper.yellow("● Makeup request cancelled.");
+                        return ScreenResult.stay(this);
+                    }
+                } else if (line >= 11 && line <= 15) {
+                    examReasonFocusIndex = 0;
+                }
+                return ScreenResult.stay(this);
+            }
+
             int line = MouseUtil.getLineIndex(msg);
             int col = MouseUtil.getColInLine(msg);
 
-            boolean hasSearchLine = searchMode || !searchBuffer.isEmpty();
-            int headerLine = hasSearchLine ? 15 : 13;
-            int itemsStartLine = headerLine + 3;
-
+            int itemsStartLine = MouseUtil.findTableStartLine(view());
             int pageSize = TuiHelper.PAGE_SIZE;
             int totalPages = Math.max(1, (int) Math.ceil((double) quizzes.size() / pageSize));
             int currentPage = selectedIndex / pageSize;
@@ -178,7 +194,7 @@ public class AvailableQuizzesScreen implements Screen {
             int endRow = Math.min(quizzes.size(), startRow + pageSize);
             int displayedRows = endRow - startRow;
 
-            if (line >= itemsStartLine && line < itemsStartLine + displayedRows * 2) {
+            if (itemsStartLine != -1 && line >= itemsStartLine && line < itemsStartLine + displayedRows * 2) {
                 int clickedOffset = (line - itemsStartLine) / 2;
                 int targetIdx = startRow + clickedOffset;
                 if (targetIdx < quizzes.size()) {
@@ -192,14 +208,22 @@ public class AvailableQuizzesScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
-            int paginationLine = itemsStartLine + displayedRows * 2 + 2;
-            if (line == paginationLine && !quizzes.isEmpty()) {
-                if (col < 20 && currentPage > 0) {
+            int pagLine = MouseUtil.findPaginationLine(view());
+            if (pagLine != -1 && line == pagLine && !quizzes.isEmpty()) {
+                int action = MouseUtil.getClickedPaginationAction(col, currentPage, totalPages);
+                if (action < 0) {
                     selectedIndex = (currentPage - 1) * pageSize;
-                } else if (col > 35 && currentPage < totalPages - 1) {
+                } else if (action > 0) {
                     selectedIndex = Math.min(quizzes.size() - 1, (currentPage + 1) * pageSize);
                 }
                 return ScreenResult.stay(this);
+            }
+
+            String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
+            if (hintAction != null) {
+                if ("Esc".equals(hintAction)) {
+                    return ScreenResult.navigate(new StudentDashboardScreen(authService, examService));
+                }
             }
 
             return ScreenResult.stay(this);
@@ -402,39 +426,7 @@ public class AvailableQuizzesScreen implements Screen {
                 bannerMessage = TuiHelper.yellow("● Makeup request cancelled.");
                 return ScreenResult.stay(this);
             }
-
-            if (examReasonBuffer.toString().trim().isBlank()) {
-                bannerMessage = TuiHelper.red("✖ A reason is required.");
-                return ScreenResult.stay(this);
-            }
-
-            Quiz q = quizzes.get(selectedIndex);
-            User student = Session.getCurrentUser().orElse(null);
-            int studentId = (student != null && student.getId() != null) ? student.getId() : 0;
-
-            if (q.getCreatedBy() == null) {
-                bannerMessage = TuiHelper.red("✖ Teacher for this exam was not found.");
-                requestingExamReason = false;
-                return ScreenResult.stay(this);
-            }
-
-            try {
-                inboxService.sendExamRetakeRequest(
-                        studentId,
-                        q.getCreatedBy(),
-                        q.getId(),
-                        q.getTitle(),
-                        examReasonBuffer.toString().trim(),
-                        isMissedExam,
-                        examReferenceTime
-                );
-                bannerMessage = TuiHelper.green("✔ Exam makeup request sent to teacher's inbox!");
-                refreshAttempts();
-            } catch (ValidationException e) {
-                bannerMessage = TuiHelper.yellow("● " + e.getMessage());
-            }
-            requestingExamReason = false;
-            return ScreenResult.stay(this);
+            return submitExamReason();
         }
 
         if (examReasonFocusIndex == 0) {
@@ -445,6 +437,41 @@ public class AvailableQuizzesScreen implements Screen {
             KeyUtil.appendInput(examReasonBuffer, k, 500);
         }
 
+        return ScreenResult.stay(this);
+    }
+
+    private ScreenResult submitExamReason() {
+        if (examReasonBuffer.toString().trim().isBlank()) {
+            bannerMessage = TuiHelper.red("✖ A reason is required.");
+            return ScreenResult.stay(this);
+        }
+
+        Quiz q = quizzes.get(selectedIndex);
+        User student = Session.getCurrentUser().orElse(null);
+        int studentId = (student != null && student.getId() != null) ? student.getId() : 0;
+
+        if (q.getCreatedBy() == null) {
+            bannerMessage = TuiHelper.red("✖ Teacher for this exam was not found.");
+            requestingExamReason = false;
+            return ScreenResult.stay(this);
+        }
+
+        try {
+            inboxService.sendExamRetakeRequest(
+                    studentId,
+                    q.getCreatedBy(),
+                    q.getId(),
+                    q.getTitle(),
+                    examReasonBuffer.toString().trim(),
+                    isMissedExam,
+                    examReferenceTime
+            );
+            bannerMessage = TuiHelper.green("✔ Exam makeup request sent to teacher's inbox!");
+            refreshAttempts();
+        } catch (ValidationException e) {
+            bannerMessage = TuiHelper.yellow("● " + e.getMessage());
+        }
+        requestingExamReason = false;
         return ScreenResult.stay(this);
     }
 

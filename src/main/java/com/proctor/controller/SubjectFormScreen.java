@@ -5,6 +5,7 @@ import com.proctor.exception.ValidationException;
 import com.proctor.model.entity.Subject;
 import com.proctor.model.service.SubjectService;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.MouseUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.SubjectViews;
 import com.proctor.model.service.UserService;
@@ -75,6 +76,68 @@ public class SubjectFormScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        if (MouseUtil.isWheelUp(msg)) {
+            focusedField = (focusedField - 1 + getFieldCount()) % getFieldCount();
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isWheelDown(msg)) {
+            focusedField = (focusedField + 1) % getFieldCount();
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isLeftClick(msg)) {
+            if (showDeleteModal) {
+                int line = MouseUtil.getLineIndex(msg);
+                int col = MouseUtil.getColInLine(msg);
+                int btnLine = MouseUtil.findButtonRowLine(view());
+                if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
+                    int btn = MouseUtil.getClickedButtonIndex(col, "Delete", "Cancel");
+                    if (btn == 0) {
+                        try {
+                            subjectService.deleteSubject(subjectToEdit.getId());
+                            return ScreenResult.navigate(new SubjectListScreen(subjectService, userService, authService));
+                        } catch (ValidationException e) {
+                            showDeleteModal = false;
+                            errorMessage = e.getMessage();
+                            return ScreenResult.stay(this);
+                        }
+                    } else if (btn == 1) {
+                        showDeleteModal = false;
+                    }
+                } else if (btnLine != -1 && (line < btnLine - 4 || line > btnLine + 4)) {
+                    showDeleteModal = false;
+                }
+                return ScreenResult.stay(this);
+            }
+
+            int line = MouseUtil.getLineIndex(msg);
+            int col = MouseUtil.getColInLine(msg);
+            int btnLine = MouseUtil.findButtonRowLine(view());
+            if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
+                if (isEditMode()) {
+                    int btn = MouseUtil.getClickedButtonIndex(col, "Submit", "Delete", "Cancel");
+                    if (btn == 0) {
+                        return handleSave();
+                    } else if (btn == 1) {
+                        showDeleteModal = true;
+                        deleteConfirmFocused = false;
+                        return ScreenResult.stay(this);
+                    } else if (btn == 2) {
+                        return ScreenResult.navigate(new SubjectListScreen(subjectService, userService, authService));
+                    }
+                } else {
+                    int btn = MouseUtil.getClickedButtonIndex(col, "Submit", "Cancel");
+                    if (btn == 0) {
+                        return handleSave();
+                    } else if (btn == 1) {
+                        return ScreenResult.navigate(new SubjectListScreen(subjectService, userService, authService));
+                    }
+                }
+            }
+            return ScreenResult.stay(this);
+        }
+
         if (msg instanceof KeyPressMessage k) {
             if (showDeleteModal) {
                 if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {

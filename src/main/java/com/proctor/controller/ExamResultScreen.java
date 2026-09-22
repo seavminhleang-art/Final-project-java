@@ -12,6 +12,7 @@ import com.proctor.model.service.InboxService;
 import com.proctor.model.entity.Quiz;
 import com.proctor.model.entity.Result;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.MouseUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.ExamViews;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
@@ -50,6 +51,17 @@ public class ExamResultScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        if (MouseUtil.isLeftClick(msg)) {
+            int line = MouseUtil.getLineIndex(msg);
+            if (line >= 0) {
+                if (returnScreen != null) {
+                    return ScreenResult.navigate(returnScreen);
+                }
+                return ScreenResult.navigate(new StudentDashboardScreen(authService, examService));
+            }
+            return ScreenResult.stay(this);
+        }
+
         if (msg instanceof KeyPressMessage k) {
             if ("r".equalsIgnoreCase(k.key())) {
                 if (result != null && result.isPassed()) {

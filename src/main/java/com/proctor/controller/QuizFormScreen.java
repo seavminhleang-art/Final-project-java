@@ -12,6 +12,7 @@ import com.proctor.model.service.QuizService;
 import com.proctor.model.entity.Subject;
 import com.proctor.model.service.SubjectService;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.MouseUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.QuizViews;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
@@ -98,6 +99,33 @@ public class QuizFormScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        if (MouseUtil.isWheelUp(msg)) {
+            subjectFilter.confirmSearch();
+            focusedField = (focusedField - 1 + getFieldCount()) % getFieldCount();
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isWheelDown(msg)) {
+            subjectFilter.confirmSearch();
+            focusedField = (focusedField + 1) % getFieldCount();
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isLeftClick(msg)) {
+            int line = MouseUtil.getLineIndex(msg);
+            int col = MouseUtil.getColInLine(msg);
+            int btnLine = MouseUtil.findButtonRowLine(view());
+            if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
+                int btn = MouseUtil.getClickedButtonIndex(col, "Submit", "Cancel");
+                if (btn == 0) {
+                    return handleSave();
+                } else if (btn == 1) {
+                    return ScreenResult.navigate(new QuizListScreen(quizService, questionService, subjectService, authService, assessmentType));
+                }
+            }
+            return ScreenResult.stay(this);
+        }
+
         if (msg instanceof KeyPressMessage k) {
             if (focusedField == 0) {
                 if (KeyUtil.isEsc(k)) {

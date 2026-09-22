@@ -107,8 +107,10 @@ public class InboxListScreen implements Screen {
             if (showDeleteModal) {
                 int line = MouseUtil.getLineIndex(msg);
                 int col = MouseUtil.getColInLine(msg);
-                if (line >= 17 && line <= 19) {
-                    if (col >= 0 && col < 22) {
+                int btnLine = MouseUtil.findButtonRowLine(view());
+                if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
+                    int btn = MouseUtil.getClickedButtonIndex(col, "Delete", "Cancel");
+                    if (btn == 0) {
                         if (!messages.isEmpty()) {
                             InboxMessage target = messages.get(selectedIndex);
                             inboxService.deleteMessage(target.getId());
@@ -116,10 +118,10 @@ public class InboxListScreen implements Screen {
                             showDeleteModal = false;
                             refreshMessages();
                         }
-                    } else if (col >= 26 && col < 48) {
+                    } else if (btn == 1) {
                         showDeleteModal = false;
                     }
-                } else if (line < 11 || line > 21) {
+                } else if (btnLine != -1 && (line < btnLine - 4 || line > btnLine + 4)) {
                     showDeleteModal = false;
                 }
                 return ScreenResult.stay(this);
@@ -128,9 +130,10 @@ public class InboxListScreen implements Screen {
             int line = MouseUtil.getLineIndex(msg);
             int col = MouseUtil.getColInLine(msg);
 
-            if (line == 11) {
-                int clickedTab = (col < 20) ? 0 : (col < 35 ? 1 : 2);
-                if (clickedTab != filterIndex) {
+            int tabLine = MouseUtil.findTabBarLine(view());
+            if (tabLine != -1 && line == tabLine) {
+                int clickedTab = MouseUtil.getClickedTabIndex(col, "All", "Unread", "Actionable");
+                if (clickedTab >= 0 && clickedTab < 3 && clickedTab != filterIndex) {
                     filterIndex = clickedTab;
                     selectedIndex = 0;
                     applyFilters();
@@ -138,10 +141,7 @@ public class InboxListScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
-            boolean hasSearchLine = searchMode || !searchBuffer.isEmpty();
-            int headerLine = hasSearchLine ? 15 : 13;
-            int itemsStartLine = headerLine + 3;
-
+            int itemsStartLine = MouseUtil.findTableStartLine(view());
             int pageSize = TuiHelper.PAGE_SIZE;
             int totalPages = Math.max(1, (int) Math.ceil((double) messages.size() / pageSize));
             int currentPage = selectedIndex / pageSize;
@@ -149,7 +149,7 @@ public class InboxListScreen implements Screen {
             int endRow = Math.min(messages.size(), startRow + pageSize);
             int displayedRows = endRow - startRow;
 
-            if (line >= itemsStartLine && line < itemsStartLine + displayedRows * 2) {
+            if (itemsStartLine != -1 && line >= itemsStartLine && line < itemsStartLine + displayedRows * 2) {
                 int clickedOffset = (line - itemsStartLine) / 2;
                 int targetIdx = startRow + clickedOffset;
                 if (targetIdx < messages.size()) {
@@ -165,14 +165,34 @@ public class InboxListScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
-            int paginationLine = itemsStartLine + displayedRows * 2 + 2;
-            if (line == paginationLine && !messages.isEmpty()) {
-                if (col < 20 && currentPage > 0) {
+            int paginationLine = MouseUtil.findPaginationLine(view());
+            if (paginationLine != -1 && line == paginationLine && !messages.isEmpty()) {
+                int action = MouseUtil.getClickedPaginationAction(col, currentPage, totalPages);
+                if (action < 0) {
                     selectedIndex = (currentPage - 1) * pageSize;
-                } else if (col > 35 && currentPage < totalPages - 1) {
+                } else if (action > 0) {
                     selectedIndex = Math.min(messages.size() - 1, (currentPage + 1) * pageSize);
                 }
                 return ScreenResult.stay(this);
+            }
+
+            String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
+            if (hintAction != null) {
+                if ("Esc".equals(hintAction)) {
+                    return ScreenResult.navigate(returnDashboardScreen);
+                } else if ("m".equals(hintAction)) {
+                    int userId = getCurrentUserId();
+                    if (userId != -1) {
+                        inboxService.markAllAsRead(userId);
+                        bannerMessage = TuiHelper.green("✔ All messages marked as read.");
+                        refreshMessages();
+                    }
+                    return ScreenResult.stay(this);
+                } else if ("d".equals(hintAction) && !messages.isEmpty()) {
+                    showDeleteModal = true;
+                    deleteConfirmFocused = false;
+                    return ScreenResult.stay(this);
+                }
             }
 
             return ScreenResult.stay(this);

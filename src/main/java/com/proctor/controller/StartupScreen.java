@@ -34,14 +34,16 @@ public class StartupScreen implements Screen {
             if (showQuitModal) {
                 int line = MouseUtil.getLineIndex(msg);
                 int col = MouseUtil.getColInLine(msg);
-                if (line >= 17 && line <= 19) {
-                    if (col >= 0 && col < 22) {
+                int btnLine = MouseUtil.findButtonRowLine(view());
+                if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
+                    int btn = MouseUtil.getClickedButtonIndex(col, "Quit Application", "Return to App");
+                    if (btn == 0) {
                         return ScreenResult.quit();
-                    } else if (col >= 26 && col < 48) {
+                    } else if (btn == 1) {
                         showQuitModal = false;
                         return ScreenResult.stay(this);
                     }
-                } else if (line < 11 || line > 21) {
+                } else if (btnLine != -1 && (line < btnLine - 6 || line > btnLine + 4)) {
                     showQuitModal = false;
                     return ScreenResult.stay(this);
                 }
@@ -51,13 +53,13 @@ public class StartupScreen implements Screen {
             int line = MouseUtil.getLineIndex(msg);
             int col = MouseUtil.getColInLine(msg);
             if (col >= 0 && col < 26) {
-                if (line >= 12 && line <= 14) {
+                if (line >= 11 && line <= 13) {
                     focusedButton = 0;
                     return ScreenResult.navigate(new LoginScreen(authService));
-                } else if (line >= 16 && line <= 18) {
+                } else if (line >= 15 && line <= 17) {
                     focusedButton = 1;
                     return ScreenResult.navigate(new RegisterRoleScreen(authService));
-                } else if (line >= 20 && line <= 22) {
+                } else if (line >= 19 && line <= 21) {
                     focusedButton = 2;
                     showQuitModal = true;
                     quitConfirmFocused = false;

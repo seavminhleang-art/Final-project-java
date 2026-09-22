@@ -9,6 +9,7 @@ import com.proctor.model.service.AuthService;
 import com.proctor.model.service.ExamService;
 import com.proctor.model.entity.Session;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.MouseUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.SpeedQuizViews;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
@@ -52,6 +53,28 @@ public class SpeedQuizResultScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        if (MouseUtil.isLeftClick(msg)) {
+            int line = MouseUtil.getLineIndex(msg);
+            int col = MouseUtil.getColInLine(msg);
+            if (line >= 0) {
+                if (col >= 30 && col <= 50) {
+                    if (examService != null && result != null && result.getQuizId() != null) {
+                        User student = Session.getCurrentUser().orElse(null);
+                        int studentId = (student != null && student.getId() != null) ? student.getId() : 0;
+                        try {
+                            SpeedQuizSession newSession = examService.startSpeedQuiz(result.getQuizId(), studentId);
+                            return ScreenResult.navigate(new SpeedQuizTakerScreen(newSession, examService, authService, returnScreen));
+                        } catch (Exception ignored) {}
+                    }
+                }
+                if (returnScreen != null) {
+                    return ScreenResult.navigate(returnScreen);
+                }
+                return ScreenResult.navigate(new StudentDashboardScreen(authService, examService));
+            }
+            return ScreenResult.stay(this);
+        }
+
         if (msg instanceof KeyPressMessage k) {
             if ("r".equalsIgnoreCase(k.key())) {
                 if (examService != null && result != null && result.getQuizId() != null) {

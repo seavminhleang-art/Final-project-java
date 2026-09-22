@@ -15,6 +15,7 @@ import com.proctor.model.service.QuizService;
 import com.proctor.model.entity.Subject;
 import com.proctor.model.service.SubjectService;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.MouseUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.QuestionViews;
 import com.williamcallahan.tui4j.compat.bubbletea.Command;
@@ -167,8 +168,92 @@ public class AIQuestionGeneratorScreen implements Screen {
                     activeCancellation.set(true);
                 }
                 bannerMessage = TuiHelper.yellow("Generation cancelled.");
+            } else if (MouseUtil.isLeftClick(msg)) {
+                int line = MouseUtil.getLineIndex(msg);
+                int btnLine = MouseUtil.findButtonRowLine(view());
+                if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
+                    isGenerating = false;
+                    activeGenerationId++;
+                    if (activeCancellation != null) {
+                        activeCancellation.set(true);
+                    }
+                    bannerMessage = TuiHelper.yellow("Generation cancelled.");
+                }
             }
             return ScreenResult.stay(this);
+        }
+
+        if (reviewingDrafts) {
+            if (MouseUtil.isWheelUp(msg)) {
+                if (!generatedDrafts.isEmpty()) {
+                    selectedDraftIndex = (selectedDraftIndex - 1 + generatedDrafts.size()) % generatedDrafts.size();
+                }
+                return ScreenResult.stay(this);
+            }
+            if (MouseUtil.isWheelDown(msg)) {
+                if (!generatedDrafts.isEmpty()) {
+                    selectedDraftIndex = (selectedDraftIndex + 1) % generatedDrafts.size();
+                }
+                return ScreenResult.stay(this);
+            }
+            if (MouseUtil.isLeftClick(msg)) {
+                int line = MouseUtil.getLineIndex(msg);
+                int col = MouseUtil.getColInLine(msg);
+                int btnLine = MouseUtil.findButtonRowLine(view());
+                if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
+                    int btn = MouseUtil.getClickedButtonIndex(col, "Save Drafts", "Cancel");
+                    if (btn == 0) {
+                        try {
+                            saveAllDrafts();
+                            return returnToPreviousScreen();
+                        } catch (Exception ex) {
+                            bannerMessage = TuiHelper.red("✖ Failed to save questions: " + ex.getMessage());
+                            return ScreenResult.stay(this);
+                        }
+                    } else if (btn == 1) {
+                        reviewingDrafts = false;
+                        return ScreenResult.stay(this);
+                    }
+                }
+                int pagLine = MouseUtil.findPaginationLine(view());
+                if (pagLine != -1 && line == pagLine && !generatedDrafts.isEmpty()) {
+                    int pageSize = 3;
+                    int totalPages = Math.max(1, (int) Math.ceil((double) generatedDrafts.size() / pageSize));
+                    int currentPage = selectedDraftIndex / pageSize;
+                    int action = MouseUtil.getClickedPaginationAction(col, currentPage, totalPages);
+                    if (action == -1 && currentPage > 0) {
+                        selectedDraftIndex = (currentPage - 1) * pageSize;
+                    } else if (action == 1 && currentPage < totalPages - 1) {
+                        selectedDraftIndex = Math.min(generatedDrafts.size() - 1, (currentPage + 1) * pageSize);
+                    }
+                }
+                return ScreenResult.stay(this);
+            }
+        } else {
+            if (MouseUtil.isWheelUp(msg)) {
+                if (!isPinnedQuiz()) subjectFilter.confirmSearch();
+                focusedField = (focusedField - 1 + getFieldCount()) % getFieldCount();
+                return ScreenResult.stay(this);
+            }
+            if (MouseUtil.isWheelDown(msg)) {
+                if (!isPinnedQuiz()) subjectFilter.confirmSearch();
+                focusedField = (focusedField + 1) % getFieldCount();
+                return ScreenResult.stay(this);
+            }
+            if (MouseUtil.isLeftClick(msg)) {
+                int line = MouseUtil.getLineIndex(msg);
+                int col = MouseUtil.getColInLine(msg);
+                int btnLine = MouseUtil.findButtonRowLine(view());
+                if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
+                    int btn = MouseUtil.getClickedButtonIndex(col, "Generate Questions", "Cancel");
+                    if (btn == 0) {
+                        return startAsyncGeneration();
+                    } else if (btn == 1) {
+                        return returnToPreviousScreen();
+                    }
+                }
+                return ScreenResult.stay(this);
+            }
         }
 
         if (msg instanceof KeyPressMessage k) {

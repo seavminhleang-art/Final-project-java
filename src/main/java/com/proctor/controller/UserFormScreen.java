@@ -5,6 +5,7 @@ import com.proctor.model.service.AuthService;
 import com.proctor.model.enums.Role;
 import com.proctor.exception.ValidationException;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.MouseUtil;
 import com.proctor.view.UserViews;
 import com.proctor.model.service.UserService;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
@@ -75,6 +76,31 @@ public class UserFormScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        if (MouseUtil.isWheelUp(msg)) {
+            focusedField = (focusedField - 1 + getFieldCount()) % getFieldCount();
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isWheelDown(msg)) {
+            focusedField = (focusedField + 1) % getFieldCount();
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isLeftClick(msg)) {
+            int line = MouseUtil.getLineIndex(msg);
+            int col = MouseUtil.getColInLine(msg);
+            int btnLine = MouseUtil.findButtonRowLine(view());
+            if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
+                int btn = MouseUtil.getClickedButtonIndex(col, "Submit", "Cancel");
+                if (btn == 0) {
+                    return handleSave();
+                } else if (btn == 1) {
+                    return ScreenResult.navigate(new UserListScreen(userService, authService));
+                }
+            }
+            return ScreenResult.stay(this);
+        }
+
         if (msg instanceof KeyPressMessage k) {
             if (KeyUtil.isEsc(k)) {
                 return ScreenResult.navigate(new UserListScreen(userService, authService));

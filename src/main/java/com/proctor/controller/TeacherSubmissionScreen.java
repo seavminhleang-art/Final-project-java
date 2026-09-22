@@ -18,6 +18,7 @@ import com.proctor.model.entity.Result;
 import com.proctor.model.service.SubjectService;
 import com.proctor.model.enums.QuestionType;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.MouseUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.TeacherSubmissionViews;
 import com.williamcallahan.tui4j.compat.bubbletea.Command;
@@ -160,6 +161,129 @@ public class TeacherSubmissionScreen implements Screen {
                 }
                 bannerMessage = TuiHelper.yellow("AI grading cancelled.");
             }
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isWheelUp(msg)) {
+            if (!submissions.isEmpty() && selectedIndex > 0) {
+                selectedIndex--;
+            }
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isWheelDown(msg)) {
+            if (!submissions.isEmpty() && selectedIndex < submissions.size() - 1) {
+                selectedIndex++;
+            }
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isLeftClick(msg)) {
+            int line = MouseUtil.getLineIndex(msg);
+            int col = MouseUtil.getColInLine(msg);
+
+            if (inspectingAnswerSheet) {
+                int pagLine = MouseUtil.findPaginationLine(view());
+                if (pagLine != -1 && line == pagLine) {
+                    Attempt currentAttempt = !submissions.isEmpty() ? submissions.get(selectedIndex) : null;
+                    Quiz currentQuiz = specificQuiz;
+                    if (currentQuiz == null && currentAttempt != null) {
+                        currentQuiz = quizService.getQuizById(currentAttempt.getQuizId()).orElse(null);
+                    }
+                    List<Question> questions = (currentQuiz != null && currentQuiz.getQuestions() != null) ? currentQuiz.getQuestions() : List.of();
+                    if (!questions.isEmpty()) {
+                        int action = MouseUtil.getClickedPaginationAction(col, inspectingAnswerIndex, questions.size());
+                        if (action < 0) {
+                            inspectingAnswerIndex = (inspectingAnswerIndex - 1 + questions.size()) % questions.size();
+                        } else if (action > 0) {
+                            inspectingAnswerIndex = (inspectingAnswerIndex + 1) % questions.size();
+                        }
+                    }
+                }
+                String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
+                if (hintAction != null) {
+                    if ("Esc".equals(hintAction)) {
+                        inspectingAnswerSheet = false;
+                        return ScreenResult.stay(this);
+                    } else if ("g".equals(hintAction)) {
+                        return startAsyncGrading();
+                    } else if ("r".equals(hintAction)) {
+                        executeReturnGrade();
+                        return ScreenResult.stay(this);
+                    }
+                }
+                return ScreenResult.stay(this);
+            }
+
+            int tabLine = MouseUtil.findTabBarLine(view());
+            if (tabLine != -1 && line == tabLine) {
+                int clickedTab = MouseUtil.getClickedTabIndex(col, "All", "Pending Review", "Graded");
+                if (clickedTab >= 0 && clickedTab < STATUS_FILTERS.length && clickedTab != statusFilterIndex) {
+                    statusFilterIndex = clickedTab;
+                    selectedIndex = 0;
+                    applyFilters();
+                }
+                return ScreenResult.stay(this);
+            }
+
+            int itemsStartLine = MouseUtil.findTableStartLine(view());
+            int pageSize = TuiHelper.PAGE_SIZE;
+            int totalPages = Math.max(1, (int) Math.ceil((double) submissions.size() / pageSize));
+            int currentPage = selectedIndex / pageSize;
+            int startRow = currentPage * pageSize;
+            int endRow = Math.min(submissions.size(), startRow + pageSize);
+            int displayedRows = endRow - startRow;
+
+            if (itemsStartLine != -1 && line >= itemsStartLine && line < itemsStartLine + displayedRows * 2) {
+                int clickedOffset = (line - itemsStartLine) / 2;
+                int targetIdx = startRow + clickedOffset;
+                if (targetIdx < submissions.size()) {
+                    if (selectedIndex == targetIdx) {
+                        inspectingAnswerSheet = true;
+                        inspectingAnswerIndex = 0;
+                        bannerMessage = "";
+                    } else {
+                        selectedIndex = targetIdx;
+                    }
+                }
+                return ScreenResult.stay(this);
+            }
+
+            int pagLine = MouseUtil.findPaginationLine(view());
+            if (pagLine != -1 && line == pagLine && !submissions.isEmpty()) {
+                int action = MouseUtil.getClickedPaginationAction(col, currentPage, totalPages);
+                if (action < 0) {
+                    selectedIndex = (currentPage - 1) * pageSize;
+                } else if (action > 0) {
+                    selectedIndex = Math.min(submissions.size() - 1, (currentPage + 1) * pageSize);
+                }
+                return ScreenResult.stay(this);
+            }
+
+            String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
+            if (hintAction != null) {
+                if ("Esc".equals(hintAction)) {
+                    if (specificQuiz != null) {
+                        return ScreenResult.navigate(new QuizListScreen(quizService, questionService, subjectService, authService, specificQuiz.getAssessmentType()));
+                    }
+                    User user = Session.getCurrentUser().orElse(null);
+                    if (user != null && user.getRole() == Role.ADMIN) {
+                        return ScreenResult.navigate(new AdminDashboardScreen(authService));
+                    }
+                    return ScreenResult.navigate(new TeacherDashboardScreen(authService, questionService, subjectService, quizService));
+                } else if ("g".equals(hintAction)) {
+                    return startAsyncGrading();
+                } else if ("r".equals(hintAction)) {
+                    executeReturnGrade();
+                    return ScreenResult.stay(this);
+                } else if ("Enter".equals(hintAction) && !submissions.isEmpty()) {
+                    inspectingAnswerSheet = true;
+                    inspectingAnswerIndex = 0;
+                    bannerMessage = "";
+                    return ScreenResult.stay(this);
+                }
+            }
+
             return ScreenResult.stay(this);
         }
 

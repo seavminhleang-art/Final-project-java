@@ -7,6 +7,7 @@ import com.proctor.model.enums.InboxMessageType;
 import com.proctor.model.enums.InboxStatus;
 import com.proctor.model.service.InboxService;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.MouseUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.InboxViews;
 import com.proctor.model.service.UserService;
@@ -45,6 +46,66 @@ public class InboxDetailScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        if (MouseUtil.isWheelUp(msg) || MouseUtil.isWheelDown(msg)) {
+            if (message.isActionable()) {
+                focusedActionIndex = (focusedActionIndex == 0) ? 1 : 0;
+            }
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isLeftClick(msg)) {
+            if (showDeleteModal) {
+                int line = MouseUtil.getLineIndex(msg);
+                int col = MouseUtil.getColInLine(msg);
+                int btnLine = MouseUtil.findButtonRowLine(view());
+                if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
+                    int btn = MouseUtil.getClickedButtonIndex(col, "Delete", "Cancel");
+                    if (btn == 0) {
+                        inboxService.deleteMessage(message.getId());
+                        return ScreenResult.navigate(returnScreen);
+                    } else if (btn == 1) {
+                        showDeleteModal = false;
+                        return ScreenResult.stay(this);
+                    }
+                } else if (btnLine != -1 && (line < btnLine - 4 || line > btnLine + 4)) {
+                    showDeleteModal = false;
+                    return ScreenResult.stay(this);
+                }
+                return ScreenResult.stay(this);
+            }
+
+            if (message.isActionable()) {
+                int line = MouseUtil.getLineIndex(msg);
+                int col = MouseUtil.getColInLine(msg);
+                int btnLine = MouseUtil.findButtonRowLine(view());
+                if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
+                    int btn = MouseUtil.getClickedButtonIndex(col, "Approve Request", "Reject Request");
+                    if (btn == 0) {
+                        focusedActionIndex = 0;
+                        return executeStandardApprove();
+                    } else if (btn == 1) {
+                        focusedActionIndex = 1;
+                        return executeReject();
+                    }
+                }
+            }
+
+            int line = MouseUtil.getLineIndex(msg);
+            int col = MouseUtil.getColInLine(msg);
+            String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
+            if (hintAction != null) {
+                if ("Esc".equals(hintAction)) {
+                    return ScreenResult.navigate(returnScreen);
+                } else if ("d".equals(hintAction)) {
+                    showDeleteModal = true;
+                    deleteConfirmFocused = false;
+                    return ScreenResult.stay(this);
+                }
+            }
+
+            return ScreenResult.stay(this);
+        }
+
         if (msg instanceof KeyPressMessage k) {
             if (showDeleteModal) {
                 if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {

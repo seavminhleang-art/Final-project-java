@@ -5,6 +5,7 @@ import com.proctor.model.service.ExamService;
 import com.proctor.model.entity.LeaderboardEntry;
 import com.proctor.model.service.PortalService;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.MouseUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.PortalViews;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
@@ -56,6 +57,84 @@ public class GlobalLeaderboardScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        if (MouseUtil.isWheelUp(msg)) {
+            if (!leaderboard.isEmpty() && selectedIndex > 0) {
+                selectedIndex--;
+            }
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isWheelDown(msg)) {
+            if (!leaderboard.isEmpty() && selectedIndex < leaderboard.size() - 1) {
+                selectedIndex++;
+            }
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isLeftClick(msg)) {
+            int line = MouseUtil.getLineIndex(msg);
+            int col = MouseUtil.getColInLine(msg);
+
+            int tabLine = MouseUtil.findTabBarLine(view());
+            if (tabLine != -1 && line == tabLine) {
+                int clickedTab = MouseUtil.getClickedTabIndex(col, "Quizzes", "Exams", "Speed Quizzes");
+                if (clickedTab >= 0) {
+                    Mode targetMode = switch (clickedTab) {
+                        case 0 -> Mode.QUIZ;
+                        case 1 -> Mode.EXAM;
+                        case 2 -> Mode.SPEED;
+                        default -> mode;
+                    };
+                    if (targetMode != mode) {
+                        mode = targetMode;
+                        selectedIndex = 0;
+                        refreshLeaderboard();
+                    }
+                }
+                return ScreenResult.stay(this);
+            }
+
+            int itemsStartLine = MouseUtil.findTableStartLine(view());
+            int pageSize = TuiHelper.PAGE_SIZE;
+            int totalPages = Math.max(1, (int) Math.ceil((double) leaderboard.size() / pageSize));
+            int currentPage = selectedIndex / pageSize;
+            int startRow = currentPage * pageSize;
+            int endRow = Math.min(leaderboard.size(), startRow + pageSize);
+            int displayedRows = endRow - startRow;
+
+            if (itemsStartLine != -1 && line >= itemsStartLine && line < itemsStartLine + displayedRows * 2) {
+                int clickedOffset = (line - itemsStartLine) / 2;
+                int targetIdx = startRow + clickedOffset;
+                if (targetIdx < leaderboard.size()) {
+                    selectedIndex = targetIdx;
+                }
+                return ScreenResult.stay(this);
+            }
+
+            int pagLine = MouseUtil.findPaginationLine(view());
+            if (pagLine != -1 && line == pagLine && !leaderboard.isEmpty()) {
+                int action = MouseUtil.getClickedPaginationAction(col, currentPage, totalPages);
+                if (action < 0) {
+                    selectedIndex = (currentPage - 1) * pageSize;
+                } else if (action > 0) {
+                    selectedIndex = Math.min(leaderboard.size() - 1, (currentPage + 1) * pageSize);
+                }
+                return ScreenResult.stay(this);
+            }
+
+            String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
+            if (hintAction != null) {
+                if ("Esc".equals(hintAction)) {
+                    if (returnScreen != null) {
+                        return ScreenResult.navigate(returnScreen);
+                    }
+                    return ScreenResult.navigate(new StudentDashboardScreen(authService, examService, portalService));
+                }
+            }
+
+            return ScreenResult.stay(this);
+        }
+
         if (msg instanceof KeyPressMessage k) {
             if (KeyUtil.isEsc(k)) {
                 if (returnScreen != null) {

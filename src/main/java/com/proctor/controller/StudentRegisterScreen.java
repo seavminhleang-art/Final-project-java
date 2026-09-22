@@ -73,7 +73,9 @@ public class StudentRegisterScreen implements Screen {
                     }
                     return ScreenResult.stay(this);
                 }
-            } else if (line >= 47 && line <= 49) {
+            }
+            int btnLine = MouseUtil.findButtonRowLine(view());
+            if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
                 int btn = MouseUtil.getClickedButtonIndex(col, 106, "Register", "Back");
                 if (btn == 0) {
                     focusedField = 7;

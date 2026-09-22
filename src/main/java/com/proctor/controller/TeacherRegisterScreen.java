@@ -99,9 +99,8 @@ public class TeacherRegisterScreen implements Screen {
                 curL++;
             }
 
-            curL++;
-
-            if (line >= curL && line <= curL + 2) {
+            int btnLine = MouseUtil.findButtonRowLine(view());
+            if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
                 int btn = MouseUtil.getClickedButtonIndex(col, 106, "Register", "Back");
                 if (btn == 0) {
                     focusedField = 10;

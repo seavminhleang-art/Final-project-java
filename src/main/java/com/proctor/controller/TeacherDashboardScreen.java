@@ -123,14 +123,16 @@ public class TeacherDashboardScreen implements Screen {
             if (showQuitModal) {
                 int line = MouseUtil.getLineIndex(msg);
                 int col = MouseUtil.getColInLine(msg);
-                if (line >= 17 && line <= 19) {
-                    if (col >= 0 && col < 22) {
+                int btnLine = MouseUtil.findButtonRowLine(view());
+                if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
+                    int btn = MouseUtil.getClickedButtonIndex(col, "Quit Application", "Return to App");
+                    if (btn == 0) {
                         return ScreenResult.quit();
-                    } else if (col >= 26 && col < 48) {
+                    } else if (btn == 1) {
                         showQuitModal = false;
                         return ScreenResult.stay(this);
                     }
-                } else if (line < 11 || line > 21) {
+                } else if (btnLine != -1 && (line < btnLine - 6 || line > btnLine + 4)) {
                     showQuitModal = false;
                     return ScreenResult.stay(this);
                 }
@@ -138,8 +140,9 @@ public class TeacherDashboardScreen implements Screen {
             }
 
             int line = MouseUtil.getLineIndex(msg);
-            int itemIndex = (line - 11) / 2;
-            if (line >= 11 && itemIndex >= 0 && itemIndex < menuItems.length) {
+            int col = MouseUtil.getColInLine(msg);
+            int itemIndex = MouseUtil.findMenuItemIndex(view(), line);
+            if (itemIndex >= 0 && itemIndex < menuItems.length && col >= 0 && col < 110) {
                 selectedIndex = itemIndex;
                 return handleSelection();
             }

@@ -2,6 +2,7 @@ package com.proctor.controller;
 
 import com.proctor.exception.ValidationException;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.MouseUtil;
 import com.proctor.util.PasswordUtils;
 import com.proctor.util.TuiHelper;
 import com.proctor.model.entity.Session;
@@ -34,6 +35,43 @@ public class ChangePasswordScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        if (MouseUtil.isWheelUp(msg)) {
+            focusedField = (focusedField - 1 + 5) % 5;
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isWheelDown(msg)) {
+            focusedField = (focusedField + 1) % 5;
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isLeftClick(msg)) {
+            int line = MouseUtil.getLineIndex(msg);
+            int col = MouseUtil.getColInLine(msg);
+            if (line >= 11 && line <= 14) {
+                focusedField = 0;
+                return ScreenResult.stay(this);
+            } else if (line >= 16 && line <= 19) {
+                focusedField = 1;
+                return ScreenResult.stay(this);
+            } else if (line >= 21 && line <= 24) {
+                focusedField = 2;
+                return ScreenResult.stay(this);
+            }
+            int btnLine = MouseUtil.findButtonRowLine(view());
+            if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
+                int btn = MouseUtil.getClickedButtonIndex(col, "Save Password", "Back");
+                if (btn == 0) {
+                    focusedField = 3;
+                    return handleSave();
+                } else if (btn == 1) {
+                    focusedField = 4;
+                    return navigateBack();
+                }
+            }
+            return ScreenResult.stay(this);
+        }
+
         if (msg instanceof KeyPressMessage k) {
             if (KeyUtil.isEsc(k)) {
                 return navigateBack();

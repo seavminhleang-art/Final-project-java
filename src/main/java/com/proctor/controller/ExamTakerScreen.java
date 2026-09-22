@@ -146,17 +146,19 @@ public class ExamTakerScreen implements Screen {
             if (confirmSubmitMode) {
                 int line = MouseUtil.getLineIndex(msg);
                 int col = MouseUtil.getColInLine(msg);
-                if (line >= 17 && line <= 19) {
-                    if (col >= 0 && col < 22) {
+                int btnLine = MouseUtil.findButtonRowLine(view());
+                if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
+                    int btn = MouseUtil.getClickedButtonIndex(col, "Submit Quiz", "Return to Quiz");
+                    if (btn == 0) {
                         isSubmitted = true;
                         saveCurrentAnswer();
                         Result result = examService.submitExam(session, false);
                         return ScreenResult.navigate(new ExamResultScreen(result, session, examService, authService));
-                    } else if (col >= 26 && col < 48) {
+                    } else if (btn == 1) {
                         confirmSubmitMode = false;
                         return ScreenResult.stay(this);
                     }
-                } else if (line < 11 || line > 21) {
+                } else if (btnLine != -1 && (line < btnLine - 4 || line > btnLine + 4)) {
                     confirmSubmitMode = false;
                     return ScreenResult.stay(this);
                 }
@@ -167,8 +169,8 @@ public class ExamTakerScreen implements Screen {
                 Question q = session.getQuestions().get(currentQuestionIndex);
                 if (q.getQuestionType() != QuestionType.SHORT_ANSWER && q.getOptions() != null) {
                     int line = MouseUtil.getLineIndex(msg);
-                    int optIdx = (line - 13) / 2;
-                    if (line >= 13 && optIdx >= 0 && optIdx < q.getOptions().size()) {
+                    int optIdx = MouseUtil.findOptionIndex(view(), line);
+                    if (optIdx >= 0 && optIdx < q.getOptions().size()) {
                         focusedOptionIndex = optIdx;
                         QuestionOption opt = q.getOptions().get(optIdx);
                         session.getSelectedOptions().put(q.getId(), opt.getId());
@@ -176,6 +178,14 @@ public class ExamTakerScreen implements Screen {
                         return ScreenResult.stay(this);
                     }
                 }
+            }
+            int line = MouseUtil.getLineIndex(msg);
+            int col = MouseUtil.getColInLine(msg);
+            String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
+            if ("Esc".equals(hintAction)) {
+                confirmSubmitMode = true;
+                confirmSubmitFocused = false;
+                return ScreenResult.stay(this);
             }
             return ScreenResult.stay(this);
         }

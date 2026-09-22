@@ -451,10 +451,10 @@ public class TuiHelper {
         String rawLenText = focused ? ("< " + value + " >" + (helpText != null ? " (" + helpText + ")" : "")) : (value != null ? value : "");
         int padLen = Math.max(0, (width - 4) - rawLenText.length());
 
-        sb.append("  ").append(INPUT_MARKER).append(labelCol).append(CLEAR_EOL).append("\n");
-        sb.append("  ").append(INPUT_MARKER).append(borderCol).append("┌").append("─".repeat(width - 2)).append("┐").append(RESET).append(CLEAR_EOL).append("\n");
-        sb.append("  ").append(INPUT_MARKER).append(borderCol).append("│").append(RESET).append(" ").append(valDisplay).append(" ".repeat(padLen)).append(" ").append(borderCol).append("│").append(RESET).append(CLEAR_EOL).append("\n");
-        sb.append("  ").append(INPUT_MARKER).append(borderCol).append("└").append("─".repeat(width - 2)).append("┘").append(RESET).append(CLEAR_EOL).append("\n");
+        sb.append("  ").append(BUTTON_MARKER).append(labelCol).append(CLEAR_EOL).append("\n");
+        sb.append("  ").append(BUTTON_MARKER).append(borderCol).append("┌").append("─".repeat(width - 2)).append("┐").append(RESET).append(CLEAR_EOL).append("\n");
+        sb.append("  ").append(BUTTON_MARKER).append(borderCol).append("│").append(RESET).append(" ").append(valDisplay).append(" ".repeat(padLen)).append(" ").append(borderCol).append("│").append(RESET).append(CLEAR_EOL).append("\n");
+        sb.append("  ").append(BUTTON_MARKER).append(borderCol).append("└").append("─".repeat(width - 2)).append("┘").append(RESET).append(CLEAR_EOL).append("\n");
         return sb.toString();
     }
 
@@ -764,13 +764,16 @@ public class TuiHelper {
         if (s.contains("[ ▶ ") || s.contains("[   ")) {
             return false;
         }
-        if (s.startsWith("[Pinned") || s.startsWith("[NEW]") || s.startsWith("[READ]")) {
+        if (s.startsWith("[Pinned") || s.startsWith("[NEW]") || s.startsWith("[READ]") || s.startsWith("[✔") || s.startsWith("[✖")) {
+            return false;
+        }
+        if (s.matches("^\\[[0-9A-Za-z]\\]\\s+.*") && !s.contains(" • ")) {
             return false;
         }
         if (s.contains(" • ")) {
             return true;
         }
-        return s.startsWith("[Esc]") || s.startsWith("[Enter]") || s.startsWith("[Enter/Esc]") || s.startsWith("[Enter / Esc]");
+        return s.matches("^\\[[^\\]]+\\].*");
     }
 
     public static String wrapHints(List<String> hints, int maxWidth) {
@@ -793,7 +796,7 @@ public class TuiHelper {
             lines.add(currentLine.toString());
         }
         for (int i = 0; i < lines.size(); i++) {
-            sb.append(dim(lines.get(i))).append("\n");
+            sb.append(BUTTON_MARKER).append(dim(lines.get(i))).append("\n");
             if (i < lines.size() - 1) {
                 sb.append("\n");
             }
@@ -1188,9 +1191,14 @@ private static String stripAnsi(String str) {
                 int leftPad = Math.max(0, (innerWidth - trimmedVisLen) / 2);
                 int rightPad = Math.max(0, innerWidth - (leftPad + trimmedVisLen));
 
+                int colOffset = leftIndent + 1 + contentLeftPad + 1 + 1 + leftPad;
                 if (currentRow < maxRows) {
                     lineAtRow[currentRow] = idx;
-                    colOffsetAtRow[currentRow] = leftIndent + 1 + contentLeftPad + 1 + 1 + leftPad;
+                    colOffsetAtRow[currentRow] = colOffset;
+                }
+                MouseTarget target = createMouseTarget(rawLines[idx], colOffset, currentRow, innerWidth, contentBlockOffset);
+                if (target != null) {
+                    mouseTargets.add(target);
                 }
                 appendCardContentRow(sb, indent, borderCol, contentLeftPad, leftPad, trimmedClean, rightPad, contentRightPad, rightMargin);
                 currentRow++;
@@ -1369,6 +1377,27 @@ private static String stripAnsi(String str) {
         appendCardContentRow(sb, indent, borderCol, contentLeftPad, leftPad, cleanLine, rightPad, contentRightPad, rightMargin);
     }
 
+    public static boolean isTableRow(String trimmed) {
+        if (trimmed == null || trimmed.length() < 4) {
+            return false;
+        }
+        if (trimmed.startsWith("─") || trimmed.startsWith("━") || trimmed.startsWith("┌") || trimmed.startsWith("└")) {
+            return false;
+        }
+        if (trimmed.startsWith("Page ") || trimmed.startsWith("Tabs:") || trimmed.startsWith("Search:")) {
+            return false;
+        }
+        if (trimmed.startsWith("#") && !trimmed.matches("^#\\d+.*")) {
+            return false;
+        }
+        if (trimmed.matches("^Q\\d+\\..*") && !trimmed.contains("pts]")) {
+            return false;
+        }
+        return trimmed.matches("^(?:[●#]\\s*)?\\d+(?:\\.|\\s{2,}).*")
+                || trimmed.matches("^\\[[^\\]]*\\]\\s*(?:Added|Selected|Unselected)?\\s*\\d+(?:\\.|\\s{2,}).*")
+                || trimmed.matches("^Q\\d+\\..*\\[.*pts\\].*");
+    }
+
     private static MouseTarget createMouseTarget(String rawLine, int colOffset, int screenRow, int innerWidth, int contentBlockOffset) {
         if (rawLine == null || rawLine.isBlank()) {
             return null;
@@ -1394,20 +1423,47 @@ private static String stripAnsi(String str) {
         boolean isTabsRow = trimmed.startsWith("Tabs:") || cleanLine.contains("Tabs:");
         boolean isLegacyButtonRow = !isTabsRow && ((stripped.contains("[ ▶ ") || stripped.contains("[   ")) && trimmed.endsWith("]"));
 
+        boolean isActionLink = trimmed.startsWith("[Enter / Esc]")
+                || trimmed.startsWith("[Enter/Esc]")
+                || trimmed.startsWith("[Enter / s]")
+                || (trimmed.startsWith("[Enter]") && trimmed.contains("Back"))
+                || (trimmed.startsWith("[Esc]") && trimmed.contains("Back"))
+                || (trimmed.startsWith("[Esc]") && trimmed.contains("Cancel"))
+                || (trimmed.startsWith("[Esc]") && trimmed.contains("Forfeit"))
+                || (trimmed.startsWith("[Esc]") && trimmed.contains("Quit"))
+                || trimmed.startsWith("[Enter] View")
+                || trimmed.startsWith("[Enter] Save")
+                || trimmed.startsWith("[Enter] Confirm")
+                || trimmed.startsWith("[Enter] Inspect")
+                || trimmed.contains("to view scorecard")
+                || trimmed.contains("to continue")
+                || trimmed.contains("Press [Enter]")
+                || trimmed.contains("Press [Space]")
+                || trimmed.contains("Press [Esc]");
+
+        boolean isScrollIndicator = stripped.contains("▲") || stripped.contains("▼");
+
+        boolean isOptionRow = !trimmed.contains(" • ") && (
+                stripped.contains("(•) ")
+                || stripped.contains("( ) ")
+                || trimmed.matches("^(?:[✔✖•●]\\s*)?\\[[0-9A-Za-z]\\]\\s+.*")
+        );
+
+        boolean isHint = isHintRow(stripped) || isHintRow(trimmed);
+
         boolean isButton = rawLine.contains(BUTTON_MARKER)
                 || isLegacyButtonRow
                 || isTabsRow
                 || stripped.contains("[←]") || stripped.contains("[→]")
-                || trimmed.startsWith("Tabs:")
-                || stripped.contains("(•) ") || stripped.contains("( ) ")
-                || ((trimmed.startsWith("1.") || trimmed.startsWith("2.") || trimmed.startsWith("3.") || trimmed.startsWith("4.")
-                     || trimmed.startsWith("5.") || trimmed.startsWith("6.") || trimmed.startsWith("7.") || trimmed.startsWith("8.")
-                     || trimmed.startsWith("9.")) && trimmed.length() > 3)
-                || trimmed.startsWith("[A]") || trimmed.startsWith("[B]") || trimmed.startsWith("[C]") || trimmed.startsWith("[D]");
+                || isOptionRow
+                || isTableRow(trimmed)
+                || isActionLink
+                || isHint
+                || isScrollIndicator;
 
         if (isButton) {
-            boolean isCenteredRow = cleanLine.contains(BOX_TITLE_MARKER) || cleanLine.contains(CENTER_MARKER);
-            int w = Math.max(8, isCenteredRow ? visibleLength(stripSpaces(stripped)) : visibleLength(stripped));
+            boolean isCenteredRow = cleanLine.contains(BOX_TITLE_MARKER) || cleanLine.contains(CENTER_MARKER) || isHint;
+            int w = Math.max(8, isCenteredRow ? visibleLength(stripSpaces(stripped)) : Math.max(visibleLength(stripped), innerWidth - contentBlockOffset));
             return new MouseTarget("btn-" + screenRow, new MouseBounds(colOffset, screenRow, w, 1), 1, MouseCursor.POINTER, null);
         }
 
