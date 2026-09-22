@@ -11,6 +11,7 @@ import com.proctor.model.service.AuthService;
 import com.proctor.model.service.QuestionService;
 import com.proctor.model.service.SubjectService;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.ListNavigationHelper;
 import com.proctor.util.MouseUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.QuestionBankViews;
@@ -28,29 +29,28 @@ public class QuestionBankScreen implements Screen {
 
     private List<Question> questions = new ArrayList<>();
     private int selectedIndex = 0;
+    private final StringBuilder searchBuffer = new StringBuilder();
+    private boolean searchMode = false;
+    private String bannerMessage = "";
 
-    private final List<Subject> allSubjects;
+    private List<Subject> allSubjects;
     private int subjectFilterIndex = 0;
     private final InlineSubjectFilter<Subject> subjectFilter;
 
     private QuestionType typeFilter = null;
     private Difficulty diffFilter = null;
-    private final StringBuilder searchBuffer = new StringBuilder();
-    private boolean searchMode = false;
 
     private boolean confirmingDelete = false;
     private boolean confirmDeleteFocused = false;
     private Question pendingDeleteQuestion = null;
 
-    private String bannerMessage = "";
-
     public QuestionBankScreen(QuestionService questionService, SubjectService subjectService, AuthService authService) {
         this.questionService = questionService;
         this.subjectService = subjectService;
         this.authService = authService;
-        this.allSubjects = subjectService.getSubjects(null);
+        this.allSubjects = subjectService.getSubjects("");
 
-        List<InlineSubjectFilter.Item<Subject>> items = new java.util.ArrayList<>();
+        List<InlineSubjectFilter.Item<Subject>> items = new ArrayList<>();
         items.add(new InlineSubjectFilter.Item<>(null, "ALL", "All Subjects"));
         for (Subject s : this.allSubjects) {
             items.add(new InlineSubjectFilter.Item<>(s, s.getCode(), s.getName()));
@@ -61,49 +61,31 @@ public class QuestionBankScreen implements Screen {
     }
 
     private void refreshData() {
-        Integer currentUserId = Session.getCurrentUser().map(User::getId).orElse(null);
+        User user = Session.getCurrentUser().orElse(null);
+        Integer currentUserId = (user != null) ? user.getId() : null;
         Integer subjectId = (subjectFilterIndex > 0 && subjectFilterIndex <= allSubjects.size())
                 ? allSubjects.get(subjectFilterIndex - 1).getId() : null;
         String search = searchBuffer.toString().trim().isEmpty() ? null : searchBuffer.toString().trim();
         this.questions = questionService.getBankQuestions(currentUserId, subjectId, typeFilter, diffFilter, search);
-        if (selectedIndex >= questions.size()) {
-            selectedIndex = Math.max(0, questions.size() - 1);
-        }
+        selectedIndex = ListNavigationHelper.clampIndex(selectedIndex, questions.size());
     }
 
     @Override
     public ScreenResult update(Message msg) {
-        if (MouseUtil.isWheelUp(msg)) {
-            if (!questions.isEmpty() && selectedIndex > 0) {
-                selectedIndex--;
-            }
-            return ScreenResult.stay(this);
-        }
-
-        if (MouseUtil.isWheelDown(msg)) {
-            if (!questions.isEmpty() && selectedIndex < questions.size() - 1) {
-                selectedIndex++;
-            }
+        if (MouseUtil.isWheelUp(msg) || MouseUtil.isWheelDown(msg)) {
+            selectedIndex = ListNavigationHelper.handleWheel(msg, selectedIndex, questions.size());
             return ScreenResult.stay(this);
         }
 
         if (MouseUtil.isLeftClick(msg)) {
             if (confirmingDelete) {
-                int line = MouseUtil.getLineIndex(msg);
-                int col = MouseUtil.getColInLine(msg);
-                int btnLine = MouseUtil.findButtonRowLine(view());
-                if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
-                    int btn = MouseUtil.getClickedButtonIndex(col, "Delete", "Cancel");
-                    if (btn == 0) {
-                        if (pendingDeleteQuestion != null) {
-                            questionService.deleteQuestion(pendingDeleteQuestion.getId());
-                            bannerMessage = TuiHelper.green("✔ Question deleted from bank.");
-                            refreshData();
-                        }
-                    }
-                    confirmingDelete = false;
-                    pendingDeleteQuestion = null;
-                } else if (btnLine != -1 && (line < btnLine - 4 || line > btnLine + 4)) {
+                int action = ListNavigationHelper.handleConfirmationClick(msg, view(), "Delete", "Cancel");
+                if (action == 0 && pendingDeleteQuestion != null) {
+                    questionService.deleteQuestion(pendingDeleteQuestion.getId());
+                    bannerMessage = TuiHelper.green("✔ Question deleted from bank.");
+                    refreshData();
+                }
+                if (action >= 0) {
                     confirmingDelete = false;
                     pendingDeleteQuestion = null;
                 }
@@ -113,35 +95,18 @@ public class QuestionBankScreen implements Screen {
             int line = MouseUtil.getLineIndex(msg);
             int col = MouseUtil.getColInLine(msg);
 
-            int itemsStartLine = MouseUtil.findTableStartLine(view());
-            int pageSize = TuiHelper.PAGE_SIZE;
-            int totalPages = Math.max(1, (int) Math.ceil((double) questions.size() / pageSize));
-            int currentPage = selectedIndex / pageSize;
-            int startRow = currentPage * pageSize;
-            int endRow = Math.min(questions.size(), startRow + pageSize);
-            int displayedRows = endRow - startRow;
-
-            if (itemsStartLine != -1 && line >= itemsStartLine && line < itemsStartLine + displayedRows * 2) {
-                int clickedOffset = (line - itemsStartLine) / 2;
-                int targetIdx = startRow + clickedOffset;
-                if (targetIdx < questions.size()) {
-                    if (selectedIndex == targetIdx) {
-                        return ScreenResult.navigate(new QuestionFormScreen(questionService, subjectService, authService, questions.get(selectedIndex)));
-                    } else {
-                        selectedIndex = targetIdx;
-                    }
+            int clickedIdx = ListNavigationHelper.getClickedItemIndex(line, MouseUtil.findTableStartLine(view()), questions.size(), selectedIndex, TuiHelper.PAGE_SIZE);
+            if (clickedIdx != -1) {
+                if (selectedIndex == clickedIdx) {
+                    return ScreenResult.navigate(new QuestionFormScreen(questionService, subjectService, authService, questions.get(selectedIndex)));
                 }
+                selectedIndex = clickedIdx;
                 return ScreenResult.stay(this);
             }
 
             int pagLine = MouseUtil.findPaginationLine(view());
             if (pagLine != -1 && line == pagLine && !questions.isEmpty()) {
-                int action = MouseUtil.getClickedPaginationAction(col, currentPage, totalPages);
-                if (action < 0) {
-                    selectedIndex = (currentPage - 1) * pageSize;
-                } else if (action > 0) {
-                    selectedIndex = Math.min(questions.size() - 1, (currentPage + 1) * pageSize);
-                }
+                selectedIndex = ListNavigationHelper.handlePaginationClick(col, selectedIndex, questions.size(), TuiHelper.PAGE_SIZE);
                 return ScreenResult.stay(this);
             }
 
@@ -203,20 +168,7 @@ public class QuestionBankScreen implements Screen {
             }
 
             if (searchMode) {
-                if (KeyUtil.isEsc(k) || KeyUtil.isEnter(k)) {
-                    searchMode = false;
-                    refreshData();
-                } else if (KeyUtil.isBackspace(k)) {
-                    if (!searchBuffer.isEmpty()) {
-                        searchBuffer.deleteCharAt(searchBuffer.length() - 1);
-                    }
-                } else if (k.type() == KeyType.KeyRunes && k.runes() != null) {
-                    for (char c : k.runes()) {
-                        if (!Character.isISOControl(c)) searchBuffer.append(c);
-                    }
-                } else if (k.key() != null && k.key().length() == 1 && !Character.isISOControl(k.key().charAt(0))) {
-                    searchBuffer.append(k.key());
-                }
+                searchMode = ListNavigationHelper.handleSearchKey(k, searchBuffer, this::refreshData);
                 return ScreenResult.stay(this);
             }
 
@@ -226,26 +178,13 @@ public class QuestionBankScreen implements Screen {
                 return ScreenResult.navigate(new TeacherDashboardScreen(authService, questionService, subjectService));
             }
             if (KeyUtil.isUp(k)) {
-                if (!questions.isEmpty()) selectedIndex = (selectedIndex - 1 + questions.size()) % questions.size();
+                selectedIndex = ListNavigationHelper.adjustIndex(selectedIndex, -1, questions.size());
             } else if (KeyUtil.isDown(k)) {
-                if (!questions.isEmpty()) selectedIndex = (selectedIndex + 1) % questions.size();
+                selectedIndex = ListNavigationHelper.adjustIndex(selectedIndex, 1, questions.size());
             } else if (KeyUtil.isLeft(k)) {
-                if (!questions.isEmpty()) {
-                    int pageSize = TuiHelper.PAGE_SIZE;
-                    int page = selectedIndex / pageSize;
-                    if (page > 0) {
-                        selectedIndex = (page - 1) * pageSize;
-                    }
-                }
+                selectedIndex = ListNavigationHelper.prevPage(selectedIndex, TuiHelper.PAGE_SIZE);
             } else if (KeyUtil.isRight(k)) {
-                if (!questions.isEmpty()) {
-                    int pageSize = TuiHelper.PAGE_SIZE;
-                    int page = selectedIndex / pageSize;
-                    int totalPages = Math.max(1, (int) Math.ceil((double) questions.size() / pageSize));
-                    if (page < totalPages - 1) {
-                        selectedIndex = Math.min(questions.size() - 1, (page + 1) * pageSize);
-                    }
-                }
+                selectedIndex = ListNavigationHelper.nextPage(selectedIndex, questions.size(), TuiHelper.PAGE_SIZE);
             } else if ("n".equalsIgnoreCase(k.key())) {
                 return ScreenResult.navigate(new QuestionFormScreen(questionService, subjectService, authService, null, null));
             } else if ("g".equalsIgnoreCase(k.key())) {

@@ -61,6 +61,9 @@ public class UserService {
         if (gender == null || gender.trim().isBlank()) {
             throw new ValidationException("Gender is required.");
         }
+        if (gender.trim().length() > 20) {
+            throw new ValidationException("Gender cannot exceed 20 characters.");
+        }
         if (fullName.trim().length() > 100) {
             throw new ValidationException("Full name cannot exceed 100 characters.");
         }
@@ -74,6 +77,15 @@ public class UserService {
             if (specialization == null || specialization.trim().isBlank()) {
                 throw new ValidationException("Primary subject / specialization is required.");
             }
+        }
+        if (academicDegree != null && academicDegree.trim().length() > 100) {
+            throw new ValidationException("Academic degree cannot exceed 100 characters.");
+        }
+        if (educationBackground != null && educationBackground.trim().length() > 150) {
+            throw new ValidationException("Education background cannot exceed 150 characters.");
+        }
+        if (specialization != null && specialization.trim().length() > 100) {
+            throw new ValidationException("Specialization cannot exceed 100 characters.");
         }
         if (dateOfBirth != null) {
             validateDateOfBirth(dateOfBirth, role != null ? role : Role.STUDENT);
@@ -167,6 +179,18 @@ public class UserService {
         }
         if (gender == null || gender.trim().isBlank()) {
             throw new ValidationException("Gender is required.");
+        }
+        if (gender.trim().length() > 20) {
+            throw new ValidationException("Gender cannot exceed 20 characters.");
+        }
+        if (academicDegree != null && academicDegree.trim().length() > 100) {
+            throw new ValidationException("Academic degree cannot exceed 100 characters.");
+        }
+        if (educationBackground != null && educationBackground.trim().length() > 150) {
+            throw new ValidationException("Education background cannot exceed 150 characters.");
+        }
+        if (specialization != null && specialization.trim().length() > 100) {
+            throw new ValidationException("Specialization cannot exceed 100 characters.");
         }
 
         if (dateOfBirth != null) {

@@ -424,6 +424,14 @@ public class AIQuestionGeneratorScreen implements Screen {
             bannerMessage = TuiHelper.red("✖ Topic cannot be blank.");
             return ScreenResult.stay(this);
         }
+        if (topicBuffer.toString().trim().length() > 200) {
+            bannerMessage = TuiHelper.red("✖ Topic must not exceed 200 characters.");
+            return ScreenResult.stay(this);
+        }
+        if (customPromptBuffer.toString().trim().length() > 500) {
+            bannerMessage = TuiHelper.red("✖ Additional instructions must not exceed 500 characters.");
+            return ScreenResult.stay(this);
+        }
         if (!isPinnedQuiz() && selectedSubjectIndex == 0) {
             bannerMessage = TuiHelper.red("✖ Subject is required.");
             return ScreenResult.stay(this);

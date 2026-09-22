@@ -445,6 +445,10 @@ public class AvailableQuizzesScreen implements Screen {
             bannerMessage = TuiHelper.red("✖ A reason is required.");
             return ScreenResult.stay(this);
         }
+        if (examReasonBuffer.toString().trim().length() > 500) {
+            bannerMessage = TuiHelper.red("✖ Reason must not exceed 500 characters.");
+            return ScreenResult.stay(this);
+        }
 
         Quiz q = quizzes.get(selectedIndex);
         User student = Session.getCurrentUser().orElse(null);

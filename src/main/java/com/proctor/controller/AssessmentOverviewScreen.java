@@ -380,6 +380,10 @@ public class AssessmentOverviewScreen implements Screen {
             bannerMessage = TuiHelper.red("✖ A reason is required.");
             return ScreenResult.stay(this);
         }
+        if (examReasonBuffer.toString().trim().length() > 500) {
+            bannerMessage = TuiHelper.red("✖ Reason must not exceed 500 characters.");
+            return ScreenResult.stay(this);
+        }
 
         User student = Session.getCurrentUser().orElse(null);
         int studentId = (student != null && student.getId() != null) ? student.getId() : 0;

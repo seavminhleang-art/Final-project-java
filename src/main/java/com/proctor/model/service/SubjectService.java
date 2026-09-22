@@ -60,6 +60,9 @@ public class SubjectService {
         if (name.trim().length() > 100) {
             throw new ValidationException("Subject name cannot exceed 100 characters.");
         }
+        if (description != null && description.trim().length() > 500) {
+            throw new ValidationException("Subject description cannot exceed 500 characters.");
+        }
         if (subjectRepository.findByCode(cleanCode).isPresent()) {
             throw new ValidationException("Subject code '" + cleanCode + "' already exists.");
         }
@@ -92,6 +95,9 @@ public class SubjectService {
         }
         if (name.trim().length() > 100) {
             throw new ValidationException("Subject name cannot exceed 100 characters.");
+        }
+        if (description != null && description.trim().length() > 500) {
+            throw new ValidationException("Subject description cannot exceed 500 characters.");
         }
 
         Optional<Subject> withCode = subjectRepository.findByCode(cleanCode);

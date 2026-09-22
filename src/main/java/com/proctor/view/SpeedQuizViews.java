@@ -420,7 +420,7 @@ public class SpeedQuizViews {
         }
 
         String returnMsg = hasReturnScreen ? "Back" : "Back to Speed Quizzes";
-        sb.append(TuiHelper.dim("  [Enter / Esc] " + returnMsg + "  •  [r] Play Again\n"));
+        sb.append(TuiHelper.wrapHints(List.of("[Enter / Esc] " + returnMsg, "[r] Play Again"))).append("\n");
         return sb.toString();
     }
 

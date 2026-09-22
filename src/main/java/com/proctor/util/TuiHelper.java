@@ -69,160 +69,6 @@ public class TuiHelper {
     public static String dim(String text) {
         return DIM + text + RESET;
     }
-
-    private static final String[] ASCII_PROCTOR = new String[]{
-        "██████╗ ██████╗  ██████╗  ██████╗████████╗ ██████╗ ██████╗ ",
-        "██╔══██╗██╔══██╗██╔═══██╗██╔════╝╚══██╔══╝██╔═══██╗██╔══██╗",
-        "██████╔╝██████╔╝██║   ██║██║        ██║   ██║   ██║██████╔╝",
-        "██╔═══╝ ██╔══██╗██║   ██║██║        ██║   ██║   ██║██╔══██╗",
-        "██║     ██║  ██║╚██████╔╝╚██████╗   ██║   ╚██████╔╝██║  ██║",
-        "╚═╝     ╚═╝  ╚═╝ ╚═════╝  ╚═════╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝"
-    };
-
-    private static final String[] ASCII_QUIZZES = new String[]{
-        " ██████╗ ██╗   ██╗██╗███████╗███████╗███████╗███████╗",
-        "██╔═══██╗██║   ██║██║╚══███╔╝╚══███╔╝██╔════╝██╔════╝",
-        "██║   ██║██║   ██║██║  ███╔╝   ███╔╝ █████╗  ███████╗",
-        "██║▄▄ ██║██║   ██║██║ ███╔╝   ███╔╝  ██╔══╝  ╚════██║",
-        "╚██████╔╝╚██████╔╝██║███████╗███████╗███████╗███████║",
-        " ╚══▀▀═╝  ╚═════╝ ╚═╝╚══════╝╚══════╝╚══════╝╚══════╝"
-    };
-
-    private static final String[] ASCII_EXAMS = new String[]{
-        "███████╗██╗  ██╗ █████╗ ███╗   ███╗███████╗",
-        "██╔════╝╚██╗██╔╝██╔══██╗████╗ ████║██╔════╝",
-        "█████╗   ╚███╔╝ ███████║██╔████╔██║███████╗",
-        "██╔══╝   ██╔██╗ ██╔══██║██║╚██╔╝██║╚════██║",
-        "███████╗██╔╝ ██╗██║  ██║██║ ╚═╝ ██║███████║",
-        "╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝"
-    };
-
-    private static final String[] ASCII_INBOX = new String[]{
-        "██╗███╗   ██╗██████╗  ██████╗ ██╗  ██╗",
-        "██║████╗  ██║██╔══██╗██╔═══██╗╚██╗██╔╝",
-        "██║██╔██╗ ██║██████╔╝██║   ██║ ╚███╔╝ ",
-        "██║██║╚██╗██║██╔══██╗██║   ██║ ██╔██╗ ",
-        "██║██║ ╚████║██████╔╝╚██████╔╝██╔╝ ██╗",
-        "╚═╝╚═╝  ╚═══╝╚═════╝  ╚═════╝ ╚═╝  ╚═╝"
-    };
-
-    private static final String[] ASCII_DASHBOARD = new String[]{
-        "██████╗  █████╗ ███████╗██╗  ██╗██████╗  ██████╗  █████╗ ██████╗ ██████╗ ",
-        "██╔══██╗██╔══██╗██╔════╝██║  ██║██╔══██╗██╔═══██╗██╔══██╗██╔══██╗██╔══██╗",
-        "██║  ██║███████║███████╗███████║██████╔╝██║   ██║███████║██████╔╝██║  ██║",
-        "██║  ██║██╔══██║╚════██║██╔══██║██╔══██╗██║   ██║██╔══██║██╔══██╗██║  ██║",
-        "██████╔╝██║  ██║███████║██║  ██║██████╔╝╚██████╔╝██║  ██║██║  ██║██████╔╝",
-        "╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ "
-    };
-
-    private static final String[] ASCII_USERS = new String[]{
-        "██╗   ██╗███████╗███████╗██████╗ ███████╗",
-        "██║   ██║██╔════╝██╔════╝██╔══██╗██╔════╝",
-        "██║   ██║███████╗█████╗  ██████╔╝███████╗",
-        "██║   ██║╚════██║██╔══╝  ██╔══██╗╚════██║",
-        "╚██████╔╝███████║███████╗██║  ██║███████║",
-        " ╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝╚══════╝"
-    };
-
-    private static final String[] ASCII_REPORTS = new String[]{
-        "██████╗ ███████╗██████╗  ██████╗ ██████╗ ████████╗███████╗",
-        "██╔══██╗██╔════╝██╔══██╗██╔═══██╗██╔══██╗╚══██╔══╝██╔════╝",
-        "██████╔╝█████╗  ██████╔╝██║   ██║██████╔╝   ██║   ███████╗",
-        "██╔══██╗██╔══╝  ██╔═══╝ ██║   ██║██╔══██╗   ██║   ╚════██║",
-        "██║  ██║███████╗██║     ╚██████╔╝██║  ██║   ██║   ███████║",
-        "╚═╝  ╚═╝╚══════╝╚═╝      ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚══════╝"
-    };
-
-    private static final String[] ASCII_LEADERBOARD = new String[]{
-        "██╗     ███████╗ █████╗ ██████╗ ███████╗██████╗ ██████╗  ██████╗  █████╗ ██████╗ ██████╗ ",
-        "██║     ██╔════╝██╔══██╗██╔══██╗██╔════╝██╔══██╗██╔══██╗██╔═══██╗██╔══██╗██╔══██╗██╔══██╗",
-        "██║     █████╗  ███████║██║  ██║█████╗  ██████╔╝██████╔╝██║   ██║███████║██████╔╝██║  ██║",
-        "██║     ██╔══╝  ██╔══██║██║  ██║██╔══╝  ██╔══██╗██╔══██╗██║   ██║██╔══██║██╔══██╗██║  ██║",
-        "███████╗███████╗██║  ██║██████╔╝███████╗██║  ██║██████╔╝╚██████╔╝██║  ██║██║  ██║██████╔╝",
-        "╚══════╝╚══════╝╚═╝  ╚═╝╚═════╝ ╚══════╝╚═╝  ╚═╝╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ "
-    };
-
-    private static final String[] ASCII_SUBMISSIONS = new String[]{
-        "███████╗██╗   ██╗██████╗ ███╗   ███╗██╗███████╗███████╗██╗ ██████╗ ███╗   ██╗███████╗",
-        "██╔════╝██║   ██║██╔══██╗████╗ ████║██║██╔════╝██╔════╝██║██╔═══██╗████╗  ██║██╔════╝",
-        "███████╗██║   ██║██████╔╝██╔████╔██║██║███████╗███████╗██║██║   ██║██╔██╗ ██║███████╗",
-        "╚════██║██║   ██║██╔══██╗██║╚██╔╝██║██║╚════██║╚════██║██║██║   ██║██║╚██╗██║╚════██║",
-        "███████║╚██████╔╝██████╔╝██║ ╚═╝ ██║██║███████║███████║██║╚██████╔╝██║ ╚████║███████║",
-        "╚══════╝ ╚═════╝ ╚═════╝ ╚═╝     ╚═╝╚═╝╚══════╝╚══════╝╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝"
-    };
-
-    private static final String[] ASCII_QUESTIONS = new String[]{
-        " ██████╗ ██╗   ██╗███████╗███████╗████████╗██╗ ██████╗ ███╗   ██╗███████╗",
-        "██╔═══██╗██║   ██║██╔════╝██╔════╝╚══██╔══╝██║██╔═══██╗████╗  ██║██╔════╝",
-        "██║   ██║██║   ██║█████╗  ███████╗   ██║   ██║██║   ██║██╔██╗ ██║███████╗",
-        "██║▄▄ ██║██║   ██║██╔══╝  ╚════██║   ██║   ██║██║   ██║██║╚██╗██║╚════██║",
-        "╚██████╔╝╚██████╔╝███████╗███████║   ██║   ██║╚██████╔╝██║ ╚████║███████║",
-        " ╚══▀▀═╝  ╚═════╝ ╚══════╝╚══════╝   ╚═╝   ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝"
-    };
-
-    private static final String[] ASCII_SUBJECTS = new String[]{
-        "███████╗██╗   ██╗██████╗      ██╗███████╗ ██████╗████████╗███████╗",
-        "██╔════╝██║   ██║██╔══██╗     ██║██╔════╝██╔════╝╚══██╔══╝██╔════╝",
-        "███████╗██║   ██║██████╔╝     ██║█████╗  ██║        ██║   ███████╗",
-        "╚════██║██║   ██║██╔══██╗██   ██║██╔══╝  ██║        ██║   ╚════██║",
-        "███████║╚██████╔╝██████╔╝╚█████╔╝███████╗╚██████╗   ██║   ███████║",
-        "╚══════╝ ╚═════╝ ╚═════╝  ╚════╝ ╚══════╝ ╚═════╝   ╚═╝   ╚══════╝"
-    };
-
-    private static final String[] ASCII_HISTORY = new String[]{
-        "██╗  ██╗██╗███████╗████████╗ ██████╗ ██████╗ ██╗   ██╗",
-        "██║  ██║██║██╔════╝╚══██╔══╝██╔═══██╗██╔══██╗╚██╗ ██╔╝",
-        "███████║██║███████╗   ██║   ██║   ██║██████╔╝ ╚████╔╝ ",
-        "██╔══██║██║╚════██║   ██║   ██║   ██║██╔══██╗  ╚██╔╝  ",
-        "██║  ██║██║███████║   ██║   ╚██████╔╝██║  ██║   ██║   ",
-        "╚═╝  ╚═╝╚═╝╚══════╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝   ╚═╝   "
-    };
-
-    private static final String[] ASCII_LOGIN = new String[]{
-        "██╗      ██████╗  ██████╗     ██╗███╗   ██╗",
-        "██║     ██╔═══██╗██╔════╝     ██║████╗  ██║",
-        "██║     ██║   ██║██║  ███╗    ██║██╔██╗ ██║",
-        "██║     ██║   ██║██║   ██║    ██║██║╚██╗██║",
-        "███████╗╚██████╔╝╚██████╔╝    ██║██║ ╚████║",
-        "╚══════╝ ╚═════╝  ╚═════╝     ╚═╝╚═╝  ╚═══╝"
-    };
-
-    private static final String[] ASCII_REGISTER = new String[]{
-        "██████╗ ███████╗ ██████╗ ██╗███████╗████████╗███████╗██████╗ ",
-        "██╔══██╗██╔════╝██╔════╝ ██║██╔════╝╚══██╔══╝██╔════╝██╔══██╗",
-        "██████╔╝█████╗  ██║  ███╗██║███████╗   ██║   █████╗  ██████╔╝",
-        "██╔══██╗██╔══╝  ██║   ██║██║╚════██║   ██║   ██╔══╝  ██╔══██╗",
-        "██║  ██║███████╗╚██████╔╝██║███████║   ██║   ███████╗██║  ██║",
-        "╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝╚══════╝   ╚═╝   ╚══════╝╚═╝  ╚═╝"
-    };
-
-    private static final String[] ASCII_SPEED = new String[]{
-        "███████╗██████╗ ███████╗███████╗██████╗ ",
-        "██╔════╝██╔══██╗██╔════╝██╔════╝██╔══██╗",
-        "███████╗██████╔╝█████╗  █████╗  ██║  ██║",
-        "╚════██║██╔═══╝ ██╔══╝  ██╔══╝  ██║  ██║",
-        "███████║██║     ███████╗███████╗██████╔╝",
-        "╚══════╝╚═╝     ╚══════╝╚══════╝╚═════╝ "
-    };
-
-    private static final String[] ASCII_SECURITY = new String[]{
-        "███████╗███████╗ ██████╗██╗   ██╗██████╗ ██╗████████╗██╗   ██╗",
-        "██╔════╝██╔════╝██╔════╝██║   ██║██╔══██╗██║╚══██╔══╝╚██╗ ██╔╝",
-        "███████╗█████╗  ██║     ██║   ██║██████╔╝██║   ██║    ╚████╔╝ ",
-        "╚════██║██╔══╝  ██║     ██║   ██║██╔══██╗██║   ██║     ╚██╔╝  ",
-        "███████╗███████╗╚██████╗╚██████╔╝██║  ██║██║   ██║      ██║   ",
-        "╚══════╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚═╝   ╚═╝      ╚═╝   "
-    };
-
-    private static final String[] ASCII_GOODBYE = new String[]{
-        " ██████╗  ██████╗  ██████╗ ██████╗ ██████╗ ██╗   ██╗███████╗",
-        "██╔════╝ ██╔═══██╗██╔═══██╗██╔══██╗██╔══██╗╚██╗ ██╔╝██╔════╝",
-        "██║  ███╗██║   ██║██║   ██║██║  ██║██████╔╝ ╚████╔╝ █████╗  ",
-        "██║   ██║██║   ██║██║   ██║██║  ██║██╔══██╗  ╚██╔╝  ██╔══╝  ",
-        "╚██████╔╝╚██████╔╝╚██████╔╝██████╔╝██████╔╝   ██║   ███████╗",
-        " ╚═════╝  ╚═════╝  ╚═════╝ ╚═════╝ ╚═════╝    ╚═╝   ╚══════╝"
-    };
-
     public static final String BOX_TITLE_MARKER = "\u001B[8888m";
     public static final String CENTER_MARKER = "\u001B[8889m";
     public static final String BUTTON_MARKER = "\u001B[8890m";
@@ -287,63 +133,14 @@ public class TuiHelper {
     }
 
     public static String header(String title, String subtitle) {
-        String upper = (title != null) ? title.toUpperCase() : "";
-
-        if (upper.equals("PROCTOR")) {
-            return asciiBannerBox(ASCII_PROCTOR);
-        }
-        if (upper.equals("LOG IN") || upper.equals("LOGIN") || upper.equals("SIGN IN")) {
-            return asciiBannerBox(ASCII_LOGIN);
-        }
-        if (upper.equals("REGISTER") || upper.contains("SIGN UP") || upper.contains("CREATE ACCOUNT")) {
-            return asciiBannerBox(ASCII_REGISTER);
-        }
-        if (upper.contains("DASHBOARD") || upper.contains("PORTAL")) {
-            return asciiBannerBox(ASCII_DASHBOARD);
-        }
-        if (upper.contains("SECURITY") || upper.contains("PASSWORD")) {
-            return asciiBannerBox(ASCII_SECURITY);
-        }
-        if (upper.contains("HISTORY")) {
-            return asciiBannerBox(ASCII_HISTORY);
-        }
-        if (upper.contains("SPEED")) {
-            return asciiBannerBox(ASCII_SPEED);
-        }
-        if (upper.contains("EXAM")) {
-            return asciiBannerBox(ASCII_EXAMS);
-        }
-        if (upper.contains("QUIZ")) {
-            return asciiBannerBox(ASCII_QUIZZES);
-        }
-        if (upper.contains("INBOX") || upper.contains("NOTIFICATION") || upper.contains("MESSAGE")) {
-            return asciiBannerBox(ASCII_INBOX);
-        }
-        if (upper.contains("USER")) {
-            return asciiBannerBox(ASCII_USERS);
-        }
-        if (upper.contains("REPORT")) {
-            return asciiBannerBox(ASCII_REPORTS);
-        }
-        if (upper.contains("LEADERBOARD")) {
-            return asciiBannerBox(ASCII_LEADERBOARD);
-        }
-        if (upper.contains("SUBMISSION") || upper.contains("ANSWER SHEET") || upper.contains("ATTEMPT")) {
-            return asciiBannerBox(ASCII_SUBMISSIONS);
-        }
-        if (upper.contains("QUESTION")) {
-            return asciiBannerBox(ASCII_QUESTIONS);
-        }
-        if (upper.contains("SUBJECT") || upper.contains("TEACHER ASSIGNMENT")) {
-            return asciiBannerBox(ASCII_SUBJECTS);
-        }
-        if (upper.contains("QUIT") || upper.contains("GOODBYE") || upper.contains("EXIT")) {
-            return asciiBannerBox(ASCII_GOODBYE);
+        String[] ascii = AsciiBanners.getBannerForTitle(title);
+        if (ascii != null) {
+            return asciiBannerBox(ascii);
         }
 
         StringBuilder sb = new StringBuilder();
         sb.append(HEADER_START).append(CLEAR_EOL).append("\n");
-        sb.append(bold(NAVY_BLUE + title.trim())).append(RESET).append(CLEAR_EOL).append("\n");
+        sb.append(bold(NAVY_BLUE + (title != null ? title.trim() : ""))).append(RESET).append(CLEAR_EOL).append("\n");
         sb.append(HEADER_END).append(CLEAR_EOL).append("\n");
         return sb.toString();
     }
@@ -509,7 +306,7 @@ public class TuiHelper {
             boolean isFocused = (i == focusedIndex);
             String lower = label != null ? label.toLowerCase() : "";
             String color = NAVY_BLUE;
-            if (lower.contains("cancel") || lower.contains("delete") || lower.contains("reject")) {
+            if (lower.contains("cancel") || lower.contains("delete") || lower.contains("reject") || lower.contains("back")) {
                 color = RED;
             }
             String[] b = boxButtonLines(label, isFocused, color, btnWidth);
@@ -550,17 +347,8 @@ public class TuiHelper {
     }
 
     public static String buttonRow(String primaryLabel, boolean primaryFocused, String secondaryLabel, boolean secondaryFocused, int width) {
-        int btnWidth = Math.max(16, Math.max(primaryLabel.length(), secondaryLabel.length()) + 6);
-        String[] b1 = boxButtonLines(primaryLabel, primaryFocused, NAVY_BLUE, btnWidth);
-        String[] b2 = boxButtonLines(secondaryLabel, secondaryFocused, RED, btnWidth);
-
-        int rowWidth = visibleLength(b1[0]) + 4 + visibleLength(b2[0]);
-        int leftPad = Math.max(0, (width - rowWidth) / 2);
-        String padStr = " ".repeat(leftPad);
-
-        return CENTER_MARKER + padStr + b1[0] + "    " + b2[0] + CLEAR_EOL + "\n"
-             + CENTER_MARKER + padStr + b1[1] + "    " + b2[1] + CLEAR_EOL + "\n"
-             + CENTER_MARKER + padStr + b1[2] + "    " + b2[2] + CLEAR_EOL;
+        int focusedIndex = primaryFocused ? 0 : (secondaryFocused ? 1 : -1);
+        return buttonRow(java.util.List.of(primaryLabel, secondaryLabel), focusedIndex, width);
     }
 
     public static String buttonRow(String primaryLabel, boolean primaryFocused,
@@ -572,26 +360,15 @@ public class TuiHelper {
     public static String buttonRow(String primaryLabel, boolean primaryFocused,
                                    String dangerLabel, boolean dangerFocused,
                                    String secondaryLabel, boolean secondaryFocused, int width) {
-        return buttonRow(primaryLabel, primaryFocused, NAVY_BLUE,
-                         dangerLabel, dangerFocused, RED,
-                         secondaryLabel, secondaryFocused, YELLOW, width);
+        int focusedIndex = primaryFocused ? 0 : (dangerFocused ? 1 : (secondaryFocused ? 2 : -1));
+        return buttonRow(java.util.List.of(primaryLabel, dangerLabel, secondaryLabel), focusedIndex, width);
     }
 
     public static String buttonRow(String label1, boolean focused1, String color1,
                                    String label2, boolean focused2, String color2,
                                    String label3, boolean focused3, String color3, int width) {
-        int btnWidth = Math.max(16, Math.max(label1.length(), Math.max(label2.length(), label3.length())) + 6);
-        String[] b1 = boxButtonLines(label1, focused1, color1, btnWidth);
-        String[] b2 = boxButtonLines(label2, focused2, color2, btnWidth);
-        String[] b3 = boxButtonLines(label3, focused3, color3, btnWidth);
-
-        int rowWidth = visibleLength(b1[0]) + 4 + visibleLength(b2[0]) + 4 + visibleLength(b3[0]);
-        int leftPad = Math.max(0, (width - rowWidth) / 2);
-        String padStr = " ".repeat(leftPad);
-
-        return CENTER_MARKER + padStr + b1[0] + "    " + b2[0] + "    " + b3[0] + CLEAR_EOL + "\n"
-             + CENTER_MARKER + padStr + b1[1] + "    " + b2[1] + "    " + b3[1] + CLEAR_EOL + "\n"
-             + CENTER_MARKER + padStr + b1[2] + "    " + b2[2] + "    " + b3[2] + CLEAR_EOL;
+        int focusedIndex = focused1 ? 0 : (focused2 ? 1 : (focused3 ? 2 : -1));
+        return buttonRow(java.util.List.of(label1, label2, label3), focusedIndex, width);
     }
 
     public static String confirmationModal(String title, String message, String warningDetail, String confirmLabel, String cancelLabel, boolean confirmFocused) {

@@ -384,12 +384,32 @@ public class QuestionFormScreen implements Screen {
             Integer teacherId = currentTeacher != null ? currentTeacher.getId() : null;
             Integer quizId = quizContext != null ? quizContext.getId() : (questionToEdit != null ? questionToEdit.getQuizId() : null);
 
+            if (isLockedQuizType() && selectedType != quizContext.getQuizQuestionType()) {
+                throw new ValidationException("This quiz is strictly confined to " + quizContext.getQuizQuestionType() + " questions.");
+            }
+
             List<QuestionOption> options = new ArrayList<>();
             if (selectedType == QuestionType.MCQ) {
-                if (!optionA.isEmpty()) options.add(QuestionOption.builder().optionText(optionA.toString()).correct(correctMcqIndex == 0).optionOrder(1).build());
-                if (!optionB.isEmpty()) options.add(QuestionOption.builder().optionText(optionB.toString()).correct(correctMcqIndex == 1).optionOrder(2).build());
-                if (!optionC.isEmpty()) options.add(QuestionOption.builder().optionText(optionC.toString()).correct(correctMcqIndex == 2).optionOrder(3).build());
-                if (!optionD.isEmpty()) options.add(QuestionOption.builder().optionText(optionD.toString()).correct(correctMcqIndex == 3).optionOrder(4).build());
+                String optAText = optionA.toString().trim();
+                String optBText = optionB.toString().trim();
+                String optCText = optionC.toString().trim();
+                String optDText = optionD.toString().trim();
+
+                String correctText = switch (correctMcqIndex) {
+                    case 0 -> optAText;
+                    case 1 -> optBText;
+                    case 2 -> optCText;
+                    default -> optDText;
+                };
+                if (correctText.isEmpty()) {
+                    char label = (char) ('A' + correctMcqIndex);
+                    throw new ValidationException("Option " + label + " is selected as correct, but its text is blank.");
+                }
+
+                if (!optAText.isEmpty()) options.add(QuestionOption.builder().optionText(optAText).correct(correctMcqIndex == 0).optionOrder(1).build());
+                if (!optBText.isEmpty()) options.add(QuestionOption.builder().optionText(optBText).correct(correctMcqIndex == 1).optionOrder(2).build());
+                if (!optCText.isEmpty()) options.add(QuestionOption.builder().optionText(optCText).correct(correctMcqIndex == 2).optionOrder(3).build());
+                if (!optDText.isEmpty()) options.add(QuestionOption.builder().optionText(optDText).correct(correctMcqIndex == 3).optionOrder(4).build());
             } else if (selectedType == QuestionType.TRUE_FALSE) {
                 options.add(QuestionOption.builder().optionText("True").correct(tfCorrectIsTrue).optionOrder(1).build());
                 options.add(QuestionOption.builder().optionText("False").correct(!tfCorrectIsTrue).optionOrder(2).build());

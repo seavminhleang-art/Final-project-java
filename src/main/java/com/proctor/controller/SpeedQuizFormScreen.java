@@ -232,6 +232,9 @@ public class SpeedQuizFormScreen implements Screen {
             if (seconds < 5) {
                 throw new ValidationException("Seconds per question must be at least 5 seconds.");
             }
+            if (seconds > 300) {
+                throw new ValidationException("Seconds per question cannot exceed 300 seconds (5 minutes).");
+            }
 
             int hours = 0;
             String hoursStr = activeHours.toString().trim();
@@ -240,6 +243,9 @@ public class SpeedQuizFormScreen implements Screen {
                     hours = Integer.parseInt(hoursStr);
                     if (hours < 0) {
                         throw new ValidationException("Active duration must be a non-negative number of hours.");
+                    }
+                    if (hours > 8760) {
+                        throw new ValidationException("Active duration cannot exceed 8760 hours (1 year).");
                     }
                 } catch (NumberFormatException e) {
                     throw new ValidationException("Active duration must be a valid number of hours.");

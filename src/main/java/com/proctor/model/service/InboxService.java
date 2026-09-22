@@ -79,11 +79,18 @@ public class InboxService {
     }
 
     public InboxMessage sendNotification(int recipientId, String title, String body) {
+        if (title == null || title.trim().isBlank()) {
+            throw new ValidationException("Notification title cannot be blank.");
+        }
+        String safeTitle = title.trim();
+        if (safeTitle.length() > 200) {
+            safeTitle = safeTitle.substring(0, 197) + "...";
+        }
         InboxMessage msg = InboxMessage.builder()
                 .recipientId(recipientId)
                 .type(InboxMessageType.NOTIFICATION)
-                .title(title)
-                .body(body)
+                .title(safeTitle)
+                .body(body != null ? body : "")
                 .status(InboxStatus.READ)
                 .read(false)
                 .createdAt(new Timestamp(System.currentTimeMillis()))
@@ -150,6 +157,9 @@ public class InboxService {
 
         if (reason == null || reason.trim().isBlank()) {
             throw new ValidationException("A reason is required for exam makeup requests.");
+        }
+        if (reason.trim().length() > 500) {
+            throw new ValidationException("Reason must not exceed 500 characters.");
         }
 
         if (examTimestamp != null) {
@@ -261,6 +271,9 @@ public class InboxService {
         InboxMessage msg = opt.get();
         if (msg.getStatus() != InboxStatus.PENDING) {
             throw new ValidationException("This request has already been processed (status: " + msg.getStatus() + ").");
+        }
+        if (responseNote != null && responseNote.trim().length() > 300) {
+            throw new ValidationException("Rejection note must not exceed 300 characters.");
         }
         boolean updated = inboxRepository.updateStatus(messageId, InboxStatus.REJECTED, new Timestamp(System.currentTimeMillis()));
 

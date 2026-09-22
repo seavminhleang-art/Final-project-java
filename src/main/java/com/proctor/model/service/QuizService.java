@@ -180,13 +180,21 @@ public class QuizService {
                 quiz.setSpeedSecondsPerQuestion(15);
             } else if (quiz.getSpeedSecondsPerQuestion() < 5) {
                 throw new ValidationException("Speed quiz seconds per question must be at least 5.");
+            } else if (quiz.getSpeedSecondsPerQuestion() > 300) {
+                throw new ValidationException("Speed quiz seconds per question cannot exceed 300 seconds.");
             }
         }
         if (quiz.getTimeLimitMins() != null && quiz.getTimeLimitMins() <= 0) {
             throw new ValidationException("Time limit must be greater than 0 minutes.");
         }
+        if (quiz.getTimeLimitMins() != null && quiz.getTimeLimitMins() > 1440) {
+            throw new ValidationException("Time limit cannot exceed 1440 minutes (24 hours).");
+        }
         if (quiz.getActiveDurationHours() != null && quiz.getActiveDurationHours() < 0) {
             throw new ValidationException("Active duration hours cannot be negative.");
+        }
+        if (quiz.getActiveDurationHours() != null && quiz.getActiveDurationHours() > 8760) {
+            throw new ValidationException("Active duration hours cannot exceed 8760 hours (1 year).");
         }
         if (quiz.getPassScore() < 1 || quiz.getPassScore() > 100) {
             throw new ValidationException("Passing score must be between 1 and 100.");

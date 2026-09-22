@@ -17,6 +17,7 @@ import com.proctor.model.repository.QuizRepository;
 import com.proctor.model.service.QuizService;
 import com.proctor.model.service.SubjectService;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.ListNavigationHelper;
 import com.proctor.util.MouseUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.QuizViews;
@@ -38,25 +39,26 @@ public class QuizListScreen implements Screen {
     private final AuthService authService;
     private final AssessmentType assessmentType;
 
-    private final List<Subject> allSubjects;
+    private List<Subject> allSubjects;
     private int subjectFilterIndex = 0;
-    private List<Quiz> quizzes;
+    private final InlineSubjectFilter<Subject> subjectFilter;
+
+    private QuizScope currentScope = QuizScope.MY_QUIZZES;
+    private List<Quiz> quizzes = new java.util.ArrayList<>();
     private int selectedIndex = 0;
     private final StringBuilder searchBuffer = new StringBuilder();
     private boolean searchMode = false;
-    private QuizScope currentScope = QuizScope.MY_QUIZZES;
+    private String bannerMessage = "";
+
     private boolean confirmingDelete = false;
     private boolean confirmDeleteFocused = false;
     private Quiz pendingDeleteQuiz = null;
-    private String bannerMessage = "";
-    private final InlineSubjectFilter<Subject> subjectFilter;
 
     public QuizListScreen(QuizService quizService, QuestionService questionService, SubjectService subjectService, AuthService authService) {
         this(quizService, questionService, subjectService, authService, AssessmentType.QUIZ);
     }
 
-    public QuizListScreen(QuizService quizService, QuestionService questionService, SubjectService subjectService,
-                          AuthService authService, AssessmentType assessmentType) {
+    public QuizListScreen(QuizService quizService, QuestionService questionService, SubjectService subjectService, AuthService authService, AssessmentType assessmentType) {
         this.quizService = quizService;
         this.questionService = questionService;
         this.subjectService = subjectService;
@@ -94,47 +96,27 @@ public class QuizListScreen implements Screen {
             this.quizzes = quizService.getAssessmentsVisibleTo(assessmentType, subjectId, currentUserId, searchBuffer.toString());
         }
 
-        if (quizzes.isEmpty()) {
-            selectedIndex = 0;
-        } else if (selectedIndex >= quizzes.size()) {
-            selectedIndex = quizzes.size() - 1;
-        }
+        selectedIndex = ListNavigationHelper.clampIndex(selectedIndex, quizzes.size());
     }
 
     @Override
     public ScreenResult update(Message msg) {
-        if (MouseUtil.isWheelUp(msg)) {
-            if (!quizzes.isEmpty() && selectedIndex > 0) {
-                selectedIndex--;
-            }
-            return ScreenResult.stay(this);
-        }
-
-        if (MouseUtil.isWheelDown(msg)) {
-            if (!quizzes.isEmpty() && selectedIndex < quizzes.size() - 1) {
-                selectedIndex++;
-            }
+        if (MouseUtil.isWheelUp(msg) || MouseUtil.isWheelDown(msg)) {
+            selectedIndex = ListNavigationHelper.handleWheel(msg, selectedIndex, quizzes.size());
             return ScreenResult.stay(this);
         }
 
         if (MouseUtil.isLeftClick(msg)) {
             if (confirmingDelete) {
-                int line = MouseUtil.getLineIndex(msg);
-                int col = MouseUtil.getColInLine(msg);
-                int btnLine = MouseUtil.findButtonRowLine(view());
-                if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
-                    int btn = MouseUtil.getClickedButtonIndex(col, "Delete", "Cancel");
-                    if (btn == 0) {
-                        executeDelete();
-                    } else if (btn == 1) {
-                        bannerMessage = TuiHelper.yellow("Deletion cancelled.");
-                    }
-                    confirmingDelete = false;
-                    pendingDeleteQuiz = null;
-                } else if (btnLine != -1 && (line < btnLine - 4 || line > btnLine + 4)) {
-                    confirmingDelete = false;
-                    pendingDeleteQuiz = null;
+                int action = ListNavigationHelper.handleConfirmationClick(msg, view(), "Delete", "Cancel");
+                if (action == 0) {
+                    executeDelete();
+                } else if (action == 1) {
                     bannerMessage = TuiHelper.yellow("Deletion cancelled.");
+                }
+                if (action >= 0) {
+                    confirmingDelete = false;
+                    pendingDeleteQuiz = null;
                 }
                 return ScreenResult.stay(this);
             }
@@ -162,35 +144,18 @@ public class QuizListScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
-            int itemsStartLine = MouseUtil.findTableStartLine(view());
-            int pageSize = TuiHelper.PAGE_SIZE;
-            int totalPages = Math.max(1, (int) Math.ceil((double) quizzes.size() / pageSize));
-            int currentPage = selectedIndex / pageSize;
-            int startRow = currentPage * pageSize;
-            int endRow = Math.min(quizzes.size(), startRow + pageSize);
-            int displayedRows = endRow - startRow;
-
-            if (itemsStartLine != -1 && line >= itemsStartLine && line < itemsStartLine + displayedRows * 2) {
-                int clickedOffset = (line - itemsStartLine) / 2;
-                int targetIdx = startRow + clickedOffset;
-                if (targetIdx < quizzes.size()) {
-                    if (selectedIndex == targetIdx) {
-                        return ScreenResult.navigate(new QuizQuestionEditorScreen(quizzes.get(selectedIndex), quizService, questionService, subjectService, authService));
-                    } else {
-                        selectedIndex = targetIdx;
-                    }
+            int clickedIdx = ListNavigationHelper.getClickedItemIndex(line, MouseUtil.findTableStartLine(view()), quizzes.size(), selectedIndex, TuiHelper.PAGE_SIZE);
+            if (clickedIdx != -1) {
+                if (selectedIndex == clickedIdx) {
+                    return ScreenResult.navigate(new QuizQuestionEditorScreen(quizzes.get(selectedIndex), quizService, questionService, subjectService, authService));
                 }
+                selectedIndex = clickedIdx;
                 return ScreenResult.stay(this);
             }
 
             int pagLine = MouseUtil.findPaginationLine(view());
             if (pagLine != -1 && line == pagLine && !quizzes.isEmpty()) {
-                int action = MouseUtil.getClickedPaginationAction(col, currentPage, totalPages);
-                if (action < 0) {
-                    selectedIndex = (currentPage - 1) * pageSize;
-                } else if (action > 0) {
-                    selectedIndex = Math.min(quizzes.size() - 1, (currentPage + 1) * pageSize);
-                }
+                selectedIndex = ListNavigationHelper.handlePaginationClick(col, selectedIndex, quizzes.size(), TuiHelper.PAGE_SIZE);
                 return ScreenResult.stay(this);
             }
 
@@ -236,23 +201,7 @@ public class QuizListScreen implements Screen {
             }
 
             if (searchMode) {
-                if (KeyUtil.isEnter(k) || KeyUtil.isEsc(k)) {
-                    searchMode = false;
-                    refreshList();
-                } else if (KeyUtil.isBackspace(k)) {
-                    if (!searchBuffer.isEmpty()) {
-                        searchBuffer.deleteCharAt(searchBuffer.length() - 1);
-                        refreshList();
-                    }
-                } else if (k.type() == KeyType.KeyRunes && k.runes() != null) {
-                    for (char c : k.runes()) {
-                        if (!Character.isISOControl(c)) searchBuffer.append(c);
-                    }
-                    refreshList();
-                } else if (k.key() != null && k.key().length() == 1 && !Character.isISOControl(k.key().charAt(0))) {
-                    searchBuffer.append(k.key());
-                    refreshList();
-                }
+                searchMode = ListNavigationHelper.handleSearchKey(k, searchBuffer, this::refreshList);
                 return ScreenResult.stay(this);
             }
 
@@ -264,30 +213,13 @@ public class QuizListScreen implements Screen {
                 }
                 return ScreenResult.navigate(new TeacherDashboardScreen(authService, questionService, subjectService, quizService));
             } else if (KeyUtil.isUp(k)) {
-                if (!quizzes.isEmpty()) {
-                    selectedIndex = (selectedIndex - 1 + quizzes.size()) % quizzes.size();
-                }
+                selectedIndex = ListNavigationHelper.adjustIndex(selectedIndex, -1, quizzes.size());
             } else if (KeyUtil.isDown(k)) {
-                if (!quizzes.isEmpty()) {
-                    selectedIndex = (selectedIndex + 1) % quizzes.size();
-                }
+                selectedIndex = ListNavigationHelper.adjustIndex(selectedIndex, 1, quizzes.size());
             } else if (KeyUtil.isLeft(k)) {
-                if (!quizzes.isEmpty()) {
-                    int pageSize = TuiHelper.PAGE_SIZE;
-                    int currentPage = selectedIndex / pageSize;
-                    if (currentPage > 0) {
-                        selectedIndex = (currentPage - 1) * pageSize;
-                    }
-                }
+                selectedIndex = ListNavigationHelper.prevPage(selectedIndex, TuiHelper.PAGE_SIZE);
             } else if (KeyUtil.isRight(k)) {
-                if (!quizzes.isEmpty()) {
-                    int pageSize = TuiHelper.PAGE_SIZE;
-                    int totalPages = Math.max(1, (int) Math.ceil((double) quizzes.size() / pageSize));
-                    int currentPage = selectedIndex / pageSize;
-                    if (currentPage < totalPages - 1) {
-                        selectedIndex = Math.min(quizzes.size() - 1, (currentPage + 1) * pageSize);
-                    }
-                }
+                selectedIndex = ListNavigationHelper.nextPage(selectedIndex, quizzes.size(), TuiHelper.PAGE_SIZE);
             } else if ("n".equalsIgnoreCase(k.key())) {
                 User user = Session.getCurrentUser().orElse(null);
                 if (user == null || user.getRole() != Role.ADMIN) {

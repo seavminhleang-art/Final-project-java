@@ -8,8 +8,10 @@ import com.proctor.model.entity.QuestionOption;
 import com.proctor.model.repository.QuestionRepository;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public class QuestionService {
     private final QuestionRepository questionRepository;
@@ -100,7 +102,20 @@ public class QuestionService {
             if (q.getOptions() == null || q.getOptions().size() < 2) {
                 throw new ValidationException("MCQ questions require at least 2 options.");
             }
-            boolean hasCorrect = q.getOptions().stream().anyMatch(QuestionOption::isCorrect);
+            Set<String> seenOptions = new HashSet<>();
+            for (QuestionOption opt : q.getOptions()) {
+                if (opt.getOptionText() == null || opt.getOptionText().isBlank()) {
+                    throw new ValidationException("MCQ option text cannot be blank.");
+                }
+                if (opt.getOptionText().trim().length() > 200) {
+                    throw new ValidationException("MCQ option text cannot exceed 200 characters.");
+                }
+                String normalized = opt.getOptionText().trim().toLowerCase();
+                if (!seenOptions.add(normalized)) {
+                    throw new ValidationException("Duplicate options are not allowed: \"" + opt.getOptionText().trim() + "\".");
+                }
+            }
+            boolean hasCorrect = q.getOptions().stream().anyMatch(opt -> opt.isCorrect() && opt.getOptionText() != null && !opt.getOptionText().isBlank());
             if (!hasCorrect) {
                 throw new ValidationException("At least one MCQ option must be marked as correct.");
             }

@@ -205,10 +205,10 @@ public class MouseUtil {
             return null;
         }
 
-        if (trimmedClean.startsWith("[Enter / Esc]") || trimmedClean.startsWith("[Enter/Esc]")) {
+        if ((trimmedClean.startsWith("[Enter / Esc]") || trimmedClean.startsWith("[Enter/Esc]")) && !stripped.contains("•")) {
             return "Esc";
         }
-        if (trimmedClean.startsWith("[Esc] Back") || trimmedClean.startsWith("[Esc] Cancel") || trimmedClean.startsWith("[Esc] Quit") || trimmedClean.startsWith("[Esc] Forfeit")) {
+        if ((trimmedClean.startsWith("[Esc] Back") || trimmedClean.startsWith("[Esc] Cancel") || trimmedClean.startsWith("[Esc] Quit") || trimmedClean.startsWith("[Esc] Forfeit")) && !stripped.contains("•")) {
             return "Esc";
         }
 
@@ -224,7 +224,7 @@ public class MouseUtil {
             searchStart = endCol;
 
             if (colInLine >= startCol - 1 && colInLine <= endCol + 2) {
-                if (pTrimmed.contains("[Esc]") || pTrimmed.contains("Back") || pTrimmed.contains("Cancel") || pTrimmed.contains("Forfeit") || pTrimmed.contains("Quit")) {
+                if (pTrimmed.contains("[Esc]") || pTrimmed.contains("[Enter / Esc]") || pTrimmed.contains("[Enter/Esc]") || pTrimmed.contains("Back") || pTrimmed.contains("Cancel") || pTrimmed.contains("Forfeit") || pTrimmed.contains("Quit")) {
                     return "Esc";
                 }
                 if (pTrimmed.contains("[n]")) return "n";

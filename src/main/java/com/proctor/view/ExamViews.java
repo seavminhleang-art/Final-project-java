@@ -370,7 +370,7 @@ public class ExamViews {
             sb.append("  " + "─".repeat(56) + "\n\n");
 
             String returnMsg = hasReturnScreen ? "Back" : "Back to Dashboard";
-            sb.append(TuiHelper.dim("  [Enter / Esc] " + returnMsg + "\n"));
+            sb.append(TuiHelper.wrapHints(List.of("[Enter / Esc] " + returnMsg))).append("\n");
             return sb.toString();
         }
 
@@ -440,11 +440,12 @@ public class ExamViews {
         }
 
         String returnMsg = hasReturnScreen ? "Back" : "Back to Portal";
+        List<String> hints = new ArrayList<>();
+        hints.add("[Enter / Esc] " + returnMsg);
         if (canRequestRetake) {
-            sb.append(TuiHelper.dim("  [Enter / Esc] " + returnMsg + "  •  [r] Request Retake\n"));
-        } else {
-            sb.append(TuiHelper.dim("  [Enter / Esc] " + returnMsg + "\n"));
+            hints.add("[r] Request Retake");
         }
+        sb.append(TuiHelper.wrapHints(hints)).append("\n");
         return sb.toString();
     }
 

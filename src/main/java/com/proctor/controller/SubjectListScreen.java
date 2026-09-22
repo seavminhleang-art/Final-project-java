@@ -5,6 +5,7 @@ import com.proctor.model.service.AuthService;
 import com.proctor.model.entity.Subject;
 import com.proctor.model.service.SubjectService;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.ListNavigationHelper;
 import com.proctor.util.MouseUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.SubjectViews;
@@ -57,42 +58,23 @@ public class SubjectListScreen implements Screen {
             return true;
         }).toList();
 
-        if (subjects.isEmpty()) {
-            selectedIndex = 0;
-        } else if (selectedIndex >= subjects.size()) {
-            selectedIndex = subjects.size() - 1;
-        }
+        selectedIndex = ListNavigationHelper.clampIndex(selectedIndex, subjects.size());
     }
 
     @Override
     public ScreenResult update(Message msg) {
-        if (MouseUtil.isWheelUp(msg)) {
-            if (!subjects.isEmpty() && selectedIndex > 0) {
-                selectedIndex--;
-            }
-            return ScreenResult.stay(this);
-        }
-
-        if (MouseUtil.isWheelDown(msg)) {
-            if (!subjects.isEmpty() && selectedIndex < subjects.size() - 1) {
-                selectedIndex++;
-            }
+        if (MouseUtil.isWheelUp(msg) || MouseUtil.isWheelDown(msg)) {
+            selectedIndex = ListNavigationHelper.handleWheel(msg, selectedIndex, subjects.size());
             return ScreenResult.stay(this);
         }
 
         if (MouseUtil.isLeftClick(msg)) {
             if (confirmingDelete) {
-                int line = MouseUtil.getLineIndex(msg);
-                int col = MouseUtil.getColInLine(msg);
-                int btnLine = MouseUtil.findButtonRowLine(view());
-                if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
-                    int btn = MouseUtil.getClickedButtonIndex(col, "Delete", "Cancel");
-                    if (btn == 0) {
-                        executeDelete();
-                    }
-                    confirmingDelete = false;
-                    pendingDeleteSubject = null;
-                } else if (btnLine != -1 && (line < btnLine - 4 || line > btnLine + 4)) {
+                int action = ListNavigationHelper.handleConfirmationClick(msg, view(), "Delete", "Cancel");
+                if (action == 0) {
+                    executeDelete();
+                }
+                if (action >= 0) {
                     confirmingDelete = false;
                     pendingDeleteSubject = null;
                 }
@@ -113,35 +95,18 @@ public class SubjectListScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
-            int itemsStartLine = MouseUtil.findTableStartLine(view());
-            int pageSize = TuiHelper.PAGE_SIZE;
-            int totalPages = Math.max(1, (int) Math.ceil((double) subjects.size() / pageSize));
-            int currentPage = selectedIndex / pageSize;
-            int startRow = currentPage * pageSize;
-            int endRow = Math.min(subjects.size(), startRow + pageSize);
-            int displayedRows = endRow - startRow;
-
-            if (itemsStartLine != -1 && line >= itemsStartLine && line < itemsStartLine + displayedRows * 2) {
-                int clickedOffset = (line - itemsStartLine) / 2;
-                int targetIdx = startRow + clickedOffset;
-                if (targetIdx < subjects.size()) {
-                    if (selectedIndex == targetIdx) {
-                        return ScreenResult.navigate(new SubjectFormScreen(subjectService, userService, authService, subjects.get(selectedIndex)));
-                    } else {
-                        selectedIndex = targetIdx;
-                    }
+            int clickedIdx = ListNavigationHelper.getClickedItemIndex(line, MouseUtil.findTableStartLine(view()), subjects.size(), selectedIndex, TuiHelper.PAGE_SIZE);
+            if (clickedIdx != -1) {
+                if (selectedIndex == clickedIdx) {
+                    return ScreenResult.navigate(new SubjectFormScreen(subjectService, userService, authService, subjects.get(selectedIndex)));
                 }
+                selectedIndex = clickedIdx;
                 return ScreenResult.stay(this);
             }
 
             int pagLine = MouseUtil.findPaginationLine(view());
             if (pagLine != -1 && line == pagLine && !subjects.isEmpty()) {
-                int action = MouseUtil.getClickedPaginationAction(col, currentPage, totalPages);
-                if (action < 0) {
-                    selectedIndex = (currentPage - 1) * pageSize;
-                } else if (action > 0) {
-                    selectedIndex = Math.min(subjects.size() - 1, (currentPage + 1) * pageSize);
-                }
+                selectedIndex = ListNavigationHelper.handlePaginationClick(col, selectedIndex, subjects.size(), TuiHelper.PAGE_SIZE);
                 return ScreenResult.stay(this);
             }
 
@@ -180,53 +145,20 @@ public class SubjectListScreen implements Screen {
             }
 
             if (searchMode) {
-                if (KeyUtil.isEnter(k) || KeyUtil.isEsc(k)) {
-                    searchMode = false;
-                    refreshList();
-                } else if (KeyUtil.isBackspace(k)) {
-                    if (!searchBuffer.isEmpty()) {
-                        searchBuffer.deleteCharAt(searchBuffer.length() - 1);
-                        refreshList();
-                    }
-                } else if (k.type() == KeyType.KeyRunes && k.runes() != null) {
-                    for (char c : k.runes()) {
-                        if (!Character.isISOControl(c)) searchBuffer.append(c);
-                    }
-                    refreshList();
-                } else if (k.key() != null && k.key().length() == 1 && !Character.isISOControl(k.key().charAt(0))) {
-                    searchBuffer.append(k.key());
-                    refreshList();
-                }
+                searchMode = ListNavigationHelper.handleSearchKey(k, searchBuffer, this::refreshList);
                 return ScreenResult.stay(this);
             }
 
             if (KeyUtil.isEsc(k)) {
                 return ScreenResult.navigate(new AdminDashboardScreen(authService, userService, subjectService));
             } else if (KeyUtil.isUp(k)) {
-                if (!subjects.isEmpty()) {
-                    selectedIndex = (selectedIndex - 1 + subjects.size()) % subjects.size();
-                }
+                selectedIndex = ListNavigationHelper.adjustIndex(selectedIndex, -1, subjects.size());
             } else if (KeyUtil.isDown(k)) {
-                if (!subjects.isEmpty()) {
-                    selectedIndex = (selectedIndex + 1) % subjects.size();
-                }
+                selectedIndex = ListNavigationHelper.adjustIndex(selectedIndex, 1, subjects.size());
             } else if (KeyUtil.isLeft(k)) {
-                if (!subjects.isEmpty()) {
-                    int pageSize = TuiHelper.PAGE_SIZE;
-                    int currentPage = selectedIndex / pageSize;
-                    if (currentPage > 0) {
-                        selectedIndex = (currentPage - 1) * pageSize;
-                    }
-                }
+                selectedIndex = ListNavigationHelper.prevPage(selectedIndex, TuiHelper.PAGE_SIZE);
             } else if (KeyUtil.isRight(k)) {
-                if (!subjects.isEmpty()) {
-                    int pageSize = TuiHelper.PAGE_SIZE;
-                    int totalPages = Math.max(1, (int) Math.ceil((double) subjects.size() / pageSize));
-                    int currentPage = selectedIndex / pageSize;
-                    if (currentPage < totalPages - 1) {
-                        selectedIndex = Math.min(subjects.size() - 1, (currentPage + 1) * pageSize);
-                    }
-                }
+                selectedIndex = ListNavigationHelper.nextPage(selectedIndex, subjects.size(), TuiHelper.PAGE_SIZE);
             } else if ("n".equalsIgnoreCase(k.key())) {
                 return ScreenResult.navigate(new SubjectFormScreen(subjectService, userService, authService, null));
             } else if ("e".equalsIgnoreCase(k.key()) || KeyUtil.isEnter(k)) {

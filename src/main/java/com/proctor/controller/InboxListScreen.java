@@ -6,6 +6,7 @@ import com.proctor.model.service.AuthService;
 import com.proctor.model.entity.InboxMessage;
 import com.proctor.model.service.InboxService;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.ListNavigationHelper;
 import com.proctor.util.MouseUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.InboxViews;
@@ -28,14 +29,16 @@ public class InboxListScreen implements Screen {
     private List<InboxMessage> messages = new ArrayList<>();
     private int selectedIndex = 0;
     private int unreadCount = 0;
+    private int actionRequiredCount = 0;
+    private int filterIndex = 0;
     private final StringBuilder searchBuffer = new StringBuilder();
     private boolean searchMode = false;
-    private int filterIndex = 0;
-    private static final String[] FILTERS = {"ALL", "UNREAD", "ACTIONABLE"};
+    private String bannerMessage = "";
 
     private boolean showDeleteModal = false;
     private boolean deleteConfirmFocused = false;
-    private String bannerMessage = "";
+
+    private static final String[] FILTERS = {"ALL", "UNREAD", "ACTIONABLE"};
 
     public InboxListScreen(InboxService inboxService, UserService userService, AuthService authService, Screen returnDashboardScreen) {
         this.inboxService = inboxService;
@@ -54,8 +57,8 @@ public class InboxListScreen implements Screen {
         if (userId != -1) {
             this.allMessages = inboxService.getInbox(userId);
             this.unreadCount = inboxService.getUnreadCount(userId);
-            applyFilters();
         }
+        applyFilters();
     }
 
     private void applyFilters() {
@@ -80,48 +83,26 @@ public class InboxListScreen implements Screen {
             return true;
         }).toList();
 
-        if (messages.isEmpty()) {
-            selectedIndex = 0;
-        } else if (selectedIndex >= messages.size()) {
-            selectedIndex = Math.max(0, messages.size() - 1);
-        }
+        selectedIndex = ListNavigationHelper.clampIndex(selectedIndex, messages.size());
     }
 
     @Override
     public ScreenResult update(Message msg) {
-        if (MouseUtil.isWheelUp(msg)) {
-            if (!messages.isEmpty() && selectedIndex > 0) {
-                selectedIndex--;
-            }
-            return ScreenResult.stay(this);
-        }
-
-        if (MouseUtil.isWheelDown(msg)) {
-            if (!messages.isEmpty() && selectedIndex < messages.size() - 1) {
-                selectedIndex++;
-            }
+        if (MouseUtil.isWheelUp(msg) || MouseUtil.isWheelDown(msg)) {
+            selectedIndex = ListNavigationHelper.handleWheel(msg, selectedIndex, messages.size());
             return ScreenResult.stay(this);
         }
 
         if (MouseUtil.isLeftClick(msg)) {
             if (showDeleteModal) {
-                int line = MouseUtil.getLineIndex(msg);
-                int col = MouseUtil.getColInLine(msg);
-                int btnLine = MouseUtil.findButtonRowLine(view());
-                if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
-                    int btn = MouseUtil.getClickedButtonIndex(col, "Delete", "Cancel");
-                    if (btn == 0) {
-                        if (!messages.isEmpty()) {
-                            InboxMessage target = messages.get(selectedIndex);
-                            inboxService.deleteMessage(target.getId());
-                            bannerMessage = TuiHelper.green("✔ Message deleted.");
-                            showDeleteModal = false;
-                            refreshMessages();
-                        }
-                    } else if (btn == 1) {
-                        showDeleteModal = false;
-                    }
-                } else if (btnLine != -1 && (line < btnLine - 4 || line > btnLine + 4)) {
+                int action = ListNavigationHelper.handleConfirmationClick(msg, view(), "Delete", "Cancel");
+                if (action == 0 && !messages.isEmpty()) {
+                    InboxMessage target = messages.get(selectedIndex);
+                    inboxService.deleteMessage(target.getId());
+                    bannerMessage = TuiHelper.green("✔ Message deleted.");
+                    showDeleteModal = false;
+                    refreshMessages();
+                } else if (action >= 0) {
                     showDeleteModal = false;
                 }
                 return ScreenResult.stay(this);
@@ -141,38 +122,21 @@ public class InboxListScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
-            int itemsStartLine = MouseUtil.findTableStartLine(view());
-            int pageSize = TuiHelper.PAGE_SIZE;
-            int totalPages = Math.max(1, (int) Math.ceil((double) messages.size() / pageSize));
-            int currentPage = selectedIndex / pageSize;
-            int startRow = currentPage * pageSize;
-            int endRow = Math.min(messages.size(), startRow + pageSize);
-            int displayedRows = endRow - startRow;
-
-            if (itemsStartLine != -1 && line >= itemsStartLine && line < itemsStartLine + displayedRows * 2) {
-                int clickedOffset = (line - itemsStartLine) / 2;
-                int targetIdx = startRow + clickedOffset;
-                if (targetIdx < messages.size()) {
-                    if (selectedIndex == targetIdx) {
-                        InboxMessage target = messages.get(selectedIndex);
-                        inboxService.markAsRead(target.getId());
-                        refreshMessages();
-                        return ScreenResult.navigate(new InboxDetailScreen(target, inboxService, userService, authService, this));
-                    } else {
-                        selectedIndex = targetIdx;
-                    }
+            int clickedIdx = ListNavigationHelper.getClickedItemIndex(line, MouseUtil.findTableStartLine(view()), messages.size(), selectedIndex, TuiHelper.PAGE_SIZE);
+            if (clickedIdx != -1) {
+                if (selectedIndex == clickedIdx) {
+                    InboxMessage target = messages.get(selectedIndex);
+                    inboxService.markAsRead(target.getId());
+                    refreshMessages();
+                    return ScreenResult.navigate(new InboxDetailScreen(target, inboxService, userService, authService, this));
                 }
+                selectedIndex = clickedIdx;
                 return ScreenResult.stay(this);
             }
 
             int paginationLine = MouseUtil.findPaginationLine(view());
             if (paginationLine != -1 && line == paginationLine && !messages.isEmpty()) {
-                int action = MouseUtil.getClickedPaginationAction(col, currentPage, totalPages);
-                if (action < 0) {
-                    selectedIndex = (currentPage - 1) * pageSize;
-                } else if (action > 0) {
-                    selectedIndex = Math.min(messages.size() - 1, (currentPage + 1) * pageSize);
-                }
+                selectedIndex = ListNavigationHelper.handlePaginationClick(col, selectedIndex, messages.size(), TuiHelper.PAGE_SIZE);
                 return ScreenResult.stay(this);
             }
 
@@ -225,23 +189,7 @@ public class InboxListScreen implements Screen {
             }
 
             if (searchMode) {
-                if (KeyUtil.isEsc(k) || KeyUtil.isEnter(k)) {
-                    searchMode = false;
-                    applyFilters();
-                } else if (KeyUtil.isBackspace(k)) {
-                    if (!searchBuffer.isEmpty()) {
-                        searchBuffer.deleteCharAt(searchBuffer.length() - 1);
-                        applyFilters();
-                    }
-                } else if (k.type() == KeyType.KeyRunes && k.runes() != null) {
-                    for (char c : k.runes()) {
-                        if (!Character.isISOControl(c)) searchBuffer.append(c);
-                    }
-                    applyFilters();
-                } else if (k.key() != null && k.key().length() == 1 && !Character.isISOControl(k.key().charAt(0))) {
-                    searchBuffer.append(k.key());
-                    applyFilters();
-                }
+                searchMode = ListNavigationHelper.handleSearchKey(k, searchBuffer, this::applyFilters);
                 return ScreenResult.stay(this);
             }
 
@@ -252,39 +200,22 @@ public class InboxListScreen implements Screen {
             }
 
             if (KeyUtil.isUp(k)) {
-                if (!messages.isEmpty()) {
-                    selectedIndex = (selectedIndex - 1 + messages.size()) % messages.size();
-                }
+                selectedIndex = ListNavigationHelper.adjustIndex(selectedIndex, -1, messages.size());
                 return ScreenResult.stay(this);
             }
 
             if (KeyUtil.isDown(k)) {
-                if (!messages.isEmpty()) {
-                    selectedIndex = (selectedIndex + 1) % messages.size();
-                }
+                selectedIndex = ListNavigationHelper.adjustIndex(selectedIndex, 1, messages.size());
                 return ScreenResult.stay(this);
             }
 
             if (KeyUtil.isLeft(k)) {
-                if (!messages.isEmpty()) {
-                    int pageSize = TuiHelper.PAGE_SIZE;
-                    int currentPage = selectedIndex / pageSize;
-                    if (currentPage > 0) {
-                        selectedIndex = (currentPage - 1) * pageSize;
-                    }
-                }
+                selectedIndex = ListNavigationHelper.prevPage(selectedIndex, TuiHelper.PAGE_SIZE);
                 return ScreenResult.stay(this);
             }
 
             if (KeyUtil.isRight(k)) {
-                if (!messages.isEmpty()) {
-                    int pageSize = TuiHelper.PAGE_SIZE;
-                    int totalPages = Math.max(1, (int) Math.ceil((double) messages.size() / pageSize));
-                    int currentPage = selectedIndex / pageSize;
-                    if (currentPage < totalPages - 1) {
-                        selectedIndex = Math.min(messages.size() - 1, (currentPage + 1) * pageSize);
-                    }
-                }
+                selectedIndex = ListNavigationHelper.nextPage(selectedIndex, messages.size(), TuiHelper.PAGE_SIZE);
                 return ScreenResult.stay(this);
             }
 

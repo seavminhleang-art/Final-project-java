@@ -53,7 +53,18 @@ public class ExamResultScreen implements Screen {
     public ScreenResult update(Message msg) {
         if (MouseUtil.isLeftClick(msg)) {
             int line = MouseUtil.getLineIndex(msg);
-            if (line >= 0) {
+            int col = MouseUtil.getColInLine(msg);
+            String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
+            if ("r".equalsIgnoreCase(hintAction)) {
+                return handleRetakeRequest();
+            }
+            if ("Esc".equalsIgnoreCase(hintAction)) {
+                if (returnScreen != null) {
+                    return ScreenResult.navigate(returnScreen);
+                }
+                return ScreenResult.navigate(new StudentDashboardScreen(authService, examService));
+            }
+            if (line >= 0 && !canRequestRetake()) {
                 if (returnScreen != null) {
                     return ScreenResult.navigate(returnScreen);
                 }
@@ -64,30 +75,7 @@ public class ExamResultScreen implements Screen {
 
         if (msg instanceof KeyPressMessage k) {
             if ("r".equalsIgnoreCase(k.key())) {
-                if (result != null && result.isPassed()) {
-                    bannerMessage = TuiHelper.yellow("● Retakes cannot be requested for assessments that have been passed.");
-                    return ScreenResult.stay(this);
-                }
-                if (result != null && result.getAssessmentType() == AssessmentType.EXAM) {
-                    bannerMessage = TuiHelper.yellow("● Exam makeup requests require a reason. Please submit via the Exams screen.");
-                    return ScreenResult.stay(this);
-                }
-                if (session != null && session.getAttempt() != null && session.getAttempt().getStatus() == AttemptStatus.AUTO_SUBMITTED) {
-                    Quiz q = session.getQuiz();
-                    if (q != null && q.getCreatedBy() != null) {
-                        try {
-                            inboxService.sendQuizRetakeRequest(result.getStudentId(), q.getCreatedBy(), q.getId(), q.getTitle());
-                            bannerMessage = TuiHelper.green("✔ Quiz retake request sent to teacher's inbox!");
-                        } catch (ValidationException e) {
-                            bannerMessage = TuiHelper.yellow("● " + e.getMessage());
-                        }
-                    } else {
-                        bannerMessage = TuiHelper.red("✖ Teacher for this quiz was not found.");
-                    }
-                } else {
-                    bannerMessage = TuiHelper.yellow("● Retakes can only be requested if timer expired.");
-                }
-                return ScreenResult.stay(this);
+                return handleRetakeRequest();
             }
 
             if (KeyUtil.isEnter(k) || KeyUtil.isEsc(k)) {
@@ -100,9 +88,40 @@ public class ExamResultScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    private boolean canRequestRetake() {
+        return session != null && session.getAttempt() != null && session.getAttempt().getStatus() == AttemptStatus.AUTO_SUBMITTED && result != null && !result.isPassed() && result.getAssessmentType() == AssessmentType.QUIZ;
+    }
+
+    private ScreenResult handleRetakeRequest() {
+        if (result != null && result.isPassed()) {
+            bannerMessage = TuiHelper.yellow("● Retakes cannot be requested for assessments that have been passed.");
+            return ScreenResult.stay(this);
+        }
+        if (result != null && result.getAssessmentType() == AssessmentType.EXAM) {
+            bannerMessage = TuiHelper.yellow("● Exam makeup requests require a reason. Please submit via the Exams screen.");
+            return ScreenResult.stay(this);
+        }
+        if (session != null && session.getAttempt() != null && session.getAttempt().getStatus() == AttemptStatus.AUTO_SUBMITTED) {
+            Quiz q = session.getQuiz();
+            if (q != null && q.getCreatedBy() != null) {
+                try {
+                    inboxService.sendQuizRetakeRequest(result.getStudentId(), q.getCreatedBy(), q.getId(), q.getTitle());
+                    bannerMessage = TuiHelper.green("✔ Quiz retake request sent to teacher's inbox!");
+                } catch (ValidationException e) {
+                    bannerMessage = TuiHelper.yellow("● " + e.getMessage());
+                }
+            } else {
+                bannerMessage = TuiHelper.red("✖ Teacher for this quiz was not found.");
+            }
+        } else {
+            bannerMessage = TuiHelper.yellow("● Retakes can only be requested if timer expired.");
+        }
+        return ScreenResult.stay(this);
+    }
+
     @Override
     public String view() {
-        boolean canRetake = session != null && session.getAttempt() != null && session.getAttempt().getStatus() == AttemptStatus.AUTO_SUBMITTED && result != null && !result.isPassed() && result.getAssessmentType() == AssessmentType.QUIZ;
+        boolean canRetake = canRequestRetake();
         String retakeNotice = "";
         if (canRetake && bannerMessage.isBlank()) {
             retakeNotice = TuiHelper.yellow("● Timer expired. Press [r] to request a retake from your teacher.");

@@ -255,6 +255,9 @@ public class QuizFormScreen implements Screen {
                     if (mins <= 0) {
                         throw new ValidationException("Time limit must be a positive number of minutes.");
                     }
+                    if (mins > 1440) {
+                        throw new ValidationException("Time limit cannot exceed 1440 minutes (24 hours).");
+                    }
                 } catch (NumberFormatException e) {
                     throw new ValidationException("Time limit must be a valid number of minutes.");
                 }
@@ -267,6 +270,9 @@ public class QuizFormScreen implements Screen {
                     hours = Integer.parseInt(hoursStr);
                     if (hours < 0) {
                         throw new ValidationException("Active duration must be a non-negative number of hours.");
+                    }
+                    if (hours > 8760) {
+                        throw new ValidationException("Active duration cannot exceed 8760 hours (1 year).");
                     }
                 } catch (NumberFormatException e) {
                     throw new ValidationException("Active duration must be a valid number of hours.");

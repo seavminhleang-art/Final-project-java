@@ -8,6 +8,7 @@ import com.proctor.model.service.PortalService;
 import com.proctor.model.enums.AssessmentType;
 import com.proctor.model.entity.Result;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.ListNavigationHelper;
 import com.proctor.util.MouseUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.ExamViews;
@@ -36,10 +37,10 @@ public class StudentHistoryScreen implements Screen {
         this.portalService = portalService;
         this.examService = examService;
         this.authService = authService;
-        refreshHistory();
+        refreshList();
     }
 
-    private void refreshHistory() {
+    private void refreshList() {
         User student = Session.getCurrentUser().orElse(null);
         int studentId = (student != null && student.getId() != null) ? student.getId() : 0;
         this.allHistory = portalService.getStudentHistory(studentId);
@@ -73,26 +74,13 @@ public class StudentHistoryScreen implements Screen {
             return true;
         }).toList();
 
-        if (historyList.isEmpty()) {
-            selectedIndex = 0;
-        } else if (selectedIndex >= historyList.size()) {
-            selectedIndex = historyList.size() - 1;
-        }
+        selectedIndex = ListNavigationHelper.clampIndex(selectedIndex, historyList.size());
     }
 
     @Override
     public ScreenResult update(Message msg) {
-        if (MouseUtil.isWheelUp(msg)) {
-            if (!historyList.isEmpty() && selectedIndex > 0) {
-                selectedIndex--;
-            }
-            return ScreenResult.stay(this);
-        }
-
-        if (MouseUtil.isWheelDown(msg)) {
-            if (!historyList.isEmpty() && selectedIndex < historyList.size() - 1) {
-                selectedIndex++;
-            }
+        if (MouseUtil.isWheelUp(msg) || MouseUtil.isWheelDown(msg)) {
+            selectedIndex = ListNavigationHelper.handleWheel(msg, selectedIndex, historyList.size());
             return ScreenResult.stay(this);
         }
 
@@ -111,39 +99,22 @@ public class StudentHistoryScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
-            int itemsStartLine = MouseUtil.findTableStartLine(view());
-            int pageSize = TuiHelper.PAGE_SIZE;
-            int totalPages = Math.max(1, (int) Math.ceil((double) historyList.size() / pageSize));
-            int currentPage = selectedIndex / pageSize;
-            int startRow = currentPage * pageSize;
-            int endRow = Math.min(historyList.size(), startRow + pageSize);
-            int displayedRows = endRow - startRow;
-
-            if (itemsStartLine != -1 && line >= itemsStartLine && line < itemsStartLine + displayedRows * 2) {
-                int clickedOffset = (line - itemsStartLine) / 2;
-                int targetIdx = startRow + clickedOffset;
-                if (targetIdx < historyList.size()) {
-                    if (selectedIndex == targetIdx) {
-                        Result r = historyList.get(selectedIndex);
-                        if (r.getAssessmentType() == AssessmentType.SPEED) {
-                            return ScreenResult.navigate(new SpeedQuizResultScreen(r, this, examService, authService));
-                        }
-                        return ScreenResult.navigate(new ExamResultScreen(r, this));
-                    } else {
-                        selectedIndex = targetIdx;
+            int clickedIdx = ListNavigationHelper.getClickedItemIndex(line, MouseUtil.findTableStartLine(view()), historyList.size(), selectedIndex, TuiHelper.PAGE_SIZE);
+            if (clickedIdx != -1) {
+                if (selectedIndex == clickedIdx) {
+                    Result r = historyList.get(selectedIndex);
+                    if (r.getAssessmentType() == AssessmentType.SPEED) {
+                        return ScreenResult.navigate(new SpeedQuizResultScreen(r, this, examService, authService));
                     }
+                    return ScreenResult.navigate(new ExamResultScreen(r, this));
                 }
+                selectedIndex = clickedIdx;
                 return ScreenResult.stay(this);
             }
 
             int pagLine = MouseUtil.findPaginationLine(view());
             if (pagLine != -1 && line == pagLine && !historyList.isEmpty()) {
-                int action = MouseUtil.getClickedPaginationAction(col, currentPage, totalPages);
-                if (action < 0) {
-                    selectedIndex = (currentPage - 1) * pageSize;
-                } else if (action > 0) {
-                    selectedIndex = Math.min(historyList.size() - 1, (currentPage + 1) * pageSize);
-                }
+                selectedIndex = ListNavigationHelper.handlePaginationClick(col, selectedIndex, historyList.size(), TuiHelper.PAGE_SIZE);
                 return ScreenResult.stay(this);
             }
 
@@ -159,53 +130,20 @@ public class StudentHistoryScreen implements Screen {
 
         if (msg instanceof KeyPressMessage k) {
             if (searchMode) {
-                if (KeyUtil.isEsc(k) || KeyUtil.isEnter(k)) {
-                    searchMode = false;
-                    applyFilters();
-                } else if (KeyUtil.isBackspace(k)) {
-                    if (!searchBuffer.isEmpty()) {
-                        searchBuffer.deleteCharAt(searchBuffer.length() - 1);
-                        applyFilters();
-                    }
-                } else if (k.type() == KeyType.KeyRunes && k.runes() != null) {
-                    for (char c : k.runes()) {
-                        if (!Character.isISOControl(c)) searchBuffer.append(c);
-                    }
-                    applyFilters();
-                } else if (k.key() != null && k.key().length() == 1 && !Character.isISOControl(k.key().charAt(0))) {
-                    searchBuffer.append(k.key());
-                    applyFilters();
-                }
+                searchMode = ListNavigationHelper.handleSearchKey(k, searchBuffer, this::applyFilters);
                 return ScreenResult.stay(this);
             }
 
             if (KeyUtil.isEsc(k)) {
                 return ScreenResult.navigate(new StudentDashboardScreen(authService, examService, portalService));
             } else if (KeyUtil.isUp(k)) {
-                if (!historyList.isEmpty()) {
-                    selectedIndex = (selectedIndex - 1 + historyList.size()) % historyList.size();
-                }
+                selectedIndex = ListNavigationHelper.adjustIndex(selectedIndex, -1, historyList.size());
             } else if (KeyUtil.isDown(k)) {
-                if (!historyList.isEmpty()) {
-                    selectedIndex = (selectedIndex + 1) % historyList.size();
-                }
+                selectedIndex = ListNavigationHelper.adjustIndex(selectedIndex, 1, historyList.size());
             } else if (KeyUtil.isLeft(k)) {
-                if (!historyList.isEmpty()) {
-                    int pageSize = TuiHelper.PAGE_SIZE;
-                    int currentPage = selectedIndex / pageSize;
-                    if (currentPage > 0) {
-                        selectedIndex = (currentPage - 1) * pageSize;
-                    }
-                }
+                selectedIndex = ListNavigationHelper.prevPage(selectedIndex, TuiHelper.PAGE_SIZE);
             } else if (KeyUtil.isRight(k)) {
-                if (!historyList.isEmpty()) {
-                    int pageSize = TuiHelper.PAGE_SIZE;
-                    int totalPages = Math.max(1, (int) Math.ceil((double) historyList.size() / pageSize));
-                    int currentPage = selectedIndex / pageSize;
-                    if (currentPage < totalPages - 1) {
-                        selectedIndex = Math.min(historyList.size() - 1, (currentPage + 1) * pageSize);
-                    }
-                }
+                selectedIndex = ListNavigationHelper.nextPage(selectedIndex, historyList.size(), TuiHelper.PAGE_SIZE);
             } else if (KeyUtil.isTab(k) || "f".equalsIgnoreCase(k.key())) {
                 statusFilterIndex = (statusFilterIndex + 1) % STATUS_FILTERS.length;
                 selectedIndex = 0;

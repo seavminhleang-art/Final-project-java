@@ -5,6 +5,7 @@ import com.proctor.model.entity.User;
 import com.proctor.model.service.AuthService;
 import com.proctor.model.enums.Role;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.ListNavigationHelper;
 import com.proctor.util.MouseUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.UserViews;
@@ -19,9 +20,9 @@ public class UserListScreen implements Screen {
     private final UserService userService;
     private final AuthService authService;
 
-    private List<User> users;
-    private int selectedIndex = 0;
     private Role filterRole = null;
+    private List<User> users = new java.util.ArrayList<>();
+    private int selectedIndex = 0;
     private final StringBuilder searchBuffer = new StringBuilder();
     private boolean searchMode = false;
     private String bannerMessage = "";
@@ -34,26 +35,13 @@ public class UserListScreen implements Screen {
 
     private void refreshList() {
         this.users = userService.getUsers(searchBuffer.toString(), filterRole);
-        if (users.isEmpty()) {
-            selectedIndex = 0;
-        } else if (selectedIndex >= users.size()) {
-            selectedIndex = users.size() - 1;
-        }
+        selectedIndex = ListNavigationHelper.clampIndex(selectedIndex, users.size());
     }
 
     @Override
     public ScreenResult update(Message msg) {
-        if (MouseUtil.isWheelUp(msg)) {
-            if (!users.isEmpty() && selectedIndex > 0) {
-                selectedIndex--;
-            }
-            return ScreenResult.stay(this);
-        }
-
-        if (MouseUtil.isWheelDown(msg)) {
-            if (!users.isEmpty() && selectedIndex < users.size() - 1) {
-                selectedIndex++;
-            }
+        if (MouseUtil.isWheelUp(msg) || MouseUtil.isWheelDown(msg)) {
+            selectedIndex = ListNavigationHelper.handleWheel(msg, selectedIndex, users.size());
             return ScreenResult.stay(this);
         }
 
@@ -80,35 +68,18 @@ public class UserListScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
-            int itemsStartLine = MouseUtil.findTableStartLine(view());
-            int pageSize = TuiHelper.PAGE_SIZE;
-            int totalPages = Math.max(1, (int) Math.ceil((double) users.size() / pageSize));
-            int currentPage = selectedIndex / pageSize;
-            int startRow = currentPage * pageSize;
-            int endRow = Math.min(users.size(), startRow + pageSize);
-            int displayedRows = endRow - startRow;
-
-            if (itemsStartLine != -1 && line >= itemsStartLine && line < itemsStartLine + displayedRows * 2) {
-                int clickedOffset = (line - itemsStartLine) / 2;
-                int targetIdx = startRow + clickedOffset;
-                if (targetIdx < users.size()) {
-                    if (selectedIndex == targetIdx) {
-                        return ScreenResult.navigate(new UserFormScreen(userService, authService, users.get(selectedIndex)));
-                    } else {
-                        selectedIndex = targetIdx;
-                    }
+            int clickedIdx = ListNavigationHelper.getClickedItemIndex(line, MouseUtil.findTableStartLine(view()), users.size(), selectedIndex, TuiHelper.PAGE_SIZE);
+            if (clickedIdx != -1) {
+                if (selectedIndex == clickedIdx) {
+                    return ScreenResult.navigate(new UserFormScreen(userService, authService, users.get(selectedIndex)));
                 }
+                selectedIndex = clickedIdx;
                 return ScreenResult.stay(this);
             }
 
             int pagLine = MouseUtil.findPaginationLine(view());
             if (pagLine != -1 && line == pagLine && !users.isEmpty()) {
-                int action = MouseUtil.getClickedPaginationAction(col, currentPage, totalPages);
-                if (action < 0) {
-                    selectedIndex = (currentPage - 1) * pageSize;
-                } else if (action > 0) {
-                    selectedIndex = Math.min(users.size() - 1, (currentPage + 1) * pageSize);
-                }
+                selectedIndex = ListNavigationHelper.handlePaginationClick(col, selectedIndex, users.size(), TuiHelper.PAGE_SIZE);
                 return ScreenResult.stay(this);
             }
 
@@ -126,53 +97,20 @@ public class UserListScreen implements Screen {
 
         if (msg instanceof KeyPressMessage k) {
             if (searchMode) {
-                if (KeyUtil.isEnter(k) || KeyUtil.isEsc(k)) {
-                    searchMode = false;
-                    refreshList();
-                } else if (KeyUtil.isBackspace(k)) {
-                    if (!searchBuffer.isEmpty()) {
-                        searchBuffer.deleteCharAt(searchBuffer.length() - 1);
-                        refreshList();
-                    }
-                } else if (k.type() == KeyType.KeyRunes && k.runes() != null) {
-                    for (char c : k.runes()) {
-                        if (!Character.isISOControl(c)) searchBuffer.append(c);
-                    }
-                    refreshList();
-                } else if (k.key() != null && k.key().length() == 1 && !Character.isISOControl(k.key().charAt(0))) {
-                    searchBuffer.append(k.key());
-                    refreshList();
-                }
+                searchMode = ListNavigationHelper.handleSearchKey(k, searchBuffer, this::refreshList);
                 return ScreenResult.stay(this);
             }
 
             if (KeyUtil.isEsc(k)) {
                 return ScreenResult.navigate(new AdminDashboardScreen(authService));
             } else if (KeyUtil.isUp(k)) {
-                if (!users.isEmpty()) {
-                    selectedIndex = (selectedIndex - 1 + users.size()) % users.size();
-                }
+                selectedIndex = ListNavigationHelper.adjustIndex(selectedIndex, -1, users.size());
             } else if (KeyUtil.isDown(k)) {
-                if (!users.isEmpty()) {
-                    selectedIndex = (selectedIndex + 1) % users.size();
-                }
+                selectedIndex = ListNavigationHelper.adjustIndex(selectedIndex, 1, users.size());
             } else if (KeyUtil.isLeft(k)) {
-                if (!users.isEmpty()) {
-                    int pageSize = TuiHelper.PAGE_SIZE;
-                    int currentPage = selectedIndex / pageSize;
-                    if (currentPage > 0) {
-                        selectedIndex = (currentPage - 1) * pageSize;
-                    }
-                }
+                selectedIndex = ListNavigationHelper.prevPage(selectedIndex, TuiHelper.PAGE_SIZE);
             } else if (KeyUtil.isRight(k)) {
-                if (!users.isEmpty()) {
-                    int pageSize = TuiHelper.PAGE_SIZE;
-                    int totalPages = Math.max(1, (int) Math.ceil((double) users.size() / pageSize));
-                    int currentPage = selectedIndex / pageSize;
-                    if (currentPage < totalPages - 1) {
-                        selectedIndex = Math.min(users.size() - 1, (currentPage + 1) * pageSize);
-                    }
-                }
+                selectedIndex = ListNavigationHelper.nextPage(selectedIndex, users.size(), TuiHelper.PAGE_SIZE);
             } else if ("n".equalsIgnoreCase(k.key())) {
                 return ScreenResult.navigate(new UserFormScreen(userService, authService, null));
             } else if ("e".equalsIgnoreCase(k.key()) || KeyUtil.isEnter(k)) {
