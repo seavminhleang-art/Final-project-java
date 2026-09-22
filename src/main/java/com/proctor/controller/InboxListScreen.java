@@ -6,6 +6,7 @@ import com.proctor.model.service.AuthService;
 import com.proctor.model.entity.InboxMessage;
 import com.proctor.model.service.InboxService;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.MouseUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.InboxViews;
 import com.proctor.model.service.UserService;
@@ -88,6 +89,95 @@ public class InboxListScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        if (MouseUtil.isWheelUp(msg)) {
+            if (!messages.isEmpty() && selectedIndex > 0) {
+                selectedIndex--;
+            }
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isWheelDown(msg)) {
+            if (!messages.isEmpty() && selectedIndex < messages.size() - 1) {
+                selectedIndex++;
+            }
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isLeftClick(msg)) {
+            if (showDeleteModal) {
+                int line = MouseUtil.getLineIndex(msg);
+                int col = MouseUtil.getColInLine(msg);
+                if (line >= 17 && line <= 19) {
+                    if (col >= 0 && col < 22) {
+                        if (!messages.isEmpty()) {
+                            InboxMessage target = messages.get(selectedIndex);
+                            inboxService.deleteMessage(target.getId());
+                            bannerMessage = TuiHelper.green("✔ Message deleted.");
+                            showDeleteModal = false;
+                            refreshMessages();
+                        }
+                    } else if (col >= 26 && col < 48) {
+                        showDeleteModal = false;
+                    }
+                } else if (line < 11 || line > 21) {
+                    showDeleteModal = false;
+                }
+                return ScreenResult.stay(this);
+            }
+
+            int line = MouseUtil.getLineIndex(msg);
+            int col = MouseUtil.getColInLine(msg);
+
+            if (line == 11) {
+                int clickedTab = (col < 20) ? 0 : (col < 35 ? 1 : 2);
+                if (clickedTab != filterIndex) {
+                    filterIndex = clickedTab;
+                    selectedIndex = 0;
+                    applyFilters();
+                }
+                return ScreenResult.stay(this);
+            }
+
+            boolean hasSearchLine = searchMode || !searchBuffer.isEmpty();
+            int headerLine = hasSearchLine ? 15 : 13;
+            int itemsStartLine = headerLine + 3;
+
+            int pageSize = TuiHelper.PAGE_SIZE;
+            int totalPages = Math.max(1, (int) Math.ceil((double) messages.size() / pageSize));
+            int currentPage = selectedIndex / pageSize;
+            int startRow = currentPage * pageSize;
+            int endRow = Math.min(messages.size(), startRow + pageSize);
+            int displayedRows = endRow - startRow;
+
+            if (line >= itemsStartLine && line < itemsStartLine + displayedRows * 2) {
+                int clickedOffset = (line - itemsStartLine) / 2;
+                int targetIdx = startRow + clickedOffset;
+                if (targetIdx < messages.size()) {
+                    if (selectedIndex == targetIdx) {
+                        InboxMessage target = messages.get(selectedIndex);
+                        inboxService.markAsRead(target.getId());
+                        refreshMessages();
+                        return ScreenResult.navigate(new InboxDetailScreen(target, inboxService, userService, authService, this));
+                    } else {
+                        selectedIndex = targetIdx;
+                    }
+                }
+                return ScreenResult.stay(this);
+            }
+
+            int paginationLine = itemsStartLine + displayedRows * 2 + 2;
+            if (line == paginationLine && !messages.isEmpty()) {
+                if (col < 20 && currentPage > 0) {
+                    selectedIndex = (currentPage - 1) * pageSize;
+                } else if (col > 35 && currentPage < totalPages - 1) {
+                    selectedIndex = Math.min(messages.size() - 1, (currentPage + 1) * pageSize);
+                }
+                return ScreenResult.stay(this);
+            }
+
+            return ScreenResult.stay(this);
+        }
+
         if (msg instanceof KeyPressMessage k) {
             if (showDeleteModal) {
                 if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {

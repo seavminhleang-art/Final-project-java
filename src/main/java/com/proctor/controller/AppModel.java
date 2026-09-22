@@ -2,13 +2,24 @@ package com.proctor.controller;
 
 import com.proctor.util.TuiHelper;
 import com.williamcallahan.tui4j.compat.bubbletea.*;
+import com.williamcallahan.tui4j.compat.bubbletea.input.MouseAction;
+import com.williamcallahan.tui4j.compat.bubbletea.input.MouseMessage;
+import com.williamcallahan.tui4j.input.MouseTarget;
+import com.williamcallahan.tui4j.input.MouseTargetProvider;
 
-public class AppModel implements Model {
+import java.util.List;
+
+public class AppModel implements Model, MouseTargetProvider {
     private Screen currentScreen;
     private String runtimeError = null;
 
     public AppModel(Screen initialScreen) {
         this.currentScreen = initialScreen;
+    }
+
+    @Override
+    public List<MouseTarget> mouseTargets() {
+        return TuiHelper.getHitMap().getMouseTargets();
     }
 
     @Override
@@ -25,6 +36,10 @@ public class AppModel implements Model {
     public UpdateResult<? extends Model> update(Message msg) {
         if (msg instanceof WindowSizeMessage w) {
             TuiHelper.setTerminalDimensions(w.width(), w.height());
+        }
+
+        if (msg instanceof MouseMessage m && m.getAction() == MouseAction.MouseActionMotion) {
+            return new UpdateResult<>(this, null);
         }
 
         if (msg instanceof KeyPressMessage k && k.key().equals("ctrl+c")) {

@@ -53,7 +53,7 @@ public class UserService {
         return createUser(email, username, rawPassword, fullName, role, dateOfBirth, gender, null, null, null);
     }
 
-    public User createUser(String email, String username, String rawPassword, String fullName, Role role, LocalDate dateOfBirth, String gender, String academicDegree, String educationBackground, String specialization) {
+    public void validateNewUser(String email, String username, String rawPassword, String fullName, Role role, LocalDate dateOfBirth, String gender, String academicDegree, String educationBackground, String specialization) {
         if (email == null || email.isBlank() || username == null || username.isBlank() ||
                 rawPassword == null || rawPassword.isBlank() || fullName == null || fullName.isBlank()) {
             throw new ValidationException("All fields are required.");
@@ -115,6 +115,13 @@ public class UserService {
         if (userRepository.findByUsername(cleanUsername).isPresent()) {
             throw new ValidationException("Username '" + cleanUsername + "' is already taken.");
         }
+    }
+
+    public User createUser(String email, String username, String rawPassword, String fullName, Role role, LocalDate dateOfBirth, String gender, String academicDegree, String educationBackground, String specialization) {
+        validateNewUser(email, username, rawPassword, fullName, role, dateOfBirth, gender, academicDegree, educationBackground, specialization);
+
+        String cleanEmail = email.trim().toLowerCase();
+        String cleanUsername = username.trim().toLowerCase();
 
         User user = User.builder()
                 .email(cleanEmail)
@@ -225,6 +232,9 @@ public class UserService {
         }
         if (!PasswordUtils.verify(currentPassword, user.getPasswordHash())) {
             throw new ValidationException("Current password does not match.");
+        }
+        if (PasswordUtils.verify(newPassword.trim(), user.getPasswordHash())) {
+            throw new ValidationException("New password must be different from your current password.");
         }
         String hash = PasswordUtils.hash(newPassword.trim());
         boolean updated = userRepository.updatePassword(id, hash);

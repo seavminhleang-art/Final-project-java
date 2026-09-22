@@ -19,6 +19,7 @@ import com.proctor.model.repository.InboxRepository;
 import com.proctor.model.service.InboxService;
 import com.proctor.model.service.UserService;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.MouseUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.DashboardViews;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
@@ -107,6 +108,44 @@ public class TeacherDashboardScreen implements Screen {
     @Override
     public ScreenResult update(Message msg) {
         String[] menuItems = getMenuItems();
+
+        if (MouseUtil.isWheelUp(msg)) {
+            selectedIndex = (selectedIndex - 1 + menuItems.length) % menuItems.length;
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isWheelDown(msg)) {
+            selectedIndex = (selectedIndex + 1) % menuItems.length;
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isLeftClick(msg)) {
+            if (showQuitModal) {
+                int line = MouseUtil.getLineIndex(msg);
+                int col = MouseUtil.getColInLine(msg);
+                if (line >= 17 && line <= 19) {
+                    if (col >= 0 && col < 22) {
+                        return ScreenResult.quit();
+                    } else if (col >= 26 && col < 48) {
+                        showQuitModal = false;
+                        return ScreenResult.stay(this);
+                    }
+                } else if (line < 11 || line > 21) {
+                    showQuitModal = false;
+                    return ScreenResult.stay(this);
+                }
+                return ScreenResult.stay(this);
+            }
+
+            int line = MouseUtil.getLineIndex(msg);
+            int itemIndex = (line - 11) / 2;
+            if (line >= 11 && itemIndex >= 0 && itemIndex < menuItems.length) {
+                selectedIndex = itemIndex;
+                return handleSelection();
+            }
+            return ScreenResult.stay(this);
+        }
+
         if (msg instanceof KeyPressMessage k) {
             if (showQuitModal) {
                 if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {

@@ -173,7 +173,6 @@ public class InboxViews {
     private static String formatTypeBadge(InboxMessageType type) {
         if (type == null) return "[NOTICE]";
         return switch (type) {
-            case PASSWORD_RESET -> "[PASSWORD]";
             case QUIZ_RETAKE -> "[QUIZ RETAKE]";
             case EXAM_RETAKE -> "[EXAM RETAKE]";
             case NOTIFICATION -> "[NOTICE]";

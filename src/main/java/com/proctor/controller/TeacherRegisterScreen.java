@@ -5,7 +5,9 @@ import com.proctor.model.service.AuthService;
 import com.proctor.model.enums.Role;
 import com.proctor.exception.ValidationException;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.MouseUtil;
 import com.proctor.view.AuthViews;
+import com.proctor.model.service.EmailVerificationService;
 import com.proctor.model.service.UserService;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
 import com.williamcallahan.tui4j.compat.bubbletea.Message;
@@ -17,6 +19,7 @@ import java.time.LocalDate;
 public class TeacherRegisterScreen implements Screen {
     private final AuthService authService;
     private final UserService userService;
+    private final EmailVerificationService verificationService;
 
     private final StringBuilder fullName = new StringBuilder();
     private String selectedGender = "Male";
@@ -33,8 +36,13 @@ public class TeacherRegisterScreen implements Screen {
     private String errorMessage = "";
 
     public TeacherRegisterScreen(AuthService authService, UserService userService) {
+        this(authService, userService, new EmailVerificationService());
+    }
+
+    public TeacherRegisterScreen(AuthService authService, UserService userService, EmailVerificationService verificationService) {
         this.authService = authService;
         this.userService = userService;
+        this.verificationService = verificationService != null ? verificationService : new EmailVerificationService();
     }
 
     private int getFieldCount() {
@@ -43,6 +51,70 @@ public class TeacherRegisterScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        if (MouseUtil.isWheelUp(msg)) {
+            focusedField = (focusedField - 1 + getFieldCount()) % getFieldCount();
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isWheelDown(msg)) {
+            focusedField = (focusedField + 1) % getFieldCount();
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isLeftClick(msg)) {
+            int line = MouseUtil.getLineIndex(msg);
+            int col = MouseUtil.getColInLine(msg);
+
+            int windowSize = 5;
+            int numInputFields = 10;
+            int startField = Math.max(0, Math.min(Math.min(focusedField, numInputFields - 1) - 1, numInputFields - windowSize));
+            int endField = Math.min(numInputFields, startField + windowSize);
+
+            int curL = 11;
+            if (startField > 0) {
+                if (line == curL) {
+                    focusedField = Math.max(0, focusedField - 1);
+                    return ScreenResult.stay(this);
+                }
+                curL++;
+            }
+
+            for (int f = startField; f < endField; f++) {
+                if (line >= curL && line <= curL + 3) {
+                    if (f == 1 && focusedField == 1) {
+                        cycleGender(true);
+                    } else {
+                        focusedField = f;
+                    }
+                    return ScreenResult.stay(this);
+                }
+                curL += 5;
+            }
+
+            if (endField < numInputFields) {
+                if (line == curL) {
+                    focusedField = Math.min(numInputFields - 1, focusedField + 1);
+                    return ScreenResult.stay(this);
+                }
+                curL++;
+            }
+
+            curL++;
+
+            if (line >= curL && line <= curL + 2) {
+                int btn = MouseUtil.getClickedButtonIndex(col, 106, "Register", "Back");
+                if (btn == 0) {
+                    focusedField = 10;
+                    return attemptRegister();
+                } else if (btn == 1) {
+                    focusedField = 11;
+                    return ScreenResult.navigate(new RegisterRoleScreen(authService));
+                }
+            }
+
+            return ScreenResult.stay(this);
+        }
+
         if (msg instanceof KeyPressMessage k) {
             if (KeyUtil.isEsc(k)) {
                 return ScreenResult.navigate(new RegisterRoleScreen(authService));
@@ -186,21 +258,35 @@ public class TeacherRegisterScreen implements Screen {
 
             LocalDate dob = parseBirthday();
 
-            userService.createUser(
-                    email.toString().trim(),
-                    username.toString().trim(),
-                    password.toString(),
-                    fullName.toString().trim(),
-                    Role.TEACHER,
-                    dob,
-                    selectedGender,
-                    academicDegree.toString().trim(),
-                    educationBackground.toString().trim(),
-                    specialization.toString().trim()
-            );
-            User loggedIn = authService.login(email.toString().trim(), password.toString());
+            String cleanEmail = email.toString().trim();
+            String cleanUser = username.toString().trim();
+            String rawPass = password.toString();
+            String cleanName = fullName.toString().trim();
+            String gender = selectedGender;
+            String degree = academicDegree.toString().trim();
+            String edu = educationBackground.toString().trim();
+            String spec = specialization.toString().trim();
 
-            return ScreenResult.navigate(new TeacherDashboardScreen(authService));
+            userService.validateNewUser(cleanEmail, cleanUser, rawPass, cleanName, Role.TEACHER, dob, gender, degree, edu, spec);
+
+            verificationService.sendRegistrationCode(cleanEmail, cleanName);
+
+            return ScreenResult.navigate(new EmailVerificationScreen(
+                    cleanEmail,
+                    cleanName,
+                    "Teacher Account Registration",
+                    "Complete Registration",
+                    verificationService,
+                    () -> {
+                        userService.createUser(
+                                cleanEmail, cleanUser, rawPass, cleanName, Role.TEACHER,
+                                dob, gender, degree, edu, spec
+                        );
+                        authService.login(cleanEmail, rawPass);
+                        return ScreenResult.navigate(new TeacherDashboardScreen(authService));
+                    },
+                    this
+            ));
         } catch (ValidationException e) {
             errorMessage = e.getMessage();
             return ScreenResult.stay(this);

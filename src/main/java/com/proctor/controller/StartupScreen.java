@@ -2,6 +2,7 @@ package com.proctor.controller;
 
 import com.proctor.model.service.AuthService;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.MouseUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.AuthViews;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
@@ -19,6 +20,52 @@ public class StartupScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        if (MouseUtil.isWheelUp(msg)) {
+            focusedButton = (focusedButton - 1 + 3) % 3;
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isWheelDown(msg)) {
+            focusedButton = (focusedButton + 1) % 3;
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isLeftClick(msg)) {
+            if (showQuitModal) {
+                int line = MouseUtil.getLineIndex(msg);
+                int col = MouseUtil.getColInLine(msg);
+                if (line >= 17 && line <= 19) {
+                    if (col >= 0 && col < 22) {
+                        return ScreenResult.quit();
+                    } else if (col >= 26 && col < 48) {
+                        showQuitModal = false;
+                        return ScreenResult.stay(this);
+                    }
+                } else if (line < 11 || line > 21) {
+                    showQuitModal = false;
+                    return ScreenResult.stay(this);
+                }
+                return ScreenResult.stay(this);
+            }
+
+            int line = MouseUtil.getLineIndex(msg);
+            int col = MouseUtil.getColInLine(msg);
+            if (col >= 0 && col < 26) {
+                if (line >= 12 && line <= 14) {
+                    focusedButton = 0;
+                    return ScreenResult.navigate(new LoginScreen(authService));
+                } else if (line >= 16 && line <= 18) {
+                    focusedButton = 1;
+                    return ScreenResult.navigate(new RegisterRoleScreen(authService));
+                } else if (line >= 20 && line <= 22) {
+                    focusedButton = 2;
+                    showQuitModal = true;
+                    quitConfirmFocused = false;
+                    return ScreenResult.stay(this);
+                }
+            }
+            return ScreenResult.stay(this);
+        }
         if (msg instanceof KeyPressMessage k) {
             if (showQuitModal) {
                 if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {

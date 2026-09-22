@@ -99,6 +99,15 @@ public class SchemaInitializer {
                 stmt.execute("DROP TABLE IF EXISTS user_subjects CASCADE;");
 
                 stmt.execute("ALTER TABLE quizzes DROP COLUMN IF EXISTS max_attempts;");
+
+                stmt.execute("CREATE TABLE IF NOT EXISTS email_verification_tokens (" +
+                        "id SERIAL PRIMARY KEY, " +
+                        "email VARCHAR(150) NOT NULL, " +
+                        "code VARCHAR(10) NOT NULL, " +
+                        "purpose VARCHAR(30) NOT NULL, " +
+                        "expires_at TIMESTAMP NOT NULL, " +
+                        "used BOOLEAN NOT NULL DEFAULT FALSE, " +
+                        "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP);");
             }
         } catch (Exception e) {
             System.err.println("Database schema initialization error: " + e.getMessage());

@@ -118,9 +118,6 @@ public class InboxDetailScreen implements Screen {
             } else if (message.getType() == InboxMessageType.EXAM_RETAKE) {
                 inboxService.approveExamRetake(message.getId());
                 message.setStatus(InboxStatus.APPROVED);
-            } else if (message.getType() == InboxMessageType.PASSWORD_RESET) {
-                inboxService.approvePasswordReset(message.getId());
-                message.setStatus(InboxStatus.RESOLVED);
             } else {
                 inboxService.updateStatus(message.getId(), InboxStatus.APPROVED);
                 if (message.getSenderId() != null) {

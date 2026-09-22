@@ -8,6 +8,7 @@ import com.proctor.model.entity.SpeedQuizSession;
 import com.proctor.model.service.AuthService;
 import com.proctor.model.service.ExamService;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.MouseUtil;
 import com.proctor.view.SpeedQuizViews;
 import com.williamcallahan.tui4j.compat.bubbletea.Command;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
@@ -123,6 +124,61 @@ public class SpeedQuizTakerScreen implements Screen {
                 int curGen = tickGeneration;
                 return ScreenResult.stay(this, () -> tick(curGen));
             }
+        }
+
+        if (MouseUtil.isWheelUp(msg)) {
+            if (state == State.ANSWERING) {
+                Question q = session.getCurrentQuestion();
+                if (q != null && q.getOptions() != null && !q.getOptions().isEmpty()) {
+                    int optCount = q.getOptions().size();
+                    focusedOptionIndex = (focusedOptionIndex - 1 + optCount) % optCount;
+                }
+            }
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isWheelDown(msg)) {
+            if (state == State.ANSWERING) {
+                Question q = session.getCurrentQuestion();
+                if (q != null && q.getOptions() != null && !q.getOptions().isEmpty()) {
+                    int optCount = q.getOptions().size();
+                    focusedOptionIndex = (focusedOptionIndex + 1) % optCount;
+                }
+            }
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isLeftClick(msg)) {
+            if (confirmForfeitMode) {
+                int line = MouseUtil.getLineIndex(msg);
+                int col = MouseUtil.getColInLine(msg);
+                if (line >= 17 && line <= 19) {
+                    if (col >= 0 && col < 22) {
+                        return finishAndSubmit();
+                    } else if (col >= 26 && col < 48) {
+                        confirmForfeitMode = false;
+                        return ScreenResult.stay(this);
+                    }
+                } else if (line < 11 || line > 21) {
+                    confirmForfeitMode = false;
+                    return ScreenResult.stay(this);
+                }
+                return ScreenResult.stay(this);
+            }
+
+            if (state == State.ANSWERING) {
+                Question q = session.getCurrentQuestion();
+                if (q != null && q.getOptions() != null) {
+                    int line = MouseUtil.getLineIndex(msg);
+                    int optIdx = (line - 15) / 2;
+                    if (line >= 15 && optIdx >= 0 && optIdx < q.getOptions().size()) {
+                        focusedOptionIndex = optIdx;
+                        QuestionOption opt = q.getOptions().get(optIdx);
+                        return lockInOption(q, opt.getId());
+                    }
+                }
+            }
+            return ScreenResult.stay(this);
         }
 
         if (msg instanceof KeyPressMessage k) {

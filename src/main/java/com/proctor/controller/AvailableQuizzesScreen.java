@@ -15,6 +15,7 @@ import com.proctor.model.service.InboxService;
 import com.proctor.model.entity.Quiz;
 import com.proctor.model.entity.Result;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.MouseUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.ExamViews;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
@@ -148,6 +149,62 @@ public class AvailableQuizzesScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        if (MouseUtil.isWheelUp(msg)) {
+            if (!quizzes.isEmpty() && selectedIndex > 0) {
+                selectedIndex--;
+            }
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isWheelDown(msg)) {
+            if (!quizzes.isEmpty() && selectedIndex < quizzes.size() - 1) {
+                selectedIndex++;
+            }
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isLeftClick(msg)) {
+            int line = MouseUtil.getLineIndex(msg);
+            int col = MouseUtil.getColInLine(msg);
+
+            boolean hasSearchLine = searchMode || !searchBuffer.isEmpty();
+            int headerLine = hasSearchLine ? 15 : 13;
+            int itemsStartLine = headerLine + 3;
+
+            int pageSize = TuiHelper.PAGE_SIZE;
+            int totalPages = Math.max(1, (int) Math.ceil((double) quizzes.size() / pageSize));
+            int currentPage = selectedIndex / pageSize;
+            int startRow = currentPage * pageSize;
+            int endRow = Math.min(quizzes.size(), startRow + pageSize);
+            int displayedRows = endRow - startRow;
+
+            if (line >= itemsStartLine && line < itemsStartLine + displayedRows * 2) {
+                int clickedOffset = (line - itemsStartLine) / 2;
+                int targetIdx = startRow + clickedOffset;
+                if (targetIdx < quizzes.size()) {
+                    if (selectedIndex == targetIdx) {
+                        Quiz q = quizzes.get(selectedIndex);
+                        return ScreenResult.navigate(new AssessmentOverviewScreen(q, examService, authService, inboxService, this));
+                    } else {
+                        selectedIndex = targetIdx;
+                    }
+                }
+                return ScreenResult.stay(this);
+            }
+
+            int paginationLine = itemsStartLine + displayedRows * 2 + 2;
+            if (line == paginationLine && !quizzes.isEmpty()) {
+                if (col < 20 && currentPage > 0) {
+                    selectedIndex = (currentPage - 1) * pageSize;
+                } else if (col > 35 && currentPage < totalPages - 1) {
+                    selectedIndex = Math.min(quizzes.size() - 1, (currentPage + 1) * pageSize);
+                }
+                return ScreenResult.stay(this);
+            }
+
+            return ScreenResult.stay(this);
+        }
+
         if (msg instanceof KeyPressMessage k) {
             if (subjectFilter != null && subjectFilter.isActive()) {
                 boolean handled = subjectFilter.handleKey(k);

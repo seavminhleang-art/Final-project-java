@@ -33,8 +33,7 @@ public class InboxMessage {
     public boolean isActionable() {
         return status == InboxStatus.PENDING &&
                 (type == InboxMessageType.QUIZ_RETAKE ||
-                 type == InboxMessageType.EXAM_RETAKE ||
-                 type == InboxMessageType.PASSWORD_RESET);
+                 type == InboxMessageType.EXAM_RETAKE);
     }
 
     public String getEffectivePasswordHash() {

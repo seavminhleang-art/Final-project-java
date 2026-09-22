@@ -7,13 +7,13 @@ import com.proctor.exception.ValidationException;
 import com.proctor.model.repository.AttemptRepository;
 import com.proctor.model.entity.Attempt;
 import com.proctor.model.entity.InboxMessage;
+import com.proctor.model.entity.Quiz;
 import com.proctor.model.entity.Result;
 import com.proctor.model.enums.InboxMessageType;
 import com.proctor.model.enums.InboxStatus;
 import com.proctor.model.repository.InboxRepository;
 import com.proctor.model.repository.QuizRepository;
 import com.proctor.model.repository.ResultRepository;
-import com.proctor.util.PasswordUtils;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -27,25 +27,31 @@ public class InboxService {
     private final AttemptRepository attemptRepository;
     private final ResultRepository resultRepository;
     private final QuizRepository quizRepository;
+    private final EmailService emailService;
 
     public InboxService(InboxRepository inboxRepository, UserRepository userRepository) {
-        this(inboxRepository, userRepository, new AttemptRepository(), new ResultRepository(), new QuizRepository());
+        this(inboxRepository, userRepository, new AttemptRepository(), new ResultRepository(), new QuizRepository(), new EmailService());
     }
 
     public InboxService(InboxRepository inboxRepository, UserRepository userRepository, AttemptRepository attemptRepository) {
-        this(inboxRepository, userRepository, attemptRepository, new ResultRepository(), new QuizRepository());
+        this(inboxRepository, userRepository, attemptRepository, new ResultRepository(), new QuizRepository(), new EmailService());
     }
 
     public InboxService(InboxRepository inboxRepository, UserRepository userRepository, AttemptRepository attemptRepository, ResultRepository resultRepository) {
-        this(inboxRepository, userRepository, attemptRepository, resultRepository, new QuizRepository());
+        this(inboxRepository, userRepository, attemptRepository, resultRepository, new QuizRepository(), new EmailService());
     }
 
     public InboxService(InboxRepository inboxRepository, UserRepository userRepository, AttemptRepository attemptRepository, ResultRepository resultRepository, QuizRepository quizRepository) {
+        this(inboxRepository, userRepository, attemptRepository, resultRepository, quizRepository, new EmailService());
+    }
+
+    public InboxService(InboxRepository inboxRepository, UserRepository userRepository, AttemptRepository attemptRepository, ResultRepository resultRepository, QuizRepository quizRepository, EmailService emailService) {
         this.inboxRepository = inboxRepository;
         this.userRepository = userRepository;
         this.attemptRepository = attemptRepository;
         this.resultRepository = resultRepository;
         this.quizRepository = quizRepository;
+        this.emailService = emailService != null ? emailService : new EmailService();
     }
 
     public List<InboxMessage> getInbox(int userId) {
@@ -176,85 +182,6 @@ public class InboxService {
         return msg;
     }
 
-    public int sendPasswordResetRequest(String identifier, String newPassword) {
-        if (identifier == null || identifier.trim().isBlank()) {
-            throw new ValidationException("Email or username is required.");
-        }
-        if (newPassword == null || newPassword.isBlank()) {
-            throw new ValidationException("New password is required.");
-        }
-
-        Optional<User> userOpt = userRepository.findByEmailOrUsername(identifier.trim());
-        if (userOpt.isEmpty()) {
-            throw new ValidationException("No account found matching '" + identifier.trim() + "'.");
-        }
-
-        User requester = userOpt.get();
-        if (requester.getRole() == Role.ADMIN || SeedService.ADMIN_USERNAME.equalsIgnoreCase(requester.getUsername())) {
-            throw new ValidationException("The administrator account is hardcoded and cannot be reset.");
-        }
-
-        if (inboxRepository.hasPendingRequest(requester.getId(), InboxMessageType.PASSWORD_RESET, requester.getId())) {
-            throw new ValidationException("You already have a pending password reset request.");
-        }
-
-        PasswordUtils.validatePassword(newPassword);
-        String hash = PasswordUtils.hash(newPassword.trim());
-
-        List<User> admins = userRepository.findAll(null, Role.ADMIN);
-        if (admins.isEmpty()) {
-            throw new ValidationException("No administrator found to receive the password reset request.");
-        }
-
-        int sent = 0;
-        for (User admin : admins) {
-            String bodyText = String.format("User @%s (%s, %s) has forgotten their password and provided their desired new password.\n[HASH:%s]",
-                    requester.getUsername(), requester.getFullName(), requester.getEmail(), hash);
-
-            InboxMessage msg = InboxMessage.builder()
-                    .senderId(requester.getId())
-                    .recipientId(admin.getId())
-                    .type(InboxMessageType.PASSWORD_RESET)
-                    .title("Password Reset Request: @" + requester.getUsername())
-                    .body(bodyText)
-                    .targetId(requester.getId())
-                    .proposedPasswordHash(hash)
-                    .status(InboxStatus.PENDING)
-                    .read(false)
-                    .createdAt(new Timestamp(System.currentTimeMillis()))
-                    .build();
-
-            if (inboxRepository.create(msg)) {
-                sent++;
-            }
-        }
-        return sent;
-    }
-
-    public boolean approvePasswordReset(int messageId) {
-        Optional<InboxMessage> opt = inboxRepository.findById(messageId);
-        if (opt.isEmpty()) return false;
-        InboxMessage msg = opt.get();
-        if (msg.getStatus() != InboxStatus.PENDING) {
-            throw new ValidationException("This request has already been processed (status: " + msg.getStatus() + ").");
-        }
-        if (msg.getTargetId() == null) return false;
-
-        String hash = msg.getEffectivePasswordHash();
-        if (hash == null) return false;
-
-        boolean pwdUpdated = userRepository.updatePassword(msg.getTargetId(), hash);
-        if (!pwdUpdated) {
-            throw new ValidationException("Failed to update user password.");
-        }
-        boolean updated = inboxRepository.updateStatus(messageId, InboxStatus.RESOLVED, new Timestamp(System.currentTimeMillis()));
-        if (updated && msg.getSenderId() != null) {
-            sendNotification(msg.getSenderId(), "Password Reset Approved",
-                    "Your password change request has been approved by an administrator. You may now log in using the new password you specified.");
-        }
-        return updated;
-    }
-
     public boolean approveQuizRetake(int messageId) {
         Optional<InboxMessage> opt = inboxRepository.findById(messageId);
         if (opt.isEmpty()) return false;
@@ -274,6 +201,19 @@ public class InboxService {
         if (updated) {
             sendNotification(msg.getSenderId(), "Quiz Retake Approved",
                     "Your teacher has approved your quiz retake request. You may now retake the quiz from Quizzes.");
+            if (emailService != null) {
+                userRepository.findById(msg.getSenderId()).ifPresent(student -> {
+                    String assessmentTitle = "Quiz";
+                    if (quizRepository != null && msg.getTargetId() != null) {
+                        assessmentTitle = quizRepository.findById(msg.getTargetId())
+                                .map(Quiz::getTitle)
+                                .orElseGet(() -> msg.getTitle() != null ? msg.getTitle().replaceFirst("^Quiz Retake Request:\\s*", "") : "Quiz");
+                    } else if (msg.getTitle() != null) {
+                        assessmentTitle = msg.getTitle().replaceFirst("^Quiz Retake Request:\\s*", "");
+                    }
+                    emailService.sendRetakeDecision(student.getEmail(), student.getFullName(), assessmentTitle, true, null);
+                });
+            }
         }
         return updated;
     }
@@ -297,6 +237,19 @@ public class InboxService {
         if (updated) {
             sendNotification(msg.getSenderId(), "Exam Makeup Approved",
                     "Your teacher has approved your exam makeup request. You may now take the exam from Exams.");
+            if (emailService != null) {
+                userRepository.findById(msg.getSenderId()).ifPresent(student -> {
+                    String assessmentTitle = "Exam";
+                    if (quizRepository != null && msg.getTargetId() != null) {
+                        assessmentTitle = quizRepository.findById(msg.getTargetId())
+                                .map(Quiz::getTitle)
+                                .orElseGet(() -> msg.getTitle() != null ? msg.getTitle().replaceFirst("^Exam Makeup Request:\\s*", "") : "Exam");
+                    } else if (msg.getTitle() != null) {
+                        assessmentTitle = msg.getTitle().replaceFirst("^Exam Makeup Request:\\s*", "");
+                    }
+                    emailService.sendRetakeDecision(student.getEmail(), student.getFullName(), assessmentTitle, true, null);
+                });
+            }
         }
         return updated;
     }
@@ -315,6 +268,21 @@ public class InboxService {
             String note = (responseNote != null && !responseNote.isBlank()) ? "\nNote: " + responseNote.trim() : "";
             sendNotification(msg.getSenderId(), "Request Rejected: " + msg.getTitle(),
                     "Your request was reviewed and rejected by the teacher/administrator." + note);
+            if (emailService != null && (msg.getType() == InboxMessageType.QUIZ_RETAKE || msg.getType() == InboxMessageType.EXAM_RETAKE)) {
+                userRepository.findById(msg.getSenderId()).ifPresent(student -> {
+                    String assessmentTitle = "Assessment";
+                    if (quizRepository != null && msg.getTargetId() != null) {
+                        assessmentTitle = quizRepository.findById(msg.getTargetId())
+                                .map(Quiz::getTitle)
+                                .orElseGet(() -> msg.getTitle() != null 
+                                        ? msg.getTitle().replaceFirst("^(Quiz Retake Request|Exam Makeup Request):\\s*", "") 
+                                        : "Assessment");
+                    } else if (msg.getTitle() != null) {
+                        assessmentTitle = msg.getTitle().replaceFirst("^(Quiz Retake Request|Exam Makeup Request):\\s*", "");
+                    }
+                    emailService.sendRetakeDecision(student.getEmail(), student.getFullName(), assessmentTitle, false, responseNote);
+                });
+            }
         }
         return updated;
     }

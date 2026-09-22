@@ -35,7 +35,11 @@ public class Main {
             AuthService authService = new AuthService(userRepository);
 
             StartupScreen startupScreen = new StartupScreen(authService);
-            new Program(new AppModel(startupScreen)).withAltScreen().run();
+            new Program(new AppModel(startupScreen))
+                    .withAltScreen()
+                    .withMouseAllMotion()
+                    .withMouseTargetCursor()
+                    .run();
         } catch (Throwable t) {
             System.setErr(originalErr);
             System.out.println("\n\u001B[1;31m[PROCTOR ERROR] Application error:\u001B[0m");

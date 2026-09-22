@@ -26,6 +26,8 @@ dependencies {
 
     implementation 'net.sf.jasperreports:jasperreports:6.21.3'
 
+    implementation 'com.sun.mail:jakarta.mail:2.0.1'
+
     implementation 'org.slf4j:slf4j-simple:2.0.13'
 
     compileOnly 'org.projectlombok:lombok:1.18.34'

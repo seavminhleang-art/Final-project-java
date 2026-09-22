@@ -8,6 +8,7 @@ import com.proctor.model.entity.Question;
 import com.proctor.model.entity.QuestionOption;
 import com.proctor.model.entity.Result;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.MouseUtil;
 import com.proctor.view.ExamViews;
 import com.williamcallahan.tui4j.compat.bubbletea.Command;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
@@ -88,10 +89,12 @@ public class ExamTakerScreen implements Screen {
 
         if (q.getQuestionType() == QuestionType.SHORT_ANSWER) {
             session.getTextAnswers().put(q.getId(), shortAnswerBuffer.toString());
-            examService.recordAnswer(session.getAttempt().getId(), q.getId(), null, shortAnswerBuffer.toString());
+            if (session.getAttempt() != null && session.getAttempt().getId() != null) {
+                examService.recordAnswer(session.getAttempt().getId(), q.getId(), null, shortAnswerBuffer.toString());
+            }
         } else {
             Integer selectedOptId = session.getSelectedOptions().get(q.getId());
-            if (selectedOptId != null) {
+            if (selectedOptId != null && session.getAttempt() != null && session.getAttempt().getId() != null) {
                 examService.recordAnswer(session.getAttempt().getId(), q.getId(), selectedOptId, null);
             }
         }
@@ -119,6 +122,62 @@ public class ExamTakerScreen implements Screen {
                 int nextGen = tickGeneration;
                 return ScreenResult.stay(this, () -> tick(nextGen));
             }
+        }
+
+        if (MouseUtil.isWheelUp(msg)) {
+            if (!confirmSubmitMode && currentQuestionIndex > 0) {
+                saveCurrentAnswer();
+                currentQuestionIndex--;
+                loadCurrentQuestionState();
+            }
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isWheelDown(msg)) {
+            if (!confirmSubmitMode && currentQuestionIndex < session.getQuestions().size() - 1) {
+                saveCurrentAnswer();
+                currentQuestionIndex++;
+                loadCurrentQuestionState();
+            }
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isLeftClick(msg)) {
+            if (confirmSubmitMode) {
+                int line = MouseUtil.getLineIndex(msg);
+                int col = MouseUtil.getColInLine(msg);
+                if (line >= 17 && line <= 19) {
+                    if (col >= 0 && col < 22) {
+                        isSubmitted = true;
+                        saveCurrentAnswer();
+                        Result result = examService.submitExam(session, false);
+                        return ScreenResult.navigate(new ExamResultScreen(result, session, examService, authService));
+                    } else if (col >= 26 && col < 48) {
+                        confirmSubmitMode = false;
+                        return ScreenResult.stay(this);
+                    }
+                } else if (line < 11 || line > 21) {
+                    confirmSubmitMode = false;
+                    return ScreenResult.stay(this);
+                }
+                return ScreenResult.stay(this);
+            }
+
+            if (!session.getQuestions().isEmpty()) {
+                Question q = session.getQuestions().get(currentQuestionIndex);
+                if (q.getQuestionType() != QuestionType.SHORT_ANSWER && q.getOptions() != null) {
+                    int line = MouseUtil.getLineIndex(msg);
+                    int optIdx = (line - 13) / 2;
+                    if (line >= 13 && optIdx >= 0 && optIdx < q.getOptions().size()) {
+                        focusedOptionIndex = optIdx;
+                        QuestionOption opt = q.getOptions().get(optIdx);
+                        session.getSelectedOptions().put(q.getId(), opt.getId());
+                        saveCurrentAnswer();
+                        return ScreenResult.stay(this);
+                    }
+                }
+            }
+            return ScreenResult.stay(this);
         }
 
         if (msg instanceof KeyPressMessage k) {

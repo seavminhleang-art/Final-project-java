@@ -7,11 +7,6 @@ import com.williamcallahan.tui4j.compat.bubbletea.input.key.KeyType;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Manages inline subject filtering and typeahead search across list headers and form screens.
- *
- * @param <T> The underlying item type (e.g. Subject or String code)
- */
 public final class InlineSubjectFilter<T> {
 
     public static class Item<T> {

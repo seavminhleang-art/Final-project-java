@@ -2,7 +2,11 @@ package com.proctor.util;
 
 import com.proctor.model.entity.Session;
 import com.proctor.model.entity.User;
+import com.williamcallahan.tui4j.input.MouseBounds;
+import com.williamcallahan.tui4j.input.MouseCursor;
+import com.williamcallahan.tui4j.input.MouseTarget;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class TuiHelper {
@@ -221,6 +225,8 @@ public class TuiHelper {
 
     public static final String BOX_TITLE_MARKER = "\u001B[8888m";
     public static final String CENTER_MARKER = "\u001B[8889m";
+    public static final String BUTTON_MARKER = "\u001B[8890m";
+    public static final String INPUT_MARKER = "\u001B[8891m";
 
     public static String centerText(String text) {
         if (text == null || text.isBlank()) {
@@ -358,14 +364,14 @@ public class TuiHelper {
         String pageInfo = bold(String.format("Page %d of %d", currentPage + 1, totalPages));
         String countInfo = dim(String.format("(%d %s)", totalItems, totalItems == 1 ? "item" : "items"));
 
-        return String.format("  %s   %s  %s   %s%n%n", prevLabel, pageInfo, countInfo, nextLabel);
+        return String.format("  " + BUTTON_MARKER + "%s   %s  %s   %s%n%n", prevLabel, pageInfo, countInfo, nextLabel);
     }
 
     public static String tabBar(String[] tabs, int activeIndex) {
         if (tabs == null || tabs.length == 0) {
             return "";
         }
-        StringBuilder sb = new StringBuilder("  Tabs:  ");
+        StringBuilder sb = new StringBuilder("  " + BUTTON_MARKER + "Tabs:  ");
         for (int i = 0; i < tabs.length; i++) {
             if (i == activeIndex) {
                 sb.append(cyan(bold("[ ● " + tabs[i] + " ]")));
@@ -426,13 +432,13 @@ public class TuiHelper {
             }
         }
 
-        sb.append("  ").append(labelCol).append(CLEAR_EOL).append("\n");
-        sb.append("  ").append(borderCol).append("┌").append("─".repeat(width - 2)).append("┐").append(RESET).append(CLEAR_EOL).append("\n");
+        sb.append("  ").append(INPUT_MARKER).append(labelCol).append(CLEAR_EOL).append("\n");
+        sb.append("  ").append(INPUT_MARKER).append(borderCol).append("┌").append("─".repeat(width - 2)).append("┐").append(RESET).append(CLEAR_EOL).append("\n");
 
         String lineContent = " " + displayVal + " ";
 
-        sb.append("  ").append(borderCol).append("│").append(RESET).append(lineContent).append(borderCol).append("│").append(RESET).append(CLEAR_EOL).append("\n");
-        sb.append("  ").append(borderCol).append("└").append("─".repeat(width - 2)).append("┘").append(RESET).append(CLEAR_EOL).append("\n");
+        sb.append("  ").append(INPUT_MARKER).append(borderCol).append("│").append(RESET).append(lineContent).append(borderCol).append("│").append(RESET).append(CLEAR_EOL).append("\n");
+        sb.append("  ").append(INPUT_MARKER).append(borderCol).append("└").append("─".repeat(width - 2)).append("┘").append(RESET).append(CLEAR_EOL).append("\n");
         return sb.toString();
     }
 
@@ -445,10 +451,10 @@ public class TuiHelper {
         String rawLenText = focused ? ("< " + value + " >" + (helpText != null ? " (" + helpText + ")" : "")) : (value != null ? value : "");
         int padLen = Math.max(0, (width - 4) - rawLenText.length());
 
-        sb.append("  ").append(labelCol).append(CLEAR_EOL).append("\n");
-        sb.append("  ").append(borderCol).append("┌").append("─".repeat(width - 2)).append("┐").append(RESET).append(CLEAR_EOL).append("\n");
-        sb.append("  ").append(borderCol).append("│").append(RESET).append(" ").append(valDisplay).append(" ".repeat(padLen)).append(" ").append(borderCol).append("│").append(RESET).append(CLEAR_EOL).append("\n");
-        sb.append("  ").append(borderCol).append("└").append("─".repeat(width - 2)).append("┘").append(RESET).append(CLEAR_EOL).append("\n");
+        sb.append("  ").append(INPUT_MARKER).append(labelCol).append(CLEAR_EOL).append("\n");
+        sb.append("  ").append(INPUT_MARKER).append(borderCol).append("┌").append("─".repeat(width - 2)).append("┐").append(RESET).append(CLEAR_EOL).append("\n");
+        sb.append("  ").append(INPUT_MARKER).append(borderCol).append("│").append(RESET).append(" ").append(valDisplay).append(" ".repeat(padLen)).append(" ").append(borderCol).append("│").append(RESET).append(CLEAR_EOL).append("\n");
+        sb.append("  ").append(INPUT_MARKER).append(borderCol).append("└").append("─".repeat(width - 2)).append("┘").append(RESET).append(CLEAR_EOL).append("\n");
         return sb.toString();
     }
 
@@ -465,13 +471,13 @@ public class TuiHelper {
         String bot;
 
         if (focused) {
-            top = col + "┌" + "─".repeat(innerW) + "┐" + RESET;
-            mid = col + "│" + RESET + " ".repeat(padLeft) + bold(col + text) + " ".repeat(padRight) + col + "│" + RESET;
-            bot = col + "└" + "─".repeat(innerW) + "┘" + RESET;
+            top = BUTTON_MARKER + col + "┌" + "─".repeat(innerW) + "┐" + RESET;
+            mid = BUTTON_MARKER + col + "│" + RESET + " ".repeat(padLeft) + bold(col + text) + " ".repeat(padRight) + col + "│" + RESET;
+            bot = BUTTON_MARKER + col + "└" + "─".repeat(innerW) + "┘" + RESET;
         } else {
-            top = dim("┌" + "─".repeat(innerW) + "┐");
-            mid = dim("│") + " ".repeat(padLeft) + dim(text) + " ".repeat(padRight) + dim("│");
-            bot = dim("└" + "─".repeat(innerW) + "┘");
+            top = BUTTON_MARKER + dim("┌" + "─".repeat(innerW) + "┐");
+            mid = BUTTON_MARKER + dim("│") + " ".repeat(padLeft) + dim(text) + " ".repeat(padRight) + dim("│");
+            bot = BUTTON_MARKER + dim("└" + "─".repeat(innerW) + "┘");
         }
         return new String[]{top, mid, bot};
     }
@@ -1008,14 +1014,22 @@ private static String stripAnsi(String str) {
 
         StringBuilder sb = new StringBuilder();
 
+        int maxRows = Math.max(termHeight + 30, 256);
+        int[] lineAtRow = new int[maxRows];
+        int[] colOffsetAtRow = new int[maxRows];
+        java.util.Arrays.fill(lineAtRow, -1);
+        int currentRow = 0;
+
         for (int r = 0; r < topMarginOutside; r++) {
             sb.append(" ".repeat(termWidth)).append(CLEAR_EOL).append("\n");
+            currentRow++;
         }
 
         sb.append(indent)
           .append(borderCol).append("┏").append("━".repeat(outerInnerWidth)).append("┓").append(RESET)
           .append(rightMargin)
           .append(CLEAR_EOL).append("\n");
+        currentRow++;
 
         int asciiLift = (!headerLines.isEmpty() && topPadInside >= 4) ? 2 : 0;
 
@@ -1026,6 +1040,7 @@ private static String stripAnsi(String str) {
               .append(borderCol).append("┃").append(RESET)
               .append(rightMargin)
               .append(CLEAR_EOL).append("\n");
+            currentRow++;
         }
 
         if (!headerLines.isEmpty()) {
@@ -1042,6 +1057,7 @@ private static String stripAnsi(String str) {
                   .append(borderCol).append("┃").append(RESET)
                   .append(rightMargin)
                   .append(CLEAR_EOL).append("\n");
+                currentRow++;
             }
             if (bodyRows > 0 || hintRows > 0) {
                 for (int g = 0; g < 1 + asciiLift; g++) {
@@ -1051,9 +1067,12 @@ private static String stripAnsi(String str) {
                       .append(borderCol).append("┃").append(RESET)
                       .append(rightMargin)
                       .append(CLEAR_EOL).append("\n");
+                    currentRow++;
                 }
             }
         }
+
+        List<MouseTarget> mouseTargets = new ArrayList<>();
 
         if (bodyRows > 0) {
             sb.append(indent)
@@ -1064,37 +1083,69 @@ private static String stripAnsi(String str) {
               .append(borderCol).append("┃").append(RESET)
               .append(rightMargin)
               .append(CLEAR_EOL).append("\n");
+            currentRow++;
 
             boolean hasBoxTitleAtTop = rawLines[startBody].contains(BOX_TITLE_MARKER);
             if (hasBoxTitleAtTop) {
                 appendCardEmptyRow(sb, indent, borderCol, contentLeftPad, targetInnerWidth, contentRightPad, rightMargin);
+                currentRow++;
 
                 String titleClean = rawLines[startBody].replace(CLEAR_EOL, "");
                 String trimmedTitle = stripSpaces(titleClean.replace(BOX_TITLE_MARKER, "").replace(CENTER_MARKER, ""));
                 int titleVisLen = visibleLength(trimmedTitle);
                 int titleLeftPad = Math.max(0, (innerWidth - titleVisLen) / 2);
                 int titleRightPad = Math.max(0, innerWidth - (titleLeftPad + titleVisLen));
+                if (currentRow < maxRows) {
+                    lineAtRow[currentRow] = startBody;
+                    colOffsetAtRow[currentRow] = leftIndent + 1 + contentLeftPad + 1 + 1 + titleLeftPad;
+                }
                 appendCardContentRow(sb, indent, borderCol, contentLeftPad, titleLeftPad, trimmedTitle, titleRightPad, contentRightPad, rightMargin);
+                currentRow++;
 
                 for (int p = 0; p < extraTopPad; p++) {
                     appendCardEmptyRow(sb, indent, borderCol, contentLeftPad, targetInnerWidth, contentRightPad, rightMargin);
+                    currentRow++;
                 }
 
                 for (int i = startBody + 1; i <= endBody; i++) {
+                    int lPad = computeLineLeftPad(rawLines[i], innerWidth, contentBlockOffset);
+                    int colOffset = leftIndent + 1 + contentLeftPad + 1 + 1 + lPad;
+                    if (currentRow < maxRows) {
+                        lineAtRow[currentRow] = i;
+                        colOffsetAtRow[currentRow] = colOffset;
+                    }
+                    MouseTarget target = createMouseTarget(rawLines[i], colOffset, currentRow, innerWidth, contentBlockOffset);
+                    if (target != null) {
+                        mouseTargets.add(target);
+                    }
                     renderCardBodyLine(sb, rawLines[i], innerWidth, contentBlockOffset, indent, borderCol, contentLeftPad, contentRightPad, rightMargin);
+                    currentRow++;
                 }
             } else {
                 for (int p = 0; p < 1 + extraTopPad; p++) {
                     appendCardEmptyRow(sb, indent, borderCol, contentLeftPad, targetInnerWidth, contentRightPad, rightMargin);
+                    currentRow++;
                 }
 
                 for (int i = startBody; i <= endBody; i++) {
+                    int lPad = computeLineLeftPad(rawLines[i], innerWidth, contentBlockOffset);
+                    int colOffset = leftIndent + 1 + contentLeftPad + 1 + 1 + lPad;
+                    if (currentRow < maxRows) {
+                        lineAtRow[currentRow] = i;
+                        colOffsetAtRow[currentRow] = colOffset;
+                    }
+                    MouseTarget target = createMouseTarget(rawLines[i], colOffset, currentRow, innerWidth, contentBlockOffset);
+                    if (target != null) {
+                        mouseTargets.add(target);
+                    }
                     renderCardBodyLine(sb, rawLines[i], innerWidth, contentBlockOffset, indent, borderCol, contentLeftPad, contentRightPad, rightMargin);
+                    currentRow++;
                 }
             }
 
             for (int p = 0; p < 1 + extraBotPad; p++) {
                 appendCardEmptyRow(sb, indent, borderCol, contentLeftPad, targetInnerWidth, contentRightPad, rightMargin);
+                currentRow++;
             }
 
             sb.append(indent)
@@ -1105,6 +1156,7 @@ private static String stripAnsi(String str) {
               .append(borderCol).append("┃").append(RESET)
               .append(rightMargin)
               .append(CLEAR_EOL);
+            currentRow++;
 
             if (hintRows > 0) {
                 sb.append("\n")
@@ -1114,6 +1166,7 @@ private static String stripAnsi(String str) {
                   .append(borderCol).append("┃").append(RESET)
                   .append(rightMargin)
                   .append(CLEAR_EOL).append("\n");
+                currentRow++;
             }
         }
 
@@ -1126,15 +1179,21 @@ private static String stripAnsi(String str) {
               .append(borderCol).append("┃").append(RESET)
               .append(rightMargin)
               .append(CLEAR_EOL).append("\n");
+            currentRow++;
 
             for (int idx : hintIndices) {
-                String cleanLine = rawLines[idx].replace(CLEAR_EOL, "");
+                String cleanLine = rawLines[idx].replace(CLEAR_EOL, "").replace(BUTTON_MARKER, "").replace(INPUT_MARKER, "");
                 String trimmedClean = stripSpaces(cleanLine.replace(BOX_TITLE_MARKER, "").replace(CENTER_MARKER, ""));
                 int trimmedVisLen = visibleLength(trimmedClean);
                 int leftPad = Math.max(0, (innerWidth - trimmedVisLen) / 2);
                 int rightPad = Math.max(0, innerWidth - (leftPad + trimmedVisLen));
 
+                if (currentRow < maxRows) {
+                    lineAtRow[currentRow] = idx;
+                    colOffsetAtRow[currentRow] = leftIndent + 1 + contentLeftPad + 1 + 1 + leftPad;
+                }
                 appendCardContentRow(sb, indent, borderCol, contentLeftPad, leftPad, trimmedClean, rightPad, contentRightPad, rightMargin);
+                currentRow++;
             }
 
             sb.append(indent)
@@ -1145,6 +1204,7 @@ private static String stripAnsi(String str) {
               .append(borderCol).append("┃").append(RESET)
               .append(rightMargin)
               .append(CLEAR_EOL);
+            currentRow++;
         }
 
         for (int p = 0; p < botPadInside; p++) {
@@ -1155,6 +1215,7 @@ private static String stripAnsi(String str) {
               .append(borderCol).append("┃").append(RESET)
               .append(rightMargin)
               .append(CLEAR_EOL);
+            currentRow++;
         }
 
         sb.append("\n")
@@ -1162,12 +1223,87 @@ private static String stripAnsi(String str) {
           .append(borderCol).append("┗").append("━".repeat(outerInnerWidth)).append("┛").append(RESET)
           .append(rightMargin)
           .append(CLEAR_EOL);
+        currentRow++;
 
         for (int r = 0; r < botMarginOutside; r++) {
             sb.append("\n").append(" ".repeat(termWidth)).append(CLEAR_EOL);
+            currentRow++;
         }
 
+        currentHitMap = new LayoutHitMap(lineAtRow, colOffsetAtRow, mouseTargets);
         return sb.toString();
+    }
+
+    public static class LayoutHitMap {
+        private final int[] lineAtRow;
+        private final int[] colOffsetAtRow;
+        private final List<MouseTarget> mouseTargets;
+
+        public LayoutHitMap(int[] lineAtRow, int[] colOffsetAtRow) {
+            this(lineAtRow, colOffsetAtRow, List.of());
+        }
+
+        public LayoutHitMap(int[] lineAtRow, int[] colOffsetAtRow, List<MouseTarget> mouseTargets) {
+            this.lineAtRow = lineAtRow != null ? lineAtRow : new int[0];
+            this.colOffsetAtRow = colOffsetAtRow != null ? colOffsetAtRow : new int[0];
+            this.mouseTargets = mouseTargets != null ? List.copyOf(mouseTargets) : List.of();
+        }
+
+        public List<MouseTarget> getMouseTargets() {
+            return mouseTargets;
+        }
+
+        public int getLineIndex(int screenRow) {
+            if (screenRow >= 0 && screenRow < lineAtRow.length) {
+                return lineAtRow[screenRow];
+            }
+            return -1;
+        }
+
+        public int getColInLine(int screenCol, int screenRow) {
+            if (screenRow >= 0 && screenRow < colOffsetAtRow.length) {
+                return screenCol - colOffsetAtRow[screenRow];
+            }
+            return screenCol;
+        }
+
+        public int getColOffset(int screenRow) {
+            if (screenRow >= 0 && screenRow < colOffsetAtRow.length) {
+                return colOffsetAtRow[screenRow];
+            }
+            return 0;
+        }
+    }
+
+    private static volatile LayoutHitMap currentHitMap = new LayoutHitMap(new int[0], new int[0]);
+
+    public static LayoutHitMap getHitMap() {
+        return currentHitMap;
+    }
+
+    public static int computeLineLeftPad(String rawLine, int innerWidth, int contentBlockOffset) {
+        String cleanLine = rawLine.replace(CLEAR_EOL, "")
+                                  .replace(BUTTON_MARKER, "")
+                                  .replace(INPUT_MARKER, "");
+        String stripped = cleanLine.replaceAll("\u001B\\[[;?0-9]*[a-zA-Z]", "");
+
+        boolean isCentered = cleanLine.contains(BOX_TITLE_MARKER) || cleanLine.contains(CENTER_MARKER);
+        boolean isTabsRow = stripped.trim().startsWith("Tabs:") || cleanLine.contains("Tabs:");
+        boolean isButtonRow = !isTabsRow && (
+                ((stripped.contains("[ ▶ ") || stripped.contains("[   ")) && stripped.trim().endsWith("]"))
+        );
+
+        if (isCentered) {
+            String trimmedClean = stripSpaces(cleanLine.replace(BOX_TITLE_MARKER, "").replace(CENTER_MARKER, ""));
+            int trimmedVisLen = visibleLength(trimmedClean);
+            return Math.max(0, (innerWidth - trimmedVisLen) / 2);
+        } else if (isButtonRow) {
+            String trimmedClean = stripSpaces(cleanLine);
+            int trimmedVisLen = visibleLength(trimmedClean);
+            return Math.max(0, (innerWidth - trimmedVisLen) / 2);
+        } else {
+            return contentBlockOffset;
+        }
     }
 
     private static void appendCardEmptyRow(StringBuilder sb, String indent, String borderCol,
@@ -1207,7 +1343,9 @@ private static String stripAnsi(String str) {
     private static void renderCardBodyLine(StringBuilder sb, String rawLine, int innerWidth,
                                            int contentBlockOffset, String indent, String borderCol,
                                            int contentLeftPad, int contentRightPad, String rightMargin) {
-        String cleanLine = rawLine.replace(CLEAR_EOL, "");
+        String cleanLine = rawLine.replace(CLEAR_EOL, "")
+                                  .replace(BUTTON_MARKER, "")
+                                  .replace(INPUT_MARKER, "");
         int visLen = visibleLength(cleanLine);
         String stripped = cleanLine.replaceAll("\u001B\\[[;?0-9]*[a-zA-Z]", "");
 
@@ -1215,30 +1353,64 @@ private static String stripAnsi(String str) {
         boolean isTabsRow = stripped.trim().startsWith("Tabs:") || cleanLine.contains("Tabs:");
         boolean isButtonRow = !isTabsRow && (
                 ((stripped.contains("[ ▶ ") || stripped.contains("[   ")) && stripped.trim().endsWith("]"))
-                || ((stripped.contains("┌") && stripped.contains("┐"))
-                    || (stripped.contains("│") && !stripped.contains("┃") && !stripped.contains("Email") && !stripped.contains("Password") && !stripped.contains("Search:") && !stripped.contains("Page "))
-                    || (stripped.contains("└") && stripped.contains("┘")))
         );
 
-        int leftPad;
+        int leftPad = computeLineLeftPad(rawLine, innerWidth, contentBlockOffset);
         int rightPad;
-        if (isCentered) {
-            String trimmedClean = stripSpaces(cleanLine.replace(BOX_TITLE_MARKER, "").replace(CENTER_MARKER, ""));
+        if (isCentered || isButtonRow) {
+            String trimmedClean = isCentered ? stripSpaces(cleanLine.replace(BOX_TITLE_MARKER, "").replace(CENTER_MARKER, "")) : stripSpaces(cleanLine);
             int trimmedVisLen = visibleLength(trimmedClean);
-            leftPad = Math.max(0, (innerWidth - trimmedVisLen) / 2);
-            rightPad = Math.max(0, innerWidth - (leftPad + trimmedVisLen));
-            cleanLine = trimmedClean;
-        } else if (isButtonRow) {
-            String trimmedClean = stripSpaces(cleanLine);
-            int trimmedVisLen = visibleLength(trimmedClean);
-            leftPad = Math.max(0, (innerWidth - trimmedVisLen) / 2);
             rightPad = Math.max(0, innerWidth - (leftPad + trimmedVisLen));
             cleanLine = trimmedClean;
         } else {
-            leftPad = contentBlockOffset;
             rightPad = Math.max(0, innerWidth - (leftPad + visLen));
         }
 
         appendCardContentRow(sb, indent, borderCol, contentLeftPad, leftPad, cleanLine, rightPad, contentRightPad, rightMargin);
+    }
+
+    private static MouseTarget createMouseTarget(String rawLine, int colOffset, int screenRow, int innerWidth, int contentBlockOffset) {
+        if (rawLine == null || rawLine.isBlank()) {
+            return null;
+        }
+        String cleanLine = rawLine.replace(CLEAR_EOL, "")
+                                  .replace(BUTTON_MARKER, "")
+                                  .replace(INPUT_MARKER, "");
+        String stripped = cleanLine.replaceAll("\u001B\\[[;?0-9]*[a-zA-Z]", "");
+        String trimmed = stripped.trim();
+        if (trimmed.isEmpty()) {
+            return null;
+        }
+
+        boolean isInput = rawLine.contains(INPUT_MARKER)
+                || stripped.contains("Search: [")
+                || stripped.contains("DD - MM - YYYY");
+
+        if (isInput) {
+            int w = Math.max(10, visibleLength(stripped));
+            return new MouseTarget("in-" + screenRow, new MouseBounds(colOffset, screenRow, w, 1), 1, MouseCursor.TEXT, null);
+        }
+
+        boolean isTabsRow = trimmed.startsWith("Tabs:") || cleanLine.contains("Tabs:");
+        boolean isLegacyButtonRow = !isTabsRow && ((stripped.contains("[ ▶ ") || stripped.contains("[   ")) && trimmed.endsWith("]"));
+
+        boolean isButton = rawLine.contains(BUTTON_MARKER)
+                || isLegacyButtonRow
+                || isTabsRow
+                || stripped.contains("[←]") || stripped.contains("[→]")
+                || trimmed.startsWith("Tabs:")
+                || stripped.contains("(•) ") || stripped.contains("( ) ")
+                || ((trimmed.startsWith("1.") || trimmed.startsWith("2.") || trimmed.startsWith("3.") || trimmed.startsWith("4.")
+                     || trimmed.startsWith("5.") || trimmed.startsWith("6.") || trimmed.startsWith("7.") || trimmed.startsWith("8.")
+                     || trimmed.startsWith("9.")) && trimmed.length() > 3)
+                || trimmed.startsWith("[A]") || trimmed.startsWith("[B]") || trimmed.startsWith("[C]") || trimmed.startsWith("[D]");
+
+        if (isButton) {
+            boolean isCenteredRow = cleanLine.contains(BOX_TITLE_MARKER) || cleanLine.contains(CENTER_MARKER);
+            int w = Math.max(8, isCenteredRow ? visibleLength(stripSpaces(stripped)) : visibleLength(stripped));
+            return new MouseTarget("btn-" + screenRow, new MouseBounds(colOffset, screenRow, w, 1), 1, MouseCursor.POINTER, null);
+        }
+
+        return null;
     }
 }

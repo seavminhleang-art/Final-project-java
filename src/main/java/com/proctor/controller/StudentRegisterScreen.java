@@ -5,7 +5,9 @@ import com.proctor.model.service.AuthService;
 import com.proctor.model.enums.Role;
 import com.proctor.exception.ValidationException;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.MouseUtil;
 import com.proctor.view.AuthViews;
+import com.proctor.model.service.EmailVerificationService;
 import com.proctor.model.service.UserService;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
 import com.williamcallahan.tui4j.compat.bubbletea.Message;
@@ -17,6 +19,7 @@ import java.time.LocalDate;
 public class StudentRegisterScreen implements Screen {
     private final AuthService authService;
     private final UserService userService;
+    private final EmailVerificationService verificationService;
 
     private final StringBuilder fullName = new StringBuilder();
     private String selectedGender = "Male";
@@ -30,8 +33,13 @@ public class StudentRegisterScreen implements Screen {
     private String errorMessage = "";
 
     public StudentRegisterScreen(AuthService authService, UserService userService) {
+        this(authService, userService, new EmailVerificationService());
+    }
+
+    public StudentRegisterScreen(AuthService authService, UserService userService, EmailVerificationService verificationService) {
         this.authService = authService;
         this.userService = userService;
+        this.verificationService = verificationService != null ? verificationService : new EmailVerificationService();
     }
 
     private int getFieldCount() {
@@ -40,6 +48,44 @@ public class StudentRegisterScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        if (MouseUtil.isWheelUp(msg)) {
+            focusedField = (focusedField - 1 + getFieldCount()) % getFieldCount();
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isWheelDown(msg)) {
+            focusedField = (focusedField + 1) % getFieldCount();
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isLeftClick(msg)) {
+            int line = MouseUtil.getLineIndex(msg);
+            int col = MouseUtil.getColInLine(msg);
+            if (line >= 11 && line <= 44) {
+                int offset = line - 11;
+                int f = offset / 5;
+                int mod = offset % 5;
+                if (mod <= 3 && f >= 0 && f <= 6) {
+                    if (f == 1 && focusedField == 1) {
+                        cycleGender(true);
+                    } else {
+                        focusedField = f;
+                    }
+                    return ScreenResult.stay(this);
+                }
+            } else if (line >= 47 && line <= 49) {
+                int btn = MouseUtil.getClickedButtonIndex(col, 106, "Register", "Back");
+                if (btn == 0) {
+                    focusedField = 7;
+                    return attemptRegister();
+                } else if (btn == 1) {
+                    focusedField = 8;
+                    return ScreenResult.navigate(new RegisterRoleScreen(authService));
+                }
+            }
+            return ScreenResult.stay(this);
+        }
+
         if (msg instanceof KeyPressMessage k) {
             if (KeyUtil.isEsc(k)) {
                 return ScreenResult.navigate(new RegisterRoleScreen(authService));
@@ -168,11 +214,29 @@ public class StudentRegisterScreen implements Screen {
 
             LocalDate dob = parseBirthday();
 
-            userService.createUser(email.toString().trim(), username.toString().trim(),
-                    password.toString(), fullName.toString().trim(), Role.STUDENT, dob, selectedGender);
-            User loggedIn = authService.login(email.toString().trim(), password.toString());
+            String cleanEmail = email.toString().trim();
+            String cleanName = fullName.toString().trim();
+            String cleanUser = username.toString().trim();
+            String rawPass = password.toString();
+            String gender = selectedGender;
 
-            return ScreenResult.navigate(new StudentDashboardScreen(authService));
+            userService.validateNewUser(cleanEmail, cleanUser, rawPass, cleanName, Role.STUDENT, dob, gender, null, null, null);
+
+            verificationService.sendRegistrationCode(cleanEmail, cleanName);
+
+            return ScreenResult.navigate(new EmailVerificationScreen(
+                    cleanEmail,
+                    cleanName,
+                    "Student Account Registration",
+                    "Complete Registration",
+                    verificationService,
+                    () -> {
+                        userService.createUser(cleanEmail, cleanUser, rawPass, cleanName, Role.STUDENT, dob, gender);
+                        authService.login(cleanEmail, rawPass);
+                        return ScreenResult.navigate(new StudentDashboardScreen(authService));
+                    },
+                    this
+            ));
         } catch (ValidationException e) {
             errorMessage = e.getMessage();
             return ScreenResult.stay(this);

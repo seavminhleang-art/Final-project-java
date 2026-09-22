@@ -4,6 +4,7 @@ import com.proctor.model.repository.UserRepository;
 import com.proctor.model.service.AuthService;
 import com.proctor.model.service.UserService;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.MouseUtil;
 import com.proctor.view.AuthViews;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
 import com.williamcallahan.tui4j.compat.bubbletea.Message;
@@ -18,6 +19,34 @@ public class RegisterRoleScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        if (MouseUtil.isWheelUp(msg)) {
+            focusedButton = (focusedButton - 1 + 3) % 3;
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isWheelDown(msg)) {
+            focusedButton = (focusedButton + 1) % 3;
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isLeftClick(msg)) {
+            int line = MouseUtil.getLineIndex(msg);
+            int col = MouseUtil.getColInLine(msg);
+            if (col >= 0 && col < 26) {
+                UserService userService = new UserService(new UserRepository());
+                if (line >= 12 && line <= 14) {
+                    focusedButton = 0;
+                    return ScreenResult.navigate(new StudentRegisterScreen(authService, userService));
+                } else if (line >= 16 && line <= 18) {
+                    focusedButton = 1;
+                    return ScreenResult.navigate(new TeacherRegisterScreen(authService, userService));
+                } else if (line >= 20 && line <= 22) {
+                    focusedButton = 2;
+                    return ScreenResult.navigate(new StartupScreen(authService));
+                }
+            }
+            return ScreenResult.stay(this);
+        }
         if (msg instanceof KeyPressMessage k) {
             if (KeyUtil.isEsc(k)) {
                 return ScreenResult.navigate(new StartupScreen(authService));
