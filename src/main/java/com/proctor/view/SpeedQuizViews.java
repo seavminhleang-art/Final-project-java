@@ -51,7 +51,7 @@ public class SpeedQuizViews {
 
         for (int f = startField; f < endField; f++) {
             switch (f) {
-                case 0 -> sb.append(TuiHelper.selectBox("Subject (Required)", subjectDisplay, focusedField == 0, 102, "Type to search • Tab / ← / → to cycle"));
+                case 0 -> sb.append(TuiHelper.selectBox("Subject (Required)", subjectDisplay, focusedField == 0, 102, "Type to search • ← / → to cycle"));
                 case 1 -> sb.append(TuiHelper.inputBox("Speed Quiz Title (Required)", title, focusedField == 1, 102, false, "e.g. Rapid Chemistry Challenge"));
                 case 2 -> sb.append(TuiHelper.inputBox("Description", description, focusedField == 2, 102, false, "optional rules or instructions"));
                 case 3 -> sb.append(TuiHelper.inputBox("Timer Per Question (Seconds)", secondsPerQuestion, focusedField == 3, 102, false, "default: 15 seconds"));
@@ -214,7 +214,7 @@ public class SpeedQuizViews {
         if (toastRecord != null) {
             sb.append(TuiHelper.dim("  [Esc] Forfeit\n"));
         } else {
-            sb.append(TuiHelper.dim("  [↑/↓] Move Focus  •  [1-4] Quick Select & Lock  •  [Space/Enter] Lock In  •  [Esc] Forfeit\n"));
+            sb.append(TuiHelper.dim("  [↑/↓] Move Focus  •  [1-4] Quick Select & Lock  •  [Enter] Lock In  •  [Esc] Forfeit\n"));
         }
         return sb.toString();
     }
@@ -297,9 +297,9 @@ public class SpeedQuizViews {
         sb.append("\n  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         if (session.isCompleted()) {
-            sb.append(TuiHelper.cyan(String.format("  Finishing Speed Quiz in %ds... (Press [Enter] or [Space] to view scorecard)\n", revealSecondsRemaining)));
+            sb.append(TuiHelper.cyan(String.format("  Finishing Speed Quiz in %ds... (Press [Enter] to view scorecard)\n", revealSecondsRemaining)));
         } else {
-            sb.append(TuiHelper.dim(String.format("  Next question in %ds... (Press [Enter] or [Space] to continue)\n", revealSecondsRemaining)));
+            sb.append(TuiHelper.dim(String.format("  Next question in %ds... (Press [Enter] to continue)\n", revealSecondsRemaining)));
         }
 
         return sb.toString();
@@ -420,7 +420,7 @@ public class SpeedQuizViews {
         }
 
         String returnMsg = hasReturnScreen ? "Back" : "Back to Speed Quizzes";
-        sb.append(TuiHelper.wrapHints(List.of("[Enter / Esc] " + returnMsg, "[r] Play Again"))).append("\n");
+        sb.append(TuiHelper.wrapHints(List.of("[Enter] " + returnMsg, "[r] Play Again"))).append("\n");
         return sb.toString();
     }
 

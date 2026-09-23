@@ -247,7 +247,7 @@ public class QuestionFormScreen implements Screen {
         int idx = focusedField;
         if (!isPinnedQuiz()) {
             if (idx == 0) {
-                if (KeyUtil.isTab(k) || KeyUtil.isRight(k)) {
+                if (KeyUtil.isRight(k)) {
                     subjectFilter.cycleNext();
                     selectedSubjectIndex = subjectFilter.getSelectedOriginalIndex();
                 } else if (KeyUtil.isLeft(k)) {
@@ -275,11 +275,11 @@ public class QuestionFormScreen implements Screen {
                     return;
                 }
                 if (KeyUtil.isLeft(k)) cycleType(false);
-                else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) cycleType(true);
+                else if (KeyUtil.isRight(k)) cycleType(true);
             }
             case 2 -> {
                 if (KeyUtil.isLeft(k)) cycleDifficulty(false);
-                else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) cycleDifficulty(true);
+                else if (KeyUtil.isRight(k)) cycleDifficulty(true);
             }
             case 3 -> handleTextInput(pointsBuffer, k);
             default -> handleTypeSpecificInput(idx, k);
@@ -295,14 +295,14 @@ public class QuestionFormScreen implements Screen {
                 case 7 -> handleTextInput(optionD, k);
                 case 8 -> {
                     if (KeyUtil.isLeft(k)) correctMcqIndex = (correctMcqIndex - 1 + 4) % 4;
-                    else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) correctMcqIndex = (correctMcqIndex + 1) % 4;
+                    else if (KeyUtil.isRight(k)) correctMcqIndex = (correctMcqIndex + 1) % 4;
                 }
                 case 9 -> handleTextInput(explanation, k);
             }
         } else if (selectedType == QuestionType.TRUE_FALSE) {
             switch (relativeIndex) {
                 case 4 -> {
-                    if (KeyUtil.isLeft(k) || KeyUtil.isRight(k) || KeyUtil.isSpace(k)) {
+                    if (KeyUtil.isSpace(k)) {
                         tfCorrectIsTrue = !tfCorrectIsTrue;
                     }
                 }

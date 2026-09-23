@@ -218,7 +218,7 @@ public class SubjectFormScreen implements Screen {
             if (focusedField >= 0 && focusedField <= 2) {
                 handleTextInput(k);
             } else if (isEditMode() && focusedField == 3) {
-                if (KeyUtil.isSpace(k) || KeyUtil.isRight(k) || KeyUtil.isLeft(k)) {
+                if (KeyUtil.isSpace(k)) {
                     enabledStatus = !enabledStatus;
                 }
             }

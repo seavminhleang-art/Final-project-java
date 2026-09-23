@@ -178,11 +178,11 @@ public class TeacherSubmissionScreen implements Screen {
                     bannerMessage = "";
                     return ScreenResult.stay(this);
                 }
-                if (KeyUtil.isUp(k) || KeyUtil.isLeft(k)) {
+                if (KeyUtil.isLeft(k)) {
                     inspectingAnswerIndex = ListNavigationHelper.prevPage(inspectingAnswerIndex, 1);
                     return ScreenResult.stay(this);
                 }
-                if (KeyUtil.isDown(k) || KeyUtil.isRight(k)) {
+                if (KeyUtil.isRight(k)) {
                     inspectingAnswerIndex = ListNavigationHelper.nextPage(inspectingAnswerIndex, qCount, 1);
                     return ScreenResult.stay(this);
                 }
@@ -287,7 +287,7 @@ public class TeacherSubmissionScreen implements Screen {
                 selectedIndex = ListNavigationHelper.prevPage(selectedIndex, TuiHelper.PAGE_SIZE);
             } else if (KeyUtil.isRight(k)) {
                 selectedIndex = ListNavigationHelper.nextPage(selectedIndex, submissions.size(), TuiHelper.PAGE_SIZE);
-            } else if (KeyUtil.isTab(k) || "f".equalsIgnoreCase(k.key())) {
+            } else if (KeyUtil.isTab(k)) {
                 statusFilterIndex = (statusFilterIndex + 1) % STATUS_FILTERS.length;
                 selectedIndex = 0;
                 applyFilters();

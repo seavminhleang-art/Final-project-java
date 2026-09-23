@@ -122,7 +122,7 @@ public final class InlineSubjectFilter<T> {
             cancelSearch();
             return true;
         }
-        if (KeyUtil.isTab(k) || KeyUtil.isRight(k)) {
+        if (KeyUtil.isRight(k)) {
             cycleNext();
             return true;
         }

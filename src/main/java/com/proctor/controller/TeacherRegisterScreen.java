@@ -148,7 +148,7 @@ public class TeacherRegisterScreen implements Screen {
             }
 
             if (focusedField == 1) {
-                if (KeyUtil.isSpace(k) || KeyUtil.isRight(k)) {
+                if (KeyUtil.isRight(k)) {
                     cycleGender(true);
                     return ScreenResult.stay(this);
                 } else if (KeyUtil.isLeft(k)) {

@@ -113,11 +113,11 @@ public class UserListScreen implements Screen {
                 selectedIndex = ListNavigationHelper.nextPage(selectedIndex, users.size(), TuiHelper.PAGE_SIZE);
             } else if ("n".equalsIgnoreCase(k.key())) {
                 return ScreenResult.navigate(new UserFormScreen(userService, authService, null));
-            } else if ("e".equalsIgnoreCase(k.key()) || KeyUtil.isEnter(k)) {
+            } else if (KeyUtil.isEnter(k)) {
                 if (!users.isEmpty()) {
                     return ScreenResult.navigate(new UserFormScreen(userService, authService, users.get(selectedIndex)));
                 }
-            } else if ("t".equalsIgnoreCase(k.key()) || KeyUtil.isSpace(k)) {
+            } else if (KeyUtil.isSpace(k)) {
                 if (!users.isEmpty()) {
                     User u = users.get(selectedIndex);
                     try {
@@ -128,7 +128,7 @@ public class UserListScreen implements Screen {
                         bannerMessage = TuiHelper.red("✖ " + e.getMessage());
                     }
                 }
-            } else if (KeyUtil.isTab(k) || "f".equalsIgnoreCase(k.key())) {
+            } else if (KeyUtil.isTab(k)) {
                 cycleFilterRole();
             } else if ("/".equals(k.key())) {
                 searchMode = true;

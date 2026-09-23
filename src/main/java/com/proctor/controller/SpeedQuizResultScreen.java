@@ -74,7 +74,7 @@ public class SpeedQuizResultScreen implements Screen {
                 return retrySpeedQuiz();
             }
 
-            if (KeyUtil.isEnter(k) || KeyUtil.isEsc(k)) {
+            if (KeyUtil.isEnter(k)) {
                 if (returnScreen != null) {
                     return ScreenResult.navigate(returnScreen);
                 }

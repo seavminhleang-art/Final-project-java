@@ -256,12 +256,7 @@ public class QuizListScreen implements Screen {
                     confirmingDelete = false;
                     pendingDeleteQuiz = null;
                     return ScreenResult.stay(this);
-                } else if ("y".equalsIgnoreCase(k.key())) {
-                    executeDelete();
-                    confirmingDelete = false;
-                    pendingDeleteQuiz = null;
-                    return ScreenResult.stay(this);
-                } else if ("n".equalsIgnoreCase(k.key()) || KeyUtil.isEsc(k)) {
+                } else if (KeyUtil.isEsc(k)) {
                     confirmingDelete = false;
                     pendingDeleteQuiz = null;
                     bannerMessage = TuiHelper.yellow("Deletion cancelled.");
@@ -303,12 +298,12 @@ public class QuizListScreen implements Screen {
                 if (user == null || user.getRole() != Role.ADMIN) {
                     return ScreenResult.navigate(new AIQuizGeneratorScreen(new AIService(), quizService, questionService, subjectService, authService, assessmentType));
                 }
-            } else if (KeyUtil.isTab(k) || "f".equalsIgnoreCase(k.key())) {
+            } else if (KeyUtil.isTab(k)) {
                 User user = Session.getCurrentUser().orElse(null);
                 if (user == null || user.getRole() != Role.ADMIN) {
                     toggleScope();
                 }
-            } else if ("d".equalsIgnoreCase(k.key()) || KeyUtil.isDelete(k)) {
+            } else if ("d".equalsIgnoreCase(k.key())) {
                 if (!quizzes.isEmpty()) {
                     initiateDelete();
                 }
@@ -324,7 +319,7 @@ public class QuizListScreen implements Screen {
                         bannerMessage = TuiHelper.red("✖ You can only edit assessments you created.");
                     }
                 }
-            } else if ("q".equalsIgnoreCase(k.key()) || KeyUtil.isEnter(k)) {
+            } else if (KeyUtil.isEnter(k)) {
                 if (!quizzes.isEmpty()) {
                     return ScreenResult.navigate(new QuizQuestionEditorScreen(quizzes.get(selectedIndex), quizService, questionService, subjectService, authService));
                 }
@@ -337,7 +332,7 @@ public class QuizListScreen implements Screen {
                 subjectFilter.startSearch(subjectFilterIndex);
                 selectedIndex = 0;
                 refreshList();
-            } else if ("p".equalsIgnoreCase(k.key()) || KeyUtil.isSpace(k)) {
+            } else if (KeyUtil.isSpace(k)) {
                 if (!quizzes.isEmpty()) {
                     Quiz q = quizzes.get(selectedIndex);
                     if (canModify(q)) {

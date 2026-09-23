@@ -68,7 +68,7 @@ public class QuestionViews {
         int idx = fieldIndex;
         if (!isPinnedQuiz) {
             if (idx == 0) {
-                sb.append(TuiHelper.selectBox("Subject (Required)", subjectName, focusedField == 0, 102, "Type to search • Tab / ← / → to cycle"));
+                sb.append(TuiHelper.selectBox("Subject (Required)", subjectName, focusedField == 0, 102, "Type to search • ← / → to cycle"));
                 return;
             }
             idx -= 1;
@@ -76,8 +76,8 @@ public class QuestionViews {
 
         switch (idx) {
             case 0 -> sb.append(TuiHelper.inputBox("Question Prompt (Required)", questionText, focusedField == fieldIndex, 102, false, "enter question text"));
-            case 1 -> sb.append(TuiHelper.selectBox("Question Type", selectedType.name(), focusedField == fieldIndex, 102, "Space to cycle"));
-            case 2 -> sb.append(TuiHelper.selectBox("Difficulty", selectedDifficulty.name(), focusedField == fieldIndex, 102, "Space to cycle"));
+            case 1 -> sb.append(TuiHelper.selectBox("Question Type", selectedType.name(), focusedField == fieldIndex, 102, "← / → to cycle"));
+            case 2 -> sb.append(TuiHelper.selectBox("Difficulty", selectedDifficulty.name(), focusedField == fieldIndex, 102, "← / → to cycle"));
             case 3 -> sb.append(TuiHelper.inputBox("Points", points, focusedField == fieldIndex, 102, false, "e.g. 2.0"));
             default -> {
                 int optIdx = idx - 4;
@@ -88,14 +88,14 @@ public class QuestionViews {
                         sb.append(TuiHelper.inputBox(label, options.get(optIdx).toString(), focusedField == fieldIndex, 102, false, "leave blank to omit"));
                     } else if (optIdx == 4) {
                         String corrLabel = "Option " + (char) ('A' + correctOptionIndex);
-                        sb.append(TuiHelper.selectBox("Correct Answer Selection", corrLabel, focusedField == fieldIndex, 102, "Space to cycle"));
+                        sb.append(TuiHelper.selectBox("Correct Answer Selection", corrLabel, focusedField == fieldIndex, 102, "← / → to cycle"));
                     } else if (optIdx == 5) {
                         sb.append(TuiHelper.inputBox("Explanation (Optional)", explanation, focusedField == fieldIndex, 102, false, "rubric context"));
                     }
                 } else if (selectedType == QuestionType.TRUE_FALSE) {
                     if (optIdx == 0) {
                         String corrLabel = (correctOptionIndex == 0) ? "True" : "False";
-                        sb.append(TuiHelper.selectBox("Correct Answer Selection", corrLabel, focusedField == fieldIndex, 102, "Space to cycle"));
+                        sb.append(TuiHelper.selectBox("Correct Answer Selection", corrLabel, focusedField == fieldIndex, 102, "Space to toggle"));
                     } else if (optIdx == 1) {
                         sb.append(TuiHelper.inputBox("Explanation (Optional)", explanation, focusedField == fieldIndex, 102, false, "rubric context"));
                     }
@@ -243,7 +243,7 @@ public class QuestionViews {
 
         String dest = "Save Drafts";
         sb.append(TuiHelper.buttonRow(dest, false, "Cancel", false)).append("\n\n");
-        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [Enter / s] Save to Quiz  •  [Esc] Cancel\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [Enter] Save to Quiz  •  [Esc] Cancel\n"));
         return sb.toString();
     }
 

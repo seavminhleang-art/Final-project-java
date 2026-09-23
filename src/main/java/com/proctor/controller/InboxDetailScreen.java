@@ -135,7 +135,7 @@ public class InboxDetailScreen implements Screen {
                 return ScreenResult.navigate(returnScreen);
             }
 
-            if ("d".equalsIgnoreCase(k.key()) || KeyUtil.isDelete(k)) {
+            if ("d".equalsIgnoreCase(k.key())) {
                 showDeleteModal = true;
                 deleteConfirmFocused = false;
                 return ScreenResult.stay(this);

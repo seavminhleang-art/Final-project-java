@@ -143,7 +143,7 @@ public class QuizViews {
         }
 
         if (subjectFilterDisplay != null && subjectFilterDisplay.contains("→")) {
-            sb.append(TuiHelper.dim("  [Type] Search  •  [Tab/←/→] Cycle Matches  •  [Enter] Confirm  •  [Esc] Cancel\n"));
+            sb.append(TuiHelper.dim("  [Type] Search  •  [←/→] Cycle Matches  •  [Enter] Confirm  •  [Esc] Cancel\n"));
             return sb.toString();
         }
 
@@ -208,7 +208,7 @@ public class QuizViews {
 
         for (int f = startField; f < endField; f++) {
             switch (f) {
-                case 0 -> sb.append(TuiHelper.selectBox("Subject (Required)", subjectName, focusedField == 0, 102, "Type to search • Tab / ← / → to cycle"));
+                case 0 -> sb.append(TuiHelper.selectBox("Subject (Required)", subjectName, focusedField == 0, 102, "Type to search • ← / → to cycle"));
                 case 1 -> sb.append(TuiHelper.inputBox(itemType + " Title (Required)", title, focusedField == 1, 102, false, "e.g. Midterm Assessment"));
                 case 2 -> {
                     if (assessmentType == AssessmentType.QUIZ) {
@@ -217,7 +217,7 @@ public class QuizViews {
                             case TRUE_FALSE -> "True / False";
                             case SHORT_ANSWER -> "Short Answer";
                         } : "Multiple Choice (MCQ)";
-                        sb.append(TuiHelper.selectBox("Quiz Question Type (Strict)", typeLabel, focusedField == 2, 102, "Space or ←/→ to switch"));
+                        sb.append(TuiHelper.selectBox("Quiz Question Type (Strict)", typeLabel, focusedField == 2, 102, "← / → to switch"));
                     } else {
                         sb.append(TuiHelper.selectBox("Assessment Mode", "Exam (Mixed - All Question Types Allowed)", focusedField == 2, 102, "Comprehensive Exam"));
                     }
@@ -317,7 +317,7 @@ public class QuizViews {
         List<String> hints = List.of(
                 "[↑/↓] Move",
                 "[←/→] Page",
-                "[Enter/e] Edit",
+                "[Enter] Edit",
                 "[n] Add Question",
                 "[b] From Bank",
                 "[g] AI Generate",
@@ -378,7 +378,7 @@ public class QuizViews {
             fieldWidgets.add(TuiHelper.inputBox("MCQ Question Count (0-10)", mcqCountBuffer, focusedField == curIdx++, 102, false, "e.g. 3"));
             fieldWidgets.add(TuiHelper.inputBox("True/False Question Count (0-10)", tfCountBuffer, focusedField == curIdx++, 102, false, "e.g. 3"));
         } else {
-            fieldWidgets.add(TuiHelper.selectBox("Question Type", questionTypeLabel, focusedField == curIdx++, 102, "Space or ←/→ to cycle"));
+            fieldWidgets.add(TuiHelper.selectBox("Question Type", questionTypeLabel, focusedField == curIdx++, 102, "← / → to cycle"));
             if (isMixed) {
                 fieldWidgets.add(TuiHelper.inputBox("MCQ Question Count (0-10)", mcqCountBuffer, focusedField == curIdx++, 102, false, "e.g. 2"));
                 fieldWidgets.add(TuiHelper.inputBox("True/False Question Count (0-10)", tfCountBuffer, focusedField == curIdx++, 102, false, "e.g. 2"));
@@ -388,12 +388,12 @@ public class QuizViews {
             }
         }
 
-        fieldWidgets.add(TuiHelper.selectBox("Difficulty Level", selectedDifficulty.name(), focusedField == curIdx++, 102, "Space to cycle"));
+        fieldWidgets.add(TuiHelper.selectBox("Difficulty Level", selectedDifficulty.name(), focusedField == curIdx++, 102, "← / → to cycle"));
 
         boolean showMcq = (isMixed || isSpeed) ? (!"0".equals(mcqCountBuffer != null ? mcqCountBuffer.trim() : "0")) : questionTypeLabel.contains("MCQ");
         if (showMcq) {
             String optLabel = mcqOptionCount + " Options per Question";
-            fieldWidgets.add(TuiHelper.selectBox("MCQ Option Count", optLabel, focusedField == curIdx++, 102, "Space to cycle (2, 3, 4)"));
+            fieldWidgets.add(TuiHelper.selectBox("MCQ Option Count", optLabel, focusedField == curIdx++, 102, "← / → to cycle (2, 3, 4)"));
         }
 
         if (isSpeed) {

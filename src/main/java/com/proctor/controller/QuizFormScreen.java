@@ -179,7 +179,7 @@ public class QuizFormScreen implements Screen {
     private void handleFieldInput(KeyPressMessage k) {
         switch (focusedField) {
             case 0 -> {
-                if (KeyUtil.isTab(k) || KeyUtil.isRight(k)) {
+                if (KeyUtil.isRight(k)) {
                     subjectFilter.cycleNext();
                     selectedSubjectIndex = subjectFilter.getSelectedOriginalIndex();
                 } else if (KeyUtil.isLeft(k)) {
@@ -198,7 +198,7 @@ public class QuizFormScreen implements Screen {
             case 1 -> handleTextInput(title, k);
             case 2 -> {
                 if (assessmentType == AssessmentType.QUIZ) {
-                    if (KeyUtil.isSpace(k) || KeyUtil.isRight(k)) cycleQuizQuestionType(true);
+                    if (KeyUtil.isRight(k)) cycleQuizQuestionType(true);
                     else if (KeyUtil.isLeft(k)) cycleQuizQuestionType(false);
                 }
             }
@@ -207,13 +207,13 @@ public class QuizFormScreen implements Screen {
             case 5 -> handleTextInput(activeHours, k);
             case 6 -> handleTextInput(passScore, k);
             case 7 -> {
-                if (KeyUtil.isSpace(k) || KeyUtil.isRight(k) || KeyUtil.isLeft(k)) randomizeQuestions = !randomizeQuestions;
+                if (KeyUtil.isSpace(k)) randomizeQuestions = !randomizeQuestions;
             }
             case 8 -> {
-                if (KeyUtil.isSpace(k) || KeyUtil.isRight(k) || KeyUtil.isLeft(k)) randomizeAnswers = !randomizeAnswers;
+                if (KeyUtil.isSpace(k)) randomizeAnswers = !randomizeAnswers;
             }
             case 9 -> {
-                if (KeyUtil.isSpace(k) || KeyUtil.isRight(k) || KeyUtil.isLeft(k)) showAnswersAfter = !showAnswersAfter;
+                if (KeyUtil.isSpace(k)) showAnswersAfter = !showAnswersAfter;
             }
         }
     }

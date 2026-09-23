@@ -78,7 +78,7 @@ public class ExamResultScreen implements Screen {
                 return handleRetakeRequest();
             }
 
-            if (KeyUtil.isEnter(k) || KeyUtil.isEsc(k)) {
+            if (KeyUtil.isEnter(k)) {
                 if (returnScreen != null) {
                     return ScreenResult.navigate(returnScreen);
                 }

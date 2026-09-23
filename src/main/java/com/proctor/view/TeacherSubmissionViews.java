@@ -261,9 +261,9 @@ public class TeacherSubmissionViews {
         }
 
         if (isSpeedQuiz) {
-            sb.append(TuiHelper.dim("  [↑/↓/←/→] Navigate  •  [Esc] Back\n"));
+            sb.append(TuiHelper.dim("  [←/→] Navigate Questions  •  [Esc] Back\n"));
         } else {
-            sb.append(TuiHelper.dim("  [↑/↓/←/→] Navigate  •  [g] AI Grade  •  [r] Return Grade  •  [Esc] Back\n"));
+            sb.append(TuiHelper.dim("  [←/→] Navigate Questions  •  [g] AI Grade  •  [r] Return Grade  •  [Esc] Back\n"));
         }
         return sb.toString();
     }

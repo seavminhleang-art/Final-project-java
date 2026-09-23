@@ -106,7 +106,7 @@ public class ExamViews {
         }
 
         if (subjectFilterDisplay != null && subjectFilterDisplay.contains("→")) {
-            sb.append(TuiHelper.dim("  [Type] Search  •  [Tab/←/→] Cycle Matches  •  [Enter] Confirm  •  [Esc] Cancel\n"));
+            sb.append(TuiHelper.dim("  [Type] Search  •  [←/→] Cycle Matches  •  [Enter] Confirm  •  [Esc] Cancel\n"));
             return sb.toString();
         }
 
@@ -327,9 +327,9 @@ public class ExamViews {
 
         sb.append("\n  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
         if (q.getQuestionType() == com.proctor.model.enums.QuestionType.SHORT_ANSWER) {
-            sb.append(TuiHelper.dim("  [Type] Answer  •  [Enter / Tab] Next  •  [↑] Prev  •  [Esc] Review & Submit\n"));
+            sb.append(TuiHelper.dim("  [Type] Answer  •  [Enter] Next  •  [↑] Prev  •  [Esc] Review & Submit\n"));
         } else {
-            sb.append(TuiHelper.dim("  [↑/↓] Move Focus  •  [Space] Select  •  [Enter] Confirm & Next  •  [←/→ or p/n] Prev/Next  •  [Esc] Review & Submit\n"));
+            sb.append(TuiHelper.dim("  [↑/↓] Move Focus  •  [Space] Select  •  [Enter] Confirm & Next  •  [←/→] Prev/Next  •  [Esc] Review & Submit\n"));
         }
         return sb.toString();
     }
@@ -370,7 +370,7 @@ public class ExamViews {
             sb.append("  " + "─".repeat(56) + "\n\n");
 
             String returnMsg = hasReturnScreen ? "Back" : "Back to Dashboard";
-            sb.append(TuiHelper.wrapHints(List.of("[Enter / Esc] " + returnMsg))).append("\n");
+            sb.append(TuiHelper.wrapHints(List.of("[Enter] " + returnMsg))).append("\n");
             return sb.toString();
         }
 
@@ -441,7 +441,7 @@ public class ExamViews {
 
         String returnMsg = hasReturnScreen ? "Back" : "Back to Portal";
         List<String> hints = new ArrayList<>();
-        hints.add("[Enter / Esc] " + returnMsg);
+        hints.add("[Enter] " + returnMsg);
         if (canRequestRetake) {
             hints.add("[r] Request Retake");
         }

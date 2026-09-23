@@ -163,7 +163,7 @@ public class SpeedQuizFormScreen implements Screen {
     private void handleFieldInput(KeyPressMessage k) {
         switch (focusedField) {
             case 0 -> {
-                if (KeyUtil.isTab(k) || KeyUtil.isRight(k)) {
+                if (KeyUtil.isRight(k)) {
                     subjectFilter.cycleNext();
                     selectedSubjectIndex = subjectFilter.getSelectedOriginalIndex();
                 } else if (KeyUtil.isLeft(k)) {
@@ -184,10 +184,10 @@ public class SpeedQuizFormScreen implements Screen {
             case 3 -> handleNumericInput(secondsPerQuestion, k);
             case 4 -> handleNumericInput(activeHours, k);
             case 5 -> {
-                if (KeyUtil.isSpace(k) || KeyUtil.isRight(k) || KeyUtil.isLeft(k)) randomizeAnswers = !randomizeAnswers;
+                if (KeyUtil.isSpace(k)) randomizeAnswers = !randomizeAnswers;
             }
             case 6 -> {
-                if (KeyUtil.isSpace(k) || KeyUtil.isRight(k) || KeyUtil.isLeft(k)) showAnswersAfter = !showAnswersAfter;
+                if (KeyUtil.isSpace(k)) showAnswersAfter = !showAnswersAfter;
             }
         }
     }

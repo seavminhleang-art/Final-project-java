@@ -161,22 +161,22 @@ public class SubjectListScreen implements Screen {
                 selectedIndex = ListNavigationHelper.nextPage(selectedIndex, subjects.size(), TuiHelper.PAGE_SIZE);
             } else if ("n".equalsIgnoreCase(k.key())) {
                 return ScreenResult.navigate(new SubjectFormScreen(subjectService, userService, authService, null));
-            } else if ("e".equalsIgnoreCase(k.key()) || KeyUtil.isEnter(k)) {
+            } else if (KeyUtil.isEnter(k)) {
                 if (!subjects.isEmpty()) {
                     return ScreenResult.navigate(new SubjectFormScreen(subjectService, userService, authService, subjects.get(selectedIndex)));
                 }
-            } else if ("d".equalsIgnoreCase(k.key()) || KeyUtil.isDelete(k)) {
+            } else if ("d".equalsIgnoreCase(k.key())) {
                 if (!subjects.isEmpty()) {
                     initiateDelete();
                 }
-            } else if ("t".equalsIgnoreCase(k.key()) || KeyUtil.isSpace(k)) {
+            } else if (KeyUtil.isSpace(k)) {
                 if (!subjects.isEmpty()) {
                     Subject s = subjects.get(selectedIndex);
                     subjectService.toggleSubjectStatus(s.getId());
                     bannerMessage = TuiHelper.green("Toggled status for " + s.getCode());
                     refreshList();
                 }
-            } else if (KeyUtil.isTab(k) || "f".equalsIgnoreCase(k.key())) {
+            } else if (KeyUtil.isTab(k)) {
                 statusFilterIndex = (statusFilterIndex + 1) % STATUS_FILTERS.length;
                 selectedIndex = 0;
                 applyFilters();

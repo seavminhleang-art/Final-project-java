@@ -149,7 +149,7 @@ public class GlobalLeaderboardScreen implements Screen {
                 selectedIndex = ListNavigationHelper.prevPage(selectedIndex, TuiHelper.PAGE_SIZE);
             } else if (KeyUtil.isRight(k)) {
                 selectedIndex = ListNavigationHelper.nextPage(selectedIndex, leaderboard.size(), TuiHelper.PAGE_SIZE);
-            } else if (KeyUtil.isTab(k) || "f".equalsIgnoreCase(k.key())) {
+            } else if (KeyUtil.isTab(k)) {
                 mode = switch (mode) {
                     case QUIZ -> Mode.EXAM;
                     case EXAM -> Mode.SPEED;

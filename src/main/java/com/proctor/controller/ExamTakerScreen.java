@@ -205,12 +205,7 @@ public class ExamTakerScreen implements Screen {
                         confirmSubmitMode = false;
                         return ScreenResult.stay(this);
                     }
-                } else if ("y".equalsIgnoreCase(k.key())) {
-                    isSubmitted = true;
-                    saveCurrentAnswer();
-                    Result result = examService.submitExam(session, false);
-                    return ScreenResult.navigate(new ExamResultScreen(result, session, examService, authService));
-                } else if ("n".equalsIgnoreCase(k.key()) || KeyUtil.isEsc(k)) {
+                } else if (KeyUtil.isEsc(k)) {
                     confirmSubmitMode = false;
                     return ScreenResult.stay(this);
                 }
@@ -225,7 +220,7 @@ public class ExamTakerScreen implements Screen {
 
             Question q = session.getQuestions().get(currentQuestionIndex);
             if (q.getQuestionType() != QuestionType.SHORT_ANSWER) {
-                if (KeyUtil.isLeft(k) || "p".equalsIgnoreCase(k.key())) {
+                if (KeyUtil.isLeft(k)) {
                     saveCurrentAnswer();
                     if (currentQuestionIndex > 0) {
                         currentQuestionIndex--;
@@ -234,7 +229,7 @@ public class ExamTakerScreen implements Screen {
                     return ScreenResult.stay(this);
                 }
 
-                if (KeyUtil.isRight(k) || "n".equalsIgnoreCase(k.key())) {
+                if (KeyUtil.isRight(k)) {
                     saveCurrentAnswer();
                     if (currentQuestionIndex < session.getQuestions().size() - 1) {
                         currentQuestionIndex++;
@@ -279,7 +274,7 @@ public class ExamTakerScreen implements Screen {
                     return ScreenResult.stay(this);
                 }
 
-                if (KeyUtil.isEnter(k) || KeyUtil.isTab(k) || KeyUtil.isDown(k)) {
+                if (KeyUtil.isEnter(k)) {
                     saveCurrentAnswer();
                     if (currentQuestionIndex < session.getQuestions().size() - 1) {
                         currentQuestionIndex++;

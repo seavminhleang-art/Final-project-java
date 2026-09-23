@@ -177,7 +177,7 @@ public class QuestionBankPickerScreen implements Screen {
                 selectedIndex = ListNavigationHelper.prevPage(selectedIndex, TuiHelper.PAGE_SIZE);
             } else if (KeyUtil.isRight(k)) {
                 selectedIndex = ListNavigationHelper.nextPage(selectedIndex, bankQuestions.size(), TuiHelper.PAGE_SIZE);
-            } else if ((KeyUtil.isSpace(k) || KeyUtil.isEnter(k)) && !bankQuestions.isEmpty()) {
+            } else if (KeyUtil.isSpace(k) && !bankQuestions.isEmpty()) {
                 int qid = bankQuestions.get(selectedIndex).getId();
                 if (alreadyAddedIds.contains(qid)) {
                     bannerMessage = TuiHelper.yellow("● This question is already in the quiz.");
@@ -188,7 +188,7 @@ public class QuestionBankPickerScreen implements Screen {
                 } else {
                     selectedIds.add(qid);
                 }
-            } else if ("c".equalsIgnoreCase(k.key())) {
+            } else if (KeyUtil.isEnter(k)) {
                 return confirmImport();
             }
         }
@@ -197,7 +197,7 @@ public class QuestionBankPickerScreen implements Screen {
 
     private ScreenResult confirmImport() {
         if (selectedIds.isEmpty()) {
-            bannerMessage = TuiHelper.yellow("⚠ No questions selected. Use Space/Enter to toggle.");
+            bannerMessage = TuiHelper.yellow("⚠ No questions selected. Use Space to toggle.");
             return ScreenResult.stay(this);
         }
         int imported = 0;

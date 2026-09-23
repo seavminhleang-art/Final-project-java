@@ -192,16 +192,7 @@ public class QuizQuestionEditorScreen implements Screen {
                     confirmingDelete = false;
                     pendingDeleteQuestion = null;
                     return ScreenResult.stay(this);
-                } else if ("y".equalsIgnoreCase(k.key())) {
-                    if (pendingDeleteQuestion != null) {
-                        questionService.deleteQuestion(pendingDeleteQuestion.getId());
-                        bannerMessage = TuiHelper.green("✔ Deleted question #" + pendingDeleteQuestion.getId());
-                        refreshList();
-                    }
-                    confirmingDelete = false;
-                    pendingDeleteQuestion = null;
-                    return ScreenResult.stay(this);
-                } else if ("n".equalsIgnoreCase(k.key()) || KeyUtil.isEsc(k)) {
+                } else if (KeyUtil.isEsc(k)) {
                     confirmingDelete = false;
                     pendingDeleteQuestion = null;
                     bannerMessage = TuiHelper.yellow("Deletion cancelled.");
@@ -226,15 +217,15 @@ public class QuizQuestionEditorScreen implements Screen {
                 selectedIndex = ListNavigationHelper.prevPage(selectedIndex, TuiHelper.PAGE_SIZE);
             } else if (KeyUtil.isRight(k)) {
                 selectedIndex = ListNavigationHelper.nextPage(selectedIndex, questions.size(), TuiHelper.PAGE_SIZE);
-            } else if ("n".equalsIgnoreCase(k.key()) || "a".equalsIgnoreCase(k.key())) {
+            } else if ("n".equalsIgnoreCase(k.key())) {
                 return ScreenResult.navigate(new QuestionFormScreen(questionService, subjectService, authService, null, quiz));
             } else if ("b".equalsIgnoreCase(k.key())) {
                 return ScreenResult.navigate(new QuestionBankPickerScreen(quiz, quizService, questionService, subjectService, authService));
-            } else if ("e".equalsIgnoreCase(k.key()) || KeyUtil.isEnter(k)) {
+            } else if (KeyUtil.isEnter(k)) {
                 if (!questions.isEmpty()) {
                     return ScreenResult.navigate(new QuestionFormScreen(questionService, subjectService, authService, questions.get(selectedIndex), quiz));
                 }
-            } else if ("d".equalsIgnoreCase(k.key()) || KeyUtil.isDelete(k)) {
+            } else if ("d".equalsIgnoreCase(k.key())) {
                 if (!questions.isEmpty()) {
                     confirmingDelete = true;
                     confirmDeleteFocused = false;
@@ -242,7 +233,7 @@ public class QuizQuestionEditorScreen implements Screen {
                 }
             } else if ("g".equalsIgnoreCase(k.key())) {
                 return ScreenResult.navigate(new AIQuestionGeneratorScreen(new AIService(), questionService, subjectService, authService, quiz));
-            } else if ("p".equalsIgnoreCase(k.key()) || KeyUtil.isSpace(k)) {
+            } else if (KeyUtil.isSpace(k)) {
                 try {
                     quizService.togglePublishStatus(quiz.getId());
                     quiz.setPublished(!quiz.isPublished());

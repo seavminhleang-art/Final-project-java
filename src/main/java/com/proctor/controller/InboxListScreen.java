@@ -219,7 +219,7 @@ public class InboxListScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
-            if (KeyUtil.isTab(k) || "f".equalsIgnoreCase(k.key())) {
+            if (KeyUtil.isTab(k)) {
                 filterIndex = (filterIndex + 1) % FILTERS.length;
                 selectedIndex = 0;
                 applyFilters();
@@ -240,7 +240,7 @@ public class InboxListScreen implements Screen {
                 }
             }
 
-            if ("d".equalsIgnoreCase(k.key()) || KeyUtil.isDelete(k)) {
+            if ("d".equalsIgnoreCase(k.key())) {
                 if (!messages.isEmpty()) {
                     showDeleteModal = true;
                     deleteConfirmFocused = false;

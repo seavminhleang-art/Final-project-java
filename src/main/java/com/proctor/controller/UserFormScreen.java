@@ -171,7 +171,7 @@ public class UserFormScreen implements Screen {
         if (focusedField == 1) {
             if (KeyUtil.isLeft(k)) {
                 cycleGender(false);
-            } else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) {
+            } else if (KeyUtil.isRight(k)) {
                 cycleGender(true);
             }
             return;
@@ -183,7 +183,7 @@ public class UserFormScreen implements Screen {
         if (focusedField == 6) {
             if (KeyUtil.isLeft(k)) {
                 cycleRole(false);
-            } else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) {
+            } else if (KeyUtil.isRight(k)) {
                 cycleRole(true);
             }
             return;
@@ -214,7 +214,7 @@ public class UserFormScreen implements Screen {
         } else if (focusedField == 1) {
             if (KeyUtil.isLeft(k)) {
                 cycleGender(false);
-            } else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) {
+            } else if (KeyUtil.isRight(k)) {
                 cycleGender(true);
             }
         } else if (focusedField == 2) {
@@ -222,11 +222,11 @@ public class UserFormScreen implements Screen {
         } else if (focusedField == 3) {
             if (KeyUtil.isLeft(k)) {
                 cycleRole(false);
-            } else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) {
+            } else if (KeyUtil.isRight(k)) {
                 cycleRole(true);
             }
         } else if (focusedField == 4) {
-            if (KeyUtil.isLeft(k) || KeyUtil.isRight(k) || KeyUtil.isSpace(k)) {
+            if (KeyUtil.isSpace(k)) {
                 enabledStatus = !enabledStatus;
             }
         }

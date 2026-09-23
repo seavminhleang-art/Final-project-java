@@ -189,14 +189,14 @@ public class QuestionBankScreen implements Screen {
                 return ScreenResult.navigate(new QuestionFormScreen(questionService, subjectService, authService, null, null));
             } else if ("g".equalsIgnoreCase(k.key())) {
                 return ScreenResult.navigate(new AIQuestionGeneratorScreen(new AIService(), questionService, subjectService, authService, null));
-            } else if (("e".equalsIgnoreCase(k.key()) || KeyUtil.isEnter(k)) && !questions.isEmpty()) {
+            } else if (KeyUtil.isEnter(k) && !questions.isEmpty()) {
                 return ScreenResult.navigate(new QuestionFormScreen(questionService, subjectService, authService, questions.get(selectedIndex), null));
-            } else if (("d".equalsIgnoreCase(k.key()) || KeyUtil.isDelete(k)) && !questions.isEmpty()) {
+            } else if ("d".equalsIgnoreCase(k.key()) && !questions.isEmpty()) {
                 pendingDeleteQuestion = questions.get(selectedIndex);
                 confirmingDelete = true;
                 confirmDeleteFocused = false;
                 return ScreenResult.stay(this);
-            } else if (KeyUtil.isTab(k) || "f".equalsIgnoreCase(k.key())) {
+            } else if (KeyUtil.isTab(k)) {
                 if (typeFilter == null) typeFilter = QuestionType.MCQ;
                 else if (typeFilter == QuestionType.MCQ) typeFilter = QuestionType.TRUE_FALSE;
                 else if (typeFilter == QuestionType.TRUE_FALSE) typeFilter = QuestionType.SHORT_ANSWER;

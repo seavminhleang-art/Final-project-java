@@ -220,9 +220,7 @@ public class SpeedQuizTakerScreen implements Screen {
                         confirmForfeitMode = false;
                         return ScreenResult.stay(this);
                     }
-                } else if ("y".equalsIgnoreCase(k.key())) {
-                    return finishAndSubmit();
-                } else if ("n".equalsIgnoreCase(k.key()) || KeyUtil.isEsc(k)) {
+                } else if (KeyUtil.isEsc(k)) {
                     confirmForfeitMode = false;
                     return ScreenResult.stay(this);
                 }
@@ -257,7 +255,7 @@ public class SpeedQuizTakerScreen implements Screen {
                 } else if (KeyUtil.isDown(k)) {
                     focusedOptionIndex = (focusedOptionIndex + 1) % optCount;
                     return ScreenResult.stay(this);
-                } else if (KeyUtil.isSpace(k) || KeyUtil.isEnter(k)) {
+                } else if (KeyUtil.isEnter(k)) {
                     if (focusedOptionIndex >= 0 && focusedOptionIndex < optCount) {
                         QuestionOption opt = q.getOptions().get(focusedOptionIndex);
                         return lockInOption(q, opt.getId());
@@ -267,19 +265,13 @@ public class SpeedQuizTakerScreen implements Screen {
 
                 if (k.key() != null && k.key().length() == 1) {
                     char c = k.key().charAt(0);
-                    if (c >= '1' && c <= '9') {
+                    if (c >= '1' && c <= '4') {
                         int idx = c - '1';
                         if (idx >= 0 && idx < optCount) {
                             return lockInOption(q, q.getOptions().get(idx).getId());
                         }
                     }
                     char lower = Character.toLowerCase(c);
-                    if (lower >= 'a' && lower <= 'd') {
-                        int idx = lower - 'a';
-                        if (idx >= 0 && idx < optCount) {
-                            return lockInOption(q, q.getOptions().get(idx).getId());
-                        }
-                    }
                     if (lower == 't') {
                         for (int i = 0; i < optCount; i++) {
                             if (q.getOptions().get(i).getOptionText().equalsIgnoreCase("true")) {

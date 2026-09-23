@@ -275,7 +275,7 @@ public class AIQuestionGeneratorScreen implements Screen {
                     selectedDraftIndex = ListNavigationHelper.prevPage(selectedDraftIndex, 3);
                 } else if (KeyUtil.isRight(k)) {
                     selectedDraftIndex = ListNavigationHelper.nextPage(selectedDraftIndex, generatedDrafts.size(), 3);
-                } else if ("s".equalsIgnoreCase(k.key()) || KeyUtil.isEnter(k)) {
+                } else if (KeyUtil.isEnter(k)) {
                     try {
                         saveAllDrafts();
                         return returnToPreviousScreen();
@@ -340,7 +340,7 @@ public class AIQuestionGeneratorScreen implements Screen {
         int idx = focusedField;
         if (!isPinnedQuiz()) {
             if (idx == 0) {
-                if (KeyUtil.isTab(k) || KeyUtil.isRight(k)) {
+                if (KeyUtil.isRight(k)) {
                     subjectFilter.cycleNext();
                     selectedSubjectIndex = subjectFilter.getSelectedOriginalIndex();
                 } else if (KeyUtil.isLeft(k)) {
@@ -370,7 +370,7 @@ public class AIQuestionGeneratorScreen implements Screen {
                     return;
                 }
                 if (isSpeedQuiz()) {
-                    if (KeyUtil.isLeft(k) || KeyUtil.isRight(k) || KeyUtil.isSpace(k)) {
+                    if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {
                         selectedType = (selectedType == QuestionType.MCQ) ? QuestionType.TRUE_FALSE : QuestionType.MCQ;
                     }
                     if (focusedField >= getFieldCount()) focusedField = getFieldCount() - 1;
@@ -380,7 +380,7 @@ public class AIQuestionGeneratorScreen implements Screen {
                     if (selectedType == QuestionType.MCQ) selectedType = QuestionType.SHORT_ANSWER;
                     else if (selectedType == QuestionType.SHORT_ANSWER) selectedType = QuestionType.TRUE_FALSE;
                     else selectedType = QuestionType.MCQ;
-                } else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) {
+                } else if (KeyUtil.isRight(k)) {
                     if (selectedType == QuestionType.MCQ) selectedType = QuestionType.TRUE_FALSE;
                     else if (selectedType == QuestionType.TRUE_FALSE) selectedType = QuestionType.SHORT_ANSWER;
                     else selectedType = QuestionType.MCQ;
@@ -392,7 +392,7 @@ public class AIQuestionGeneratorScreen implements Screen {
                     if (selectedDifficulty == Difficulty.EASY) selectedDifficulty = Difficulty.HARD;
                     else if (selectedDifficulty == Difficulty.HARD) selectedDifficulty = Difficulty.MEDIUM;
                     else selectedDifficulty = Difficulty.EASY;
-                } else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) {
+                } else if (KeyUtil.isRight(k)) {
                     if (selectedDifficulty == Difficulty.EASY) selectedDifficulty = Difficulty.MEDIUM;
                     else if (selectedDifficulty == Difficulty.MEDIUM) selectedDifficulty = Difficulty.HARD;
                     else selectedDifficulty = Difficulty.EASY;
@@ -404,7 +404,7 @@ public class AIQuestionGeneratorScreen implements Screen {
                         if (mcqOptionCount == 2) mcqOptionCount = 4;
                         else if (mcqOptionCount == 4) mcqOptionCount = 3;
                         else mcqOptionCount = 2;
-                    } else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) {
+                    } else if (KeyUtil.isRight(k)) {
                         if (mcqOptionCount == 2) mcqOptionCount = 3;
                         else if (mcqOptionCount == 3) mcqOptionCount = 4;
                         else mcqOptionCount = 2;

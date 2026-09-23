@@ -84,7 +84,7 @@ public class QuestionBankViews {
         }
 
         if (subjectFilterDisplay != null && subjectFilterDisplay.contains("→")) {
-            sb.append(TuiHelper.dim("  [Type] Search  •  [Tab/←/→] Cycle Matches  •  [Enter] Confirm  •  [Esc] Cancel\n"));
+            sb.append(TuiHelper.dim("  [Type] Search  •  [←/→] Cycle Matches  •  [Enter] Confirm  •  [Esc] Cancel\n"));
             return sb.toString();
         }
 
@@ -93,7 +93,7 @@ public class QuestionBankViews {
                 "[←/→] Page",
                 "[n] New",
                 "[g] AI Generate",
-                "[e/Enter] Edit",
+                "[Enter] Edit",
                 "[d] Delete",
                 "[Tab] Type Filter",
                 "[s] Subj Filter",
@@ -195,8 +195,8 @@ public class QuestionBankViews {
                 "[←/→] Page",
                 "[Tab] Filter",
                 "[/] Search",
-                "[Space/Enter] Toggle",
-                "[c] Confirm Import",
+                "[Space] Toggle",
+                "[Enter] Confirm Import",
                 "[Esc] Cancel"
         );
         sb.append(TuiHelper.wrapHints(hints));

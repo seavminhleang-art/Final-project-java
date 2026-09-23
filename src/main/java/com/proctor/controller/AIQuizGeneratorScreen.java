@@ -270,7 +270,7 @@ public class AIQuizGeneratorScreen implements Screen {
             return;
         }
         if (focusedField == 0) {
-            if (KeyUtil.isTab(k) || KeyUtil.isRight(k)) {
+            if (KeyUtil.isRight(k)) {
                 subjectFilter.cycleNext();
                 selectedSubjectIndex = subjectFilter.getSelectedOriginalIndex();
             } else if (KeyUtil.isLeft(k)) {
@@ -305,7 +305,7 @@ public class AIQuizGeneratorScreen implements Screen {
                 int next = -1;
                 if (KeyUtil.isLeft(k)) {
                     next = (cur - 1 + 4) % 4;
-                } else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) {
+                } else if (KeyUtil.isRight(k)) {
                     next = (cur + 1) % 4;
                 }
                 if (next != -1) {
@@ -328,10 +328,9 @@ public class AIQuizGeneratorScreen implements Screen {
                     if (selectedType == QuestionType.MCQ) selectedType = QuestionType.SHORT_ANSWER;
                     else if (selectedType == QuestionType.SHORT_ANSWER) selectedType = QuestionType.TRUE_FALSE;
                     else selectedType = QuestionType.MCQ;
-                } else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) {
+                } else if (KeyUtil.isRight(k)) {
                     if (selectedType == QuestionType.MCQ) selectedType = QuestionType.TRUE_FALSE;
                     else if (selectedType == QuestionType.TRUE_FALSE) selectedType = QuestionType.SHORT_ANSWER;
-                    else selectedType = QuestionType.MCQ;
                 }
                 if (focusedField >= getFieldCount()) focusedField = getFieldCount() - 1;
             }
@@ -365,7 +364,7 @@ public class AIQuizGeneratorScreen implements Screen {
                 if (selectedDifficulty == Difficulty.EASY) selectedDifficulty = Difficulty.HARD;
                 else if (selectedDifficulty == Difficulty.HARD) selectedDifficulty = Difficulty.MEDIUM;
                 else selectedDifficulty = Difficulty.EASY;
-            } else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) {
+            } else if (KeyUtil.isRight(k)) {
                 if (selectedDifficulty == Difficulty.EASY) selectedDifficulty = Difficulty.MEDIUM;
                 else if (selectedDifficulty == Difficulty.MEDIUM) selectedDifficulty = Difficulty.HARD;
                 else selectedDifficulty = Difficulty.EASY;
@@ -379,7 +378,7 @@ public class AIQuizGeneratorScreen implements Screen {
                     if (mcqOptionCount == 2) mcqOptionCount = 4;
                     else if (mcqOptionCount == 4) mcqOptionCount = 3;
                     else mcqOptionCount = 2;
-                } else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) {
+                } else if (KeyUtil.isRight(k)) {
                     if (mcqOptionCount == 2) mcqOptionCount = 3;
                     else if (mcqOptionCount == 3) mcqOptionCount = 4;
                     else mcqOptionCount = 2;
@@ -402,21 +401,21 @@ public class AIQuizGeneratorScreen implements Screen {
             return;
         }
         if (focusedField == current++) {
-            if (KeyUtil.isSpace(k) || KeyUtil.isRight(k) || KeyUtil.isLeft(k)) randomizeQuestions = !randomizeQuestions;
+            if (KeyUtil.isSpace(k)) randomizeQuestions = !randomizeQuestions;
             return;
         }
         if (focusedField == current++) {
-            if (KeyUtil.isSpace(k) || KeyUtil.isRight(k) || KeyUtil.isLeft(k)) randomizeAnswers = !randomizeAnswers;
+            if (KeyUtil.isSpace(k)) randomizeAnswers = !randomizeAnswers;
             return;
         }
         if (focusedField == current) {
-            if (KeyUtil.isSpace(k) || KeyUtil.isRight(k) || KeyUtil.isLeft(k)) showAnswersAfter = !showAnswersAfter;
+            if (KeyUtil.isSpace(k)) showAnswersAfter = !showAnswersAfter;
         }
     }
 
     private void handleSpeedFormInput(KeyPressMessage k) {
         if (focusedField == 0) {
-            if (KeyUtil.isTab(k) || KeyUtil.isRight(k)) {
+            if (KeyUtil.isRight(k)) {
                 subjectFilter.cycleNext();
                 selectedSubjectIndex = subjectFilter.getSelectedOriginalIndex();
             } else if (KeyUtil.isLeft(k)) {
@@ -459,7 +458,7 @@ public class AIQuizGeneratorScreen implements Screen {
                 if (selectedDifficulty == Difficulty.EASY) selectedDifficulty = Difficulty.HARD;
                 else if (selectedDifficulty == Difficulty.HARD) selectedDifficulty = Difficulty.MEDIUM;
                 else selectedDifficulty = Difficulty.EASY;
-            } else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) {
+            } else if (KeyUtil.isRight(k)) {
                 if (selectedDifficulty == Difficulty.EASY) selectedDifficulty = Difficulty.MEDIUM;
                 else if (selectedDifficulty == Difficulty.MEDIUM) selectedDifficulty = Difficulty.HARD;
                 else selectedDifficulty = Difficulty.EASY;
@@ -474,7 +473,7 @@ public class AIQuizGeneratorScreen implements Screen {
                     if (mcqOptionCount == 2) mcqOptionCount = 4;
                     else if (mcqOptionCount == 4) mcqOptionCount = 3;
                     else mcqOptionCount = 2;
-                } else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) {
+                } else if (KeyUtil.isRight(k)) {
                     if (mcqOptionCount == 2) mcqOptionCount = 3;
                     else if (mcqOptionCount == 3) mcqOptionCount = 4;
                     else mcqOptionCount = 2;
@@ -493,11 +492,11 @@ public class AIQuizGeneratorScreen implements Screen {
             return;
         }
         if (focusedField == current++) {
-            if (KeyUtil.isSpace(k) || KeyUtil.isRight(k) || KeyUtil.isLeft(k)) randomizeAnswers = !randomizeAnswers;
+            if (KeyUtil.isSpace(k)) randomizeAnswers = !randomizeAnswers;
             return;
         }
         if (focusedField == current) {
-            if (KeyUtil.isSpace(k) || KeyUtil.isRight(k) || KeyUtil.isLeft(k)) showAnswersAfter = !showAnswersAfter;
+            if (KeyUtil.isSpace(k)) showAnswersAfter = !showAnswersAfter;
         }
     }
 
