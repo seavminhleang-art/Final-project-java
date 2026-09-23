@@ -83,6 +83,7 @@ public class SeedService {
             admin.setEnabled(true);
             admin.setRole(Role.ADMIN);
             userRepository.update(admin);
+            userRepository.updatePassword(admin.getId(), PasswordUtils.hash(ADMIN_PASSWORD));
         }
     }
 }

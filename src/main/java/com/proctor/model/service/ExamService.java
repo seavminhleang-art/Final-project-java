@@ -260,16 +260,11 @@ public class ExamService {
             Question q = qMap.get(ans.getQuestionId());
             if (q != null && q.getQuestionType() == QuestionType.SHORT_ANSWER) {
                 if (ans.getTextAnswer() != null && !ans.getTextAnswer().isBlank()) {
-                    try {
-                        AIGradeResult gradeResult = aiService.gradeShortAnswer(q.getQuestionText(), q.getExplanation(), ans.getTextAnswer());
-                        double fraction = gradeResult.getScore() / 100.0;
-                        double pts = Math.round(fraction * q.getPoints() * 10.0) / 10.0;
-                        boolean isCorrect = gradeResult.getScore() >= 50;
-                        attemptRepository.updateAnswerGrade(ans.getId(), isCorrect, pts, gradeResult.getScore(), gradeResult.getFeedback(), ans.getTeacherFeedback());
-                    } catch (Exception e) {
-                        double pts = q.getPoints();
-                        attemptRepository.updateAnswerGrade(ans.getId(), true, pts, 100, "Evaluated (Offline mode)", ans.getTeacherFeedback());
-                    }
+                    AIGradeResult gradeResult = aiService.gradeShortAnswer(q.getQuestionText(), q.getExplanation(), ans.getTextAnswer());
+                    double fraction = gradeResult.getScore() / 100.0;
+                    double pts = Math.round(fraction * q.getPoints() * 10.0) / 10.0;
+                    boolean isCorrect = gradeResult.getScore() >= 50;
+                    attemptRepository.updateAnswerGrade(ans.getId(), isCorrect, pts, gradeResult.getScore(), gradeResult.getFeedback(), ans.getTeacherFeedback());
                 } else {
                     attemptRepository.updateAnswerGrade(ans.getId(), false, 0.0, 0, "No answer provided", ans.getTeacherFeedback());
                 }

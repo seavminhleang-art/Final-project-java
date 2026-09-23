@@ -10,6 +10,9 @@ import com.proctor.util.KeyUtil;
 import com.proctor.util.MouseUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.InboxViews;
+import com.proctor.model.entity.Session;
+import com.proctor.model.entity.User;
+import com.proctor.model.enums.Role;
 import com.proctor.model.service.UserService;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
 import com.williamcallahan.tui4j.compat.bubbletea.Message;
@@ -202,7 +205,9 @@ public class InboxDetailScreen implements Screen {
 
     private ScreenResult executeReject() {
         try {
-            inboxService.rejectRequest(message.getId(), "Administrator has rejected this request.");
+            User u = Session.getCurrentUser().orElse(null);
+            String actor = (u != null && u.getRole() == Role.TEACHER) ? "Teacher" : "Administrator";
+            inboxService.rejectRequest(message.getId(), actor + " has rejected this request.");
             message.setStatus(InboxStatus.REJECTED);
             bannerMessage = TuiHelper.yellow("Request rejected.");
             errorMessage = "";

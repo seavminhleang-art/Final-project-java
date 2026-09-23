@@ -34,19 +34,29 @@ public class AIService {
     }
 
     public List<AIQuestionDraft> generateQuestions(String topic, int count, QuestionType type, Difficulty difficulty, int mcqOptionCount, String customInstructions) {
+        if (topic == null || topic.isBlank() || count <= 0) {
+            return new ArrayList<>();
+        }
         List<AIQuestionDraft> accumulated = new ArrayList<>();
         int attempts = 0;
         int maxAttempts = 3;
+        AIException lastException = null;
         while (accumulated.size() < count && attempts < maxAttempts) {
             attempts++;
             int needed = count - accumulated.size();
-            String prompt = buildGenerationPrompt(topic, needed, type, difficulty, mcqOptionCount, customInstructions);
-            String rawJson = ollamaClient.generateJson(prompt);
-            List<AIQuestionDraft> batch = parseGeneratedQuestions(rawJson, type, difficulty, mcqOptionCount);
-            if (batch.isEmpty()) {
-                break;
+            try {
+                String prompt = buildGenerationPrompt(topic, needed, type, difficulty, mcqOptionCount, customInstructions);
+                String rawJson = ollamaClient.generateJson(prompt);
+                List<AIQuestionDraft> batch = parseGeneratedQuestions(rawJson, type, difficulty, mcqOptionCount);
+                if (batch != null && !batch.isEmpty()) {
+                    accumulated.addAll(batch);
+                }
+            } catch (Exception e) {
+                lastException = (e instanceof AIException ai) ? ai : new AIException("Failed to generate questions: " + e.getMessage(), e);
             }
-            accumulated.addAll(batch);
+        }
+        if (accumulated.isEmpty() && lastException != null) {
+            throw lastException;
         }
         if (accumulated.size() > count) {
             return new ArrayList<>(accumulated.subList(0, count));
@@ -59,10 +69,30 @@ public class AIService {
     }
 
     public List<AIQuestionDraft> generateMixedQuestions(String topic, int totalCount, Difficulty difficulty, int mcqOptionCount, String customInstructions) {
-        int mcqCount = Math.max(1, totalCount / 2);
-        int tfCount = Math.max(1, (totalCount - mcqCount) / 2);
-        int saCount = Math.max(1, totalCount - mcqCount - tfCount);
-        return generateMixedQuestions(topic, mcqCount, tfCount, saCount, difficulty, mcqOptionCount, customInstructions);
+        if (totalCount <= 0) {
+            return new ArrayList<>();
+        }
+        int mcqCount;
+        int tfCount;
+        int saCount;
+        if (totalCount == 1) {
+            mcqCount = 1;
+            tfCount = 0;
+            saCount = 0;
+        } else if (totalCount == 2) {
+            mcqCount = 1;
+            tfCount = 1;
+            saCount = 0;
+        } else {
+            mcqCount = totalCount / 2;
+            tfCount = (totalCount - mcqCount) / 2;
+            saCount = totalCount - mcqCount - tfCount;
+        }
+        List<AIQuestionDraft> drafts = generateMixedQuestions(topic, mcqCount, tfCount, saCount, difficulty, mcqOptionCount, customInstructions);
+        if (drafts.size() > totalCount) {
+            return new ArrayList<>(drafts.subList(0, totalCount));
+        }
+        return drafts;
     }
 
     public List<AIQuestionDraft> generateMixedQuestions(String topic, int mcqCount, int tfCount, int saCount, Difficulty difficulty, int mcqOptionCount) {
@@ -106,6 +136,7 @@ public class AIService {
                    "2. Every question MUST be a clear declarative factual statement that is either True or False.\n" +
                    "3. Do NOT ask multiple choice questions, questions starting with 'Which of the following', or questions with options embedded in the text.\n" +
                    "4. The 'options' array MUST contain exactly two options: 'True' and 'False'. Exactly one option must have correct=true.\n" +
+                   "5. Keep question text concise (under 300 characters) and explanation concise (under 200 characters).\n" +
                    "Respond strictly in JSON format as an object with a 'questions' array:\n" +
                    "{\n" +
                    "  \"questions\": [\n" +
@@ -128,7 +159,8 @@ public class AIService {
                    "2. Every question MUST be an open-ended conceptual or analytical question requiring a concise written response.\n" +
                    "3. Do NOT provide multiple choice options or True/False questions.\n" +
                    "4. The 'options' array MUST be empty [].\n" +
-                   "5. The 'explanation' field MUST provide a complete model answer/rubric.\n" +
+                   "5. The 'explanation' field MUST provide a concise model answer rubric under 200 characters.\n" +
+                   "6. Keep question text concise (under 300 characters).\n" +
                    "Respond strictly in JSON format as an object with a 'questions' array:\n" +
                    "{\n" +
                    "  \"questions\": [\n" +
@@ -148,6 +180,7 @@ public class AIService {
                    "2. Every question MUST be a multiple choice question with exactly " + opts + " distinct options.\n" +
                    "3. Options MUST NOT be 'True' or 'False'. Provide realistic plausible distractors.\n" +
                    "4. Exactly one option must have correct=true.\n" +
+                   "5. Keep question text concise (under 300 characters), option text under 100 characters, and explanation under 200 characters.\n" +
                    "Respond strictly in JSON format as an object with a 'questions' array:\n" +
                    "{\n" +
                    "  \"questions\": [\n" +
@@ -173,6 +206,7 @@ public class AIService {
                "Model Answer / Context: \"" + (modelContext != null ? modelContext : "General domain knowledge") + "\"\n" +
                "Student's Answer: \"" + studentAnswer + "\"\n" +
                "Assign a score from 0 to 100 based on conceptual accuracy, clarity, and completeness.\n" +
+               "Keep evaluation feedback concise and under 300 characters.\n" +
                "Respond strictly in JSON format:\n" +
                "{\n" +
                "  \"score\": 85,\n" +
@@ -183,13 +217,35 @@ public class AIService {
     private String sanitizeJson(String raw) {
         if (raw == null) return "[]";
         String s = raw.trim();
-        if (s.startsWith("```json")) {
-            s = s.substring(7);
-        } else if (s.startsWith("```")) {
-            s = s.substring(3);
+        int codeStart = s.indexOf("```json");
+        if (codeStart != -1) {
+            s = s.substring(codeStart + 7);
+        } else {
+            codeStart = s.indexOf("```");
+            if (codeStart != -1) {
+                s = s.substring(codeStart + 3);
+            }
         }
-        if (s.endsWith("```")) {
-            s = s.substring(0, s.length() - 3);
+        int codeEnd = s.lastIndexOf("```");
+        if (codeEnd != -1) {
+            s = s.substring(0, codeEnd);
+        }
+        s = s.trim();
+        int firstBrace = s.indexOf('{');
+        int firstBracket = s.indexOf('[');
+        int start = -1;
+        if (firstBrace != -1 && firstBracket != -1) {
+            start = Math.min(firstBrace, firstBracket);
+        } else if (firstBrace != -1) {
+            start = firstBrace;
+        } else {
+            start = firstBracket;
+        }
+        int lastBrace = s.lastIndexOf('}');
+        int lastBracket = s.lastIndexOf(']');
+        int end = Math.max(lastBrace, lastBracket);
+        if (start != -1 && end != -1 && end >= start) {
+            s = s.substring(start, end + 1);
         }
         return s.trim();
     }
@@ -224,35 +280,74 @@ public class AIService {
             for (JsonNode node : questionNodes) {
                 String text = node.path("questionText").asText(
                         node.path("question").asText(node.path("text").asText(""))
-                );
+                ).trim();
                 if (text.isBlank()) continue;
+                if (text.length() > 500) {
+                    text = text.substring(0, 497) + "...";
+                }
 
                 double points = Math.max(0.5, Math.min(100.0, node.path("points").asDouble(2.0)));
-                String explanation = node.path("explanation").asText(node.path("rubric").asText(""));
+                String explanation = node.path("explanation").asText(node.path("rubric").asText("")).trim();
+                if (explanation.length() > 300) {
+                    explanation = explanation.substring(0, 297) + "...";
+                }
 
                 List<QuestionOption> options = new ArrayList<>();
                 if (type == QuestionType.SHORT_ANSWER) {
                 } else if (type == QuestionType.TRUE_FALSE) {
-                    boolean isTrue = true;
+                    Boolean explicitTrueCorrect = null;
                     JsonNode optsNode = node.path("options").isMissingNode() ? node.path("choices") : node.path("options");
                     if (optsNode.isArray()) {
                         for (JsonNode optNode : optsNode) {
-                            String optText = optNode.path("optionText").asText(
-                                    optNode.path("text").asText(optNode.path("choice").asText(""))
-                            ).trim();
-                            boolean correct = optNode.path("correct").asBoolean(optNode.path("is_correct").asBoolean(false));
+                            String optText;
+                            boolean correct;
+                            if (optNode.isTextual()) {
+                                optText = optNode.asText().trim();
+                                String ans = node.path("answer").asText(node.path("correctAnswer").asText(node.path("correct_answer").asText("")));
+                                correct = optText.equalsIgnoreCase(ans);
+                            } else {
+                                optText = optNode.path("optionText").asText(
+                                        optNode.path("text").asText(optNode.path("choice").asText(""))
+                                ).trim();
+                                correct = optNode.path("correct").asBoolean(optNode.path("is_correct").asBoolean(false));
+                            }
                             if (correct) {
                                 if ("false".equalsIgnoreCase(optText) || "f".equalsIgnoreCase(optText) || "no".equalsIgnoreCase(optText)) {
-                                    isTrue = false;
-                                } else {
-                                    isTrue = true;
+                                    explicitTrueCorrect = false;
+                                } else if ("true".equalsIgnoreCase(optText) || "t".equalsIgnoreCase(optText) || "yes".equalsIgnoreCase(optText)) {
+                                    explicitTrueCorrect = true;
                                 }
                             }
                         }
                     }
-                    if (explanation.toLowerCase().contains("is false") || explanation.toLowerCase().contains("incorrect") || explanation.toLowerCase().contains("statement is false")) {
-                        isTrue = false;
+
+                    if (explicitTrueCorrect == null) {
+                        String ans = node.path("answer").asText(node.path("correctAnswer").asText(node.path("correct_answer").asText(""))).trim();
+                        if (!ans.isBlank()) {
+                            if ("false".equalsIgnoreCase(ans) || "f".equalsIgnoreCase(ans) || "no".equalsIgnoreCase(ans)) {
+                                explicitTrueCorrect = false;
+                            } else if ("true".equalsIgnoreCase(ans) || "t".equalsIgnoreCase(ans) || "yes".equalsIgnoreCase(ans)) {
+                                explicitTrueCorrect = true;
+                            }
+                        }
                     }
+
+                    if (explicitTrueCorrect == null && node.has("is_true")) {
+                        explicitTrueCorrect = node.path("is_true").asBoolean(true);
+                    }
+
+                    boolean isTrue;
+                    if (explicitTrueCorrect != null) {
+                        isTrue = explicitTrueCorrect;
+                    } else {
+                        String explLower = explanation.toLowerCase();
+                        if (explLower.contains("is false") || explLower.contains("statement is false") || explLower.contains("false.")) {
+                            isTrue = false;
+                        } else {
+                            isTrue = true;
+                        }
+                    }
+
                     options.add(QuestionOption.builder().optionText("True").correct(isTrue).optionOrder(1).build());
                     options.add(QuestionOption.builder().optionText("False").correct(!isTrue).optionOrder(2).build());
                 } else {
@@ -260,13 +355,38 @@ public class AIService {
                     if (optsNode.isArray()) {
                         int order = 1;
                         boolean hasCorrect = false;
+                        java.util.Set<String> seen = new java.util.HashSet<>();
+                        String topAnswer = node.path("answer").asText(node.path("correctAnswer").asText(node.path("correct_answer").asText(""))).trim();
+
                         for (JsonNode optNode : optsNode) {
-                            String optText = optNode.path("optionText").asText(
-                                    optNode.path("text").asText(optNode.path("choice").asText(""))
-                            ).trim();
+                            String optText;
+                            boolean correct;
+                            if (optNode.isTextual()) {
+                                optText = optNode.asText().trim();
+                                correct = !topAnswer.isBlank() && (optText.equalsIgnoreCase(topAnswer) || (topAnswer.length() == 1 && Character.isDigit(topAnswer.charAt(0)) && Integer.parseInt(topAnswer) == order - 1));
+                            } else {
+                                optText = optNode.path("optionText").asText(
+                                        optNode.path("text").asText(optNode.path("choice").asText(""))
+                                ).trim();
+                                correct = optNode.path("correct").asBoolean(optNode.path("is_correct").asBoolean(false));
+                                if (!correct && !topAnswer.isBlank() && optText.equalsIgnoreCase(topAnswer)) {
+                                    correct = true;
+                                }
+                            }
                             if (optText.isBlank()) continue;
-                            boolean correct = optNode.path("correct").asBoolean(optNode.path("is_correct").asBoolean(false));
-                            if (correct) hasCorrect = true;
+                            if (optText.length() > 200) {
+                                optText = optText.substring(0, 197) + "...";
+                            }
+                            if (!seen.add(optText.toLowerCase())) {
+                                continue;
+                            }
+                            if (correct) {
+                                if (hasCorrect) {
+                                    correct = false;
+                                } else {
+                                    hasCorrect = true;
+                                }
+                            }
                             options.add(QuestionOption.builder()
                                     .optionText(optText)
                                     .correct(correct)
@@ -276,6 +396,9 @@ public class AIService {
                         if (!hasCorrect && !options.isEmpty()) {
                             options.get(0).setCorrect(true);
                         }
+                    }
+                    if (options.size() < 2) {
+                        continue;
                     }
                 }
 
@@ -298,11 +421,37 @@ public class AIService {
         try {
             String cleanJson = sanitizeJson(rawJson);
             JsonNode root = objectMapper.readTree(cleanJson);
-            int score = root.path("score").asInt(75);
-            String feedback = root.path("feedback").asText("Answer evaluated by AI.");
-            return AIGradeResult.builder().score(Math.min(100, Math.max(0, score))).feedback(feedback).build();
+            double rawScore = 75.0;
+            if (root.has("score")) {
+                rawScore = root.path("score").asDouble(75.0);
+            } else if (root.has("grade")) {
+                rawScore = root.path("grade").asDouble(75.0);
+            } else if (root.has("points")) {
+                rawScore = root.path("points").asDouble(75.0);
+            } else if (root.has("percentage")) {
+                rawScore = root.path("percentage").asDouble(75.0);
+            }
+            int score;
+            if (rawScore > 0.0 && rawScore <= 1.0) {
+                score = (int) Math.round(rawScore * 100.0);
+            } else {
+                score = (int) Math.round(rawScore);
+            }
+            score = Math.min(100, Math.max(0, score));
+
+            String feedback = root.path("feedback").asText(
+                    root.path("comments").asText(root.path("explanation").asText(root.path("evaluation").asText("Answer evaluated by AI.")))
+            ).trim();
+            if (feedback.length() > 500) {
+                feedback = feedback.substring(0, 497) + "...";
+            }
+            return AIGradeResult.builder().score(score).feedback(feedback).build();
         } catch (Exception e) {
-            return AIGradeResult.builder().score(75).feedback("AI evaluated answer: " + rawJson).build();
+            String fallbackFeedback = rawJson != null ? rawJson.trim() : "";
+            if (fallbackFeedback.length() > 200) {
+                fallbackFeedback = fallbackFeedback.substring(0, 197) + "...";
+            }
+            return AIGradeResult.builder().score(75).feedback("AI evaluated answer: " + fallbackFeedback).build();
         }
     }
 }
