@@ -121,82 +121,98 @@ public class AIService {
 
     private String buildGenerationPrompt(String topic, int count, QuestionType type, Difficulty difficulty, int mcqOptionCount, String customInstructions) {
         int opts = Math.max(2, Math.min(4, mcqOptionCount));
-        String customBlock = "";
-        if (customInstructions != null && !customInstructions.isBlank()) {
-            customBlock = "TEACHER CUSTOM INSTRUCTIONS & CONSTRAINTS:\n" +
-                          "\"" + customInstructions.trim() + "\"\n" +
-                          "You MUST strictly follow and incorporate these instructions into the questions and answers.\n\n";
+
+        String subjectContext = "";
+        String specificTopic = topic != null ? topic.trim() : "General Assessment";
+        if (specificTopic.contains(": ")) {
+            int idx = specificTopic.indexOf(": ");
+            subjectContext = specificTopic.substring(0, idx).trim();
+            specificTopic = specificTopic.substring(idx + 2).trim();
         }
 
+        StringBuilder sb = new StringBuilder();
+        sb.append("You are an expert academic examiner and curriculum specialist.\n\n");
+        if (!subjectContext.isBlank()) {
+            sb.append("ACADEMIC SUBJECT / DOMAIN: ").append(subjectContext).append("\n");
+        }
+        sb.append("TARGET TOPIC: ").append(specificTopic).append("\n");
+        sb.append("DIFFICULTY LEVEL: ").append(difficulty.name()).append("\n\n");
+
+        if (customInstructions != null && !customInstructions.isBlank()) {
+            sb.append("TEACHER CUSTOM INSTRUCTIONS & CONSTRAINTS:\n")
+              .append("\"").append(customInstructions.trim()).append("\"\n")
+              .append("You MUST strictly and obediently follow and incorporate these instructions.\n\n");
+        }
+
+        sb.append("CRITICAL REQUIREMENTS (STRICT ADHERENCE MANDATORY):\n");
+        sb.append("1. STRICT TOPICAL FOCUS: Every single question and answer MUST directly, specifically, and exclusively test the TARGET TOPIC ('").append(specificTopic).append("')");
+        if (customInstructions != null && !customInstructions.isBlank()) {
+            sb.append(" and the TEACHER CUSTOM INSTRUCTIONS ('").append(customInstructions.trim()).append("')");
+        }
+        sb.append(".\n");
+        sb.append("2. NEGATIVE CONSTRAINT (ZERO OFF-TOPIC DRIFT): Do NOT generate broad, generic, or off-topic questions. Do NOT ask generic syntax or background questions unless they are directly demonstrating '").append(specificTopic).append("'.\n");
+        sb.append("3. DISTINCTNESS: You MUST generate EXACTLY ").append(count).append(" distinct questions in the 'questions' JSON array. Every question must test a different facet of '").append(specificTopic).append("'.\n");
+
         if (type == QuestionType.TRUE_FALSE) {
-            return "You are an expert academic examiner. Generate EXACTLY " + count + " distinct " + difficulty.name() + " TRUE_FALSE questions on the topic: \"" + topic + "\".\n\n" +
-                   customBlock +
-                   "CRITICAL INSTRUCTIONS FOR TRUE_FALSE:\n" +
-                   "1. You MUST generate EXACTLY " + count + " distinct questions in the 'questions' JSON array. Not 1 question, but all " + count + " questions.\n" +
-                   "2. Every question MUST be a clear declarative factual statement that is either True or False.\n" +
-                   "3. Do NOT ask multiple choice questions, questions starting with 'Which of the following', or questions with options embedded in the text.\n" +
-                   "4. The 'options' array MUST contain exactly two options: 'True' and 'False'. Exactly one option must have correct=true.\n" +
-                   "5. Keep question text concise (under 300 characters) and explanation concise (under 200 characters).\n" +
-                   "Respond strictly in JSON format as an object with a 'questions' array:\n" +
-                   "{\n" +
-                   "  \"questions\": [\n" +
-                   "    {\n" +
-                   "      \"questionText\": \"In Java, the main method is the entry point of the application.\",\n" +
-                   "      \"points\": 2.0,\n" +
-                   "      \"explanation\": \"The main method is the required starting point for JVM execution.\",\n" +
-                   "      \"options\": [\n" +
-                   "        {\"optionText\": \"True\", \"correct\": true},\n" +
-                   "        {\"optionText\": \"False\", \"correct\": false}\n" +
-                   "      ]\n" +
-                   "    }\n" +
-                   "  ]\n" +
-                   "}";
+            sb.append("4. FORMAT: Generate EXACTLY ").append(count).append(" distinct TRUE_FALSE questions.\n");
+            sb.append("5. Every question MUST be a clear declarative factual statement that is either True or False specifically about '").append(specificTopic).append("'. Do NOT ask multiple choice questions or questions with embedded choices.\n");
+            sb.append("6. The 'options' array MUST contain exactly two options: 'True' and 'False'. Exactly one option must have correct=true.\n");
+            sb.append("7. Keep question text concise (under 300 characters) and explanation concise (under 200 characters).\n\n");
+            sb.append("Respond strictly in JSON format as an object with a 'questions' array:\n");
+            sb.append("{\n");
+            sb.append("  \"questions\": [\n");
+            sb.append("    {\n");
+            sb.append("      \"questionText\": \"In Java OOP, a class can implement multiple interfaces.\",\n");
+            sb.append("      \"points\": 2.0,\n");
+            sb.append("      \"explanation\": \"Java supports multiple interface inheritance.\",\n");
+            sb.append("      \"options\": [\n");
+            sb.append("        {\"optionText\": \"True\", \"correct\": true},\n");
+            sb.append("        {\"optionText\": \"False\", \"correct\": false}\n");
+            sb.append("      ]\n");
+            sb.append("    }\n");
+            sb.append("  ]\n");
+            sb.append("}");
+            return sb.toString();
         } else if (type == QuestionType.SHORT_ANSWER) {
-            return "You are an expert academic examiner. Generate EXACTLY " + count + " distinct " + difficulty.name() + " SHORT_ANSWER questions on the topic: \"" + topic + "\".\n\n" +
-                   customBlock +
-                   "CRITICAL INSTRUCTIONS FOR SHORT_ANSWER:\n" +
-                   "1. You MUST generate EXACTLY " + count + " distinct questions in the 'questions' JSON array. Not 1 question, but all " + count + " questions.\n" +
-                   "2. Every question MUST be an open-ended conceptual or analytical question requiring a concise written response.\n" +
-                   "3. Do NOT provide multiple choice options or True/False questions.\n" +
-                   "4. The 'options' array MUST be empty [].\n" +
-                   "5. The 'explanation' field MUST provide a concise model answer rubric under 200 characters.\n" +
-                   "6. Keep question text concise (under 300 characters).\n" +
-                   "Respond strictly in JSON format as an object with a 'questions' array:\n" +
-                   "{\n" +
-                   "  \"questions\": [\n" +
-                   "    {\n" +
-                   "      \"questionText\": \"Explain the difference between method overloading and method overriding in Java.\",\n" +
-                   "      \"points\": 5.0,\n" +
-                   "      \"explanation\": \"Overloading occurs in the same class with same name and different parameters. Overriding occurs in a subclass with the same signature.\",\n" +
-                   "      \"options\": []\n" +
-                   "    }\n" +
-                   "  ]\n" +
-                   "}";
+            sb.append("4. FORMAT: Generate EXACTLY ").append(count).append(" distinct SHORT_ANSWER questions.\n");
+            sb.append("5. Every question MUST be an open-ended conceptual or analytical question requiring a concise written response specifically about '").append(specificTopic).append("'.\n");
+            sb.append("6. Do NOT provide multiple choice options or True/False questions. The 'options' array MUST be empty [].\n");
+            sb.append("7. The 'explanation' field MUST provide a concise model answer rubric under 200 characters.\n");
+            sb.append("8. Keep question text concise (under 300 characters).\n\n");
+            sb.append("Respond strictly in JSON format as an object with a 'questions' array:\n");
+            sb.append("{\n");
+            sb.append("  \"questions\": [\n");
+            sb.append("    {\n");
+            sb.append("      \"questionText\": \"Explain the difference between method overloading and method overriding in Java.\",\n");
+            sb.append("      \"points\": 5.0,\n");
+            sb.append("      \"explanation\": \"Overloading occurs in the same class with different parameters; overriding occurs in a subclass with the same signature.\",\n");
+            sb.append("      \"options\": []\n");
+            sb.append("    }\n");
+            sb.append("  ]\n");
+            sb.append("}");
+            return sb.toString();
         } else {
-            return "You are an expert academic examiner. Generate EXACTLY " + count + " distinct " + difficulty.name() + " Multiple Choice (MCQ) questions on the topic: \"" + topic + "\".\n\n" +
-                   customBlock +
-                   "CRITICAL INSTRUCTIONS FOR MCQ:\n" +
-                   "1. You MUST generate EXACTLY " + count + " distinct questions in the 'questions' JSON array. Not 1 question, but all " + count + " questions.\n" +
-                   "2. Every question MUST be a multiple choice question with exactly " + opts + " distinct options.\n" +
-                   "3. Options MUST NOT be 'True' or 'False'. Provide realistic plausible distractors.\n" +
-                   "4. Exactly one option must have correct=true.\n" +
-                   "5. Keep question text concise (under 300 characters), option text under 100 characters, and explanation under 200 characters.\n" +
-                   "Respond strictly in JSON format as an object with a 'questions' array:\n" +
-                   "{\n" +
-                   "  \"questions\": [\n" +
-                   "    {\n" +
-                   "      \"questionText\": \"Which keyword is used to prevent a class from being subclassed in Java?\",\n" +
-                   "      \"points\": 2.0,\n" +
-                   "      \"explanation\": \"The final keyword prevents class inheritance.\",\n" +
-                   "      \"options\": [\n" +
-                   "        {\"optionText\": \"static\", \"correct\": false},\n" +
-                   "        {\"optionText\": \"final\", \"correct\": true},\n" +
-                   "        {\"optionText\": \"abstract\", \"correct\": false},\n" +
-                   "        {\"optionText\": \"sealed\", \"correct\": false}\n" +
-                   "      ]\n" +
-                   "    }\n" +
-                   "  ]\n" +
-                   "}";
+            sb.append("4. FORMAT: Generate EXACTLY ").append(count).append(" distinct Multiple Choice (MCQ) questions.\n");
+            sb.append("5. Every question MUST be a multiple choice question with exactly ").append(opts).append(" distinct plausible options specifically testing '").append(specificTopic).append("'.\n");
+            sb.append("6. Options MUST NOT be 'True' or 'False'. Exactly one option must have correct=true.\n");
+            sb.append("7. Keep question text concise (under 300 characters), option text under 100 characters, and explanation under 200 characters.\n\n");
+            sb.append("Respond strictly in JSON format as an object with a 'questions' array:\n");
+            sb.append("{\n");
+            sb.append("  \"questions\": [\n");
+            sb.append("    {\n");
+            sb.append("      \"questionText\": \"Which OOP concept refers to wrapping data and methods into a single unit?\",\n");
+            sb.append("      \"points\": 2.0,\n");
+            sb.append("      \"explanation\": \"Encapsulation wraps state and behavior within a class.\",\n");
+            sb.append("      \"options\": [\n");
+            sb.append("        {\"optionText\": \"Inheritance\", \"correct\": false},\n");
+            sb.append("        {\"optionText\": \"Encapsulation\", \"correct\": true},\n");
+            sb.append("        {\"optionText\": \"Polymorphism\", \"correct\": false},\n");
+            sb.append("        {\"optionText\": \"Abstraction\", \"correct\": false}\n");
+            sb.append("      ]\n");
+            sb.append("    }\n");
+            sb.append("  ]\n");
+            sb.append("}");
+            return sb.toString();
         }
     }
 

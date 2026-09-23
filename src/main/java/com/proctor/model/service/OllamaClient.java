@@ -49,7 +49,13 @@ public class OllamaClient {
             requestBody.put("format", "json");
 
             Map<String, Object> options = new HashMap<>();
-            options.put("temperature", 0.7);
+            double temp = 0.3;
+            String tempStr = Config.get("ollama.temperature", "0.3");
+            try {
+                temp = Double.parseDouble(tempStr.trim());
+            } catch (Exception ignored) {
+            }
+            options.put("temperature", temp);
             options.put("num_predict", 4096);
             requestBody.put("options", options);
 
