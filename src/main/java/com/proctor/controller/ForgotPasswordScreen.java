@@ -7,13 +7,20 @@ import com.proctor.model.service.EmailVerificationService;
 import com.proctor.util.KeyUtil;
 import com.proctor.util.MouseUtil;
 import com.proctor.util.TuiHelper;
+import com.proctor.view.AuthViews;
+import com.williamcallahan.tui4j.compat.bubbletea.Command;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
 import com.williamcallahan.tui4j.compat.bubbletea.Message;
 import com.williamcallahan.tui4j.compat.bubbletea.input.key.KeyType;
 
+import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ForgotPasswordScreen implements Screen {
+
+    public record OtpSendTickMessage(int generationId) implements Message {}
+    public record OtpSendResultMessage(int generationId, boolean success, boolean isResend, String maskedEmail, String error) implements Message {}
 
     private final AuthService authService;
     private final EmailVerificationService verificationService;
@@ -27,6 +34,14 @@ public class ForgotPasswordScreen implements Screen {
     private int forgotFocusIndex = 0;
     private String forgotMessage = "";
 
+    private boolean isSending = false;
+    private int sendGenerationId = 0;
+    private long sendStartTime = 0;
+    private int spinnerTick = 0;
+    private AtomicBoolean activeCancellation = null;
+    private String sendingTitle = "";
+    private String sendingRecipient = "";
+
     public ForgotPasswordScreen(AuthService authService) {
         this(authService, new EmailVerificationService());
     }
@@ -34,6 +49,14 @@ public class ForgotPasswordScreen implements Screen {
     public ForgotPasswordScreen(AuthService authService, EmailVerificationService verificationService) {
         this.authService = authService;
         this.verificationService = verificationService != null ? verificationService : new EmailVerificationService();
+    }
+
+    public boolean isSending() {
+        return isSending;
+    }
+
+    public int getSpinnerTick() {
+        return spinnerTick;
     }
 
     public ForgotStep getForgotStep() {
@@ -46,6 +69,62 @@ public class ForgotPasswordScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        if (msg instanceof OtpSendTickMessage t) {
+            if (isSending && t.generationId() == sendGenerationId) {
+                spinnerTick++;
+                return ScreenResult.stay(this, Command.tick(Duration.ofMillis(80), time -> new OtpSendTickMessage(sendGenerationId)));
+            }
+            return ScreenResult.stay(this);
+        }
+
+        if (msg instanceof OtpSendResultMessage res) {
+            if (!isSending || res.generationId() != sendGenerationId) {
+                return ScreenResult.stay(this);
+            }
+            isSending = false;
+            if (res.success()) {
+                maskedEmail = res.maskedEmail();
+                if (!res.isResend()) {
+                    forgotStep = ForgotStep.VERIFY_OTP;
+                    forgotFocusIndex = 0;
+                    forgotCode.setLength(0);
+                    forgotNewPassword.setLength(0);
+                    forgotConfirmPassword.setLength(0);
+                    forgotMessage = "";
+                } else {
+                    forgotMessage = TuiHelper.green("✔ A fresh verification code was sent to " + maskedEmail);
+                }
+            } else {
+                forgotMessage = TuiHelper.red("✖ " + res.error());
+            }
+            return ScreenResult.stay(this);
+        }
+
+        if (isSending) {
+            if (msg instanceof KeyPressMessage k && KeyUtil.isEsc(k)) {
+                if (activeCancellation != null) {
+                    activeCancellation.set(true);
+                }
+                isSending = false;
+                sendGenerationId++;
+                forgotMessage = TuiHelper.yellow("⚠ Sending cancelled.");
+                return ScreenResult.stay(this);
+            }
+            if (MouseUtil.isLeftClick(msg)) {
+                int line = MouseUtil.getLineIndex(msg);
+                int btnLine = MouseUtil.findButtonRowLine(view());
+                if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
+                    if (activeCancellation != null) {
+                        activeCancellation.set(true);
+                    }
+                    isSending = false;
+                    sendGenerationId++;
+                    forgotMessage = TuiHelper.yellow("⚠ Sending cancelled.");
+                    return ScreenResult.stay(this);
+                }
+            }
+            return ScreenResult.stay(this);
+        }
         if (MouseUtil.isWheelUp(msg)) {
             if (forgotStep == ForgotStep.IDENTIFIER || forgotStep == ForgotStep.VERIFY_OTP) {
                 forgotFocusIndex = (forgotFocusIndex == 0) ? 1 : 0;
@@ -241,20 +320,38 @@ public class ForgotPasswordScreen implements Screen {
             forgotMessage = TuiHelper.red("✖ Please enter your email address or username.");
             return ScreenResult.stay(this);
         }
-        try {
-            maskedEmail = verificationService.sendPasswordResetCode(target);
-            forgotStep = ForgotStep.VERIFY_OTP;
-            forgotFocusIndex = 0;
-            forgotCode.setLength(0);
-            forgotNewPassword.setLength(0);
-            forgotConfirmPassword.setLength(0);
-            forgotMessage = "";
-        } catch (ValidationException e) {
-            forgotMessage = TuiHelper.red("✖ " + e.getMessage());
-        } catch (Exception e) {
-            forgotMessage = TuiHelper.red("✖ Failed to send verification code: " + e.getMessage());
-        }
-        return ScreenResult.stay(this);
+        isSending = true;
+        sendStartTime = System.currentTimeMillis();
+        spinnerTick = 0;
+        final int genId = ++sendGenerationId;
+        final AtomicBoolean cancelled = new AtomicBoolean(false);
+        this.activeCancellation = cancelled;
+        sendingTitle = "Password Recovery";
+        sendingRecipient = target;
+        forgotMessage = "";
+
+        Command sendCmd = () -> {
+            try {
+                String masked = verificationService.sendPasswordResetCode(target);
+                if (cancelled.get()) {
+                    return new OtpSendResultMessage(genId, false, false, null, "Cancelled");
+                }
+                return new OtpSendResultMessage(genId, true, false, masked, null);
+            } catch (ValidationException e) {
+                if (cancelled.get()) {
+                    return new OtpSendResultMessage(genId, false, false, null, "Cancelled");
+                }
+                return new OtpSendResultMessage(genId, false, false, null, e.getMessage());
+            } catch (Exception e) {
+                if (cancelled.get()) {
+                    return new OtpSendResultMessage(genId, false, false, null, "Cancelled");
+                }
+                return new OtpSendResultMessage(genId, false, false, null, "Failed to send verification code: " + e.getMessage());
+            }
+        };
+
+        Command tickCmd = Command.tick(Duration.ofMillis(80), time -> new OtpSendTickMessage(genId));
+        return ScreenResult.stay(this, Command.batch(sendCmd, tickCmd));
     }
 
     private ScreenResult submitOtp() {
@@ -279,13 +376,38 @@ public class ForgotPasswordScreen implements Screen {
     }
 
     private ScreenResult resendOtp() {
-        try {
-            maskedEmail = verificationService.sendPasswordResetCode(forgotIdentifier.toString().trim());
-            forgotMessage = TuiHelper.green("✔ A fresh verification code was sent to " + maskedEmail);
-        } catch (Exception e) {
-            forgotMessage = TuiHelper.red("✖ Failed to resend code: " + e.getMessage());
+        String target = forgotIdentifier.toString().trim();
+        if (target.isBlank()) {
+            forgotMessage = TuiHelper.red("✖ Please enter your email address or username.");
+            return ScreenResult.stay(this);
         }
-        return ScreenResult.stay(this);
+        isSending = true;
+        sendStartTime = System.currentTimeMillis();
+        spinnerTick = 0;
+        final int genId = ++sendGenerationId;
+        final AtomicBoolean cancelled = new AtomicBoolean(false);
+        this.activeCancellation = cancelled;
+        sendingTitle = "Resending Verification Code";
+        sendingRecipient = (maskedEmail != null && !maskedEmail.isBlank()) ? maskedEmail : target;
+        forgotMessage = "";
+
+        Command sendCmd = () -> {
+            try {
+                String masked = verificationService.sendPasswordResetCode(target);
+                if (cancelled.get()) {
+                    return new OtpSendResultMessage(genId, false, true, null, "Cancelled");
+                }
+                return new OtpSendResultMessage(genId, true, true, masked, null);
+            } catch (Exception e) {
+                if (cancelled.get()) {
+                    return new OtpSendResultMessage(genId, false, true, null, "Cancelled");
+                }
+                return new OtpSendResultMessage(genId, false, true, null, "Failed to resend code: " + e.getMessage());
+            }
+        };
+
+        Command tickCmd = Command.tick(Duration.ofMillis(80), time -> new OtpSendTickMessage(genId));
+        return ScreenResult.stay(this, Command.batch(sendCmd, tickCmd));
     }
 
     private ScreenResult submitNewPassword() {
@@ -305,6 +427,11 @@ public class ForgotPasswordScreen implements Screen {
 
     @Override
     public String view() {
+        if (isSending) {
+            int elapsed = (int) ((System.currentTimeMillis() - sendStartTime) / 1000);
+            return AuthViews.renderOtpLoading("PASSWORD RESET", sendingTitle, sendingRecipient, spinnerTick, elapsed);
+        }
+
         StringBuilder sb = new StringBuilder();
         sb.append(TuiHelper.header("PROCTOR"));
         sb.append("\n");

@@ -194,4 +194,23 @@ public class AuthViews {
         sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Confirm / Submit  •  [Esc] Back\n"));
         return sb.toString();
     }
+
+    public static String renderOtpLoading(String headerTitle, String title, String recipientDisplay, int spinnerTick, int elapsedSeconds) {
+        String[] spinners = {"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"};
+        String icon = spinners[Math.abs(spinnerTick) % spinners.length];
+        String target = (recipientDisplay != null && !recipientDisplay.isBlank()) ? recipientDisplay.trim() : "your email";
+        return TuiHelper.loadingModal(
+                headerTitle != null && !headerTitle.isBlank() ? headerTitle : "PROCTOR",
+                title != null && !title.isBlank() ? title : "Verification Code",
+                "Dispatching 6-Digit OTP Code",
+                icon,
+                "Connecting to mail server...",
+                "Gmail SMTP Protocol",
+                "Delivering verification code to: " + target,
+                "Please wait while our mail system delivers your verification code.",
+                "[Esc] Cancel",
+                elapsedSeconds,
+                "[Esc] Cancel  •  Sending verification code via Gmail SMTP"
+        );
+    }
 }

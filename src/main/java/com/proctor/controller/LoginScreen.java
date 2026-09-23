@@ -69,9 +69,9 @@ public class LoginScreen implements Screen {
                     this.infoBanner = nextLogin.getInfoBanner();
                 }
                 forgotScreen = null;
-                return ScreenResult.stay(this);
+                return ScreenResult.stay(this, res.command());
             }
-            return ScreenResult.stay(this);
+            return ScreenResult.stay(this, res.command());
         }
 
         if (MouseUtil.isWheelUp(msg)) {

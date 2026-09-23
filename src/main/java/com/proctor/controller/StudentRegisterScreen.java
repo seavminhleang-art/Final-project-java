@@ -9,14 +9,21 @@ import com.proctor.util.MouseUtil;
 import com.proctor.view.AuthViews;
 import com.proctor.model.service.EmailVerificationService;
 import com.proctor.model.service.UserService;
+import com.williamcallahan.tui4j.compat.bubbletea.Command;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
 import com.williamcallahan.tui4j.compat.bubbletea.Message;
 import com.williamcallahan.tui4j.compat.bubbletea.input.key.KeyType;
 
 import java.time.DateTimeException;
+import java.time.Duration;
 import java.time.LocalDate;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class StudentRegisterScreen implements Screen {
+
+    public record RegisterSendTickMessage(int generationId) implements Message {}
+    public record RegisterSendResultMessage(int generationId, boolean success, String error, LocalDate dob, String cleanEmail, String cleanName, String cleanUser, String rawPass, String gender) implements Message {}
+
     private final AuthService authService;
     private final UserService userService;
     private final EmailVerificationService verificationService;
@@ -32,6 +39,12 @@ public class StudentRegisterScreen implements Screen {
     private int focusedField = 0;
     private String errorMessage = "";
 
+    private boolean isSending = false;
+    private int sendGenerationId = 0;
+    private long sendStartTime = 0;
+    private int spinnerTick = 0;
+    private AtomicBoolean activeCancellation = null;
+
     public StudentRegisterScreen(AuthService authService, UserService userService) {
         this(authService, userService, new EmailVerificationService());
     }
@@ -42,12 +55,78 @@ public class StudentRegisterScreen implements Screen {
         this.verificationService = verificationService != null ? verificationService : new EmailVerificationService();
     }
 
+    public boolean isSending() {
+        return isSending;
+    }
+
+    public int getSpinnerTick() {
+        return spinnerTick;
+    }
+
     private int getFieldCount() {
         return 9;
     }
 
     @Override
     public ScreenResult update(Message msg) {
+        if (msg instanceof RegisterSendTickMessage t) {
+            if (isSending && t.generationId() == sendGenerationId) {
+                spinnerTick++;
+                return ScreenResult.stay(this, Command.tick(Duration.ofMillis(80), time -> new RegisterSendTickMessage(sendGenerationId)));
+            }
+            return ScreenResult.stay(this);
+        }
+
+        if (msg instanceof RegisterSendResultMessage res) {
+            if (!isSending || res.generationId() != sendGenerationId) {
+                return ScreenResult.stay(this);
+            }
+            isSending = false;
+            if (res.success()) {
+                return ScreenResult.navigate(new EmailVerificationScreen(
+                        res.cleanEmail(),
+                        res.cleanName(),
+                        "Student Account Registration",
+                        "Complete Registration",
+                        verificationService,
+                        () -> {
+                            userService.createUser(res.cleanEmail(), res.cleanUser(), res.rawPass(), res.cleanName(), Role.STUDENT, res.dob(), res.gender());
+                            authService.login(res.cleanEmail(), res.rawPass());
+                            return ScreenResult.navigate(new StudentDashboardScreen(authService));
+                        },
+                        this
+                ));
+            } else {
+                errorMessage = "Registration failed: " + res.error();
+                return ScreenResult.stay(this);
+            }
+        }
+
+        if (isSending) {
+            if (msg instanceof KeyPressMessage k && KeyUtil.isEsc(k)) {
+                if (activeCancellation != null) {
+                    activeCancellation.set(true);
+                }
+                isSending = false;
+                sendGenerationId++;
+                errorMessage = "Sending cancelled.";
+                return ScreenResult.stay(this);
+            }
+            if (MouseUtil.isLeftClick(msg)) {
+                int line = MouseUtil.getLineIndex(msg);
+                int btnLine = MouseUtil.findButtonRowLine(view());
+                if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
+                    if (activeCancellation != null) {
+                        activeCancellation.set(true);
+                    }
+                    isSending = false;
+                    sendGenerationId++;
+                    errorMessage = "Sending cancelled.";
+                    return ScreenResult.stay(this);
+                }
+            }
+            return ScreenResult.stay(this);
+        }
         if (MouseUtil.isWheelUp(msg)) {
             focusedField = (focusedField - 1 + getFieldCount()) % getFieldCount();
             return ScreenResult.stay(this);
@@ -224,21 +303,31 @@ public class StudentRegisterScreen implements Screen {
 
             userService.validateNewUser(cleanEmail, cleanUser, rawPass, cleanName, Role.STUDENT, dob, gender, null, null, null);
 
-            verificationService.sendRegistrationCode(cleanEmail, cleanName);
+            isSending = true;
+            sendStartTime = System.currentTimeMillis();
+            spinnerTick = 0;
+            final int genId = ++sendGenerationId;
+            final AtomicBoolean cancelled = new AtomicBoolean(false);
+            this.activeCancellation = cancelled;
+            errorMessage = "";
 
-            return ScreenResult.navigate(new EmailVerificationScreen(
-                    cleanEmail,
-                    cleanName,
-                    "Student Account Registration",
-                    "Complete Registration",
-                    verificationService,
-                    () -> {
-                        userService.createUser(cleanEmail, cleanUser, rawPass, cleanName, Role.STUDENT, dob, gender);
-                        authService.login(cleanEmail, rawPass);
-                        return ScreenResult.navigate(new StudentDashboardScreen(authService));
-                    },
-                    this
-            ));
+            Command sendCmd = () -> {
+                try {
+                    verificationService.sendRegistrationCode(cleanEmail, cleanName);
+                    if (cancelled.get()) {
+                        return new RegisterSendResultMessage(genId, false, "Cancelled", dob, cleanEmail, cleanName, cleanUser, rawPass, gender);
+                    }
+                    return new RegisterSendResultMessage(genId, true, null, dob, cleanEmail, cleanName, cleanUser, rawPass, gender);
+                } catch (Exception e) {
+                    if (cancelled.get()) {
+                        return new RegisterSendResultMessage(genId, false, "Cancelled", dob, cleanEmail, cleanName, cleanUser, rawPass, gender);
+                    }
+                    return new RegisterSendResultMessage(genId, false, e.getMessage(), dob, cleanEmail, cleanName, cleanUser, rawPass, gender);
+                }
+            };
+
+            Command tickCmd = Command.tick(Duration.ofMillis(80), time -> new RegisterSendTickMessage(genId));
+            return ScreenResult.stay(this, Command.batch(sendCmd, tickCmd));
         } catch (ValidationException e) {
             errorMessage = e.getMessage();
             return ScreenResult.stay(this);
@@ -276,6 +365,10 @@ public class StudentRegisterScreen implements Screen {
 
     @Override
     public String view() {
+        if (isSending) {
+            int elapsed = (int) ((System.currentTimeMillis() - sendStartTime) / 1000);
+            return AuthViews.renderOtpLoading("STUDENT REGISTRATION", "Account Registration", email.toString().trim(), spinnerTick, elapsed);
+        }
         return AuthViews.renderRegister(
                 Role.STUDENT,
                 fullName.toString(), email.toString(), username.toString(),

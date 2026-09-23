@@ -5,17 +5,21 @@ import com.proctor.model.service.EmailVerificationService;
 import com.proctor.util.KeyUtil;
 import com.proctor.util.MouseUtil;
 import com.proctor.util.TuiHelper;
+import com.proctor.view.AuthViews;
 import com.williamcallahan.tui4j.compat.bubbletea.Command;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
 import com.williamcallahan.tui4j.compat.bubbletea.Message;
 import com.williamcallahan.tui4j.compat.bubbletea.input.key.KeyType;
 
+import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 public class EmailVerificationScreen implements Screen {
 
     public record ResendCompletedMessage(boolean success, String error) implements Message {}
+    public record ResendTickMessage(int generationId) implements Message {}
 
     private final String email;
     private final String fullName;
@@ -31,6 +35,10 @@ public class EmailVerificationScreen implements Screen {
     private String errorMessage = "";
     private String infoMessage = "";
     private boolean isResending = false;
+    private int resendGenerationId = 0;
+    private long resendStartTime = 0;
+    private int spinnerTick = 0;
+    private AtomicBoolean activeCancellation = null;
 
     public EmailVerificationScreen(String email,
                                    String fullName,
@@ -48,6 +56,14 @@ public class EmailVerificationScreen implements Screen {
         this.returnScreen = returnScreen;
     }
 
+    public boolean isResending() {
+        return isResending;
+    }
+
+    public int getSpinnerTick() {
+        return spinnerTick;
+    }
+
     @Override
     public Command init() {
         return null;
@@ -55,6 +71,14 @@ public class EmailVerificationScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        if (msg instanceof ResendTickMessage t) {
+            if (isResending && t.generationId() == resendGenerationId) {
+                spinnerTick++;
+                return ScreenResult.stay(this, Command.tick(Duration.ofMillis(80), time -> new ResendTickMessage(resendGenerationId)));
+            }
+            return ScreenResult.stay(this);
+        }
+
         if (msg instanceof ResendCompletedMessage res) {
             isResending = false;
             if (res.success()) {
@@ -62,6 +86,32 @@ public class EmailVerificationScreen implements Screen {
                 errorMessage = "";
             } else {
                 errorMessage = TuiHelper.red("✖ " + res.error());
+            }
+            return ScreenResult.stay(this);
+        }
+
+        if (isResending) {
+            if (msg instanceof KeyPressMessage k && KeyUtil.isEsc(k)) {
+                if (activeCancellation != null) {
+                    activeCancellation.set(true);
+                }
+                isResending = false;
+                resendGenerationId++;
+                errorMessage = TuiHelper.yellow("⚠ Resend cancelled.");
+                return ScreenResult.stay(this);
+            }
+            if (MouseUtil.isLeftClick(msg)) {
+                int line = MouseUtil.getLineIndex(msg);
+                int btnLine = MouseUtil.findButtonRowLine(view());
+                if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
+                    if (activeCancellation != null) {
+                        activeCancellation.set(true);
+                    }
+                    isResending = false;
+                    resendGenerationId++;
+                    errorMessage = TuiHelper.yellow("⚠ Resend cancelled.");
+                    return ScreenResult.stay(this);
+                }
             }
             return ScreenResult.stay(this);
         }
@@ -184,16 +234,31 @@ public class EmailVerificationScreen implements Screen {
 
     private ScreenResult triggerResend() {
         isResending = true;
+        resendStartTime = System.currentTimeMillis();
+        spinnerTick = 0;
+        final int genId = ++resendGenerationId;
+        final AtomicBoolean cancelled = new AtomicBoolean(false);
+        this.activeCancellation = cancelled;
         errorMessage = "";
-        infoMessage = TuiHelper.cyan("Sending fresh verification code to your email...");
-        return ScreenResult.stay(this, () -> {
+        infoMessage = "";
+
+        Command sendCmd = () -> {
             try {
                 verificationService.sendRegistrationCode(email, fullName);
+                if (cancelled.get()) {
+                    return new ResendCompletedMessage(false, "Cancelled");
+                }
                 return new ResendCompletedMessage(true, null);
             } catch (Exception e) {
+                if (cancelled.get()) {
+                    return new ResendCompletedMessage(false, "Cancelled");
+                }
                 return new ResendCompletedMessage(false, e.getMessage());
             }
-        });
+        };
+
+        Command tickCmd = Command.tick(Duration.ofMillis(80), time -> new ResendTickMessage(genId));
+        return ScreenResult.stay(this, Command.batch(sendCmd, tickCmd));
     }
 
     private char extractChar(KeyPressMessage k) {
@@ -208,6 +273,11 @@ public class EmailVerificationScreen implements Screen {
 
     @Override
     public String view() {
+        if (isResending) {
+            int elapsed = (int) ((System.currentTimeMillis() - resendStartTime) / 1000);
+            return AuthViews.renderOtpLoading("EMAIL VERIFICATION", "Resending Verification Code", email, spinnerTick, elapsed);
+        }
+
         StringBuilder sb = new StringBuilder();
         sb.append(TuiHelper.header("PROCTOR"));
         sb.append("\n");
@@ -225,9 +295,7 @@ public class EmailVerificationScreen implements Screen {
         int focusedBtnIdx = (focusedSection == 1) ? focusedButton : -1;
         sb.append(TuiHelper.buttonRow(buttons, focusedBtnIdx, 106)).append("\n\n");
 
-        if (isResending) {
-            sb.append("  ").append(TuiHelper.cyan("⠋ Dispatching email via Gmail SMTP...")).append("\n\n");
-        } else if (!errorMessage.isBlank()) {
+        if (!errorMessage.isBlank()) {
             sb.append("  ").append(errorMessage).append("\n\n");
         } else if (!infoMessage.isBlank()) {
             sb.append("  ").append(infoMessage).append("\n\n");

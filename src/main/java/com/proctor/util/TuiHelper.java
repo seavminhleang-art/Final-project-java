@@ -424,10 +424,10 @@ public class TuiHelper {
         return sb.toString();
     }
 
-    public static String aiLoadingModal(String headerTitle, String title, String subtitle,
-                                        String spinnerIcon, String primaryStatus, String secondaryStatus,
-                                        String description1, String description2,
-                                        String cancelBtnLabel, int elapsedSeconds) {
+    public static String loadingModal(String headerTitle, String title, String subtitle,
+                                      String spinnerIcon, String primaryStatus, String secondaryStatus,
+                                      String description1, String description2,
+                                      String cancelBtnLabel, int elapsedSeconds, String footerHint) {
         StringBuilder sb = new StringBuilder();
         sb.append(DIALOG_MARKER);
         sb.append(header(headerTitle));
@@ -460,8 +460,22 @@ public class TuiHelper {
         int btnWidth = Math.max(26, cancelLabel.length() + 6);
         sb.append(boxButton(cancelLabel, false, RED, btnWidth)).append("\n\n");
 
-        sb.append(dim("[Esc] Cancel  •  Please wait for Ollama LLM to respond")).append(CLEAR_EOL).append("\n");
+        String hint = (footerHint != null && !footerHint.isBlank()) ? footerHint : "[Esc] Cancel";
+        sb.append(dim(hint)).append(CLEAR_EOL).append("\n");
         return sb.toString();
+    }
+
+    public static String aiLoadingModal(String headerTitle, String title, String subtitle,
+                                        String spinnerIcon, String primaryStatus, String secondaryStatus,
+                                        String description1, String description2,
+                                        String cancelBtnLabel, int elapsedSeconds) {
+        return loadingModal(
+                headerTitle, title, subtitle,
+                spinnerIcon, primaryStatus, secondaryStatus,
+                description1, description2,
+                cancelBtnLabel, elapsedSeconds,
+                "[Esc] Cancel  •  Please wait for Ollama LLM to respond"
+        );
     }
 
     public static String padCenter(String text, int width) {
