@@ -10,6 +10,7 @@ import com.proctor.model.service.QuestionService;
 import com.proctor.model.service.QuizService;
 import com.proctor.model.service.SubjectService;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.ListNavigationHelper;
 import com.proctor.util.MouseUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.QuestionBankViews;
@@ -132,12 +133,7 @@ public class QuestionBankPickerScreen implements Screen {
 
             int pagLine = MouseUtil.findPaginationLine(view());
             if (pagLine != -1 && line == pagLine && !bankQuestions.isEmpty()) {
-                int action = MouseUtil.getClickedPaginationAction(col, currentPage, totalPages);
-                if (action < 0) {
-                    selectedIndex = (currentPage - 1) * pageSize;
-                } else if (action > 0) {
-                    selectedIndex = Math.min(bankQuestions.size() - 1, (currentPage + 1) * pageSize);
-                }
+                selectedIndex = ListNavigationHelper.handlePaginationClick(col, selectedIndex, bankQuestions.size(), TuiHelper.PAGE_SIZE);
                 return ScreenResult.stay(this);
             }
 
@@ -178,22 +174,9 @@ public class QuestionBankPickerScreen implements Screen {
             } else if (KeyUtil.isDown(k)) {
                 if (!bankQuestions.isEmpty()) selectedIndex = (selectedIndex + 1) % bankQuestions.size();
             } else if (KeyUtil.isLeft(k)) {
-                if (!bankQuestions.isEmpty()) {
-                    int pageSize = TuiHelper.PAGE_SIZE;
-                    int page = selectedIndex / pageSize;
-                    if (page > 0) {
-                        selectedIndex = (page - 1) * pageSize;
-                    }
-                }
+                selectedIndex = ListNavigationHelper.prevPage(selectedIndex, TuiHelper.PAGE_SIZE);
             } else if (KeyUtil.isRight(k)) {
-                if (!bankQuestions.isEmpty()) {
-                    int pageSize = TuiHelper.PAGE_SIZE;
-                    int page = selectedIndex / pageSize;
-                    int totalPages = Math.max(1, (int) Math.ceil((double) bankQuestions.size() / pageSize));
-                    if (page < totalPages - 1) {
-                        selectedIndex = Math.min(bankQuestions.size() - 1, (page + 1) * pageSize);
-                    }
-                }
+                selectedIndex = ListNavigationHelper.nextPage(selectedIndex, bankQuestions.size(), TuiHelper.PAGE_SIZE);
             } else if ((KeyUtil.isSpace(k) || KeyUtil.isEnter(k)) && !bankQuestions.isEmpty()) {
                 int qid = bankQuestions.get(selectedIndex).getId();
                 if (alreadyAddedIds.contains(qid)) {

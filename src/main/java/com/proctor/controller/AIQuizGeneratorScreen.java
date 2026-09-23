@@ -207,6 +207,10 @@ public class AIQuizGeneratorScreen implements Screen {
                     return ScreenResult.navigate(new QuizListScreen(quizService, questionService, subjectService, authService, assessmentType));
                 }
             }
+            String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
+            if (hintAction != null && "Esc".equals(hintAction)) {
+                return ScreenResult.navigate(new QuizListScreen(quizService, questionService, subjectService, authService, assessmentType));
+            }
             return ScreenResult.stay(this);
         }
 
@@ -298,18 +302,26 @@ public class AIQuizGeneratorScreen implements Screen {
         if (focusedField == 4) {
             if (assessmentType == AssessmentType.EXAM) {
                 int cur = isExamMixed ? 0 : (selectedType == QuestionType.MCQ ? 1 : (selectedType == QuestionType.TRUE_FALSE ? 2 : 3));
-                int next = (KeyUtil.isLeft(k)) ? (cur - 1 + 4) % 4 : (cur + 1) % 4;
-                if (next == 0) {
-                    isExamMixed = true;
-                } else if (next == 1) {
-                    isExamMixed = false;
-                    selectedType = QuestionType.MCQ;
-                } else if (next == 2) {
-                    isExamMixed = false;
-                    selectedType = QuestionType.TRUE_FALSE;
-                } else {
-                    isExamMixed = false;
-                    selectedType = QuestionType.SHORT_ANSWER;
+                int next = -1;
+                if (KeyUtil.isLeft(k)) {
+                    next = (cur - 1 + 4) % 4;
+                } else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) {
+                    next = (cur + 1) % 4;
+                }
+                if (next != -1) {
+                    if (next == 0) {
+                        isExamMixed = true;
+                    } else if (next == 1) {
+                        isExamMixed = false;
+                        selectedType = QuestionType.MCQ;
+                    } else if (next == 2) {
+                        isExamMixed = false;
+                        selectedType = QuestionType.TRUE_FALSE;
+                    } else {
+                        isExamMixed = false;
+                        selectedType = QuestionType.SHORT_ANSWER;
+                    }
+                    if (focusedField >= getFieldCount()) focusedField = getFieldCount() - 1;
                 }
             } else {
                 if (KeyUtil.isLeft(k)) {
@@ -321,6 +333,7 @@ public class AIQuizGeneratorScreen implements Screen {
                     else if (selectedType == QuestionType.TRUE_FALSE) selectedType = QuestionType.SHORT_ANSWER;
                     else selectedType = QuestionType.MCQ;
                 }
+                if (focusedField >= getFieldCount()) focusedField = getFieldCount() - 1;
             }
             return;
         }
@@ -329,6 +342,7 @@ public class AIQuizGeneratorScreen implements Screen {
         if (assessmentType == AssessmentType.EXAM && isExamMixed) {
             if (focusedField == current++) {
                 handleTextInput(mcqCountBuffer, k);
+                if (focusedField >= getFieldCount()) focusedField = getFieldCount() - 1;
                 return;
             }
             if (focusedField == current++) {
@@ -433,6 +447,7 @@ public class AIQuizGeneratorScreen implements Screen {
         }
         if (focusedField == 4) {
             handleTextInput(mcqCountBuffer, k);
+            if (focusedField >= getFieldCount()) focusedField = getFieldCount() - 1;
             return;
         }
         if (focusedField == 5) {

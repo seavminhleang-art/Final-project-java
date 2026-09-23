@@ -154,14 +154,14 @@ public class TuiHelper {
             return "";
         }
         if (totalPages <= 1) {
-            return dim(String.format("  Page 1 of 1  •  %d %s", totalItems, totalItems == 1 ? "item" : "items")) + "\n\n";
+            return "  " + bold("Page 1 of 1") + dim(String.format("  •  %d %s", totalItems, totalItems == 1 ? "item" : "items")) + "\n\n";
         }
         String prevLabel = (currentPage > 0) ? cyan("◀ [←] Prev") : dim("  [←] Prev");
         String nextLabel = (currentPage < totalPages - 1) ? cyan("[→] Next ▶") : dim("[→] Next  ");
         String pageInfo = bold(String.format("Page %d of %d", currentPage + 1, totalPages));
-        String countInfo = dim(String.format("(%d %s)", totalItems, totalItems == 1 ? "item" : "items"));
+        String countInfo = dim(String.format("  •  %d %s", totalItems, totalItems == 1 ? "item" : "items"));
 
-        return String.format("  " + BUTTON_MARKER + "%s   %s  %s   %s%n%n", prevLabel, pageInfo, countInfo, nextLabel);
+        return String.format("  " + BUTTON_MARKER + "%s   %s%s   %s%n%n", prevLabel, pageInfo, countInfo, nextLabel);
     }
 
     public static String tabBar(String[] tabs, int activeIndex) {
@@ -535,6 +535,10 @@ public class TuiHelper {
     public static boolean isHintRow(String stripped) {
         if (stripped == null || stripped.isEmpty()) return false;
         String s = stripped.trim();
+        if (((s.contains("Page ") || s.contains("Question ")) && s.contains(" of "))
+                || s.contains("[←] Prev") || s.contains("[→] Next")) {
+            return false;
+        }
         if (!s.startsWith("[")) {
             return false;
         }

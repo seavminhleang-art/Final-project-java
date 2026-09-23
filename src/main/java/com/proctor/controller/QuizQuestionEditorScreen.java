@@ -9,6 +9,7 @@ import com.proctor.model.entity.Quiz;
 import com.proctor.model.service.QuizService;
 import com.proctor.model.service.SubjectService;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.ListNavigationHelper;
 import com.proctor.util.MouseUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.QuizViews;
@@ -93,7 +94,7 @@ public class QuizQuestionEditorScreen implements Screen {
                 int col = MouseUtil.getColInLine(msg);
                 int btnLine = MouseUtil.findButtonRowLine(view());
                 if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
-                    int btn = MouseUtil.getClickedButtonIndex(col, "Delete", "Cancel");
+                    int btn = MouseUtil.getClickedButtonIndex(col, "Delete Question", "Cancel");
                     if (btn == 0) {
                         if (pendingDeleteQuestion != null) {
                             questionService.deleteQuestion(pendingDeleteQuestion.getId());
@@ -139,12 +140,7 @@ public class QuizQuestionEditorScreen implements Screen {
 
             int pagLine = MouseUtil.findPaginationLine(view());
             if (pagLine != -1 && line == pagLine && !questions.isEmpty()) {
-                int action = MouseUtil.getClickedPaginationAction(col, currentPage, totalPages);
-                if (action < 0) {
-                    selectedIndex = (currentPage - 1) * pageSize;
-                } else if (action > 0) {
-                    selectedIndex = Math.min(questions.size() - 1, (currentPage + 1) * pageSize);
-                }
+                selectedIndex = ListNavigationHelper.handlePaginationClick(col, selectedIndex, questions.size(), TuiHelper.PAGE_SIZE);
                 return ScreenResult.stay(this);
             }
 
@@ -227,22 +223,9 @@ public class QuizQuestionEditorScreen implements Screen {
                     selectedIndex = (selectedIndex + 1) % questions.size();
                 }
             } else if (KeyUtil.isLeft(k)) {
-                if (!questions.isEmpty()) {
-                    int pageSize = TuiHelper.PAGE_SIZE;
-                    int currentPage = selectedIndex / pageSize;
-                    if (currentPage > 0) {
-                        selectedIndex = (currentPage - 1) * pageSize;
-                    }
-                }
+                selectedIndex = ListNavigationHelper.prevPage(selectedIndex, TuiHelper.PAGE_SIZE);
             } else if (KeyUtil.isRight(k)) {
-                if (!questions.isEmpty()) {
-                    int pageSize = TuiHelper.PAGE_SIZE;
-                    int totalPages = Math.max(1, (int) Math.ceil((double) questions.size() / pageSize));
-                    int currentPage = selectedIndex / pageSize;
-                    if (currentPage < totalPages - 1) {
-                        selectedIndex = Math.min(questions.size() - 1, (currentPage + 1) * pageSize);
-                    }
-                }
+                selectedIndex = ListNavigationHelper.nextPage(selectedIndex, questions.size(), TuiHelper.PAGE_SIZE);
             } else if ("n".equalsIgnoreCase(k.key()) || "a".equalsIgnoreCase(k.key())) {
                 return ScreenResult.navigate(new QuestionFormScreen(questionService, subjectService, authService, null, quiz));
             } else if ("b".equalsIgnoreCase(k.key())) {

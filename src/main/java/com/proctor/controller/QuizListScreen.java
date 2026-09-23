@@ -159,6 +159,76 @@ public class QuizListScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
+            String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
+            if (hintAction != null) {
+                if ("Esc".equals(hintAction)) {
+                    User user = Session.getCurrentUser().orElse(null);
+                    boolean isAdmin = user != null && user.getRole() == Role.ADMIN;
+                    if (isAdmin) {
+                        return ScreenResult.navigate(new AdminDashboardScreen(authService));
+                    }
+                    return ScreenResult.navigate(new TeacherDashboardScreen(authService, questionService, subjectService, quizService));
+                } else if ("n".equals(hintAction)) {
+                    User user = Session.getCurrentUser().orElse(null);
+                    if (user == null || user.getRole() != Role.ADMIN) {
+                        if (assessmentType == AssessmentType.SPEED) {
+                            return ScreenResult.navigate(new SpeedQuizFormScreen(quizService, questionService, subjectService, authService, null));
+                        }
+                        return ScreenResult.navigate(new QuizFormScreen(quizService, questionService, subjectService, authService, null, assessmentType));
+                    }
+                } else if ("g".equals(hintAction)) {
+                    User user = Session.getCurrentUser().orElse(null);
+                    if (user == null || user.getRole() != Role.ADMIN) {
+                        return ScreenResult.navigate(new AIQuizGeneratorScreen(new AIService(), quizService, questionService, subjectService, authService, assessmentType));
+                    }
+                } else if ("d".equals(hintAction) && !quizzes.isEmpty() && selectedIndex < quizzes.size()) {
+                    Quiz q = quizzes.get(selectedIndex);
+                    if (canModify(q)) {
+                        pendingDeleteQuiz = q;
+                        confirmingDelete = true;
+                        confirmDeleteFocused = false;
+                        return ScreenResult.stay(this);
+                    } else {
+                        bannerMessage = TuiHelper.red("✖ You can only delete assessments you created.");
+                        return ScreenResult.stay(this);
+                    }
+                } else if ("e".equals(hintAction) && !quizzes.isEmpty() && selectedIndex < quizzes.size()) {
+                    Quiz q = quizzes.get(selectedIndex);
+                    if (canModify(q)) {
+                        if (assessmentType == AssessmentType.SPEED) {
+                            return ScreenResult.navigate(new SpeedQuizFormScreen(quizService, questionService, subjectService, authService, q));
+                        }
+                        return ScreenResult.navigate(new QuizFormScreen(quizService, questionService, subjectService, authService, q, assessmentType));
+                    } else {
+                        bannerMessage = TuiHelper.red("✖ You can only edit assessments you created.");
+                        return ScreenResult.stay(this);
+                    }
+                } else if (("Enter".equals(hintAction) || "q".equals(hintAction)) && !quizzes.isEmpty() && selectedIndex < quizzes.size()) {
+                    return ScreenResult.navigate(new QuizQuestionEditorScreen(quizzes.get(selectedIndex), quizService, questionService, subjectService, authService));
+                } else if ("r".equals(hintAction) && !quizzes.isEmpty() && selectedIndex < quizzes.size()) {
+                    ExamService examService = new ExamService(new QuizRepository(), new AttemptRepository(), new ResultRepository());
+                    return ScreenResult.navigate(new TeacherSubmissionScreen(quizzes.get(selectedIndex), examService, quizService, questionService, subjectService, authService));
+                } else if ("Space".equals(hintAction) && !quizzes.isEmpty() && selectedIndex < quizzes.size()) {
+                    Quiz q = quizzes.get(selectedIndex);
+                    if (canModify(q)) {
+                        togglePublishSelectedQuiz();
+                    } else {
+                        bannerMessage = TuiHelper.red("✖ You can only publish/unpublish quizzes you created.");
+                    }
+                    return ScreenResult.stay(this);
+                } else if ("Tab".equals(hintAction)) {
+                    User user = Session.getCurrentUser().orElse(null);
+                    if (user == null || user.getRole() != Role.ADMIN) {
+                        toggleScope();
+                    }
+                    return ScreenResult.stay(this);
+                } else if ("/".equals(hintAction)) {
+                    searchMode = true;
+                    bannerMessage = "";
+                    return ScreenResult.stay(this);
+                }
+            }
+
             return ScreenResult.stay(this);
         }
 

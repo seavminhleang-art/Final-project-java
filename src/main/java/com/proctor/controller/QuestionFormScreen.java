@@ -186,6 +186,10 @@ public class QuestionFormScreen implements Screen {
                     return returnToPreviousScreen();
                 }
             }
+            String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
+            if (hintAction != null && "Esc".equals(hintAction)) {
+                return returnToPreviousScreen();
+            }
             return ScreenResult.stay(this);
         }
 
@@ -264,7 +268,8 @@ public class QuestionFormScreen implements Screen {
         }
 
         switch (idx) {
-            case 0 -> {
+            case 0 -> handleTextInput(questionText, k);
+            case 1 -> {
                 if (isLockedQuizType()) {
                     errorMessage = "This quiz is strictly confined to " + quizContext.getQuizQuestionType() + " questions.";
                     return;
@@ -272,12 +277,11 @@ public class QuestionFormScreen implements Screen {
                 if (KeyUtil.isLeft(k)) cycleType(false);
                 else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) cycleType(true);
             }
-            case 1 -> {
+            case 2 -> {
                 if (KeyUtil.isLeft(k)) cycleDifficulty(false);
                 else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) cycleDifficulty(true);
             }
-            case 2 -> handleTextInput(pointsBuffer, k);
-            case 3 -> handleTextInput(questionText, k);
+            case 3 -> handleTextInput(pointsBuffer, k);
             default -> handleTypeSpecificInput(idx, k);
         }
     }

@@ -191,13 +191,13 @@ public class QuizViews {
         StringBuilder sb = new StringBuilder();
         String itemType = (assessmentType == AssessmentType.EXAM) ? "EXAM" : "QUIZ";
         String headerTitle = isEditMode ? "EDIT " + itemType : "CREATE NEW " + itemType;
-        int activeFieldDisplay = Math.min(10, focusedField + 1);
+        int numInputFields = 10;
+        int activeFieldDisplay = Math.min(numInputFields, focusedField + 1);
         sb.append(TuiHelper.header(headerTitle));
         sb.append("\n");
         String formSub = isEditMode ? "Edit " + itemType + " Settings" : "Create New " + itemType;
-        sb.append(TuiHelper.boxTitle(formSub, String.format("Field %d of 10", activeFieldDisplay))).append("\n\n");
+        sb.append(TuiHelper.boxTitle(formSub, String.format("Field %d of %d", activeFieldDisplay, numInputFields))).append("\n\n");
 
-        int numInputFields = 10;
         int windowSize = 4;
         int startField = Math.max(0, Math.min(Math.min(focusedField, 9) - 1, numInputFields - windowSize));
         int endField = Math.min(numInputFields, startField + windowSize);

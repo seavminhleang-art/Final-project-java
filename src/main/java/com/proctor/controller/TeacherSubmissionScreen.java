@@ -160,18 +160,30 @@ public class TeacherSubmissionScreen implements Screen {
         }
 
         if (inspectingAnswerSheet) {
+            int qCount = 0;
+            if (selectedIndex >= 0 && selectedIndex < submissions.size()) {
+                Attempt att = submissions.get(selectedIndex);
+                Quiz qz = specificQuiz;
+                if (qz == null || qz.getQuestions() == null || qz.getQuestions().isEmpty()) {
+                    qz = quizService.getQuizById(att.getQuizId()).orElse(qz);
+                }
+                if (qz != null && qz.getQuestions() != null) {
+                    qCount = qz.getQuestions().size();
+                }
+            }
+
             if (msg instanceof KeyPressMessage k) {
                 if (KeyUtil.isEsc(k)) {
                     inspectingAnswerSheet = false;
                     bannerMessage = "";
                     return ScreenResult.stay(this);
                 }
-                if (KeyUtil.isUp(k)) {
-                    inspectingAnswerIndex = Math.max(0, inspectingAnswerIndex - 1);
+                if (KeyUtil.isUp(k) || KeyUtil.isLeft(k)) {
+                    inspectingAnswerIndex = ListNavigationHelper.prevPage(inspectingAnswerIndex, 1);
                     return ScreenResult.stay(this);
                 }
-                if (KeyUtil.isDown(k)) {
-                    inspectingAnswerIndex++;
+                if (KeyUtil.isDown(k) || KeyUtil.isRight(k)) {
+                    inspectingAnswerIndex = ListNavigationHelper.nextPage(inspectingAnswerIndex, qCount, 1);
                     return ScreenResult.stay(this);
                 }
                 if ("g".equalsIgnoreCase(k.key())) {
@@ -182,8 +194,18 @@ public class TeacherSubmissionScreen implements Screen {
                     return ScreenResult.stay(this);
                 }
             }
+            if (MouseUtil.isWheelUp(msg) || MouseUtil.isWheelDown(msg)) {
+                inspectingAnswerIndex = ListNavigationHelper.handleWheel(msg, inspectingAnswerIndex, qCount);
+                return ScreenResult.stay(this);
+            }
             if (MouseUtil.isLeftClick(msg)) {
                 int line = MouseUtil.getLineIndex(msg);
+                int col = MouseUtil.getColInLine(msg);
+                int pagLine = MouseUtil.findPaginationLine(view());
+                if (pagLine != -1 && line == pagLine && qCount > 1) {
+                    inspectingAnswerIndex = ListNavigationHelper.handlePaginationClick(col, inspectingAnswerIndex, qCount, 1);
+                    return ScreenResult.stay(this);
+                }
                 int btnLine = MouseUtil.findButtonRowLine(view());
                 if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
                     inspectingAnswerSheet = false;

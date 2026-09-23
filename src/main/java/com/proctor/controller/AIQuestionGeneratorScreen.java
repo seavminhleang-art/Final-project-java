@@ -15,6 +15,7 @@ import com.proctor.model.service.QuizService;
 import com.proctor.model.entity.Subject;
 import com.proctor.model.service.SubjectService;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.ListNavigationHelper;
 import com.proctor.util.MouseUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.QuestionViews;
@@ -75,22 +76,18 @@ public class AIQuestionGeneratorScreen implements Screen {
         this.quizContext = quizContext;
         this.subjects = subjectService.getSubjects(null);
 
-        if (quizContext != null) {
-            String initialTopic = (quizContext.getTopic() != null && !quizContext.getTopic().isBlank())
-                    ? quizContext.getTopic() : quizContext.getTitle();
-            this.topicBuffer.append(initialTopic);
-
-            if (quizContext.getSubjectId() != null) {
-                final Integer sid = quizContext.getSubjectId();
-                for (int i = 0; i < this.subjects.size(); i++) {
-                    if (this.subjects.get(i).getId().equals(sid)) {
-                        this.selectedSubjectIndex = i + 1;
-                        break;
-                    }
+        if (quizContext != null && quizContext.getSubjectId() != null) {
+            final Integer sid = quizContext.getSubjectId();
+            for (int i = 0; i < this.subjects.size(); i++) {
+                if (this.subjects.get(i).getId().equals(sid)) {
+                    this.selectedSubjectIndex = i + 1;
+                    break;
                 }
             }
-        } else {
-            this.topicBuffer.append("General Assessment");
+        }
+
+        if (isLockedQuizType()) {
+            this.selectedType = quizContext.getQuizQuestionType();
         }
 
         List<InlineSubjectFilter.Item<Subject>> items = new java.util.ArrayList<>();
@@ -100,6 +97,15 @@ public class AIQuestionGeneratorScreen implements Screen {
         }
         this.subjectFilter = new InlineSubjectFilter<>(items);
         this.subjectFilter.setSelectedOriginalIndex(this.selectedSubjectIndex);
+    }
+
+    private boolean isLockedQuizType() {
+        return quizContext != null && quizContext.getAssessmentType() == com.proctor.model.enums.AssessmentType.QUIZ
+                && quizContext.getQuizQuestionType() != null;
+    }
+
+    private boolean isSpeedQuiz() {
+        return quizContext != null && quizContext.getAssessmentType() == com.proctor.model.enums.AssessmentType.SPEED;
     }
 
     private boolean isPinnedQuiz() {
@@ -217,15 +223,7 @@ public class AIQuestionGeneratorScreen implements Screen {
                 }
                 int pagLine = MouseUtil.findPaginationLine(view());
                 if (pagLine != -1 && line == pagLine && !generatedDrafts.isEmpty()) {
-                    int pageSize = 3;
-                    int totalPages = Math.max(1, (int) Math.ceil((double) generatedDrafts.size() / pageSize));
-                    int currentPage = selectedDraftIndex / pageSize;
-                    int action = MouseUtil.getClickedPaginationAction(col, currentPage, totalPages);
-                    if (action == -1 && currentPage > 0) {
-                        selectedDraftIndex = (currentPage - 1) * pageSize;
-                    } else if (action == 1 && currentPage < totalPages - 1) {
-                        selectedDraftIndex = Math.min(generatedDrafts.size() - 1, (currentPage + 1) * pageSize);
-                    }
+                    selectedDraftIndex = ListNavigationHelper.handlePaginationClick(col, selectedDraftIndex, generatedDrafts.size(), 3);
                 }
                 return ScreenResult.stay(this);
             }
@@ -252,6 +250,10 @@ public class AIQuestionGeneratorScreen implements Screen {
                         return returnToPreviousScreen();
                     }
                 }
+                String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
+                if (hintAction != null && "Esc".equals(hintAction)) {
+                    return returnToPreviousScreen();
+                }
                 return ScreenResult.stay(this);
             }
         }
@@ -270,22 +272,9 @@ public class AIQuestionGeneratorScreen implements Screen {
                         selectedDraftIndex = (selectedDraftIndex + 1) % generatedDrafts.size();
                     }
                 } else if (KeyUtil.isLeft(k)) {
-                    if (!generatedDrafts.isEmpty()) {
-                        int pageSize = 3;
-                        int currentPage = selectedDraftIndex / pageSize;
-                        if (currentPage > 0) {
-                            selectedDraftIndex = (currentPage - 1) * pageSize;
-                        }
-                    }
+                    selectedDraftIndex = ListNavigationHelper.prevPage(selectedDraftIndex, 3);
                 } else if (KeyUtil.isRight(k)) {
-                    if (!generatedDrafts.isEmpty()) {
-                        int pageSize = 3;
-                        int totalPages = Math.max(1, (int) Math.ceil((double) generatedDrafts.size() / pageSize));
-                        int currentPage = selectedDraftIndex / pageSize;
-                        if (currentPage < totalPages - 1) {
-                            selectedDraftIndex = Math.min(generatedDrafts.size() - 1, (currentPage + 1) * pageSize);
-                        }
-                    }
+                    selectedDraftIndex = ListNavigationHelper.nextPage(selectedDraftIndex, generatedDrafts.size(), 3);
                 } else if ("s".equalsIgnoreCase(k.key()) || KeyUtil.isEnter(k)) {
                     try {
                         saveAllDrafts();
@@ -376,6 +365,17 @@ public class AIQuestionGeneratorScreen implements Screen {
             case 1 -> handleTextInput(customPromptBuffer, k);
             case 2 -> handleTextInput(countBuffer, k);
             case 3 -> {
+                if (isLockedQuizType()) {
+                    bannerMessage = TuiHelper.yellow("This quiz is strictly confined to " + quizContext.getQuizQuestionType() + " questions.");
+                    return;
+                }
+                if (isSpeedQuiz()) {
+                    if (KeyUtil.isLeft(k) || KeyUtil.isRight(k) || KeyUtil.isSpace(k)) {
+                        selectedType = (selectedType == QuestionType.MCQ) ? QuestionType.TRUE_FALSE : QuestionType.MCQ;
+                    }
+                    if (focusedField >= getFieldCount()) focusedField = getFieldCount() - 1;
+                    return;
+                }
                 if (KeyUtil.isLeft(k)) {
                     if (selectedType == QuestionType.MCQ) selectedType = QuestionType.SHORT_ANSWER;
                     else if (selectedType == QuestionType.SHORT_ANSWER) selectedType = QuestionType.TRUE_FALSE;
@@ -385,6 +385,7 @@ public class AIQuestionGeneratorScreen implements Screen {
                     else if (selectedType == QuestionType.TRUE_FALSE) selectedType = QuestionType.SHORT_ANSWER;
                     else selectedType = QuestionType.MCQ;
                 }
+                if (focusedField >= getFieldCount()) focusedField = getFieldCount() - 1;
             }
             case 4 -> {
                 if (KeyUtil.isLeft(k)) {

@@ -15,6 +15,7 @@ import com.proctor.model.service.InboxService;
 import com.proctor.model.entity.Quiz;
 import com.proctor.model.entity.Result;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.ListNavigationHelper;
 import com.proctor.util.MouseUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.ExamViews;
@@ -210,12 +211,7 @@ public class AvailableQuizzesScreen implements Screen {
 
             int pagLine = MouseUtil.findPaginationLine(view());
             if (pagLine != -1 && line == pagLine && !quizzes.isEmpty()) {
-                int action = MouseUtil.getClickedPaginationAction(col, currentPage, totalPages);
-                if (action < 0) {
-                    selectedIndex = (currentPage - 1) * pageSize;
-                } else if (action > 0) {
-                    selectedIndex = Math.min(quizzes.size() - 1, (currentPage + 1) * pageSize);
-                }
+                selectedIndex = ListNavigationHelper.handlePaginationClick(col, selectedIndex, quizzes.size(), TuiHelper.PAGE_SIZE);
                 return ScreenResult.stay(this);
             }
 
@@ -272,22 +268,9 @@ public class AvailableQuizzesScreen implements Screen {
                     selectedIndex = (selectedIndex + 1) % quizzes.size();
                 }
             } else if (KeyUtil.isLeft(k)) {
-                if (!quizzes.isEmpty()) {
-                    int pageSize = TuiHelper.PAGE_SIZE;
-                    int currentPage = selectedIndex / pageSize;
-                    if (currentPage > 0) {
-                        selectedIndex = (currentPage - 1) * pageSize;
-                    }
-                }
+                selectedIndex = ListNavigationHelper.prevPage(selectedIndex, TuiHelper.PAGE_SIZE);
             } else if (KeyUtil.isRight(k)) {
-                if (!quizzes.isEmpty()) {
-                    int pageSize = TuiHelper.PAGE_SIZE;
-                    int totalPages = Math.max(1, (int) Math.ceil((double) quizzes.size() / pageSize));
-                    int currentPage = selectedIndex / pageSize;
-                    if (currentPage < totalPages - 1) {
-                        selectedIndex = Math.min(quizzes.size() - 1, (currentPage + 1) * pageSize);
-                    }
-                }
+                selectedIndex = ListNavigationHelper.nextPage(selectedIndex, quizzes.size(), TuiHelper.PAGE_SIZE);
             } else if ("r".equalsIgnoreCase(k.key())) {
                 return handleRetakeRequest();
             } else if ("s".equalsIgnoreCase(k.key())) {

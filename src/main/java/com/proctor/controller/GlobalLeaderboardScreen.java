@@ -5,6 +5,7 @@ import com.proctor.model.service.ExamService;
 import com.proctor.model.entity.LeaderboardEntry;
 import com.proctor.model.service.PortalService;
 import com.proctor.util.KeyUtil;
+import com.proctor.util.ListNavigationHelper;
 import com.proctor.util.MouseUtil;
 import com.proctor.util.TuiHelper;
 import com.proctor.view.PortalViews;
@@ -113,12 +114,7 @@ public class GlobalLeaderboardScreen implements Screen {
 
             int pagLine = MouseUtil.findPaginationLine(view());
             if (pagLine != -1 && line == pagLine && !leaderboard.isEmpty()) {
-                int action = MouseUtil.getClickedPaginationAction(col, currentPage, totalPages);
-                if (action < 0) {
-                    selectedIndex = (currentPage - 1) * pageSize;
-                } else if (action > 0) {
-                    selectedIndex = Math.min(leaderboard.size() - 1, (currentPage + 1) * pageSize);
-                }
+                selectedIndex = ListNavigationHelper.handlePaginationClick(col, selectedIndex, leaderboard.size(), TuiHelper.PAGE_SIZE);
                 return ScreenResult.stay(this);
             }
 
@@ -150,22 +146,9 @@ public class GlobalLeaderboardScreen implements Screen {
                     selectedIndex = (selectedIndex + 1) % leaderboard.size();
                 }
             } else if (KeyUtil.isLeft(k)) {
-                if (!leaderboard.isEmpty()) {
-                    int pageSize = TuiHelper.PAGE_SIZE;
-                    int currentPage = selectedIndex / pageSize;
-                    if (currentPage > 0) {
-                        selectedIndex = (currentPage - 1) * pageSize;
-                    }
-                }
+                selectedIndex = ListNavigationHelper.prevPage(selectedIndex, TuiHelper.PAGE_SIZE);
             } else if (KeyUtil.isRight(k)) {
-                if (!leaderboard.isEmpty()) {
-                    int pageSize = TuiHelper.PAGE_SIZE;
-                    int totalPages = Math.max(1, (int) Math.ceil((double) leaderboard.size() / pageSize));
-                    int currentPage = selectedIndex / pageSize;
-                    if (currentPage < totalPages - 1) {
-                        selectedIndex = Math.min(leaderboard.size() - 1, (currentPage + 1) * pageSize);
-                    }
-                }
+                selectedIndex = ListNavigationHelper.nextPage(selectedIndex, leaderboard.size(), TuiHelper.PAGE_SIZE);
             } else if (KeyUtil.isTab(k) || "f".equalsIgnoreCase(k.key())) {
                 mode = switch (mode) {
                     case QUIZ -> Mode.EXAM;

@@ -142,7 +142,7 @@ public class MouseUtil {
         if (view == null) return -1;
         String[] lines = view.split("\n", -1);
         for (int i = 0; i < lines.length; i++) {
-            if (lines[i].contains("Page ") && (lines[i].contains("Prev") || lines[i].contains("Next"))) {
+            if ((lines[i].contains("Page ") || lines[i].contains("Question ")) && (lines[i].contains("Prev") || lines[i].contains("Next"))) {
                 return i;
             }
         }
@@ -151,10 +151,10 @@ public class MouseUtil {
 
     public static int getClickedPaginationAction(int colInLine, int currentPage, int totalPages) {
         if (colInLine < 0) return 0;
-        if (colInLine < 20 && currentPage > 0) {
+        if (colInLine < 15 && currentPage > 0) {
             return -1;
         }
-        if (colInLine >= 35 && currentPage < totalPages - 1) {
+        if (colInLine >= 40 && currentPage < totalPages - 1) {
             return 1;
         }
         return 0;
@@ -166,7 +166,7 @@ public class MouseUtil {
         int itemIdx = 0;
         for (int i = 0; i < lines.length; i++) {
             String l = lines[i];
-            if (l.contains(TuiHelper.BUTTON_MARKER) && !l.contains("Tabs:") && !l.contains("Page ")) {
+            if (l.contains(TuiHelper.BUTTON_MARKER) && !l.contains("Tabs:") && !l.contains("Page ") && !l.contains("Question ")) {
                 if (i == lineIndex || i + 1 == lineIndex) {
                     return itemIdx;
                 }
@@ -201,6 +201,10 @@ public class MouseUtil {
                                  .replace(TuiHelper.BUTTON_MARKER, "")
                                  .replaceAll("\u001B\\[[;?0-9]*[a-zA-Z]", "");
         String trimmedClean = stripped.trim();
+        if (((trimmedClean.contains("Page ") || trimmedClean.contains("Question ")) && trimmedClean.contains(" of "))
+                || trimmedClean.contains("[←] Prev") || trimmedClean.contains("[→] Next")) {
+            return null;
+        }
         if (!TuiHelper.isHintRow(stripped) && !trimmedClean.startsWith("[") && !trimmedClean.contains("to continue") && !trimmedClean.contains("to view scorecard")) {
             return null;
         }

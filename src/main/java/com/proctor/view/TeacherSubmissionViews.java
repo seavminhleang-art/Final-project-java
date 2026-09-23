@@ -246,7 +246,14 @@ public class TeacherSubmissionViews {
         sb.append("\n  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         if (!questions.isEmpty()) {
-            sb.append(TuiHelper.paginationBar(inspectingAnswerIndex, questions.size(), questions.size()));
+            if (questions.size() <= 1) {
+                sb.append("  ").append(TuiHelper.bold("Question 1 of 1")).append("\n\n");
+            } else {
+                String prevLabel = (inspectingAnswerIndex > 0) ? TuiHelper.cyan("◀ [←] Prev") : TuiHelper.dim("  [←] Prev");
+                String nextLabel = (inspectingAnswerIndex < questions.size() - 1) ? TuiHelper.cyan("[→] Next ▶") : TuiHelper.dim("[→] Next  ");
+                String qInfo = TuiHelper.bold(String.format("Question %d of %d", inspectingAnswerIndex + 1, questions.size()));
+                sb.append(String.format("  " + TuiHelper.BUTTON_MARKER + "%s   %s   %s%n%n", prevLabel, qInfo, nextLabel));
+            }
         }
 
         if (!bannerMessage.isBlank()) {
