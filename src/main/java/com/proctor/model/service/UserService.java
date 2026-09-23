@@ -69,13 +69,13 @@ public class UserService {
         }
         if (role == Role.TEACHER && (academicDegree != null || educationBackground != null || specialization != null)) {
             if (academicDegree == null || academicDegree.trim().isBlank()) {
-                throw new ValidationException("Academic degree / qualification is required.");
+                throw new ValidationException("Academic degree is required.");
             }
             if (educationBackground == null || educationBackground.trim().isBlank()) {
                 throw new ValidationException("Education background (university) is required.");
             }
             if (specialization == null || specialization.trim().isBlank()) {
-                throw new ValidationException("Primary subject / specialization is required.");
+                throw new ValidationException("Specialization is required.");
             }
         }
         if (academicDegree != null && academicDegree.trim().length() > 100) {

@@ -512,7 +512,7 @@ public class AIQuizGeneratorScreen implements Screen {
             return ScreenResult.stay(this);
         }
         if (titleBuffer.toString().trim().isBlank()) {
-            bannerMessage = TuiHelper.red("✖ " + (assessmentType == AssessmentType.EXAM ? "Exam" : (assessmentType == AssessmentType.SPEED ? "Speed Quiz" : "Quiz")) + " Title / Topic is required.");
+            bannerMessage = TuiHelper.red("✖ " + (assessmentType == AssessmentType.EXAM ? "Exam" : (assessmentType == AssessmentType.SPEED ? "Speed Quiz" : "Quiz")) + " Title is required.");
             return ScreenResult.stay(this);
         }
 
@@ -542,7 +542,7 @@ public class AIQuizGeneratorScreen implements Screen {
                 return ScreenResult.stay(this);
             }
             if (mcqC + tfC == 0) {
-                bannerMessage = TuiHelper.red("✖ Please specify at least 1 question across MCQ / True-False.");
+                bannerMessage = TuiHelper.red("✖ Please specify at least 1 question across MCQ or True/False.");
                 return ScreenResult.stay(this);
             }
             int speedSecs = 15;
@@ -792,7 +792,7 @@ public class AIQuizGeneratorScreen implements Screen {
         }
         String typeLabel;
         if (assessmentType == AssessmentType.SPEED) {
-            typeLabel = "SPEED (MCQ + T/F)";
+            typeLabel = "SPEED";
         } else if (assessmentType == AssessmentType.EXAM && isExamMixed) {
             typeLabel = "MIXED (Custom Counts)";
         } else {

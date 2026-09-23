@@ -56,7 +56,7 @@ public class QuestionViews {
             sb.append("  ").append(TuiHelper.red("✖ " + errorMessage)).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Confirm / Next  •  [Esc] Cancel\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Next  •  [Esc] Cancel\n"));
         return sb.toString();
     }
 
@@ -100,7 +100,7 @@ public class QuestionViews {
                         sb.append(TuiHelper.inputBox("Explanation (Optional)", explanation, focusedField == fieldIndex, 102, false, "rubric context"));
                     }
                 } else {
-                    sb.append(TuiHelper.inputBox("Model Answer Context", explanation, focusedField == fieldIndex, 102, false, "rubric / explanation"));
+                    sb.append(TuiHelper.inputBox("Model Answer Context", explanation, focusedField == fieldIndex, 102, false, "explanation"));
                 }
             }
         }
@@ -148,11 +148,11 @@ public class QuestionViews {
         List<String> fieldWidgets = new ArrayList<>();
         int actualField = 0;
         if (!isPinnedQuiz) {
-            fieldWidgets.add(TuiHelper.selectBox("Subject (Required)", subjectName, focusedField == actualField++, 102, "Type to search • Tab / ← / → to cycle"));
+            fieldWidgets.add(TuiHelper.selectBox("Subject (Required)", subjectName, focusedField == actualField++, 102, "Type to search • [←/→] Cycle"));
         }
 
-        fieldWidgets.add(TuiHelper.inputBox("Topic / Focus Area (Required)", topicBuffer, focusedField == actualField++, 102, false, "e.g. Dynamic Programming or Recursion"));
-        fieldWidgets.add(TuiHelper.inputBox("Custom Prompt / Instructions (Optional)", customPrompt, focusedField == actualField++, 102, false, "e.g. Focus on memoization, ask conceptual scenarios"));
+        fieldWidgets.add(TuiHelper.inputBox("Topic (Required)", topicBuffer, focusedField == actualField++, 102, false, "e.g. Dynamic Programming or Recursion"));
+        fieldWidgets.add(TuiHelper.inputBox("Prompt (Optional)", customPrompt, focusedField == actualField++, 102, false, "e.g. Focus on memoization, ask conceptual scenarios"));
         fieldWidgets.add(TuiHelper.inputBox("Question Count (1-10)", countBuffer, focusedField == actualField++, 102, false, "e.g. 3"));
         fieldWidgets.add(TuiHelper.selectBox("Question Type", selectedType.name(), focusedField == actualField++, 102, "Space to cycle"));
         fieldWidgets.add(TuiHelper.selectBox("Difficulty", selectedDifficulty.name(), focusedField == actualField++, 102, "Space to cycle"));
@@ -186,7 +186,7 @@ public class QuestionViews {
             sb.append("  ").append(bannerMessage).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Confirm / Next  •  [Esc] Back\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Next  •  [Esc] Back\n"));
         return sb.toString();
     }
 

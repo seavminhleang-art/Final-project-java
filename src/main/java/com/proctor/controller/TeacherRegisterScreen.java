@@ -316,13 +316,13 @@ public class TeacherRegisterScreen implements Screen {
                 throw new ValidationException("Full name is required.");
             }
             if (academicDegree.toString().trim().isBlank()) {
-                throw new ValidationException("Academic degree / qualification is required.");
+                throw new ValidationException("Academic degree is required.");
             }
             if (educationBackground.toString().trim().isBlank()) {
                 throw new ValidationException("Education background (university) is required.");
             }
             if (specialization.toString().trim().isBlank()) {
-                throw new ValidationException("Primary subject / specialization is required.");
+                throw new ValidationException("Specialization is required.");
             }
             if (email.toString().trim().isBlank()) {
                 throw new ValidationException("Email is required.");

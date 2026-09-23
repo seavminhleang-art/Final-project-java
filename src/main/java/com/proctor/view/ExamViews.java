@@ -111,9 +111,9 @@ public class ExamViews {
         }
 
         if (assessmentType == AssessmentType.SPEED) {
-            sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [s] Subject  •  [Enter] Overview / Briefing  •  [v] View Result  •  [Esc] Back\n"));
+            sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [s] Subject  •  [Enter] Overview  •  [v] View Result  •  [Esc] Back\n"));
         } else {
-            sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [s] Subject  •  [Enter] Overview / Briefing  •  [r] Request Retake  •  [Esc] Back\n"));
+            sb.append(TuiHelper.dim("  [↑/↓] Move  •  [←/→] Page  •  [/] Search  •  [s] Subject  •  [Enter] Overview  •  [r] Request Retake  •  [Esc] Back\n"));
         }
         return sb.toString();
     }
@@ -329,7 +329,7 @@ public class ExamViews {
         if (q.getQuestionType() == com.proctor.model.enums.QuestionType.SHORT_ANSWER) {
             sb.append(TuiHelper.dim("  [Type] Answer  •  [Enter] Next  •  [↑] Prev  •  [Esc] Review & Submit\n"));
         } else {
-            sb.append(TuiHelper.dim("  [↑/↓] Move Focus  •  [Space] Select  •  [Enter] Confirm & Next  •  [←/→] Prev/Next  •  [Esc] Review & Submit\n"));
+            sb.append(TuiHelper.dim("  [↑/↓] Move Focus  •  [Space] Select  •  [Enter] Next  •  [←/→] Navigate  •  [Esc] Review & Submit\n"));
         }
         return sb.toString();
     }

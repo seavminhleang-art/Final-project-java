@@ -30,7 +30,7 @@ public class InboxViews {
         String subtitle = String.format("Total: %d  •  Unread: %d", messages.size(), unreadCount);
         sb.append(TuiHelper.header("INBOX"));
         sb.append("\n");
-        sb.append(TuiHelper.boxTitle("Inbox & Notifications", subtitle)).append("\n\n");
+        sb.append(TuiHelper.boxTitle("Inbox", subtitle)).append("\n\n");
         sb.append(TuiHelper.tabBar(new String[]{"All", "Unread", "Actionable"}, activeTab)).append("\n\n");
 
         if (searchMode) {

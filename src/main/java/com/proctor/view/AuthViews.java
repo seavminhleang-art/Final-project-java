@@ -133,7 +133,7 @@ public class AuthViews {
             sb.append("  ").append(TuiHelper.red("✖ " + errorMessage)).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Confirm / Submit  •  [Esc] Back\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Submit  •  [Esc] Back\n"));
         return sb.toString();
     }
 
@@ -159,9 +159,9 @@ public class AuthViews {
         String birthdayDisplay = TuiHelper.birthdayMask(birthday, focusedField == 2);
         fieldWidgets.add(TuiHelper.inputBox("Date of Birth", birthdayDisplay, focusedField == 2, 102, false, "DD - MM - YYYY"));
 
-        fieldWidgets.add(TuiHelper.inputBox("Academic Degree / Qualification", academicDegree, focusedField == 3, 102, false, "e.g. Ph.D. in Computer Science, Master of Science"));
+        fieldWidgets.add(TuiHelper.inputBox("Academic Degree", academicDegree, focusedField == 3, 102, false, "e.g. Ph.D. in Computer Science, Master of Science"));
         fieldWidgets.add(TuiHelper.inputBox("Education Background (University)", educationBackground, focusedField == 4, 102, false, "e.g. Stanford University, MIT, RUPP"));
-        fieldWidgets.add(TuiHelper.inputBox("Primary Subject / Specialization", specialization, focusedField == 5, 102, false, "e.g. Software Engineering, Mathematics, Java"));
+        fieldWidgets.add(TuiHelper.inputBox("Specialization", specialization, focusedField == 5, 102, false, "e.g. Software Engineering, Mathematics, Java"));
 
         fieldWidgets.add(TuiHelper.inputBox("Email Address", email, focusedField == 6, 102, false, "e.g. jane@proctor.edu"));
         fieldWidgets.add(TuiHelper.inputBox("Username", username, focusedField == 7, 102, false, "e.g. janedoe"));
@@ -191,7 +191,7 @@ public class AuthViews {
             sb.append("  ").append(TuiHelper.red("✖ " + errorMessage)).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Confirm / Submit  •  [Esc] Back\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Submit  •  [Esc] Back\n"));
         return sb.toString();
     }
 

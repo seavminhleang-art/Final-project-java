@@ -460,7 +460,7 @@ public class ForgotPasswordScreen implements Screen {
             sb.append(TuiHelper.boxTitle("Password Recovery", "Step 3 of 3: Set New Password")).append("\n\n");
             sb.append("  ").append(TuiHelper.dim("Enter your new account password below to reset your credentials.\n\n"));
 
-            sb.append(TuiHelper.inputBox("New Password", forgotNewPassword.toString(), forgotFocusIndex == 0, 102, true, "Min 8 chars, mix of upper/lower/numbers"));
+            sb.append(TuiHelper.inputBox("New Password", forgotNewPassword.toString(), forgotFocusIndex == 0, 102, true, "Min 8 chars, letters and numbers"));
             sb.append("\n");
             sb.append(TuiHelper.inputBox("Confirm New Password", forgotConfirmPassword.toString(), forgotFocusIndex == 1, 102, true, "Repeat new password"));
             sb.append("\n");

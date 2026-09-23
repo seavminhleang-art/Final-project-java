@@ -213,7 +213,7 @@ public class QuizListScreen implements Screen {
                     if (canModify(q)) {
                         togglePublishSelectedQuiz();
                     } else {
-                        bannerMessage = TuiHelper.red("✖ You can only publish/unpublish quizzes you created.");
+                        bannerMessage = TuiHelper.red("✖ You can only change the publish status of quizzes you created.");
                     }
                     return ScreenResult.stay(this);
                 } else if ("Tab".equals(hintAction)) {
@@ -338,7 +338,7 @@ public class QuizListScreen implements Screen {
                     if (canModify(q)) {
                         togglePublishSelectedQuiz();
                     } else {
-                        bannerMessage = TuiHelper.red("✖ You can only publish/unpublish quizzes you created.");
+                        bannerMessage = TuiHelper.red("✖ You can only change the publish status of quizzes you created.");
                     }
                 }
             } else if ("/".equals(k.key())) {

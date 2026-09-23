@@ -79,7 +79,7 @@ public class SpeedQuizViews {
             sb.append("  ").append(TuiHelper.red("✖ " + errorMessage)).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Confirm / Next  •  [Esc] Cancel\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Next  •  [Esc] Cancel\n"));
         return sb.toString();
     }
 
@@ -214,7 +214,7 @@ public class SpeedQuizViews {
         if (toastRecord != null) {
             sb.append(TuiHelper.dim("  [Esc] Forfeit\n"));
         } else {
-            sb.append(TuiHelper.dim("  [↑/↓] Move Focus  •  [1-4] Quick Select & Lock  •  [Enter] Lock In  •  [Esc] Forfeit\n"));
+            sb.append(TuiHelper.dim("  [↑/↓] Move Focus  •  [1-4] Select  •  [Enter] Lock In  •  [Esc] Forfeit\n"));
         }
         return sb.toString();
     }

@@ -111,7 +111,7 @@ public class SubjectViews {
             sb.append(TuiHelper.inputBox("Description", description, focusedField == 2, 102, false, "enter description"));
             sb.append("\n");
             String statusText = enabledStatus ? "Enabled" : "Disabled";
-            sb.append(TuiHelper.selectBox("Subject Status", statusText, focusedField == 3, 102, "Space to toggle (Enabled/Disabled)"));
+            sb.append(TuiHelper.selectBox("Subject Status", statusText, focusedField == 3, 102, "Space to toggle"));
             sb.append("\n");
             sb.append(TuiHelper.buttonRow("Submit", focusedField == saveBtnIndex, "Delete", focusedField == deleteBtnIndex, "Cancel", focusedField == cancelBtnIndex)).append("\n\n");
         } else {
@@ -128,7 +128,7 @@ public class SubjectViews {
             sb.append("  ").append(TuiHelper.red("✖ " + errorMessage)).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Confirm / Submit  •  [Esc] Cancel\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Submit  •  [Esc] Cancel\n"));
         return sb.toString();
     }
 

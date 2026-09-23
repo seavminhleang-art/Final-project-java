@@ -9,7 +9,7 @@ public class ReportViews {
         sb.append(TuiHelper.DIALOG_MARKER);
         sb.append(TuiHelper.header("REPORTS"));
         sb.append("\n");
-        sb.append(TuiHelper.boxTitle("Reports & Analytics", "Export PDF Reports")).append("\n\n");
+        sb.append(TuiHelper.boxTitle("Reports", "Export PDF Reports")).append("\n\n");
 
         for (int i = 0; i < reports.length; i++) {
             if (i == selectedIndex) {

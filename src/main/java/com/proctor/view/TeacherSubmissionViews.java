@@ -225,7 +225,7 @@ public class TeacherSubmissionViews {
             if (ans != null) {
                 boolean isCorrect = Boolean.TRUE.equals(ans.getCorrect());
                 if (isSpeedQuiz) {
-                    String statusText = isCorrect ? "Correct" : (ans.getSelectedOptionId() == null ? "Timed out / Unanswered" : "Incorrect");
+                    String statusText = isCorrect ? "Correct" : (ans.getSelectedOptionId() == null ? "Timed Out" : "Incorrect");
                     String scoreText = String.format("Score: %.1f pts (%s)", ans.getPointsAwarded(), statusText);
                     sb.append("\n     ").append(isCorrect ? TuiHelper.green(TuiHelper.bold(scoreText)) : TuiHelper.red(TuiHelper.bold(scoreText))).append("\n");
                 } else {

@@ -332,7 +332,7 @@ public class TeacherSubmissionScreen implements Screen {
         }
         Attempt att = submissions.get(selectedIndex);
         if (att.getAssessmentType() == AssessmentType.SPEED) {
-            bannerMessage = TuiHelper.yellow("● Speed Quizzes are objective (MCQ / T&F) only. AI grading is not applicable.");
+            bannerMessage = TuiHelper.yellow("● Speed Quizzes are objective only. AI grading is not applicable.");
             return ScreenResult.stay(this);
         }
         if (att.getStatus() == AttemptStatus.GRADED) {

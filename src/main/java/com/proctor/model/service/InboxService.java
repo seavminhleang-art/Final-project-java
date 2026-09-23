@@ -280,7 +280,7 @@ public class InboxService {
         if (updated && msg.getSenderId() != null) {
             String note = (responseNote != null && !responseNote.isBlank()) ? "\nNote: " + responseNote.trim() : "";
             sendNotification(msg.getSenderId(), "Request Rejected: " + msg.getTitle(),
-                    "Your request was reviewed and rejected by the teacher/administrator." + note);
+                    "Your request was reviewed and rejected by the instructor." + note);
             if (emailService != null && (msg.getType() == InboxMessageType.QUIZ_RETAKE || msg.getType() == InboxMessageType.EXAM_RETAKE)) {
                 userRepository.findById(msg.getSenderId()).ifPresent(student -> {
                     String assessmentTitle = "Assessment";

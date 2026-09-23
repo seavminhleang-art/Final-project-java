@@ -444,8 +444,8 @@ public class ExamService {
             for (String t : qTypesRaw.split(",")) {
                 String cleanT = t.trim();
                 if ("MCQ".equalsIgnoreCase(cleanT)) types.add("Multiple Choice");
-                else if ("TRUE_FALSE".equalsIgnoreCase(cleanT)) types.add("True / False");
-                else if ("SHORT_ANSWER".equalsIgnoreCase(cleanT)) types.add("Written (Short Answer)");
+                else if ("TRUE_FALSE".equalsIgnoreCase(cleanT)) types.add("True/False");
+                else if ("SHORT_ANSWER".equalsIgnoreCase(cleanT)) types.add("Short Answer");
                 else if (!cleanT.isEmpty()) types.add(cleanT);
             }
             if (!types.isEmpty()) {

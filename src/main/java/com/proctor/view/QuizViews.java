@@ -214,7 +214,7 @@ public class QuizViews {
                     if (assessmentType == AssessmentType.QUIZ) {
                         String typeLabel = (quizQuestionType != null) ? switch (quizQuestionType) {
                             case MCQ -> "Multiple Choice (MCQ)";
-                            case TRUE_FALSE -> "True / False";
+                            case TRUE_FALSE -> "True/False";
                             case SHORT_ANSWER -> "Short Answer";
                         } : "Multiple Choice (MCQ)";
                         sb.append(TuiHelper.selectBox("Quiz Question Type (Strict)", typeLabel, focusedField == 2, 102, "← / → to switch"));
@@ -253,7 +253,7 @@ public class QuizViews {
             sb.append("  ").append(TuiHelper.red("✖ " + errorMessage)).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Confirm / Next  •  [Esc] Cancel\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Next  •  [Esc] Cancel\n"));
         return sb.toString();
     }
 
@@ -368,10 +368,10 @@ public class QuizViews {
         boolean isSpeed = (assessmentType == AssessmentType.SPEED);
 
         List<String> fieldWidgets = new ArrayList<>();
-        fieldWidgets.add(TuiHelper.selectBox("Subject (Required)", subjectName, focusedField == 0, 102, "Type to search • Tab / ← / → to cycle"));
-        fieldWidgets.add(TuiHelper.inputBox(itemLabel + " Title / Topic (Required)", titleBuffer, focusedField == 1, 102, false, "e.g. Basic HTML, OOP Concepts"));
-        fieldWidgets.add(TuiHelper.inputBox("Student Instructions / Description (Optional)", descriptionBuffer, focusedField == 2, 102, false, "e.g. Complete all questions, no reference materials"));
-        fieldWidgets.add(TuiHelper.inputBox("AI Prompt / Custom Instructions (Optional)", customPrompt, focusedField == 3, 102, false, "e.g. Focus on edge cases, avoid multi-threading, include code snippets"));
+        fieldWidgets.add(TuiHelper.selectBox("Subject (Required)", subjectName, focusedField == 0, 102, "Type to search • [←/→] Cycle"));
+        fieldWidgets.add(TuiHelper.inputBox(itemLabel + " Title (Required)", titleBuffer, focusedField == 1, 102, false, "e.g. Basic HTML, OOP Concepts"));
+        fieldWidgets.add(TuiHelper.inputBox("Instructions (Optional)", descriptionBuffer, focusedField == 2, 102, false, "e.g. Complete all questions, no reference materials"));
+        fieldWidgets.add(TuiHelper.inputBox("Prompt (Optional)", customPrompt, focusedField == 3, 102, false, "e.g. Focus on edge cases, avoid multi-threading, include code snippets"));
 
         int curIdx = 4;
         if (isSpeed) {
@@ -442,7 +442,7 @@ public class QuizViews {
             sb.append("  ").append(bannerMessage).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Confirm / Next  •  [Esc] Cancel\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Next  •  [Esc] Cancel\n"));
         return sb.toString();
     }
 

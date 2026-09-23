@@ -34,7 +34,7 @@ public class UserViews {
         sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
         if (users.isEmpty()) {
-            sb.append("  ").append(TuiHelper.dim("No users found matching search/filter criteria.")).append("\n");
+            sb.append("  ").append(TuiHelper.dim("No users found matching search criteria.")).append("\n");
         } else {
             int pageSize = TuiHelper.PAGE_SIZE;
             int startRow = (selectedIndex / pageSize) * pageSize;
@@ -122,7 +122,7 @@ public class UserViews {
             sb.append(TuiHelper.selectBox("Role", selectedRole.name(), focusedField == 3, 102, "Space to cycle"));
             sb.append("\n");
             String statusText = enabledStatus ? "Enabled" : "Disabled";
-            sb.append(TuiHelper.selectBox("Account Status", statusText, focusedField == 4, 102, "Space to toggle (Enabled/Disabled)"));
+            sb.append(TuiHelper.selectBox("Account Status", statusText, focusedField == 4, 102, "Space to toggle"));
             sb.append("\n");
         } else {
             sb.append(TuiHelper.inputBox("Full Name", fullName, focusedField == 0, 102, false, "enter full name"));
@@ -148,7 +148,7 @@ public class UserViews {
             sb.append("  ").append(TuiHelper.red("✖ " + errorMessage)).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Confirm / Submit  •  [Esc] Cancel\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Submit  •  [Esc] Cancel\n"));
         return sb.toString();
     }
 
