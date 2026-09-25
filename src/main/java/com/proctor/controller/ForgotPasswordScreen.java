@@ -16,6 +16,7 @@ import com.williamcallahan.tui4j.compat.bubbletea.input.key.KeyType;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import com.williamcallahan.tui4j.compat.bubbletea.PasteMessage;
 
 public class ForgotPasswordScreen implements Screen {
 
@@ -125,6 +126,18 @@ public class ForgotPasswordScreen implements Screen {
             }
             return ScreenResult.stay(this);
         }
+                if (msg instanceof PasteMessage paste) {
+            if (forgotStep == ForgotStep.IDENTIFIER) {
+                if (forgotFocusIndex == 0) KeyUtil.pasteToBuffer(forgotIdentifier, paste.content());
+            } else if (forgotStep == ForgotStep.VERIFY_OTP) {
+                if (forgotFocusIndex == 0) KeyUtil.pasteToBuffer(forgotCode, paste.content(), 8);
+            } else if (forgotStep == ForgotStep.NEW_PASSWORD) {
+                if (forgotFocusIndex == 0) KeyUtil.pasteToBuffer(forgotNewPassword, paste.content(), 128);
+                else if (forgotFocusIndex == 1) KeyUtil.pasteToBuffer(forgotConfirmPassword, paste.content(), 128);
+            }
+            return ScreenResult.stay(this);
+        }
+
         if (MouseUtil.isWheelUp(msg)) {
             if (forgotStep == ForgotStep.IDENTIFIER || forgotStep == ForgotStep.VERIFY_OTP) {
                 forgotFocusIndex = (forgotFocusIndex == 0) ? 1 : 0;

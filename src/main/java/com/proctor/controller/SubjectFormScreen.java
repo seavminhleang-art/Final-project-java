@@ -12,6 +12,7 @@ import com.proctor.model.service.UserService;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
 import com.williamcallahan.tui4j.compat.bubbletea.Message;
 import com.williamcallahan.tui4j.compat.bubbletea.input.key.KeyType;
+import com.williamcallahan.tui4j.compat.bubbletea.PasteMessage;
 
 public class SubjectFormScreen implements Screen {
     private final SubjectService subjectService;
@@ -76,6 +77,13 @@ public class SubjectFormScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+                if (msg instanceof PasteMessage paste && focusedField >= 0 && focusedField <= 2) {
+            StringBuilder buf = (focusedField == 0) ? code : (focusedField == 1 ? name : description);
+            KeyUtil.pasteToBuffer(buf, paste.content());
+            errorMessage = "";
+            return ScreenResult.stay(this);
+        }
+
         if (MouseUtil.isWheelUp(msg)) {
             focusedField = (focusedField - 1 + getFieldCount()) % getFieldCount();
             return ScreenResult.stay(this);

@@ -28,6 +28,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import com.williamcallahan.tui4j.compat.bubbletea.PasteMessage;
 
 public class AIQuestionGeneratorScreen implements Screen {
     private final AIService aiService;
@@ -258,7 +259,24 @@ public class AIQuestionGeneratorScreen implements Screen {
             }
         }
 
-        if (msg instanceof KeyPressMessage k) {
+        if (msg instanceof PasteMessage paste && !isGenerating && !reviewingDrafts) {
+            int idx = focusedField;
+            if (!isPinnedQuiz()) {
+                if (idx == 0) {
+                    return ScreenResult.stay(this); // subject filter — no paste
+                }
+                idx -= 1;
+            }
+            switch (idx) {
+                case 0 -> KeyUtil.pasteToBuffer(topicBuffer, paste.content());
+                case 1 -> KeyUtil.pasteToBuffer(customPromptBuffer, paste.content());
+                case 2 -> KeyUtil.pasteToBuffer(countBuffer, paste.content(), 3);
+                default -> { /* type/difficulty/mcqCount/buttons */ }
+            }
+            return ScreenResult.stay(this);
+        }
+
+                if (msg instanceof KeyPressMessage k) {
             if (reviewingDrafts) {
                 if (KeyUtil.isEsc(k)) {
                     reviewingDrafts = false;

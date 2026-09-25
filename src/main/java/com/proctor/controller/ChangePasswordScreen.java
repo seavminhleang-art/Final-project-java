@@ -13,6 +13,7 @@ import com.proctor.model.service.UserService;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
 import com.williamcallahan.tui4j.compat.bubbletea.Message;
 import com.williamcallahan.tui4j.compat.bubbletea.input.key.KeyType;
+import com.williamcallahan.tui4j.compat.bubbletea.PasteMessage;
 
 public class ChangePasswordScreen implements Screen {
     private final AuthService authService;
@@ -35,6 +36,16 @@ public class ChangePasswordScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+                if (msg instanceof PasteMessage paste) {
+            switch (focusedField) {
+                case 0 -> KeyUtil.pasteToBuffer(currentPassword, paste.content(), 128);
+                case 1 -> KeyUtil.pasteToBuffer(newPassword, paste.content(), 128);
+                case 2 -> KeyUtil.pasteToBuffer(confirmPassword, paste.content(), 128);
+                default -> { /* buttons */ }
+            }
+            return ScreenResult.stay(this);
+        }
+
         if (MouseUtil.isWheelUp(msg)) {
             focusedField = (focusedField - 1 + 5) % 5;
             return ScreenResult.stay(this);

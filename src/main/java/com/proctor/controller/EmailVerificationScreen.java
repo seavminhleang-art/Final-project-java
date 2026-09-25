@@ -15,6 +15,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
+import com.williamcallahan.tui4j.compat.bubbletea.PasteMessage;
 
 public class EmailVerificationScreen implements Screen {
 
@@ -100,7 +101,12 @@ public class EmailVerificationScreen implements Screen {
                 errorMessage = TuiHelper.yellow("⚠ Resend cancelled.");
                 return ScreenResult.stay(this);
             }
-            if (MouseUtil.isLeftClick(msg)) {
+                    if (msg instanceof PasteMessage paste) {
+            KeyUtil.pasteToBuffer(codeBuffer, paste.content(), 8);
+            return ScreenResult.stay(this);
+        }
+
+        if (MouseUtil.isLeftClick(msg)) {
                 int line = MouseUtil.getLineIndex(msg);
                 int btnLine = MouseUtil.findButtonRowLine(view());
                 if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {

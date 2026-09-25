@@ -11,6 +11,7 @@ import com.proctor.view.AuthViews;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
 import com.williamcallahan.tui4j.compat.bubbletea.Message;
 import com.williamcallahan.tui4j.compat.bubbletea.input.key.KeyType;
+import com.williamcallahan.tui4j.compat.bubbletea.PasteMessage;
 
 public class LoginScreen implements Screen {
 
@@ -72,6 +73,14 @@ public class LoginScreen implements Screen {
                 return ScreenResult.stay(this, res.command());
             }
             return ScreenResult.stay(this, res.command());
+        }
+
+                if (msg instanceof PasteMessage paste && (focusedField == 0 || focusedField == 1)) {
+            StringBuilder active = (focusedField == 0) ? identifier : password;
+            int maxLen = (focusedField == 0) ? 254 : 128;
+            KeyUtil.pasteToBuffer(active, paste.content(), maxLen);
+            errorMessage = "";
+            return ScreenResult.stay(this);
         }
 
         if (MouseUtil.isWheelUp(msg)) {

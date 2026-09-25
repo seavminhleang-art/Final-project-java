@@ -14,6 +14,7 @@ import com.williamcallahan.tui4j.compat.bubbletea.input.key.KeyType;
 
 import java.time.DateTimeException;
 import java.time.LocalDate;
+import com.williamcallahan.tui4j.compat.bubbletea.PasteMessage;
 
 public class UserFormScreen implements Screen {
     private final UserService userService;
@@ -76,6 +77,19 @@ public class UserFormScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        if (msg instanceof PasteMessage paste) {
+            if (!isEditMode()) {
+                if (focusedField == 0) KeyUtil.pasteToBuffer(fullName, paste.content());
+                else if (focusedField == 3) KeyUtil.pasteToBuffer(email, paste.content());
+                else if (focusedField == 4) KeyUtil.pasteToBuffer(username, paste.content());
+                else if (focusedField == 5) KeyUtil.pasteToBuffer(password, paste.content(), 128);
+            } else {
+                if (focusedField == 0) KeyUtil.pasteToBuffer(fullName, paste.content());
+            }
+            errorMessage = "";
+            return ScreenResult.stay(this);
+        }
+
         if (MouseUtil.isWheelUp(msg)) {
             focusedField = (focusedField - 1 + getFieldCount()) % getFieldCount();
             return ScreenResult.stay(this);

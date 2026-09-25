@@ -24,6 +24,7 @@ import com.williamcallahan.tui4j.compat.bubbletea.input.key.KeyType;
 
 import java.util.ArrayList;
 import java.util.List;
+import com.williamcallahan.tui4j.compat.bubbletea.PasteMessage;
 
 public class QuestionFormScreen implements Screen {
     private final QuestionService questionService;
@@ -162,6 +163,23 @@ public class QuestionFormScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+                if (msg instanceof PasteMessage paste) {
+            switch (focusedField) {
+                case 0 -> KeyUtil.pasteToBuffer(questionText, paste.content());
+                case 3 -> KeyUtil.pasteToBuffer(pointsBuffer, paste.content(), 6);
+                case 4 -> KeyUtil.pasteToBuffer(optionA, paste.content());
+                case 5 -> KeyUtil.pasteToBuffer(optionB, paste.content());
+                case 6 -> KeyUtil.pasteToBuffer(optionC, paste.content());
+                case 7 -> KeyUtil.pasteToBuffer(optionD, paste.content());
+                default -> {
+                    // explanation is at different indices depending on question type —
+                    // delegate to the existing explanation field detection
+                    if (focusedField > 0) KeyUtil.pasteToBuffer(explanation, paste.content());
+                }
+            }
+            return ScreenResult.stay(this);
+        }
+
         if (MouseUtil.isWheelUp(msg)) {
             if (!isPinnedQuiz()) subjectFilter.confirmSearch();
             focusedField = (focusedField - 1 + getFieldCount()) % getFieldCount();

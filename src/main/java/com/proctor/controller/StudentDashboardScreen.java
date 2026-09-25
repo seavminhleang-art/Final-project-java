@@ -151,6 +151,12 @@ public class StudentDashboardScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
+            int digit = KeyUtil.getDigit(k);
+            if (digit >= 1 && digit <= menuItems.length) {
+                selectedIndex = digit - 1;
+                return handleSelection();
+            }
+
             if (KeyUtil.isUp(k)) {
                 selectedIndex = (selectedIndex - 1 + menuItems.length) % menuItems.length;
             } else if (KeyUtil.isDown(k)) {

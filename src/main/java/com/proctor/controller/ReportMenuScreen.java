@@ -81,6 +81,13 @@ public class ReportMenuScreen implements Screen {
                 }
             }
 
+            int digit = KeyUtil.getDigit(k);
+            if (digit >= 1 && digit <= reports.length) {
+                selectedIndex = digit - 1;
+                generateSelectedReport();
+                return ScreenResult.stay(this);
+            }
+
             if (KeyUtil.isUp(k)) {
                 selectedIndex = (selectedIndex - 1 + reports.length) % reports.length;
             } else if (KeyUtil.isDown(k)) {

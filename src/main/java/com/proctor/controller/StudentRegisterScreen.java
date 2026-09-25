@@ -18,6 +18,7 @@ import java.time.DateTimeException;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.concurrent.atomic.AtomicBoolean;
+import com.williamcallahan.tui4j.compat.bubbletea.PasteMessage;
 
 public class StudentRegisterScreen implements Screen {
 
@@ -127,6 +128,18 @@ public class StudentRegisterScreen implements Screen {
             }
             return ScreenResult.stay(this);
         }
+                if (msg instanceof PasteMessage paste) {
+            switch (focusedField) {
+                case 0 -> KeyUtil.pasteToBuffer(fullName, paste.content());
+                case 2 -> KeyUtil.pasteToBuffer(email, paste.content());
+                case 3 -> KeyUtil.pasteToBuffer(username, paste.content());
+                case 4 -> KeyUtil.pasteToBuffer(password, paste.content(), 128);
+                case 5 -> KeyUtil.pasteToBuffer(confirmPassword, paste.content(), 128);
+                default -> { /* other fields (gender, birthday, buttons) — no paste */ }
+            }
+            return ScreenResult.stay(this);
+        }
+
         if (MouseUtil.isWheelUp(msg)) {
             focusedField = (focusedField - 1 + getFieldCount()) % getFieldCount();
             return ScreenResult.stay(this);

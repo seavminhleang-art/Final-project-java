@@ -19,6 +19,7 @@ import com.williamcallahan.tui4j.compat.bubbletea.Message;
 import com.williamcallahan.tui4j.compat.bubbletea.input.key.KeyType;
 
 import java.util.List;
+import com.williamcallahan.tui4j.compat.bubbletea.PasteMessage;
 
 public class SpeedQuizFormScreen implements Screen {
     private final QuizService quizService;
@@ -83,6 +84,17 @@ public class SpeedQuizFormScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+                if (msg instanceof PasteMessage paste) {
+            switch (focusedField) {
+                case 0 -> KeyUtil.pasteToBuffer(title, paste.content());
+                case 1 -> KeyUtil.pasteToBuffer(description, paste.content());
+                case 2 -> KeyUtil.pasteToBuffer(secondsPerQuestion, paste.content(), 4);
+                case 3 -> KeyUtil.pasteToBuffer(activeHours, paste.content(), 4);
+                default -> { /* subject/buttons */ }
+            }
+            return ScreenResult.stay(this);
+        }
+
         if (MouseUtil.isWheelUp(msg)) {
             subjectFilter.confirmSearch();
             focusedField = (focusedField - 1 + getFieldCount()) % getFieldCount();

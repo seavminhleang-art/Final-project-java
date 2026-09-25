@@ -26,6 +26,7 @@ import com.williamcallahan.tui4j.compat.bubbletea.input.key.KeyType;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import com.williamcallahan.tui4j.compat.bubbletea.PasteMessage;
 
 public class AIQuizGeneratorScreen implements Screen {
     private final AIService aiService;
@@ -214,7 +215,25 @@ public class AIQuizGeneratorScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
-        if (msg instanceof KeyPressMessage k) {
+        if (msg instanceof PasteMessage paste && !isGenerating) {
+            switch (focusedField) {
+                case 0 -> { /* subject filter — no paste */ }
+                case 1 -> KeyUtil.pasteToBuffer(titleBuffer, paste.content());
+                case 2 -> KeyUtil.pasteToBuffer(descriptionBuffer, paste.content());
+                case 3 -> KeyUtil.pasteToBuffer(customPromptBuffer, paste.content());
+                case 4 -> KeyUtil.pasteToBuffer(countBuffer, paste.content(), 3);
+                case 5 -> KeyUtil.pasteToBuffer(mcqCountBuffer, paste.content(), 3);
+                case 6 -> KeyUtil.pasteToBuffer(tfCountBuffer, paste.content(), 3);
+                case 7 -> KeyUtil.pasteToBuffer(saCountBuffer, paste.content(), 3);
+                case 8 -> KeyUtil.pasteToBuffer(timeLimitBuffer, paste.content(), 4);
+                case 9 -> KeyUtil.pasteToBuffer(activeHours, paste.content(), 4);
+                case 10 -> KeyUtil.pasteToBuffer(passScore, paste.content(), 3);
+                default -> { /* type/buttons */ }
+            }
+            return ScreenResult.stay(this);
+        }
+
+                if (msg instanceof KeyPressMessage k) {
             if (focusedField == 0) {
                 if (KeyUtil.isEsc(k)) {
                     if (subjectFilter.getQuery().length() > 0) {

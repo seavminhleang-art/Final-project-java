@@ -83,4 +83,49 @@ public class KeyUtil {
         }
         return false;
     }
+
+    public static int getDigit(KeyPressMessage k) {
+        if (k == null) return -1;
+        if (k.type() == KeyType.KeyRunes && k.runes() != null && k.runes().length > 0) {
+            char c = k.runes()[0];
+            if (c >= '0' && c <= '9') {
+                return c - '0';
+            }
+        }
+        if (k.key() != null && k.key().length() == 1) {
+            char c = k.key().charAt(0);
+            if (c >= '0' && c <= '9') {
+                return c - '0';
+            }
+        }
+        return -1;
+    }
+    /**
+     * Pastes text into a buffer, stripping control characters (keeping spaces).
+     * No length limit.
+     *
+     * @param buffer the target StringBuilder
+     * @param text   the pasted text (may be null - treated as empty)
+     */
+    public static void pasteToBuffer(StringBuilder buffer, String text) {
+        pasteToBuffer(buffer, text, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Pastes text into a buffer, stripping control characters (keeping spaces),
+     * up to {@code maxLen} total characters.
+     *
+     * @param buffer the target StringBuilder
+     * @param text   the pasted text (may be null - treated as empty)
+     * @param maxLen maximum allowed buffer length after paste
+     */
+    public static void pasteToBuffer(StringBuilder buffer, String text, int maxLen) {
+        if (text == null || text.isEmpty()) return;
+        for (int i = 0; i < text.length() && buffer.length() < maxLen; i++) {
+            char c = text.charAt(i);
+            if (c == ' ' || !Character.isISOControl(c)) {
+                buffer.append(c);
+            }
+        }
+    }
 }

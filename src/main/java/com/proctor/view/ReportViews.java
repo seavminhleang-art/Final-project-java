@@ -24,7 +24,7 @@ public class ReportViews {
             sb.append("  ").append(bannerMessage).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓] Select Report  •  [Enter] Generate PDF  •  [Esc] Back\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Select Report  •  [1-" + reports.length + "] Quick Generate  •  [Enter] Generate PDF  •  [Esc] Back\n"));
         return sb.toString();
     }
 }

@@ -29,7 +29,7 @@ public class DashboardViews {
         }
 
         sb.append("\n");
-        sb.append(TuiHelper.dim("  [↑/↓] Navigate  •  [Enter] Select  •  [Esc] Quit\n"));
+        sb.append(TuiHelper.dim("  [↑/↓] Navigate  •  [1-9] Select  •  [Enter] Confirm  •  [Esc] Quit\n"));
         return sb.toString();
     }
 }
