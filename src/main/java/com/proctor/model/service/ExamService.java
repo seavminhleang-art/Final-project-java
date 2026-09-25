@@ -239,7 +239,7 @@ public class ExamService {
         if (attemptOpt.isEmpty()) return false;
 
         Attempt attempt = attemptOpt.get();
-        if (attempt.getStatus() == AttemptStatus.GRADED) {
+        if (attempt.getStatus() == AttemptStatus.GRADED || attempt.isGraded() || resultRepository.findByAttemptId(attemptId).isPresent()) {
             throw new ValidationException("This submission is already graded. AI grading cannot be re-run.");
         }
         if (attempt.getStatus() == AttemptStatus.IN_PROGRESS) {
@@ -250,27 +250,132 @@ public class ExamService {
         if (quizOpt.isEmpty()) return false;
 
         Quiz quiz = quizOpt.get();
-        Map<Integer, Question> qMap = new HashMap<>();
-        for (Question q : quiz.getQuestions()) {
-            qMap.put(q.getId(), q);
+        if (quiz.getAssessmentType() == AssessmentType.SPEED) {
+            throw new ValidationException("Speed Quizzes are objective only. AI grading is not applicable.");
         }
 
+        List<Question> questions = quiz.getQuestions() != null ? quiz.getQuestions() : List.of();
         List<AttemptAnswer> answers = attemptRepository.getAttemptAnswers(attemptId);
+        Map<Integer, AttemptAnswer> existingAnswersByQId = new HashMap<>();
         for (AttemptAnswer ans : answers) {
-            Question q = qMap.get(ans.getQuestionId());
+            existingAnswersByQId.put(ans.getQuestionId(), ans);
+        }
+
+        for (Question q : questions) {
             if (q != null && q.getQuestionType() == QuestionType.SHORT_ANSWER) {
-                if (ans.getTextAnswer() != null && !ans.getTextAnswer().isBlank()) {
-                    AIGradeResult gradeResult = aiService.gradeShortAnswer(q.getQuestionText(), q.getExplanation(), ans.getTextAnswer());
-                    double fraction = gradeResult.getScore() / 100.0;
-                    double pts = Math.round(fraction * q.getPoints() * 10.0) / 10.0;
-                    boolean isCorrect = gradeResult.getScore() >= 50;
-                    attemptRepository.updateAnswerGrade(ans.getId(), isCorrect, pts, gradeResult.getScore(), gradeResult.getFeedback(), ans.getTeacherFeedback());
-                } else {
-                    attemptRepository.updateAnswerGrade(ans.getId(), false, 0.0, 0, "No answer provided", ans.getTeacherFeedback());
+                AttemptAnswer ans = existingAnswersByQId.get(q.getId());
+                if (ans == null) {
+                    attemptRepository.saveAnswer(attemptId, q.getId(), null, "");
+                    List<AttemptAnswer> reloaded = attemptRepository.getAttemptAnswers(attemptId);
+                    for (AttemptAnswer ra : reloaded) {
+                        if (java.util.Objects.equals(ra.getQuestionId(), q.getId())) {
+                            ans = ra;
+                            break;
+                        }
+                    }
+                }
+
+                if (ans != null) {
+                    if (ans.getTextAnswer() != null && !ans.getTextAnswer().isBlank()) {
+                        AIGradeResult gradeResult = aiService.gradeShortAnswer(q.getQuestionText(), q.getExplanation(), ans.getTextAnswer());
+                        double fraction = gradeResult.getScore() / 100.0;
+                        double pts = Math.round(fraction * q.getPoints() * 10.0) / 10.0;
+                        pts = Math.min(q.getPoints(), Math.max(0.0, pts));
+                        boolean isCorrect = gradeResult.getScore() >= 50;
+                        attemptRepository.updateAnswerGrade(ans.getId(), isCorrect, pts, gradeResult.getScore(), gradeResult.getFeedback(), ans.getTeacherFeedback());
+                    } else {
+                        attemptRepository.updateAnswerGrade(ans.getId(), false, 0.0, 0, "No answer provided", ans.getTeacherFeedback());
+                    }
                 }
             }
         }
         return true;
+    }
+
+    public boolean gradeAnswerManually(int attemptId, int questionId, double pointsAwarded, String teacherFeedback) {
+        Optional<Attempt> attemptOpt = attemptRepository.getAttempt(attemptId);
+        if (attemptOpt.isEmpty()) {
+            throw new ValidationException("Attempt not found.");
+        }
+
+        Attempt attempt = attemptOpt.get();
+        if (attempt.getStatus() == AttemptStatus.GRADED || attempt.isGraded() || resultRepository.findByAttemptId(attemptId).isPresent()) {
+            throw new ValidationException("This submission is already graded. Grades cannot be modified.");
+        }
+        if (attempt.getStatus() == AttemptStatus.IN_PROGRESS) {
+            throw new ValidationException("Cannot grade an assessment that is still in progress by the student.");
+        }
+
+        Optional<Quiz> quizOpt = quizRepository.findById(attempt.getQuizId());
+        if (quizOpt.isEmpty()) {
+            throw new ValidationException("Quiz not found.");
+        }
+
+        Quiz quiz = quizOpt.get();
+        if (quiz.getAssessmentType() == AssessmentType.SPEED) {
+            throw new ValidationException("Speed Quizzes are auto-scored objective assessments. Manual score overrides are not permitted.");
+        }
+
+        List<Question> questions = quiz.getQuestions() != null ? quiz.getQuestions() : List.of();
+        Question targetQuestion = null;
+        for (Question q : questions) {
+            if (q != null && java.util.Objects.equals(q.getId(), questionId)) {
+                targetQuestion = q;
+                break;
+            }
+        }
+        if (targetQuestion == null) {
+            throw new ValidationException("Question not found in quiz.");
+        }
+
+        if (Double.isNaN(pointsAwarded) || pointsAwarded < 0.0) {
+            throw new ValidationException("Points awarded cannot be negative.");
+        }
+        if (pointsAwarded > targetQuestion.getPoints()) {
+            throw new ValidationException(String.format("Points awarded (%.1f) cannot exceed maximum question points (%.1f).",
+                    pointsAwarded, targetQuestion.getPoints()));
+        }
+
+        String cleanedFeedback = (teacherFeedback != null && !teacherFeedback.isBlank()) ? teacherFeedback.trim() : null;
+        if (cleanedFeedback != null && cleanedFeedback.length() > 1000) {
+            cleanedFeedback = cleanedFeedback.substring(0, 1000);
+        }
+
+        List<AttemptAnswer> answers = attemptRepository.getAttemptAnswers(attemptId);
+        AttemptAnswer ans = null;
+        for (AttemptAnswer a : answers) {
+            if (java.util.Objects.equals(a.getQuestionId(), questionId)) {
+                ans = a;
+                break;
+            }
+        }
+
+        if (ans == null) {
+            attemptRepository.saveAnswer(attemptId, questionId, null, "");
+            List<AttemptAnswer> reloaded = attemptRepository.getAttemptAnswers(attemptId);
+            for (AttemptAnswer ra : reloaded) {
+                if (java.util.Objects.equals(ra.getQuestionId(), questionId)) {
+                    ans = ra;
+                    break;
+                }
+            }
+        }
+
+        if (ans == null) {
+            throw new ValidationException("Unable to create or locate answer record for grading.");
+        }
+
+        double roundedPts = Math.round(pointsAwarded * 10.0) / 10.0;
+        boolean isCorrect = targetQuestion.getPoints() <= 0.0 || roundedPts >= (targetQuestion.getPoints() / 2.0);
+
+        return attemptRepository.updateAnswerGrade(
+                ans.getId(),
+                isCorrect,
+                roundedPts,
+                ans.getAiScore(),
+                ans.getAiFeedback(),
+                cleanedFeedback
+        );
     }
 
     public Result returnGrade(int attemptId) {
@@ -280,7 +385,7 @@ public class ExamService {
         }
 
         Attempt attempt = attemptOpt.get();
-        if (attempt.getStatus() == AttemptStatus.GRADED) {
+        if (attempt.getStatus() == AttemptStatus.GRADED || attempt.isGraded() || resultRepository.findByAttemptId(attemptId).isPresent()) {
             throw new ValidationException("Grade has already been returned for this submission.");
         }
         if (attempt.getStatus() == AttemptStatus.IN_PROGRESS) {
@@ -293,6 +398,9 @@ public class ExamService {
         }
 
         Quiz quiz = quizOpt.get();
+        if (quiz.getAssessmentType() == AssessmentType.SPEED) {
+            throw new ValidationException("Speed Quizzes are auto-scored objective assessments. Grade is already finalized.");
+        }
         List<AttemptAnswer> answers = attemptRepository.getAttemptAnswers(attemptId);
 
         double totalAwarded = 0.0;

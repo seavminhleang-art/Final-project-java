@@ -114,6 +114,12 @@ public class AIService {
     }
 
     public AIGradeResult gradeShortAnswer(String questionText, String modelContext, String studentAnswer) {
+        if (studentAnswer == null || studentAnswer.isBlank()) {
+            return AIGradeResult.builder()
+                    .score(0)
+                    .feedback("No answer provided")
+                    .build();
+        }
         String prompt = buildGradingPrompt(questionText, modelContext, studentAnswer);
         String rawJson = ollamaClient.generateJson(prompt);
         return parseGradingResult(rawJson);
@@ -250,16 +256,22 @@ public class AIService {
         int firstBrace = s.indexOf('{');
         int firstBracket = s.indexOf('[');
         int start = -1;
+        int end = -1;
         if (firstBrace != -1 && firstBracket != -1) {
-            start = Math.min(firstBrace, firstBracket);
+            if (firstBrace < firstBracket) {
+                start = firstBrace;
+                end = s.lastIndexOf('}');
+            } else {
+                start = firstBracket;
+                end = s.lastIndexOf(']');
+            }
         } else if (firstBrace != -1) {
             start = firstBrace;
-        } else {
+            end = s.lastIndexOf('}');
+        } else if (firstBracket != -1) {
             start = firstBracket;
+            end = s.lastIndexOf(']');
         }
-        int lastBrace = s.lastIndexOf('}');
-        int lastBracket = s.lastIndexOf(']');
-        int end = Math.max(lastBrace, lastBracket);
         if (start != -1 && end != -1 && end >= start) {
             s = s.substring(start, end + 1);
         }
@@ -437,16 +449,9 @@ public class AIService {
         try {
             String cleanJson = sanitizeJson(rawJson);
             JsonNode root = objectMapper.readTree(cleanJson);
-            double rawScore = 75.0;
-            if (root.has("score")) {
-                rawScore = root.path("score").asDouble(75.0);
-            } else if (root.has("grade")) {
-                rawScore = root.path("grade").asDouble(75.0);
-            } else if (root.has("points")) {
-                rawScore = root.path("points").asDouble(75.0);
-            } else if (root.has("percentage")) {
-                rawScore = root.path("percentage").asDouble(75.0);
-            }
+            Double extractedScore = extractNumericScore(root);
+            double rawScore = extractedScore != null ? extractedScore : 75.0;
+
             int score;
             if (rawScore > 0.0 && rawScore <= 1.0) {
                 score = (int) Math.round(rawScore * 100.0);
@@ -455,9 +460,7 @@ public class AIService {
             }
             score = Math.min(100, Math.max(0, score));
 
-            String feedback = root.path("feedback").asText(
-                    root.path("comments").asText(root.path("explanation").asText(root.path("evaluation").asText("Answer evaluated by AI.")))
-            ).trim();
+            String feedback = extractFeedback(root);
             if (feedback.length() > 500) {
                 feedback = feedback.substring(0, 497) + "...";
             }
@@ -469,5 +472,54 @@ public class AIService {
             }
             return AIGradeResult.builder().score(75).feedback("AI evaluated answer: " + fallbackFeedback).build();
         }
+    }
+
+    private Double extractNumericScore(JsonNode root) {
+        String[] scoreKeys = {"score", "grade", "points", "percentage", "mark", "marks", "result"};
+        for (String key : scoreKeys) {
+            if (root.has(key) && !root.get(key).isNull()) {
+                JsonNode node = root.get(key);
+                if (node.isNumber()) {
+                    return node.asDouble();
+                }
+                if (node.isTextual()) {
+                    String text = node.asText().trim();
+                    if (text.endsWith("%")) {
+                        try {
+                            return Double.parseDouble(text.substring(0, text.length() - 1).trim());
+                        } catch (NumberFormatException ignored) {}
+                    }
+                    if (text.contains("/")) {
+                        String[] parts = text.split("/");
+                        if (parts.length == 2) {
+                            try {
+                                double num = Double.parseDouble(parts[0].trim());
+                                double den = Double.parseDouble(parts[1].trim());
+                                if (den > 0) {
+                                    return (num / den) * 100.0;
+                                }
+                            } catch (NumberFormatException ignored) {}
+                        }
+                    }
+                    try {
+                        return Double.parseDouble(text);
+                    } catch (NumberFormatException ignored) {}
+                }
+            }
+        }
+        return null;
+    }
+
+    private String extractFeedback(JsonNode root) {
+        String[] feedbackKeys = {"feedback", "comments", "explanation", "evaluation", "critique", "notes", "reason", "remarks"};
+        for (String key : feedbackKeys) {
+            if (root.has(key) && !root.get(key).isNull()) {
+                String val = root.get(key).asText("").trim();
+                if (!val.isBlank()) {
+                    return val;
+                }
+            }
+        }
+        return "Answer evaluated by AI.";
     }
 }

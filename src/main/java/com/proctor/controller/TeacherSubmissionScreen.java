@@ -61,6 +61,12 @@ public class TeacherSubmissionScreen implements Screen {
     private boolean inspectingAnswerSheet = false;
     private int inspectingAnswerIndex = 0;
 
+    private boolean showManualGradingModal = false;
+    private int manualGradingField = 0;
+    private final StringBuilder manualPointsBuffer = new StringBuilder();
+    private final StringBuilder manualFeedbackBuffer = new StringBuilder();
+    private String manualGradingError = "";
+
     public record GradingTickMessage(int gradingId) implements Message {}
     public record AIGradingCompletedMessage(int gradingId, boolean success, String errorMessage) implements Message {
         public AIGradingCompletedMessage(boolean success, String errorMessage) {
@@ -155,6 +161,126 @@ public class TeacherSubmissionScreen implements Screen {
                     activeCancellation.set(true);
                 }
                 bannerMessage = TuiHelper.yellow("AI grading cancelled.");
+            } else if (MouseUtil.isLeftClick(msg)) {
+                int line = MouseUtil.getLineIndex(msg);
+                int col = MouseUtil.getColInLine(msg);
+                int btnLine = MouseUtil.findButtonRowLine(view());
+                String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
+                if ((btnLine != -1 && line >= btnLine && line <= btnLine + 2) || "Esc".equals(hintAction)) {
+                    isGrading = false;
+                    activeGradingId++;
+                    if (activeCancellation != null) {
+                        activeCancellation.set(true);
+                    }
+                    bannerMessage = TuiHelper.yellow("AI grading cancelled.");
+                }
+            }
+            return ScreenResult.stay(this);
+        }
+
+        if (showManualGradingModal) {
+            if (MouseUtil.isWheelUp(msg) || MouseUtil.isWheelDown(msg)) {
+                return ScreenResult.stay(this);
+            }
+            if (msg instanceof KeyPressMessage k) {
+                if (KeyUtil.isEsc(k)) {
+                    showManualGradingModal = false;
+                    manualGradingError = "";
+                    return ScreenResult.stay(this);
+                }
+                if (KeyUtil.isTab(k)) {
+                    manualGradingField = (manualGradingField + 1) % 4;
+                    return ScreenResult.stay(this);
+                }
+                if (KeyUtil.isDown(k)) {
+                    if (manualGradingField == 0) manualGradingField = 1;
+                    else if (manualGradingField == 1) manualGradingField = 2;
+                    return ScreenResult.stay(this);
+                }
+                if (KeyUtil.isUp(k)) {
+                    if (manualGradingField == 2 || manualGradingField == 3) manualGradingField = 1;
+                    else if (manualGradingField == 1) manualGradingField = 0;
+                    return ScreenResult.stay(this);
+                }
+                if (manualGradingField == 2 || manualGradingField == 3) {
+                    if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {
+                        manualGradingField = (manualGradingField == 2) ? 3 : 2;
+                        return ScreenResult.stay(this);
+                    }
+                }
+                if (KeyUtil.isEnter(k)) {
+                    if (manualGradingField == 0) {
+                        manualGradingField = 1;
+                        return ScreenResult.stay(this);
+                    } else if (manualGradingField == 1 || manualGradingField == 2) {
+                        return executeSaveManualGrade();
+                    } else if (manualGradingField == 3) {
+                        showManualGradingModal = false;
+                        manualGradingError = "";
+                        return ScreenResult.stay(this);
+                    }
+                }
+                if (manualGradingField == 0) {
+                    if (KeyUtil.handleBackspace(manualPointsBuffer, k)) {
+                        manualGradingError = "";
+                        return ScreenResult.stay(this);
+                    }
+                    if (k.runes() != null) {
+                        for (char c : k.runes()) {
+                            if ((Character.isDigit(c) || c == '.') && manualPointsBuffer.length() < 6) {
+                                manualPointsBuffer.append(c);
+                                manualGradingError = "";
+                            }
+                        }
+                    }
+                    return ScreenResult.stay(this);
+                }
+                if (manualGradingField == 1) {
+                    if (KeyUtil.handleBackspace(manualFeedbackBuffer, k)) {
+                        manualGradingError = "";
+                        return ScreenResult.stay(this);
+                    }
+                    if (KeyUtil.appendInput(manualFeedbackBuffer, k, 500)) {
+                        manualGradingError = "";
+                    }
+                    return ScreenResult.stay(this);
+                }
+                return ScreenResult.stay(this);
+            }
+            if (MouseUtil.isLeftClick(msg)) {
+                int line = MouseUtil.getLineIndex(msg);
+                int col = MouseUtil.getColInLine(msg);
+                int btnLine = MouseUtil.findButtonRowLine(view());
+                if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
+                    int btn = MouseUtil.getClickedButtonIndex(col, "Save Grade", "Cancel");
+                    if (btn == 0) {
+                        return executeSaveManualGrade();
+                    } else if (btn == 1) {
+                        showManualGradingModal = false;
+                        manualGradingError = "";
+                        return ScreenResult.stay(this);
+                    }
+                }
+                String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
+                if ("Esc".equals(hintAction)) {
+                    showManualGradingModal = false;
+                    manualGradingError = "";
+                    return ScreenResult.stay(this);
+                }
+                String[] lines = view().split("\n", -1);
+                if (line >= 0 && line < lines.length) {
+                    for (int i = 0; i <= line && i < lines.length; i++) {
+                        if (lines[i].contains("Points Awarded") && line >= i && line <= i + 3) {
+                            manualGradingField = 0;
+                            break;
+                        }
+                        if (lines[i].contains("Teacher Feedback") && line >= i && line <= i + 3) {
+                            manualGradingField = 1;
+                            break;
+                        }
+                    }
+                }
+                return ScreenResult.stay(this);
             }
             return ScreenResult.stay(this);
         }
@@ -163,10 +289,7 @@ public class TeacherSubmissionScreen implements Screen {
             int qCount = 0;
             if (selectedIndex >= 0 && selectedIndex < submissions.size()) {
                 Attempt att = submissions.get(selectedIndex);
-                Quiz qz = specificQuiz;
-                if (qz == null || qz.getQuestions() == null || qz.getQuestions().isEmpty()) {
-                    qz = quizService.getQuizById(att.getQuizId()).orElse(qz);
-                }
+                Quiz qz = getEffectiveQuiz(att);
                 if (qz != null && qz.getQuestions() != null) {
                     qCount = qz.getQuestions().size();
                 }
@@ -185,6 +308,9 @@ public class TeacherSubmissionScreen implements Screen {
                 if (KeyUtil.isRight(k)) {
                     inspectingAnswerIndex = ListNavigationHelper.nextPage(inspectingAnswerIndex, qCount, 1);
                     return ScreenResult.stay(this);
+                }
+                if ("e".equalsIgnoreCase(k.key())) {
+                    return openManualGradingModal();
                 }
                 if ("g".equalsIgnoreCase(k.key())) {
                     return startAsyncGrading();
@@ -210,6 +336,22 @@ public class TeacherSubmissionScreen implements Screen {
                 if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
                     inspectingAnswerSheet = false;
                     bannerMessage = "";
+                    return ScreenResult.stay(this);
+                }
+                String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
+                if (hintAction != null) {
+                    if ("Esc".equals(hintAction)) {
+                        inspectingAnswerSheet = false;
+                        bannerMessage = "";
+                        return ScreenResult.stay(this);
+                    } else if ("e".equals(hintAction)) {
+                        return openManualGradingModal();
+                    } else if ("g".equals(hintAction)) {
+                        return startAsyncGrading();
+                    } else if ("r".equals(hintAction)) {
+                        executeReturnGrade();
+                        return ScreenResult.stay(this);
+                    }
                 }
             }
             return ScreenResult.stay(this);
@@ -254,7 +396,7 @@ public class TeacherSubmissionScreen implements Screen {
             if (hintAction != null) {
                 if ("Esc".equals(hintAction)) {
                     return navigateBack();
-                } else if ("Enter".equals(hintAction)) {
+                } else if ("Enter".equals(hintAction) || "e".equals(hintAction)) {
                     return openSubmissionDetail();
                 } else if ("g".equals(hintAction)) {
                     return startAsyncGrading();
@@ -295,7 +437,7 @@ public class TeacherSubmissionScreen implements Screen {
                 searchMode = true;
                 searchBuffer.setLength(0);
                 applyFilters();
-            } else if (KeyUtil.isEnter(k)) {
+            } else if (KeyUtil.isEnter(k) || "e".equalsIgnoreCase(k.key())) {
                 return openSubmissionDetail();
             } else if ("g".equalsIgnoreCase(k.key())) {
                 return startAsyncGrading();
@@ -327,7 +469,7 @@ public class TeacherSubmissionScreen implements Screen {
     }
 
     private ScreenResult startAsyncGrading() {
-        if (submissions.isEmpty() || selectedIndex >= submissions.size()) {
+        if (submissions.isEmpty() || selectedIndex < 0 || selectedIndex >= submissions.size()) {
             return ScreenResult.stay(this);
         }
         Attempt att = submissions.get(selectedIndex);
@@ -335,7 +477,7 @@ public class TeacherSubmissionScreen implements Screen {
             bannerMessage = TuiHelper.yellow("● Speed Quizzes are objective only. AI grading is not applicable.");
             return ScreenResult.stay(this);
         }
-        if (att.getStatus() == AttemptStatus.GRADED) {
+        if (att.getStatus() == AttemptStatus.GRADED || att.isGraded()) {
             bannerMessage = TuiHelper.yellow("● This submission is already graded. AI grading cannot be re-run.");
             return ScreenResult.stay(this);
         }
@@ -397,12 +539,7 @@ public class TeacherSubmissionScreen implements Screen {
             return;
         }
 
-        Quiz quiz = specificQuiz;
-        if (quiz == null) {
-            quiz = quizService.getQuizById(att.getQuizId()).orElse(null);
-        } else if (quiz.getQuestions() == null || quiz.getQuestions().isEmpty()) {
-            quiz = quizService.getQuizById(quiz.getId()).orElse(quiz);
-        }
+        Quiz quiz = getEffectiveQuiz(att);
         if (quiz != null && quiz.getQuestions() != null) {
             List<AttemptAnswer> answers = examService.getAttemptAnswers(att.getId());
             Map<Integer, AttemptAnswer> ansMap = new HashMap<>();
@@ -414,7 +551,7 @@ public class TeacherSubmissionScreen implements Screen {
                 if (q.getQuestionType() == QuestionType.SHORT_ANSWER) {
                     AttemptAnswer ans = ansMap.get(q.getId());
                     if (ans != null && ans.getTextAnswer() != null && !ans.getTextAnswer().isBlank()) {
-                        if (ans.getAiScore() == null && ans.getTeacherFeedback() == null && ans.getPointsAwarded() == 0.0) {
+                        if (ans.getCorrect() == null && ans.getAiScore() == null && ans.getTeacherFeedback() == null && ans.getPointsAwarded() == 0.0) {
                             hasUnevaluatedShortAnswer = true;
                             break;
                         }
@@ -440,6 +577,108 @@ public class TeacherSubmissionScreen implements Screen {
         }
     }
 
+    private ScreenResult openManualGradingModal() {
+        if (submissions.isEmpty() || selectedIndex < 0 || selectedIndex >= submissions.size()) {
+            return ScreenResult.stay(this);
+        }
+        Attempt att = submissions.get(selectedIndex);
+        if (att.isGraded() || att.getStatus() == AttemptStatus.GRADED) {
+            bannerMessage = TuiHelper.yellow("● This submission is already graded. Grades cannot be modified.");
+            return ScreenResult.stay(this);
+        }
+        Quiz qz = getEffectiveQuiz(att);
+        if (qz != null && qz.getAssessmentType() == AssessmentType.SPEED) {
+            bannerMessage = TuiHelper.yellow("● Speed Quizzes are auto-scored objective assessments.");
+            return ScreenResult.stay(this);
+        }
+        List<Question> questions = (qz != null && qz.getQuestions() != null) ? qz.getQuestions() : List.of();
+        if (questions.isEmpty() || inspectingAnswerIndex >= questions.size()) {
+            bannerMessage = TuiHelper.red("✖ Question not found for manual grading.");
+            return ScreenResult.stay(this);
+        }
+
+        Question q = questions.get(inspectingAnswerIndex);
+        List<AttemptAnswer> answers = examService.getAttemptAnswers(att.getId());
+        AttemptAnswer ans = null;
+        for (AttemptAnswer a : answers) {
+            if (java.util.Objects.equals(a.getQuestionId(), q.getId())) {
+                ans = a;
+                break;
+            }
+        }
+
+        manualPointsBuffer.setLength(0);
+        if (ans != null && ans.getPointsAwarded() > 0.0) {
+            if (ans.getPointsAwarded() == Math.floor(ans.getPointsAwarded())) {
+                manualPointsBuffer.append(String.format(java.util.Locale.US, "%.0f", ans.getPointsAwarded()));
+            } else {
+                manualPointsBuffer.append(String.format(java.util.Locale.US, "%.1f", ans.getPointsAwarded()));
+            }
+        } else {
+            manualPointsBuffer.append("0");
+        }
+
+        manualFeedbackBuffer.setLength(0);
+        if (ans != null && ans.getTeacherFeedback() != null) {
+            manualFeedbackBuffer.append(ans.getTeacherFeedback());
+        }
+
+        manualGradingField = 0;
+        manualGradingError = "";
+        showManualGradingModal = true;
+        return ScreenResult.stay(this);
+    }
+
+    private ScreenResult executeSaveManualGrade() {
+        if (submissions.isEmpty() || selectedIndex < 0 || selectedIndex >= submissions.size()) {
+            showManualGradingModal = false;
+            return ScreenResult.stay(this);
+        }
+        Attempt att = submissions.get(selectedIndex);
+        Quiz qz = getEffectiveQuiz(att);
+        List<Question> questions = (qz != null && qz.getQuestions() != null) ? qz.getQuestions() : List.of();
+        if (questions.isEmpty() || inspectingAnswerIndex >= questions.size()) {
+            showManualGradingModal = false;
+            return ScreenResult.stay(this);
+        }
+        Question q = questions.get(inspectingAnswerIndex);
+
+        String ptsStr = manualPointsBuffer.toString().trim();
+        if (ptsStr.isEmpty()) {
+            manualGradingError = "Please enter points awarded.";
+            return ScreenResult.stay(this);
+        }
+
+        double pts;
+        try {
+            pts = Double.parseDouble(ptsStr);
+        } catch (NumberFormatException e) {
+            manualGradingError = "Invalid points format. Enter a valid number.";
+            return ScreenResult.stay(this);
+        }
+
+        try {
+            examService.gradeAnswerManually(att.getId(), q.getId(), pts, manualFeedbackBuffer.toString());
+            showManualGradingModal = false;
+            manualGradingError = "";
+            bannerMessage = TuiHelper.green(String.format(java.util.Locale.US, "✔ Score updated: %.1f/%.1f pts.", pts, q.getPoints()));
+            refreshList();
+        } catch (ValidationException e) {
+            manualGradingError = e.getMessage();
+        }
+        return ScreenResult.stay(this);
+    }
+
+    private Quiz getEffectiveQuiz(Attempt attempt) {
+        Quiz currentQuiz = specificQuiz;
+        if (currentQuiz == null && attempt != null) {
+            currentQuiz = quizService.getQuizById(attempt.getQuizId()).orElse(null);
+        } else if (currentQuiz != null && (currentQuiz.getQuestions() == null || currentQuiz.getQuestions().isEmpty())) {
+            currentQuiz = quizService.getQuizById(currentQuiz.getId()).orElse(currentQuiz);
+        }
+        return currentQuiz;
+    }
+
     @Override
     public String view() {
         if (isGrading) {
@@ -451,14 +690,32 @@ public class TeacherSubmissionScreen implements Screen {
             int elapsedSeconds = (int) Math.max(0, (System.currentTimeMillis() - gradingStartTime) / 1000);
             return TeacherSubmissionViews.renderAIGradingLoading(studentName, quizTitle, spinnerTick, elapsedSeconds);
         }
+        if (showManualGradingModal && !submissions.isEmpty() && selectedIndex < submissions.size()) {
+            Attempt attempt = submissions.get(selectedIndex);
+            Quiz currentQuiz = getEffectiveQuiz(attempt);
+            List<Question> questions = (currentQuiz != null && currentQuiz.getQuestions() != null) ? currentQuiz.getQuestions() : List.of();
+            Question q = (!questions.isEmpty() && inspectingAnswerIndex < questions.size()) ? questions.get(inspectingAnswerIndex) : null;
+            List<AttemptAnswer> answers = examService.getAttemptAnswers(attempt.getId());
+            AttemptAnswer ans = null;
+            if (q != null) {
+                for (AttemptAnswer a : answers) {
+                    if (java.util.Objects.equals(a.getQuestionId(), q.getId())) {
+                        ans = a;
+                        break;
+                    }
+                }
+            }
+            if (q != null) {
+                return TeacherSubmissionViews.renderManualGradingModal(
+                        q, ans, inspectingAnswerIndex, questions.size(),
+                        manualPointsBuffer.toString(), manualFeedbackBuffer.toString(),
+                        manualGradingField, manualGradingError
+                );
+            }
+        }
         if (inspectingAnswerSheet && !submissions.isEmpty() && selectedIndex < submissions.size()) {
             Attempt attempt = submissions.get(selectedIndex);
-            Quiz currentQuiz = specificQuiz;
-            if (currentQuiz == null) {
-                currentQuiz = quizService.getQuizById(attempt.getQuizId()).orElse(null);
-            } else if (currentQuiz.getQuestions() == null || currentQuiz.getQuestions().isEmpty()) {
-                currentQuiz = quizService.getQuizById(currentQuiz.getId()).orElse(currentQuiz);
-            }
+            Quiz currentQuiz = getEffectiveQuiz(attempt);
             List<AttemptAnswer> answers = examService.getAttemptAnswers(attempt.getId());
             Map<Integer, AttemptAnswer> answerMap = new HashMap<>();
             for (AttemptAnswer a : answers) {

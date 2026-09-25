@@ -230,10 +230,19 @@ public class TeacherSubmissionViews {
                     sb.append("\n     ").append(isCorrect ? TuiHelper.green(TuiHelper.bold(scoreText)) : TuiHelper.red(TuiHelper.bold(scoreText))).append("\n");
                 } else {
                     String scoreHeader = String.format("Score: %.1f / %.1f pts", ans.getPointsAwarded(), q.getPoints());
+                    if (ans.getAiScore() != null) {
+                        scoreHeader += String.format(" (AI: %d%%)", ans.getAiScore());
+                    }
                     sb.append("\n     ").append(isCorrect ? TuiHelper.green(TuiHelper.bold(scoreHeader)) : TuiHelper.dim(scoreHeader)).append("\n");
                     if (ans.getAiFeedback() != null && !ans.getAiFeedback().isBlank()) {
                         sb.append("     ").append(TuiHelper.dim("Feedback:")).append("\n");
                         for (String fLine : wrapText(ans.getAiFeedback(), 116)) {
+                            sb.append("       ").append(TuiHelper.dim(fLine)).append("\n");
+                        }
+                    }
+                    if (ans.getTeacherFeedback() != null && !ans.getTeacherFeedback().isBlank()) {
+                        sb.append("     ").append(TuiHelper.dim("Teacher Notes:")).append("\n");
+                        for (String fLine : wrapText(ans.getTeacherFeedback(), 116)) {
                             sb.append("       ").append(TuiHelper.dim(fLine)).append("\n");
                         }
                     }
@@ -263,8 +272,82 @@ public class TeacherSubmissionViews {
         if (isSpeedQuiz) {
             sb.append(TuiHelper.dim("  [←/→] Navigate Questions  •  [Esc] Back\n"));
         } else {
-            sb.append(TuiHelper.dim("  [←/→] Navigate Questions  •  [g] AI Grade  •  [r] Return Grade  •  [Esc] Back\n"));
+            sb.append(TuiHelper.dim("  [←/→] Navigate Questions  •  [e] Grade Answer  •  [g] AI Grade  •  [r] Return Grade  •  [Esc] Back\n"));
         }
+        return sb.toString();
+    }
+
+    public static String renderManualGradingModal(
+            Question question,
+            AttemptAnswer answer,
+            int questionIndex,
+            int totalQuestions,
+            String pointsBuffer,
+            String feedbackBuffer,
+            int focusedField,
+            String modalError
+    ) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(TuiHelper.header("SUBMISSIONS"));
+        sb.append("\n");
+        String subtitle = String.format("Question %d of %d  •  Maximum: %.1f pts  •  Type: %s",
+                questionIndex + 1, totalQuestions, question.getPoints(), question.getQuestionType().name());
+        sb.append(TuiHelper.boxTitle("Manual Grade & Score Override", subtitle)).append("\n\n");
+
+        String qHeader = String.format("Q%d. %s [%.1f pts]", questionIndex + 1, question.getQuestionText(), question.getPoints());
+        for (String qLine : wrapText(qHeader, 120)) {
+            sb.append("  ").append(TuiHelper.bold(TuiHelper.NAVY_BLUE + qLine)).append("\n");
+        }
+        sb.append("\n");
+
+        if (question.getQuestionType() == com.proctor.model.enums.QuestionType.SHORT_ANSWER) {
+            String textAns = (answer != null && answer.getTextAnswer() != null && !answer.getTextAnswer().isBlank())
+                    ? answer.getTextAnswer() : "(No answer provided)";
+            sb.append("  ").append(TuiHelper.cyan("Student Answer:")).append("\n");
+            for (String line : wrapText(textAns, 116)) {
+                sb.append("    ").append(line).append("\n");
+            }
+            if (question.getExplanation() != null && !question.getExplanation().isBlank()) {
+                sb.append("  ").append(TuiHelper.dim("Grading Context:")).append("\n");
+                for (String line : wrapText(question.getExplanation(), 116)) {
+                    sb.append("    ").append(TuiHelper.dim(line)).append("\n");
+                }
+            }
+        } else {
+            Integer chosenOptId = (answer != null) ? answer.getSelectedOptionId() : null;
+            if (question.getOptions() != null) {
+                for (int i = 0; i < question.getOptions().size(); i++) {
+                    QuestionOption opt = question.getOptions().get(i);
+                    boolean isChosen = chosenOptId != null && chosenOptId.equals(opt.getId());
+                    String prefix = opt.isCorrect()
+                            ? "✔ [Model Answer] " + opt.getOptionText() + (isChosen ? " (Student Choice)" : "")
+                            : (isChosen ? "✖ [Student Choice] " + opt.getOptionText() : "• " + opt.getOptionText());
+                    sb.append("  ").append(opt.isCorrect() ? TuiHelper.green(prefix) : (isChosen ? TuiHelper.red(prefix) : TuiHelper.dim(prefix))).append("\n");
+                }
+            }
+        }
+
+        if (answer != null && answer.getAiScore() != null) {
+            sb.append("\n  ").append(TuiHelper.cyan(String.format("AI Evaluation: %d%% score", answer.getAiScore())));
+            if (answer.getAiFeedback() != null && !answer.getAiFeedback().isBlank()) {
+                sb.append("  ").append(TuiHelper.dim("— " + answer.getAiFeedback()));
+            }
+            sb.append("\n");
+        }
+
+        sb.append("\n  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
+
+        if (modalError != null && !modalError.isBlank()) {
+            sb.append("  ").append(TuiHelper.red(modalError)).append("\n\n");
+        }
+
+        String ptsLabel = String.format("Points Awarded (0.0 - %.1f)", question.getPoints());
+        sb.append(TuiHelper.inputBox(ptsLabel, pointsBuffer, focusedField == 0, 106, false, "e.g. " + question.getPoints())).append("\n");
+        sb.append(TuiHelper.inputBox("Teacher Feedback / Notes (Optional)", feedbackBuffer, focusedField == 1, 106, false, "Enter feedback notes for student...")).append("\n\n");
+
+        sb.append(TuiHelper.buttonRow("Save Grade", focusedField == 2, "Cancel", focusedField == 3, 106)).append("\n\n");
+
+        sb.append(TuiHelper.dim("  [Tab/↑/↓] Switch Field  •  [Enter] Save / Next  •  [Esc] Cancel\n"));
         return sb.toString();
     }
 
