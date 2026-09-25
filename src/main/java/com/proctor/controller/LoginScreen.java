@@ -94,8 +94,10 @@ public class LoginScreen implements Screen {
             } else if (line >= 16 && line <= 19) {
                 focusedField = 1;
                 return ScreenResult.stay(this);
-            } else if (line >= 22 && line <= 24) {
-                int btn = MouseUtil.getClickedButtonIndex(col, 116, "Log In", "Forgot Password", "Back");
+            }
+            int btnLine = MouseUtil.findButtonRowLine(view());
+            if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
+                int btn = MouseUtil.getClickedButtonIndex(col, "Log In", "Forgot Password", "Back");
                 if (btn == 0) {
                     focusedField = 2;
                     return attemptLogin();

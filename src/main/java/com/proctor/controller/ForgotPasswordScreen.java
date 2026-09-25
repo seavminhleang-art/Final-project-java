@@ -151,12 +151,14 @@ public class ForgotPasswordScreen implements Screen {
             int line = MouseUtil.getLineIndex(msg);
             int col = MouseUtil.getColInLine(msg);
 
+            int btnLine = MouseUtil.findButtonRowLine(view());
+
             if (forgotStep == ForgotStep.IDENTIFIER) {
                 if (line >= 13 && line <= 16) {
                     forgotFocusIndex = 0;
                     return ScreenResult.stay(this);
-                } else if (line >= 18 && line <= 20) {
-                    int btn = MouseUtil.getClickedButtonIndex(col, 106, "Send Verification Code", "Cancel");
+                } else if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
+                    int btn = MouseUtil.getClickedButtonIndex(col, "Send Verification Code", "Cancel");
                     if (btn == 0) {
                         return submitIdentifier();
                     } else if (btn == 1) {
@@ -167,8 +169,8 @@ public class ForgotPasswordScreen implements Screen {
                 if (line >= 14 && line <= 17) {
                     forgotFocusIndex = 0;
                     return ScreenResult.stay(this);
-                } else if (line >= 19 && line <= 21) {
-                    int btn = MouseUtil.getClickedButtonIndex(col, 106, "Verify Code", "Resend Code", "Cancel");
+                } else if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
+                    int btn = MouseUtil.getClickedButtonIndex(col, "Verify Code", "Resend Code", "Cancel");
                     if (btn == 0) {
                         return submitOtp();
                     } else if (btn == 1) {
@@ -184,8 +186,8 @@ public class ForgotPasswordScreen implements Screen {
                 } else if (line >= 18 && line <= 21) {
                     forgotFocusIndex = 1;
                     return ScreenResult.stay(this);
-                } else if (line >= 23 && line <= 25) {
-                    int btn = MouseUtil.getClickedButtonIndex(col, 106, "Reset Password", "Cancel");
+                } else if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
+                    int btn = MouseUtil.getClickedButtonIndex(col, "Reset Password", "Cancel");
                     if (btn == 0) {
                         return submitNewPassword();
                     } else if (btn == 1) {

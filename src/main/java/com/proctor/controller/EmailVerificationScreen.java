@@ -130,8 +130,10 @@ public class EmailVerificationScreen implements Screen {
             if (line >= 16 && line <= 19) {
                 focusedSection = 0;
                 return ScreenResult.stay(this);
-            } else if (line >= 21 && line <= 23) {
-                int btn = MouseUtil.getClickedButtonIndex(col, 106, actionButtonLabel, "Resend Code", "Back");
+            }
+            int btnLine = MouseUtil.findButtonRowLine(view());
+            if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
+                int btn = MouseUtil.getClickedButtonIndex(col, actionButtonLabel, "Resend Code", "Back");
                 if (btn == 0) {
                     focusedSection = 1;
                     focusedButton = 0;

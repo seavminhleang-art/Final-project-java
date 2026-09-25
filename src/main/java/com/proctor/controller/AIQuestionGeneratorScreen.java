@@ -147,7 +147,7 @@ public class AIQuestionGeneratorScreen implements Screen {
         }
 
         if (msg instanceof AIQuestionsGeneratedMessage m) {
-            if (!isGenerating || (m.generationId() != 0 && m.generationId() != this.activeGenerationId)) {
+            if (m.generationId() != 0 && (!isGenerating || m.generationId() != this.activeGenerationId)) {
                 return ScreenResult.stay(this);
             }
             isGenerating = false;
