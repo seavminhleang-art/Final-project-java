@@ -79,11 +79,19 @@ public class SeedService {
             userRepository.create(admin);
         } else {
             User admin = existing.get();
-            admin.setPasswordHash(PasswordUtils.hash(ADMIN_PASSWORD));
-            admin.setEnabled(true);
-            admin.setRole(Role.ADMIN);
-            userRepository.update(admin);
-            userRepository.updatePassword(admin.getId(), PasswordUtils.hash(ADMIN_PASSWORD));
+            boolean needUpdate = false;
+            if (admin.getRole() != Role.ADMIN || !admin.isEnabled()) {
+                admin.setRole(Role.ADMIN);
+                admin.setEnabled(true);
+                needUpdate = true;
+            }
+            if (admin.getEmail() == null || !admin.getEmail().contains("@")) {
+                admin.setEmail(ADMIN_EMAIL);
+                needUpdate = true;
+            }
+            if (needUpdate) {
+                userRepository.update(admin);
+            }
         }
     }
 }

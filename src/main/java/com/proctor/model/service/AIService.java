@@ -364,17 +364,10 @@ public class AIService {
                         explicitTrueCorrect = node.path("is_true").asBoolean(true);
                     }
 
-                    boolean isTrue;
-                    if (explicitTrueCorrect != null) {
-                        isTrue = explicitTrueCorrect;
-                    } else {
-                        String explLower = explanation.toLowerCase();
-                        if (explLower.contains("is false") || explLower.contains("statement is false") || explLower.contains("false.")) {
-                            isTrue = false;
-                        } else {
-                            isTrue = true;
-                        }
+                    if (explicitTrueCorrect == null) {
+                        continue;
                     }
+                    boolean isTrue = explicitTrueCorrect;
 
                     options.add(QuestionOption.builder().optionText("True").correct(isTrue).optionOrder(1).build());
                     options.add(QuestionOption.builder().optionText("False").correct(!isTrue).optionOrder(2).build());
@@ -421,8 +414,8 @@ public class AIService {
                                     .optionOrder(order++)
                                     .build());
                         }
-                        if (!hasCorrect && !options.isEmpty()) {
-                            options.get(0).setCorrect(true);
+                        if (!hasCorrect) {
+                            continue;
                         }
                     }
                     if (options.size() < 2) {
@@ -442,6 +435,9 @@ public class AIService {
         } catch (Exception e) {
             throw new AIException("Failed to parse questions from AI response: " + e.getMessage(), e);
         }
+        if (drafts.isEmpty()) {
+            throw new AIException("Failed to parse questions from AI response: no valid questions found.");
+        }
         return drafts;
     }
 
@@ -450,7 +446,10 @@ public class AIService {
             String cleanJson = sanitizeJson(rawJson);
             JsonNode root = objectMapper.readTree(cleanJson);
             Double extractedScore = extractNumericScore(root);
-            double rawScore = extractedScore != null ? extractedScore : 75.0;
+            if (extractedScore == null) {
+                throw new AIException("Failed to extract score from AI grading response.");
+            }
+            double rawScore = extractedScore;
 
             int score;
             if (rawScore > 0.0 && rawScore <= 1.0) {
@@ -465,12 +464,10 @@ public class AIService {
                 feedback = feedback.substring(0, 497) + "...";
             }
             return AIGradeResult.builder().score(score).feedback(feedback).build();
+        } catch (AIException e) {
+            throw e;
         } catch (Exception e) {
-            String fallbackFeedback = rawJson != null ? rawJson.trim() : "";
-            if (fallbackFeedback.length() > 200) {
-                fallbackFeedback = fallbackFeedback.substring(0, 197) + "...";
-            }
-            return AIGradeResult.builder().score(75).feedback("AI evaluated answer: " + fallbackFeedback).build();
+            throw new AIException("Failed to parse grading result from AI response: " + e.getMessage(), e);
         }
     }
 

@@ -82,9 +82,6 @@ public class EmailVerificationService {
         }
 
         User user = userOpt.get();
-        if (user.getRole() == Role.ADMIN || SeedService.ADMIN_USERNAME.equalsIgnoreCase(user.getUsername())) {
-            throw new ValidationException("The administrator account is hardcoded and cannot be reset.");
-        }
         if (!user.isEnabled()) {
             throw new ValidationException("This account has been disabled. Please contact an administrator.");
         }
@@ -117,9 +114,6 @@ public class EmailVerificationService {
         }
 
         User user = userOpt.get();
-        if (user.getRole() == Role.ADMIN || SeedService.ADMIN_USERNAME.equalsIgnoreCase(user.getUsername())) {
-            throw new ValidationException("The administrator account is hardcoded and cannot be reset.");
-        }
         if (!user.isEnabled()) {
             throw new ValidationException("This account has been disabled. Please contact an administrator.");
         }
@@ -157,9 +151,6 @@ public class EmailVerificationService {
         }
 
         User user = userOpt.get();
-        if (user.getRole() == Role.ADMIN || SeedService.ADMIN_USERNAME.equalsIgnoreCase(user.getUsername())) {
-            throw new ValidationException("The administrator account is hardcoded and cannot be reset.");
-        }
         if (!user.isEnabled()) {
             throw new ValidationException("This account has been disabled. Please contact an administrator.");
         }

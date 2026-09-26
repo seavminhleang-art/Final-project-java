@@ -22,14 +22,6 @@ public class AuthService {
 
         Optional<User> userOpt = userRepository.findByEmailOrUsername(emailOrUsername.trim());
 
-        if (("admin".equalsIgnoreCase(emailOrUsername.trim()) || "admin@proctor.edu".equalsIgnoreCase(emailOrUsername.trim()))
-                && SeedService.ADMIN_PASSWORD.equals(rawPassword) && userOpt.isPresent()) {
-            User user = userOpt.get();
-            user.setEnabled(true);
-            Session.setLoggedInUser(user);
-            return user;
-        }
-
         if (userOpt.isEmpty()) {
             throw new AuthException("Invalid email or password.");
         }

@@ -166,22 +166,23 @@ public class UserRepository {
     }
 
     public boolean update(User user) {
-        String sql = "UPDATE users SET full_name = ?, role = ?, is_enabled = ?, date_of_birth = ?, gender = ?, academic_degree = ?, education_background = ?, specialization = ?, updated_at = NOW() WHERE id = ?";
+        String sql = "UPDATE users SET email = ?, full_name = ?, role = ?, is_enabled = ?, date_of_birth = ?, gender = ?, academic_degree = ?, education_background = ?, specialization = ?, updated_at = NOW() WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, user.getFullName());
-            stmt.setString(2, user.getRole().name());
-            stmt.setBoolean(3, user.isEnabled());
+            stmt.setString(1, user.getEmail());
+            stmt.setString(2, user.getFullName());
+            stmt.setString(3, user.getRole().name());
+            stmt.setBoolean(4, user.isEnabled());
             if (user.getDateOfBirth() != null) {
-                stmt.setDate(4, java.sql.Date.valueOf(user.getDateOfBirth()));
+                stmt.setDate(5, java.sql.Date.valueOf(user.getDateOfBirth()));
             } else {
-                stmt.setNull(4, java.sql.Types.DATE);
+                stmt.setNull(5, java.sql.Types.DATE);
             }
-            stmt.setString(5, user.getGender());
-            stmt.setString(6, user.getAcademicDegree());
-            stmt.setString(7, user.getEducationBackground());
-            stmt.setString(8, user.getSpecialization());
-            stmt.setInt(9, user.getId());
+            stmt.setString(6, user.getGender());
+            stmt.setString(7, user.getAcademicDegree());
+            stmt.setString(8, user.getEducationBackground());
+            stmt.setString(9, user.getSpecialization());
+            stmt.setInt(10, user.getId());
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new DatabaseException("Failed to update user id: " + user.getId(), e);

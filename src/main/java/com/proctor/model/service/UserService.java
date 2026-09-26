@@ -251,9 +251,6 @@ public class UserService {
             throw new ValidationException("User not found.");
         }
         User user = existing.get();
-        if (user.getRole() == Role.ADMIN || SeedService.ADMIN_USERNAME.equalsIgnoreCase(user.getUsername())) {
-            throw new ValidationException("The administrator account is hardcoded and cannot be modified.");
-        }
         if (!PasswordUtils.verify(currentPassword, user.getPasswordHash())) {
             throw new ValidationException("Current password does not match.");
         }

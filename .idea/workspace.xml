@@ -7,29 +7,21 @@
     <list default="true" id="c05deeaa-fc82-4d29-9b43-ab8bc6abc8c2" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/config.properties.example" beforeDir="false" afterPath="$PROJECT_DIR$/config.properties.example" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/AIQuestionGeneratorScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/AIQuestionGeneratorScreen.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/AIQuizGeneratorScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/AIQuizGeneratorScreen.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/AdminDashboardScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/AdminDashboardScreen.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/ChangePasswordScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/ChangePasswordScreen.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/EmailVerificationScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/EmailVerificationScreen.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/ForgotPasswordScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/ForgotPasswordScreen.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/LoginScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/LoginScreen.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/QuestionFormScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/QuestionFormScreen.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/QuizFormScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/QuizFormScreen.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/ReportMenuScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/ReportMenuScreen.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/SpeedQuizFormScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/SpeedQuizFormScreen.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/StudentDashboardScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/StudentDashboardScreen.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/StudentRegisterScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/StudentRegisterScreen.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/SubjectFormScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/SubjectFormScreen.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/TeacherDashboardScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/TeacherDashboardScreen.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/TeacherRegisterScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/TeacherRegisterScreen.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/controller/UserFormScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/controller/UserFormScreen.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/model/service/AIService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/model/service/AIService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/model/service/AuthService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/model/service/AuthService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/model/service/EmailService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/model/service/EmailService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/model/service/EmailVerificationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/model/service/EmailVerificationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/model/service/SeedService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/model/service/SeedService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/model/service/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/model/service/UserService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/util/KeyUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/util/KeyUtil.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/util/TuiHelper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/util/TuiHelper.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/view/AuthViews.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/view/AuthViews.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/view/DashboardViews.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/view/DashboardViews.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/view/ReportViews.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/view/ReportViews.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/proctor/view/UserViews.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/proctor/view/UserViews.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />

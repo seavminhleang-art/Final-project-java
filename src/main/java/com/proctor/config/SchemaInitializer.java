@@ -39,6 +39,7 @@ public class SchemaInitializer {
                 stmt.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(50);");
                 stmt.execute("UPDATE users SET email = username WHERE (email IS NULL OR email = '') AND username IS NOT NULL;");
                 stmt.execute("UPDATE users SET username = SPLIT_PART(email, '@', 1) WHERE (username IS NULL OR username = '') AND email IS NOT NULL;");
+                stmt.execute("UPDATE users SET email = 'admin@proctor.edu' WHERE username = 'admin' AND (email IS NULL OR email = '' OR email = 'admin');");
                 stmt.execute("ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS topic VARCHAR(100);");
                 stmt.execute("ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS expires_at TIMESTAMP;");
                 stmt.execute("ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS assessment_type VARCHAR(20) DEFAULT 'QUIZ';");
