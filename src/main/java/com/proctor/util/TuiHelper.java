@@ -196,9 +196,19 @@ public class TuiHelper {
     }
 
     public static String inputBox(String label, String value, boolean focused, int width, boolean masked, String placeholder) {
+        return inputBox(label, value, focused, width, masked, placeholder, false);
+    }
+
+    public static String inputBox(String label, String value, boolean focused, int width, boolean masked, String placeholder, boolean showPassword) {
         StringBuilder sb = new StringBuilder();
         String borderCol = focused ? NAVY_BLUE : DIM;
-        String labelCol = focused ? bold(NAVY_BLUE + "  " + label) : dim("  " + label);
+        String displayLabel;
+        if (masked) {
+            displayLabel = showPassword ? label + " 👁" : label + " ⊘";
+        } else {
+            displayLabel = label;
+        }
+        String labelCol = focused ? bold(NAVY_BLUE + "  " + displayLabel) : dim("  " + displayLabel);
 
         int maxInner = Math.max(10, width - 4);
         String displayVal;
@@ -213,7 +223,7 @@ public class TuiHelper {
                 displayVal = dim(ph) + " ".repeat(Math.max(0, maxInner - ph.length()));
             }
         } else {
-            String txt = masked ? "*".repeat(value.length()) : value;
+            String txt = (masked && !showPassword) ? "*".repeat(value.length()) : value;
             if (focused) {
                 if (txt.length() < maxInner) {
                     displayVal = txt + "_" + " ".repeat(maxInner - txt.length() - 1);
@@ -528,7 +538,7 @@ public class TuiHelper {
     public static int visibleLength(String str) {
         if (str == null || str.isEmpty()) return 0;
         String stripped = str.replaceAll("\\[[;?0-9]*[a-zA-Z]", "");
-        return stripped.length();
+        return stripped.codePointCount(0, stripped.length());
     }
 
     public static String truncate(String text, int max) {

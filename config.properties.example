@@ -15,3 +15,12 @@ ollama.timeout_seconds=120
 
 # Reports
 reports.output_dir=./reports/output
+
+# Email Configuration (SMTP)
+mail.smtp.host=smtp.gmail.com
+mail.smtp.port=587
+mail.smtp.auth=true
+mail.smtp.starttls.enable=true
+mail.smtp.username=your-email@gmail.com
+mail.smtp.password=your-16-char-app-password
+mail.from=Proctor System <your-email@gmail.com>

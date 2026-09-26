@@ -33,6 +33,8 @@ public class ForgotPasswordScreen implements Screen {
     private final StringBuilder forgotNewPassword = new StringBuilder();
     private final StringBuilder forgotConfirmPassword = new StringBuilder();
     private int forgotFocusIndex = 0;
+    private boolean showNewPassword = false;
+    private boolean showConfirmPassword = false;
     private String forgotMessage = "";
 
     private boolean isSending = false;
@@ -279,6 +281,12 @@ public class ForgotPasswordScreen implements Screen {
                     }
                 }
             } else {
+                if ((forgotFocusIndex == 0 || forgotFocusIndex == 1) && KeyUtil.isPasswordToggle(k)) {
+                    if (forgotFocusIndex == 0) showNewPassword = !showNewPassword;
+                    else showConfirmPassword = !showConfirmPassword;
+                    return ScreenResult.stay(this);
+                }
+
                 if (KeyUtil.isDown(k)) {
                     forgotFocusIndex = (forgotFocusIndex + 1) % 3;
                     return ScreenResult.stay(this);
@@ -475,9 +483,9 @@ public class ForgotPasswordScreen implements Screen {
             sb.append(TuiHelper.boxTitle("Password Recovery", "Step 3 of 3: Set New Password")).append("\n\n");
             sb.append("  ").append(TuiHelper.dim("Enter your new account password below to reset your credentials.\n\n"));
 
-            sb.append(TuiHelper.inputBox("New Password", forgotNewPassword.toString(), forgotFocusIndex == 0, 102, true, "Min 8 chars, letters and numbers"));
+            sb.append(TuiHelper.inputBox("New Password", forgotNewPassword.toString(), forgotFocusIndex == 0, 102, true, "Min 8 chars, letters and numbers", showNewPassword));
             sb.append("\n");
-            sb.append(TuiHelper.inputBox("Confirm New Password", forgotConfirmPassword.toString(), forgotFocusIndex == 1, 102, true, "Repeat new password"));
+            sb.append(TuiHelper.inputBox("Confirm New Password", forgotConfirmPassword.toString(), forgotFocusIndex == 1, 102, true, "Repeat new password", showConfirmPassword));
             sb.append("\n");
 
             List<String> buttons = List.of("Reset Password", "Cancel");
@@ -488,7 +496,11 @@ public class ForgotPasswordScreen implements Screen {
         if (!forgotMessage.isBlank()) {
             sb.append("  ").append(forgotMessage).append("\n\n");
         }
-        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [←/→] Select Action  •  [Enter] Confirm  •  [Esc] Cancel\n"));
+        String hint = "  [↑/↓] Switch Field  •  [←/→] Select Action  •  [Enter] Confirm  •  [Esc] Cancel";
+        if (forgotStep == ForgotStep.NEW_PASSWORD && (forgotFocusIndex == 0 || forgotFocusIndex == 1)) {
+            hint += "  •  [F3] Show/Hide";
+        }
+        sb.append(TuiHelper.dim(hint + "\n"));
         return sb.toString();
     }
 }

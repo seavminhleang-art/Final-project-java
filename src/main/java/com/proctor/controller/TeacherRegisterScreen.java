@@ -41,6 +41,8 @@ public class TeacherRegisterScreen implements Screen {
     private final StringBuilder confirmPassword = new StringBuilder();
 
     private int focusedField = 0;
+    private boolean showPassword = false;
+    private boolean showConfirmPassword = false;
     private String errorMessage = "";
 
     private boolean isSending = false;
@@ -134,16 +136,16 @@ public class TeacherRegisterScreen implements Screen {
             }
             return ScreenResult.stay(this);
         }
-                if (msg instanceof PasteMessage paste) {
+        if (msg instanceof PasteMessage paste) {
             switch (focusedField) {
                 case 0 -> KeyUtil.pasteToBuffer(fullName, paste.content());
-                case 2 -> KeyUtil.pasteToBuffer(academicDegree, paste.content());
-                case 3 -> KeyUtil.pasteToBuffer(educationBackground, paste.content());
-                case 4 -> KeyUtil.pasteToBuffer(specialization, paste.content());
-                case 5 -> KeyUtil.pasteToBuffer(email, paste.content());
-                case 6 -> KeyUtil.pasteToBuffer(username, paste.content());
-                case 7 -> KeyUtil.pasteToBuffer(password, paste.content(), 128);
-                case 8 -> KeyUtil.pasteToBuffer(confirmPassword, paste.content(), 128);
+                case 3 -> KeyUtil.pasteToBuffer(academicDegree, paste.content());
+                case 4 -> KeyUtil.pasteToBuffer(educationBackground, paste.content());
+                case 5 -> KeyUtil.pasteToBuffer(specialization, paste.content());
+                case 6 -> KeyUtil.pasteToBuffer(email, paste.content());
+                case 7 -> KeyUtil.pasteToBuffer(username, paste.content());
+                case 8 -> KeyUtil.pasteToBuffer(password, paste.content(), 128);
+                case 9 -> KeyUtil.pasteToBuffer(confirmPassword, paste.content(), 128);
                 default -> { /* gender/birthday/buttons */ }
             }
             return ScreenResult.stay(this);
@@ -213,6 +215,15 @@ public class TeacherRegisterScreen implements Screen {
         }
 
         if (msg instanceof KeyPressMessage k) {
+            if (focusedField == 8 && KeyUtil.isPasswordToggle(k)) {
+                showPassword = !showPassword;
+                return ScreenResult.stay(this);
+            }
+            if (focusedField == 9 && KeyUtil.isPasswordToggle(k)) {
+                showConfirmPassword = !showConfirmPassword;
+                return ScreenResult.stay(this);
+            }
+
             if (KeyUtil.isEsc(k)) {
                 return ScreenResult.navigate(new RegisterRoleScreen(authService));
             }
@@ -444,7 +455,9 @@ public class TeacherRegisterScreen implements Screen {
                 educationBackground.toString(),
                 specialization.toString(),
                 focusedField,
-                errorMessage
+                errorMessage,
+                showPassword,
+                showConfirmPassword
         );
     }
 }

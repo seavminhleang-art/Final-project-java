@@ -22,6 +22,7 @@ public class LoginScreen implements Screen {
     private final StringBuilder identifier = new StringBuilder();
     private final StringBuilder password = new StringBuilder();
     private int focusedField = 0;
+    private boolean showPassword = false;
     private String errorMessage = "";
     private String infoBanner = "";
 
@@ -123,6 +124,11 @@ public class LoginScreen implements Screen {
         }
 
         if (msg instanceof KeyPressMessage k) {
+            if (focusedField == 1 && KeyUtil.isPasswordToggle(k)) {
+                showPassword = !showPassword;
+                return ScreenResult.stay(this);
+            }
+
             if (KeyUtil.isEsc(k)) {
                 return ScreenResult.navigate(new StartupScreen(authService));
             }
@@ -217,6 +223,6 @@ public class LoginScreen implements Screen {
         if (forgotScreen != null) {
             return forgotScreen.view();
         }
-        return AuthViews.renderLogin(identifier.toString(), password.toString(), focusedField, errorMessage, infoBanner);
+        return AuthViews.renderLogin(identifier.toString(), password.toString(), focusedField, errorMessage, infoBanner, showPassword);
     }
 }

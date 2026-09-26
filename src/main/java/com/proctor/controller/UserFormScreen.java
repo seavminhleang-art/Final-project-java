@@ -31,6 +31,7 @@ public class UserFormScreen implements Screen {
     private boolean enabledStatus = true;
 
     private int focusedField = 0;
+    private boolean showPassword = false;
     private String errorMessage = "";
 
     public UserFormScreen(UserService userService, AuthService authService, User userToEdit) {
@@ -202,6 +203,10 @@ public class UserFormScreen implements Screen {
             }
             return;
         }
+        if (focusedField == 5 && KeyUtil.isPasswordToggle(k)) {
+            showPassword = !showPassword;
+            return;
+        }
         if (focusedField == 0 || (focusedField >= 3 && focusedField <= 5)) {
             StringBuilder focusedBuffer = switch (focusedField) {
                 case 0 -> fullName;
@@ -331,7 +336,8 @@ public class UserFormScreen implements Screen {
                 focusedField,
                 getSaveButtonIndex(),
                 getCancelButtonIndex(),
-                errorMessage
+                errorMessage,
+                showPassword
         );
     }
 }

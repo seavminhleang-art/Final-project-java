@@ -128,4 +128,9 @@ public class KeyUtil {
             }
         }
     }
+
+    public static boolean isPasswordToggle(KeyPressMessage k) {
+        if (k == null) return false;
+        return k.type() == KeyType.KeyF3 || "f3".equalsIgnoreCase(k.key());
+    }
 }

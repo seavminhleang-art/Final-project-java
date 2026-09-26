@@ -38,9 +38,9 @@ public class EmailService {
                 Config.getInt("mail.smtp.port", 587),
                 Boolean.parseBoolean(Config.get("mail.smtp.auth", "true")),
                 Boolean.parseBoolean(Config.get("mail.smtp.starttls.enable", "true")),
-                Config.get("mail.smtp.username", "tonganwashere@gmail.com"),
-                Config.get("mail.smtp.password", "ditd rhel tixr igfd"),
-                Config.get("mail.from", "Proctor System <tonganwashere@gmail.com>")
+                Config.get("mail.smtp.username", ""),
+                Config.get("mail.smtp.password", ""),
+                Config.get("mail.from", "Proctor System <noreply@proctor.edu>")
         );
     }
 

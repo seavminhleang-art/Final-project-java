@@ -37,6 +37,10 @@ public class AuthViews {
     }
 
     public static String renderLogin(String identifier, String password, int focusedField, String errorMessage, String infoBanner) {
+        return renderLogin(identifier, password, focusedField, errorMessage, infoBanner, false);
+    }
+
+    public static String renderLogin(String identifier, String password, int focusedField, String errorMessage, String infoBanner, boolean showPassword) {
         StringBuilder sb = new StringBuilder();
         sb.append(TuiHelper.header("LOG IN"));
         sb.append("\n");
@@ -46,7 +50,7 @@ public class AuthViews {
         sb.append(TuiHelper.inputBox("Email or Username", identifier, focusedField == 0, 102, false, "e.g. user@proctor.edu or username"));
         sb.append("\n");
 
-        sb.append(TuiHelper.inputBox("Password", password, focusedField == 1, 102, true, "enter password"));
+        sb.append(TuiHelper.inputBox("Password", password, focusedField == 1, 102, true, "enter password", showPassword));
         sb.append("\n\n");
 
         sb.append(TuiHelper.buttonRow(
@@ -63,7 +67,11 @@ public class AuthViews {
             sb.append("  ").append(TuiHelper.red("✖ " + errorMessage)).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [←/→] Select Action  •  [Enter] Submit  •  [Esc] Back\n"));
+        String hint = "  [↑/↓] Switch Field  •  [←/→] Select Action  •  [Enter] Submit  •  [Esc] Back";
+        if (focusedField == 1) {
+            hint += "  •  [F3] Show/Hide";
+        }
+        sb.append(TuiHelper.dim(hint + "\n"));
         return sb.toString();
     }
 
@@ -96,6 +104,10 @@ public class AuthViews {
     }
 
     public static String renderRegister(Role targetRole, String fullName, String email, String username, String password, String confirmPassword, String birthday, String gender, int focusedField, String errorMessage) {
+        return renderRegister(targetRole, fullName, email, username, password, confirmPassword, birthday, gender, focusedField, errorMessage, false, false);
+    }
+
+    public static String renderRegister(Role targetRole, String fullName, String email, String username, String password, String confirmPassword, String birthday, String gender, int focusedField, String errorMessage, boolean showPassword, boolean showConfirmPassword) {
         StringBuilder sb = new StringBuilder();
         String roleLabel = (targetRole == Role.TEACHER) ? "Teacher" : "Student";
         sb.append(TuiHelper.header("REGISTER"));
@@ -121,10 +133,10 @@ public class AuthViews {
         sb.append(TuiHelper.inputBox("Username", username, focusedField == 4, 102, false, "e.g. janedoe"));
         sb.append("\n");
 
-        sb.append(TuiHelper.inputBox("Password", password, focusedField == 5, 102, true, "create a secure password"));
+        sb.append(TuiHelper.inputBox("Password", password, focusedField == 5, 102, true, "create a secure password", showPassword));
         sb.append("\n");
 
-        sb.append(TuiHelper.inputBox("Confirm Password", confirmPassword, focusedField == 6, 102, true, "re-enter your password"));
+        sb.append(TuiHelper.inputBox("Confirm Password", confirmPassword, focusedField == 6, 102, true, "re-enter your password", showConfirmPassword));
         sb.append("\n\n");
 
         sb.append(TuiHelper.buttonRow("Register", focusedField == 7, "Back", focusedField == 8)).append("\n\n");
@@ -133,7 +145,11 @@ public class AuthViews {
             sb.append("  ").append(TuiHelper.red("✖ " + errorMessage)).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Submit  •  [Esc] Back\n"));
+        String hint = "  [↑/↓] Switch Field  •  [Enter] Submit  •  [Esc] Back";
+        if (focusedField == 5 || focusedField == 6) {
+            hint += "  •  [F3] Show/Hide";
+        }
+        sb.append(TuiHelper.dim(hint + "\n"));
         return sb.toString();
     }
 
@@ -141,6 +157,15 @@ public class AuthViews {
                                                String confirmPassword, String birthday, String gender,
                                                String academicDegree, String educationBackground, String specialization,
                                                int focusedField, String errorMessage) {
+        return renderTeacherRegister(fullName, email, username, password, confirmPassword, birthday, gender,
+                academicDegree, educationBackground, specialization, focusedField, errorMessage, false, false);
+    }
+
+    public static String renderTeacherRegister(String fullName, String email, String username, String password,
+                                               String confirmPassword, String birthday, String gender,
+                                               String academicDegree, String educationBackground, String specialization,
+                                               int focusedField, String errorMessage,
+                                               boolean showPassword, boolean showConfirmPassword) {
         StringBuilder sb = new StringBuilder();
         sb.append(TuiHelper.header("REGISTER"));
         sb.append("\n");
@@ -165,8 +190,8 @@ public class AuthViews {
 
         fieldWidgets.add(TuiHelper.inputBox("Email Address", email, focusedField == 6, 102, false, "e.g. jane@proctor.edu"));
         fieldWidgets.add(TuiHelper.inputBox("Username", username, focusedField == 7, 102, false, "e.g. janedoe"));
-        fieldWidgets.add(TuiHelper.inputBox("Password", password, focusedField == 8, 102, true, "create a secure password"));
-        fieldWidgets.add(TuiHelper.inputBox("Confirm Password", confirmPassword, focusedField == 9, 102, true, "re-enter your password"));
+        fieldWidgets.add(TuiHelper.inputBox("Password", password, focusedField == 8, 102, true, "create a secure password", showPassword));
+        fieldWidgets.add(TuiHelper.inputBox("Confirm Password", confirmPassword, focusedField == 9, 102, true, "re-enter your password", showConfirmPassword));
 
         int windowSize = 5;
         int startField = Math.max(0, Math.min(Math.min(focusedField, numInputFields - 1) - 1, numInputFields - windowSize));
@@ -191,7 +216,11 @@ public class AuthViews {
             sb.append("  ").append(TuiHelper.red("✖ " + errorMessage)).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Submit  •  [Esc] Back\n"));
+        String hint = "  [↑/↓] Switch Field  •  [Enter] Submit  •  [Esc] Back";
+        if (focusedField == 8 || focusedField == 9) {
+            hint += "  •  [F3] Show/Hide";
+        }
+        sb.append(TuiHelper.dim(hint + "\n"));
         return sb.toString();
     }
 

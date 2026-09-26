@@ -25,6 +25,9 @@ public class ChangePasswordScreen implements Screen {
     private final StringBuilder confirmPassword = new StringBuilder();
 
     private int focusedField = 0;
+    private boolean showCurrentPassword = false;
+    private boolean showNewPassword = false;
+    private boolean showConfirmPassword = false;
     private String errorMessage = "";
     private String successBanner = "";
 
@@ -84,6 +87,13 @@ public class ChangePasswordScreen implements Screen {
         }
 
         if (msg instanceof KeyPressMessage k) {
+            if (focusedField >= 0 && focusedField <= 2 && KeyUtil.isPasswordToggle(k)) {
+                if (focusedField == 0) showCurrentPassword = !showCurrentPassword;
+                else if (focusedField == 1) showNewPassword = !showNewPassword;
+                else showConfirmPassword = !showConfirmPassword;
+                return ScreenResult.stay(this);
+            }
+
             if (KeyUtil.isEsc(k)) {
                 return navigateBack();
             }
@@ -212,11 +222,11 @@ public class ChangePasswordScreen implements Screen {
         sb.append(TuiHelper.header("ACCOUNT SECURITY"));
         sb.append("\n");
         sb.append(TuiHelper.boxTitle("Change Account Password")).append("\n\n");
-        sb.append(TuiHelper.inputBox("Current Password", currentPassword.toString(), focusedField == 0, 102, true, "Enter current password"));
+        sb.append(TuiHelper.inputBox("Current Password", currentPassword.toString(), focusedField == 0, 102, true, "Enter current password", showCurrentPassword));
         sb.append("\n");
-        sb.append(TuiHelper.inputBox("New Password", newPassword.toString(), focusedField == 1, 102, true, "Min 8 chars, letters and numbers"));
+        sb.append(TuiHelper.inputBox("New Password", newPassword.toString(), focusedField == 1, 102, true, "Min 8 chars, letters and numbers", showNewPassword));
         sb.append("\n");
-        sb.append(TuiHelper.inputBox("Confirm New Password", confirmPassword.toString(), focusedField == 2, 102, true, "Repeat new password"));
+        sb.append(TuiHelper.inputBox("Confirm New Password", confirmPassword.toString(), focusedField == 2, 102, true, "Repeat new password", showConfirmPassword));
         sb.append("\n");
         sb.append(TuiHelper.buttonRow("Save Password", focusedField == 3, "Back", focusedField == 4)).append("\n\n");
 
@@ -227,7 +237,11 @@ public class ChangePasswordScreen implements Screen {
             sb.append("  ").append(successBanner).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Confirm  •  [Esc] Back\n"));
+        String hint = "  [↑/↓] Switch Field  •  [Enter] Confirm  •  [Esc] Back";
+        if (focusedField >= 0 && focusedField <= 2) {
+            hint += "  •  [F3] Show/Hide";
+        }
+        sb.append(TuiHelper.dim(hint + "\n"));
         return sb.toString();
     }
 }

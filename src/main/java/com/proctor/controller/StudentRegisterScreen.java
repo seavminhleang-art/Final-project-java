@@ -38,6 +38,8 @@ public class StudentRegisterScreen implements Screen {
     private final StringBuilder confirmPassword = new StringBuilder();
 
     private int focusedField = 0;
+    private boolean showPassword = false;
+    private boolean showConfirmPassword = false;
     private String errorMessage = "";
 
     private boolean isSending = false;
@@ -131,10 +133,10 @@ public class StudentRegisterScreen implements Screen {
                 if (msg instanceof PasteMessage paste) {
             switch (focusedField) {
                 case 0 -> KeyUtil.pasteToBuffer(fullName, paste.content());
-                case 2 -> KeyUtil.pasteToBuffer(email, paste.content());
-                case 3 -> KeyUtil.pasteToBuffer(username, paste.content());
-                case 4 -> KeyUtil.pasteToBuffer(password, paste.content(), 128);
-                case 5 -> KeyUtil.pasteToBuffer(confirmPassword, paste.content(), 128);
+                case 3 -> KeyUtil.pasteToBuffer(email, paste.content());
+                case 4 -> KeyUtil.pasteToBuffer(username, paste.content());
+                case 5 -> KeyUtil.pasteToBuffer(password, paste.content(), 128);
+                case 6 -> KeyUtil.pasteToBuffer(confirmPassword, paste.content(), 128);
                 default -> { /* other fields (gender, birthday, buttons) — no paste */ }
             }
             return ScreenResult.stay(this);
@@ -181,6 +183,15 @@ public class StudentRegisterScreen implements Screen {
         }
 
         if (msg instanceof KeyPressMessage k) {
+            if (focusedField == 5 && KeyUtil.isPasswordToggle(k)) {
+                showPassword = !showPassword;
+                return ScreenResult.stay(this);
+            }
+            if (focusedField == 6 && KeyUtil.isPasswordToggle(k)) {
+                showConfirmPassword = !showConfirmPassword;
+                return ScreenResult.stay(this);
+            }
+
             if (KeyUtil.isEsc(k)) {
                 return ScreenResult.navigate(new RegisterRoleScreen(authService));
             }
@@ -386,6 +397,7 @@ public class StudentRegisterScreen implements Screen {
                 Role.STUDENT,
                 fullName.toString(), email.toString(), username.toString(),
                 password.toString(), confirmPassword.toString(),
-                birthday.toString(), selectedGender, focusedField, errorMessage);
+                birthday.toString(), selectedGender, focusedField, errorMessage,
+                showPassword, showConfirmPassword);
     }
 }

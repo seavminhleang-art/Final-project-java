@@ -102,6 +102,14 @@ public class UserViews {
                                         String password, String fullName, String birthday, String gender,
                                         Role selectedRole, boolean enabledStatus, int focusedField,
                                         int saveBtnIndex, int cancelBtnIndex, String errorMessage) {
+        return renderUserForm(isEditMode, userToEdit, email, username, password, fullName, birthday, gender,
+                selectedRole, enabledStatus, focusedField, saveBtnIndex, cancelBtnIndex, errorMessage, false);
+    }
+
+    public static String renderUserForm(boolean isEditMode, User userToEdit, String email, String username,
+                                        String password, String fullName, String birthday, String gender,
+                                        Role selectedRole, boolean enabledStatus, int focusedField,
+                                        int saveBtnIndex, int cancelBtnIndex, String errorMessage, boolean showPassword) {
         StringBuilder sb = new StringBuilder();
         String boxSub = isEditMode ? "Update user account" : "Create user account";
         String formTitle = isEditMode ? "Edit User: @" + userToEdit.getUsername() : "Create New User";
@@ -136,7 +144,7 @@ public class UserViews {
             sb.append("\n");
             sb.append(TuiHelper.inputBox("Username", username, focusedField == 4, 102, false, "e.g. jdoe"));
             sb.append("\n");
-            sb.append(TuiHelper.inputBox("Password", password, focusedField == 5, 102, true, "enter password"));
+            sb.append(TuiHelper.inputBox("Password", password, focusedField == 5, 102, true, "enter password", showPassword));
             sb.append("\n");
             sb.append(TuiHelper.selectBox("Role", selectedRole.name(), focusedField == 6, 102, "Space to cycle"));
             sb.append("\n");
@@ -148,7 +156,11 @@ public class UserViews {
             sb.append("  ").append(TuiHelper.red("✖ " + errorMessage)).append("\n\n");
         }
 
-        sb.append(TuiHelper.dim("  [↑/↓] Switch Field  •  [Enter] Submit  •  [Esc] Cancel\n"));
+        String hint = "  [↑/↓] Switch Field  •  [Enter] Submit  •  [Esc] Cancel";
+        if (!isEditMode && focusedField == 5) {
+            hint += "  •  [F3] Show/Hide";
+        }
+        sb.append(TuiHelper.dim(hint + "\n"));
         return sb.toString();
     }
 
