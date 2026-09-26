@@ -654,7 +654,7 @@ public class TuiHelper {
         for (int i = 0; i < lines.size(); i++) {
             sb.append(BUTTON_MARKER).append(dim(lines.get(i))).append("\n");
             if (i < lines.size() - 1) {
-                sb.append("\n\n");
+                sb.append("\n");
             }
         }
         return sb.toString();
@@ -840,10 +840,11 @@ private static String stripAnsi(String str) {
         int headerRows = headerLines.size();
         int bodyRows = (endBody >= startBody) ? (endBody - startBody + 1) : 0;
         int hintRows = hintIndices.size();
+        int hintInnerRows = hintIndices.isEmpty() ? 0 : (hintIndices.size() + (hintIndices.size() - 1));
 
         int contentHeight = (headerRows > 0 ? (headerRows + 1) : 0)
                 + (bodyRows > 0 ? (Math.max(bodyRows, minBodyRows) + 4 + (hintRows > 0 ? 1 : 0)) : 0)
-                + (hintRows > 0 ? (hintRows + 2) : 0);
+                + (hintRows > 0 ? (hintInnerRows + 2) : 0);
 
         int extraPadding = (bodyRows > 0 && bodyRows < minBodyRows) ? (minBodyRows - bodyRows) : 0;
         int extraTopPad = extraPadding / 2;
@@ -1040,7 +1041,8 @@ private static String stripAnsi(String str) {
               .append(CLEAR_EOL).append("\n");
             currentRow++;
 
-            for (int idx : hintIndices) {
+            for (int h = 0; h < hintIndices.size(); h++) {
+                int idx = hintIndices.get(h);
                 String cleanLine = rawLines[idx].replace(CLEAR_EOL, "").replace(BUTTON_MARKER, "").replace(INPUT_MARKER, "");
                 String trimmedClean = stripSpaces(cleanLine.replace(BOX_TITLE_MARKER, "").replace(CENTER_MARKER, ""));
                 int trimmedVisLen = visibleLength(trimmedClean);
@@ -1058,6 +1060,11 @@ private static String stripAnsi(String str) {
                 }
                 appendCardContentRow(sb, indent, borderCol, contentLeftPad, leftPad, trimmedClean, rightPad, contentRightPad, rightMargin);
                 currentRow++;
+
+                if (h < hintIndices.size() - 1) {
+                    appendCardEmptyRow(sb, indent, borderCol, contentLeftPad, targetInnerWidth, contentRightPad, rightMargin);
+                    currentRow++;
+                }
             }
 
             sb.append(indent)
