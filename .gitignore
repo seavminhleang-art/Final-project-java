@@ -9,5 +9,4 @@ logs/
 *.log
 reports/output/
 *.db
-config.properties
 src/main/resources/config.properties

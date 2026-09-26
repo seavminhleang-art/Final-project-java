@@ -9,7 +9,10 @@ import java.sql.Statement;
 import java.util.stream.Collectors;
 
 public class SchemaInitializer {
-    public static void initialize() {
+    private static volatile boolean initialized = false;
+
+    public static synchronized void initialize() {
+        if (initialized) return;
         try (InputStream in = SchemaInitializer.class.getClassLoader().getResourceAsStream("schema.sql")) {
             if (in == null) {
                 System.err.println("schema.sql not found in classpath.");
@@ -74,10 +77,6 @@ public class SchemaInitializer {
                 stmt.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS academic_degree VARCHAR(100);");
                 stmt.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS education_background VARCHAR(150);");
                 stmt.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS specialization VARCHAR(100);");
-                stmt.execute("UPDATE subjects SET code = 'C++' WHERE id = 3 AND code = 'C' AND name = 'C++';");
-                stmt.execute("UPDATE quizzes SET subject_id = 3 WHERE subject_id = 4;");
-                stmt.execute("DELETE FROM subjects WHERE id = 4 AND code = 'CPP';");
-                stmt.execute("DELETE FROM subjects WHERE code IN ('SDJFSDF', 'FRONTED');");
                 stmt.execute("INSERT INTO subjects (code, name, description, is_enabled) " +
                         "SELECT 'HTML', 'HTML', 'HyperText Markup Language & Web Structure', TRUE " +
                         "WHERE NOT EXISTS (SELECT 1 FROM subjects WHERE code = 'HTML');");
@@ -96,8 +95,9 @@ public class SchemaInitializer {
 
                 stmt.execute("DELETE FROM subjects WHERE code = 'HTML/CSS';");
 
-                stmt.execute("ALTER TABLE quizzes DROP CONSTRAINT IF EXISTS quizzes_subject_id_fkey;");
-                stmt.execute("ALTER TABLE quizzes ADD CONSTRAINT quizzes_subject_id_fkey FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE SET NULL;");
+                stmt.execute("UPDATE quizzes SET subject_id = NULL WHERE subject_id IS NOT NULL AND subject_id NOT IN (SELECT id FROM subjects);");
+                stmt.execute("DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'quizzes_subject_id_fkey') THEN " +
+                        "ALTER TABLE quizzes ADD CONSTRAINT quizzes_subject_id_fkey FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE SET NULL; END IF; END $$;");
 
                 stmt.execute("DROP TABLE IF EXISTS user_subjects CASCADE;");
 
@@ -111,6 +111,7 @@ public class SchemaInitializer {
                         "expires_at TIMESTAMP NOT NULL, " +
                         "used BOOLEAN NOT NULL DEFAULT FALSE, " +
                         "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP);");
+                initialized = true;
             }
         } catch (Exception e) {
             System.err.println("Database schema initialization error: " + e.getMessage());
