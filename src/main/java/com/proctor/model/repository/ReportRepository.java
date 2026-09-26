@@ -19,13 +19,14 @@ public class ReportRepository {
         List<QuizPerformanceDTO> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT q.id, q.title, s.code AS subject_code, " +
-                "COUNT(r.id) AS total_attempts, " +
+                "COUNT(DISTINCT a.id) AS total_attempts, " +
                 "COALESCE(AVG(r.percentage), 0) AS avg_score, " +
                 "COALESCE(SUM(CASE WHEN r.passed THEN 1 ELSE 0 END)::FLOAT / NULLIF(COUNT(r.id), 0) * 100, 0) AS pass_rate, " +
                 "COALESCE(MAX(r.total_points), 0) AS top_score " +
                 "FROM quizzes q " +
                 "LEFT JOIN subjects s ON q.subject_id = s.id " +
-                "LEFT JOIN results r ON q.id = r.quiz_id " +
+                "LEFT JOIN attempts a ON q.id = a.quiz_id " +
+                "LEFT JOIN results r ON a.id = r.attempt_id " +
                 "WHERE 1=1"
         );
         if (subjectId != null) {
@@ -92,11 +93,12 @@ public class ReportRepository {
         String sql = "SELECT s.id, s.code, s.name, " +
                      "(SELECT COUNT(DISTINCT q.created_by) FROM quizzes q WHERE q.subject_id = s.id) AS teacher_count, " +
                      "(SELECT COUNT(*) FROM quizzes q WHERE q.subject_id = s.id) AS quiz_count, " +
-                     "COUNT(r.id) AS total_attempts, " +
+                     "COUNT(DISTINCT a.id) AS total_attempts, " +
                      "COALESCE(AVG(r.percentage), 0) AS avg_score " +
                      "FROM subjects s " +
                      "LEFT JOIN quizzes q ON s.id = q.subject_id " +
-                     "LEFT JOIN results r ON q.id = r.quiz_id " +
+                     "LEFT JOIN attempts a ON q.id = a.quiz_id " +
+                     "LEFT JOIN results r ON a.id = r.attempt_id " +
                      "GROUP BY s.id, s.code, s.name ORDER BY s.code ASC";
 
         try (Connection conn = DatabaseConnection.getConnection();

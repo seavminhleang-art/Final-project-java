@@ -154,7 +154,7 @@ public class MouseUtil {
         if (colInLine < 15 && currentPage > 0) {
             return -1;
         }
-        if (colInLine >= 40 && currentPage < totalPages - 1) {
+        if (colInLine >= 40 && colInLine <= 62 && currentPage < totalPages - 1) {
             return 1;
         }
         return 0;
@@ -221,11 +221,12 @@ public class MouseUtil {
         for (String part : parts) {
             String pTrimmed = part.trim();
             if (pTrimmed.isEmpty()) continue;
-            int idx = stripped.indexOf(part, searchStart);
-            if (idx == -1) idx = stripped.indexOf(pTrimmed, searchStart);
+            int idx = stripped.indexOf(pTrimmed, searchStart);
             int startCol = idx != -1 ? idx : 0;
-            int endCol = startCol + (idx != -1 ? part.length() : pTrimmed.length());
-            searchStart = endCol;
+            int endCol = startCol + pTrimmed.length();
+            if (idx != -1) {
+                searchStart = endCol;
+            }
 
             if (colInLine >= startCol - 1 && colInLine <= endCol + 2) {
                 if (pTrimmed.contains("[Esc]") || pTrimmed.contains("[Enter / Esc]") || pTrimmed.contains("[Enter/Esc]") || pTrimmed.contains("Back") || pTrimmed.contains("Cancel") || pTrimmed.contains("Forfeit") || pTrimmed.contains("Quit")) {

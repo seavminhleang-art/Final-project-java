@@ -14,6 +14,7 @@ import com.williamcallahan.tui4j.compat.bubbletea.Command;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
 import com.williamcallahan.tui4j.compat.bubbletea.Message;
 import com.williamcallahan.tui4j.compat.bubbletea.input.key.KeyType;
+import java.util.Objects;
 
 public class ExamTakerScreen implements Screen {
     private final ExamSession session;
@@ -64,7 +65,7 @@ public class ExamTakerScreen implements Screen {
             Integer selectedOpt = session.getSelectedOptions().get(q.getId());
             if (selectedOpt != null && q.getOptions() != null) {
                 for (int i = 0; i < q.getOptions().size(); i++) {
-                    if (q.getOptions().get(i).getId().equals(selectedOpt)) {
+                    if (Objects.equals(q.getOptions().get(i).getId(), selectedOpt)) {
                         focusedOptionIndex = i;
                         break;
                     }
@@ -182,7 +183,7 @@ public class ExamTakerScreen implements Screen {
             int line = MouseUtil.getLineIndex(msg);
             int col = MouseUtil.getColInLine(msg);
             String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
-            if ("Esc".equals(hintAction)) {
+            if ("Esc".equalsIgnoreCase(hintAction)) {
                 confirmSubmitMode = true;
                 confirmSubmitFocused = false;
                 return ScreenResult.stay(this);
@@ -218,6 +219,10 @@ public class ExamTakerScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
+            if (session.getQuestions() == null || session.getQuestions().isEmpty()) {
+                return ScreenResult.navigate(new StudentDashboardScreen(authService));
+            }
+
             Question q = session.getQuestions().get(currentQuestionIndex);
             if (q.getQuestionType() != QuestionType.SHORT_ANSWER) {
                 if (KeyUtil.isLeft(k)) {
@@ -238,7 +243,7 @@ public class ExamTakerScreen implements Screen {
                     return ScreenResult.stay(this);
                 }
 
-                if (q.getOptions() != null) {
+                if (q.getOptions() != null && !q.getOptions().isEmpty()) {
                     if (KeyUtil.isUp(k)) {
                         focusedOptionIndex = (focusedOptionIndex - 1 + q.getOptions().size()) % q.getOptions().size();
                         return ScreenResult.stay(this);

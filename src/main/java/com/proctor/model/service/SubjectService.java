@@ -1,10 +1,12 @@
 package com.proctor.model.service;
 
 import com.proctor.exception.ValidationException;
+import com.proctor.model.entity.Session;
 import com.proctor.model.entity.Subject;
 import com.proctor.model.repository.SubjectRepository;
 
 import com.proctor.model.enums.PredefinedSubject;
+import com.proctor.model.enums.Role;
 
 import java.util.HashMap;
 import java.util.List;
@@ -45,10 +47,16 @@ public class SubjectService {
         return subjectRepository.findById(id);
     }
 
-
-
+    private void checkAdminAccess() {
+        Session.getCurrentUser().ifPresent(u -> {
+            if (u.getRole() == Role.STUDENT) {
+                throw new ValidationException("Access denied: Students cannot modify subjects.");
+            }
+        });
+    }
 
     public Subject createSubject(String code, String name, String description) {
+        checkAdminAccess();
         if (code == null || code.isBlank() || name == null || name.isBlank()) {
             throw new ValidationException("Subject code and name are required.");
         }
@@ -82,6 +90,7 @@ public class SubjectService {
     }
 
     public Subject updateSubject(int id, String code, String name, String description, boolean enabled) {
+        checkAdminAccess();
         if (code == null || code.isBlank()) {
             throw new ValidationException("Subject code cannot be blank.");
         }
@@ -124,11 +133,13 @@ public class SubjectService {
     }
 
     public Subject updateSubject(int id, String name, String description, boolean enabled) {
+        checkAdminAccess();
         Subject s = subjectRepository.findById(id).orElseThrow(() -> new ValidationException("Subject not found."));
         return updateSubject(id, s.getCode(), name, description, enabled);
     }
 
     public boolean deleteSubject(int id) {
+        checkAdminAccess();
         Optional<Subject> existing = subjectRepository.findById(id);
         if (existing.isEmpty()) {
             throw new ValidationException("Subject not found.");
@@ -141,6 +152,7 @@ public class SubjectService {
     }
 
     public boolean toggleSubjectStatus(int id) {
+        checkAdminAccess();
         return subjectRepository.toggleEnabled(id);
     }
 }

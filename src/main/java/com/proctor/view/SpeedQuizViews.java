@@ -265,12 +265,12 @@ public class SpeedQuizViews {
                 sb.append("  ").append(TuiHelper.red(TuiHelper.bold("✖ INCORRECT!"))).append("\n\n");
 
                 QuestionOption picked = findOption(q, record.getSelectedOptionId());
-                String pickedText = picked != null ? picked.getOptionText() : "None";
+                String pickedText = (picked != null && picked.getOptionText() != null && !picked.getOptionText().isBlank()) ? picked.getOptionText() : "N/A";
                 sb.append("   Your Answer:       ").append(TuiHelper.red(pickedText)).append("\n\n");
             }
 
             QuestionOption correctOpt = findCorrectOption(q);
-            String correctText = correctOpt != null ? correctOpt.getOptionText() : "-";
+            String correctText = (correctOpt != null && correctOpt.getOptionText() != null && !correctOpt.getOptionText().isBlank()) ? correctOpt.getOptionText() : "N/A";
             sb.append("   Correct Answer:    ").append(TuiHelper.green(TuiHelper.bold(correctText))).append("\n\n");
             sb.append("   Points Earned:     ").append(TuiHelper.dim("+0.0 pts")).append("\n\n");
             sb.append("   Streak:            ").append(TuiHelper.dim("Reset to 0")).append("\n");
@@ -321,7 +321,9 @@ public class SpeedQuizViews {
 
         double totalScore = result != null ? result.getTotalPoints() : (session != null ? session.getTotalScore() : 0.0);
 
-        sb.append("   Student:            ").append(result != null && result.getStudentName() != null ? result.getStudentName() : "Student").append("\n\n");
+        String studentName = (result != null && result.getStudentName() != null && !result.getStudentName().isBlank())
+                ? result.getStudentName() : "N/A";
+        sb.append("   Student:            ").append(studentName).append("\n\n");
         sb.append("   Final Score:        ").append(TuiHelper.bold(TuiHelper.cyan(String.format("%.1f points", totalScore)))).append("\n\n");
 
         if (session != null) {
@@ -357,17 +359,17 @@ public class SpeedQuizViews {
                     Question q = rec.getQuestion();
                     String qText = q != null ? q.getQuestionText() : "Question #" + (i + 1);
 
-                    String yourAns = "-";
+                    String yourAns = "N/A";
                     if (rec.getSelectedOptionId() != null && q != null) {
                         QuestionOption picked = findOption(q, rec.getSelectedOptionId());
                         if (picked != null) yourAns = picked.getOptionText();
                     }
 
-                    String status = rec.isCorrect() ? TuiHelper.green("✔ Correct") : TuiHelper.red("✖ Wrong");
+                    String status = rec.isCorrect() ? (TuiHelper.green("✔ Correct") + " ") : (TuiHelper.red("✖ Wrong") + "   ");
                     String timeStr = rec.getSecondsRemaining() + "s left";
-                    String tierStr = rec.getTierShown() != null ? rec.getTierShown().name() : "MED";
+                    String tierStr = rec.getTierShown() != null ? rec.getTierShown().name() : "N/A";
 
-                    sb.append(String.format("  %-4d  %-8s  %-48s  %-18s  %-10s  %-10s  %-10s%n",
+                    sb.append(String.format("  %-4d  %-8s  %-48s  %-18s  %s  %-10s  %-10s%n",
                             (i + 1),
                             tierStr,
                             truncate(qText, 48),
@@ -394,22 +396,22 @@ public class SpeedQuizViews {
                     AttemptAnswer ans = answers.get(i);
                     Question q = qMap.get(ans.getQuestionId());
                     String qText = q != null ? q.getQuestionText() : "Question #" + (i + 1);
-                    String yourAns = "-";
+                    String yourAns = "N/A";
                     if (ans.getSelectedOptionId() != null && q != null) {
                         QuestionOption picked = findOption(q, ans.getSelectedOptionId());
                         if (picked != null) yourAns = picked.getOptionText();
                     }
                     boolean isCorrect = Boolean.TRUE.equals(ans.getCorrect());
-                    String status = isCorrect ? TuiHelper.green("✔ Correct") : TuiHelper.red("✖ Wrong");
-                    String tierStr = (q != null && q.getDifficulty() != null) ? q.getDifficulty().name() : "-";
+                    String status = isCorrect ? (TuiHelper.green("✔ Correct") + " ") : (TuiHelper.red("✖ Wrong") + "   ");
+                    String tierStr = (q != null && q.getDifficulty() != null) ? q.getDifficulty().name() : "N/A";
 
-                    sb.append(String.format("  %-4d  %-8s  %-48s  %-18s  %-10s  %-10s  %-10s%n",
+                    sb.append(String.format("  %-4d  %-8s  %-48s  %-18s  %s  %-10s  %-10s%n",
                             (i + 1),
                             tierStr,
                             truncate(qText, 48),
                             truncate(yourAns, 18),
                             status,
-                            "-",
+                            "N/A",
                             String.format("+%.1f", ans.getPointsAwarded())));
                     if (i < answers.size() - 1) {
                         sb.append("\n");

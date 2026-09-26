@@ -84,13 +84,13 @@ public class SpeedQuizFormScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
-                if (msg instanceof PasteMessage paste) {
+        if (msg instanceof PasteMessage paste) {
             switch (focusedField) {
-                case 0 -> KeyUtil.pasteToBuffer(title, paste.content());
-                case 1 -> KeyUtil.pasteToBuffer(description, paste.content());
-                case 2 -> KeyUtil.pasteToBuffer(secondsPerQuestion, paste.content(), 4);
-                case 3 -> KeyUtil.pasteToBuffer(activeHours, paste.content(), 4);
-                default -> { /* subject/buttons */ }
+                case 1 -> KeyUtil.pasteToBuffer(title, paste.content());
+                case 2 -> KeyUtil.pasteToBuffer(description, paste.content());
+                case 3 -> KeyUtil.pasteToBuffer(secondsPerQuestion, paste.content(), 4);
+                case 4 -> KeyUtil.pasteToBuffer(activeHours, paste.content(), 4);
+                default -> { /* subject/checkboxes/buttons */ }
             }
             return ScreenResult.stay(this);
         }

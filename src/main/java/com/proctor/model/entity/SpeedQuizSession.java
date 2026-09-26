@@ -134,7 +134,7 @@ public class SpeedQuizSession {
         boolean isCorrect = false;
         if (!isTimeout && selectedOptionId != null && q.getOptions() != null) {
             for (QuestionOption opt : q.getOptions()) {
-                if (opt.getId().equals(selectedOptionId) && opt.isCorrect()) {
+                if (Objects.equals(opt.getId(), selectedOptionId) && opt.isCorrect()) {
                     isCorrect = true;
                     break;
                 }
@@ -159,7 +159,8 @@ public class SpeedQuizSession {
             }
             basePoints = q.getPoints() * multiplier;
             if (secondsPerQuestion > 0) {
-                speedBonus = Math.floor(((double) questionSecondsRemaining / (double) secondsPerQuestion) * 50.0);
+                int safeRemaining = Math.max(0, questionSecondsRemaining);
+                speedBonus = Math.floor(((double) safeRemaining / (double) secondsPerQuestion) * 50.0);
             }
             if (currentStreak >= 3 && currentStreak % 3 == 0) {
                 streakBonus = 25.0;

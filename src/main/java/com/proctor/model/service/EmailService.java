@@ -16,7 +16,7 @@ public class EmailService {
 
     public record EmailRecord(String toAddress, String subject, String bodyText) {}
 
-    public static Consumer<EmailRecord> testEmailInterceptor = null;
+    public static volatile Consumer<EmailRecord> testEmailInterceptor = null;
 
     private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(3, r -> {
         Thread t = new Thread(r, "proctor-mailer");
@@ -64,8 +64,12 @@ public class EmailService {
             return;
         }
 
+        if (Boolean.parseBoolean(Config.get("mail.mock", "false")) || (auth && (username == null || username.isBlank() || password == null || password.isBlank()))) {
+            return;
+        }
+
         String lower = toAddress.toLowerCase().trim();
-        if (lower.endsWith("@proctor.edu") || lower.endsWith("@example.com") || lower.endsWith("@test.edu") || lower.endsWith("@test.com") || lower.endsWith(".invalid") || lower.endsWith(".local")) {
+        if (lower.endsWith("@example.com") || lower.endsWith("@test.edu") || lower.endsWith("@test.com") || lower.endsWith(".invalid") || lower.endsWith(".local")) {
             return;
         }
 
@@ -94,7 +98,8 @@ public class EmailService {
             Message msg = new MimeMessage(session);
             msg.setFrom(new InternetAddress(fromAddress));
             msg.setRecipient(Message.RecipientType.TO, new InternetAddress(toAddress.trim()));
-            msg.setSubject(subject);
+            String safeSubject = subject != null ? subject.replaceAll("[\\r\\n]", " ").trim() : "";
+            msg.setSubject(safeSubject);
             msg.setText(bodyText);
             Transport.send(msg);
         } catch (MessagingException e) {

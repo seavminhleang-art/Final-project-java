@@ -216,20 +216,7 @@ public class AIQuizGeneratorScreen implements Screen {
         }
 
         if (msg instanceof PasteMessage paste && !isGenerating) {
-            switch (focusedField) {
-                case 0 -> { /* subject filter — no paste */ }
-                case 1 -> KeyUtil.pasteToBuffer(titleBuffer, paste.content());
-                case 2 -> KeyUtil.pasteToBuffer(descriptionBuffer, paste.content());
-                case 3 -> KeyUtil.pasteToBuffer(customPromptBuffer, paste.content());
-                case 4 -> KeyUtil.pasteToBuffer(countBuffer, paste.content(), 3);
-                case 5 -> KeyUtil.pasteToBuffer(mcqCountBuffer, paste.content(), 3);
-                case 6 -> KeyUtil.pasteToBuffer(tfCountBuffer, paste.content(), 3);
-                case 7 -> KeyUtil.pasteToBuffer(saCountBuffer, paste.content(), 3);
-                case 8 -> KeyUtil.pasteToBuffer(timeLimitBuffer, paste.content(), 4);
-                case 9 -> KeyUtil.pasteToBuffer(activeHours, paste.content(), 4);
-                case 10 -> KeyUtil.pasteToBuffer(passScore, paste.content(), 3);
-                default -> { /* type/buttons */ }
-            }
+            handlePaste(paste);
             return ScreenResult.stay(this);
         }
 
@@ -281,6 +268,88 @@ public class AIQuizGeneratorScreen implements Screen {
             handleFormInput(k);
         }
         return ScreenResult.stay(this);
+    }
+
+    private void handlePaste(PasteMessage paste) {
+        if (focusedField == 1) {
+            KeyUtil.pasteToBuffer(titleBuffer, paste.content());
+            return;
+        }
+        if (focusedField == 2) {
+            KeyUtil.pasteToBuffer(descriptionBuffer, paste.content());
+            return;
+        }
+        if (focusedField == 3) {
+            KeyUtil.pasteToBuffer(customPromptBuffer, paste.content());
+            return;
+        }
+
+        if (assessmentType == AssessmentType.SPEED) {
+            if (focusedField == 4) {
+                KeyUtil.pasteToBuffer(mcqCountBuffer, paste.content(), 3);
+                return;
+            }
+            if (focusedField == 5) {
+                KeyUtil.pasteToBuffer(tfCountBuffer, paste.content(), 3);
+                return;
+            }
+            // Field 6: difficulty selector (no paste)
+            int current = 7;
+            if (isMcqApplicable()) {
+                current++; // mcqOptionCount selector (no paste)
+            }
+            if (focusedField == current++) {
+                KeyUtil.pasteToBuffer(timeLimitBuffer, paste.content(), 4);
+                return;
+            }
+            if (focusedField == current) {
+                KeyUtil.pasteToBuffer(activeHours, paste.content(), 4);
+                return;
+            }
+            return;
+        }
+
+        // Standard Quiz or Exam
+        // Field 4: type selector (no paste)
+        int current = 5;
+        if (assessmentType == AssessmentType.EXAM && isExamMixed) {
+            if (focusedField == current++) {
+                KeyUtil.pasteToBuffer(mcqCountBuffer, paste.content(), 3);
+                return;
+            }
+            if (focusedField == current++) {
+                KeyUtil.pasteToBuffer(tfCountBuffer, paste.content(), 3);
+                return;
+            }
+            if (focusedField == current++) {
+                KeyUtil.pasteToBuffer(saCountBuffer, paste.content(), 3);
+                return;
+            }
+        } else {
+            if (focusedField == current++) {
+                KeyUtil.pasteToBuffer(countBuffer, paste.content(), 3);
+                return;
+            }
+        }
+
+        // Difficulty selector (no paste)
+        current++;
+
+        if (isMcqApplicable()) {
+            current++; // mcqOptionCount selector (no paste)
+        }
+
+        if (focusedField == current++) {
+            KeyUtil.pasteToBuffer(timeLimitBuffer, paste.content(), 4);
+            return;
+        }
+        if (focusedField == current++) {
+            KeyUtil.pasteToBuffer(activeHours, paste.content(), 4);
+            return;
+        }
+        if (focusedField == current) {
+            KeyUtil.pasteToBuffer(passScore, paste.content(), 3);
+        }
     }
 
     private void handleFormInput(KeyPressMessage k) {

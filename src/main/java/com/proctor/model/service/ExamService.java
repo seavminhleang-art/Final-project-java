@@ -18,6 +18,9 @@ import com.proctor.model.repository.ResultRepository;
 
 import java.util.*;
 import com.proctor.model.enums.AssessmentType;
+import com.proctor.model.enums.Role;
+import com.proctor.model.entity.Session;
+import com.proctor.model.entity.User;
 import com.proctor.model.entity.SpeedQuizSession;
 import com.proctor.model.entity.SpeedQuizAnswerRecord;
 
@@ -59,18 +62,56 @@ public class ExamService {
     }
 
     public Optional<Result> getResultByAttempt(int attemptId) {
-        return resultRepository.findByAttemptId(attemptId);
+        Optional<Result> resOpt = resultRepository.findByAttemptId(attemptId);
+        if (resOpt.isEmpty()) {
+            return Optional.empty();
+        }
+        Optional<User> callerOpt = Session.getCurrentUser();
+        if (callerOpt.isPresent()) {
+            User caller = callerOpt.get();
+            if (caller.getRole() == Role.STUDENT && !Objects.equals(caller.getId(), resOpt.get().getStudentId())) {
+                return Optional.empty();
+            }
+        }
+        return resOpt;
     }
 
     public List<Attempt> getSubmissionsForQuiz(int quizId) {
+        Optional<User> callerOpt = Session.getCurrentUser();
+        if (callerOpt.isPresent()) {
+            User caller = callerOpt.get();
+            if (caller.getRole() == Role.STUDENT) {
+                return Collections.emptyList();
+            }
+        }
         return attemptRepository.getAttemptsByQuiz(quizId);
     }
 
     public List<Attempt> getAllSubmissions(Integer teacherId) {
+        Optional<User> callerOpt = Session.getCurrentUser();
+        if (callerOpt.isPresent()) {
+            User caller = callerOpt.get();
+            if (caller.getRole() == Role.STUDENT) {
+                return Collections.emptyList();
+            }
+            if (caller.getRole() == Role.TEACHER) {
+                teacherId = caller.getId();
+            }
+        }
         return attemptRepository.getAllSubmissions(teacherId);
     }
 
     public List<AttemptAnswer> getAttemptAnswers(int attemptId) {
+        Optional<User> callerOpt = Session.getCurrentUser();
+        if (callerOpt.isPresent()) {
+            User caller = callerOpt.get();
+            if (caller.getRole() == Role.STUDENT) {
+                Optional<Attempt> attOpt = attemptRepository.getAttempt(attemptId);
+                if (attOpt.isEmpty() || !Objects.equals(caller.getId(), attOpt.get().getStudentId())) {
+                    return Collections.emptyList();
+                }
+            }
+        }
         return attemptRepository.getAttemptAnswers(attemptId);
     }
 
@@ -131,6 +172,24 @@ public class ExamService {
 
         boolean isTimed = quiz.getTimeLimitMins() != null && quiz.getTimeLimitMins() > 0;
         int remainingSecs = isTimed ? quiz.getTimeLimitMins() * 60 : 0;
+        if (isTimed && attempt.getStartedAt() != null) {
+            long elapsedSeconds = (System.currentTimeMillis() - attempt.getStartedAt().getTime()) / 1000L;
+            if (elapsedSeconds > 0) {
+                remainingSecs = (int) Math.max(0, remainingSecs - elapsedSeconds);
+            }
+            if (remainingSecs <= 0) {
+                submitExam(ExamSession.builder()
+                        .attempt(attempt)
+                        .quiz(quiz)
+                        .questions(questions)
+                        .selectedOptions(selectedOpts)
+                        .textAnswers(textAns)
+                        .remainingSeconds(0)
+                        .isTimed(true)
+                        .build(), true);
+                throw new ValidationException("The time limit for this exam has expired.");
+            }
+        }
 
         return ExamSession.builder()
                 .attempt(attempt)
@@ -144,6 +203,21 @@ public class ExamService {
     }
 
     public void recordAnswer(int attemptId, int questionId, Integer selectedOptionId, String textAnswer) {
+        Optional<Attempt> attOpt = attemptRepository.getAttempt(attemptId);
+        if (attOpt.isEmpty()) {
+            throw new ValidationException("Attempt not found.");
+        }
+        Attempt attempt = attOpt.get();
+        if (attempt.getStatus() != AttemptStatus.IN_PROGRESS) {
+            throw new ValidationException("Cannot record answers for an attempt that is not in progress.");
+        }
+        Optional<User> callerOpt = Session.getCurrentUser();
+        if (callerOpt.isPresent()) {
+            User caller = callerOpt.get();
+            if (caller.getRole() == Role.STUDENT && !Objects.equals(caller.getId(), attempt.getStudentId())) {
+                throw new ValidationException("Access denied. You do not own this attempt.");
+            }
+        }
         attemptRepository.saveAnswer(attemptId, questionId, selectedOptionId, textAnswer);
     }
 
@@ -199,7 +273,7 @@ public class ExamService {
                 boolean isCorrect = false;
                 if (ans.getSelectedOptionId() != null && q.getOptions() != null) {
                     for (QuestionOption opt : q.getOptions()) {
-                        if (opt.getId() != null && opt.getId().equals(ans.getSelectedOptionId()) && opt.isCorrect()) {
+                        if (opt.getId() != null && Objects.equals(opt.getId(), ans.getSelectedOptionId()) && opt.isCorrect()) {
                             isCorrect = true;
                             break;
                         }
@@ -208,11 +282,20 @@ public class ExamService {
                 double pts = isCorrect ? q.getPoints() : 0.0;
                 totalAwarded += pts;
                 attemptRepository.updateAnswerGrade(ans.getId(), isCorrect, pts, isCorrect ? 100 : 0, null, null);
+            } else if (ans == null && (q.getQuestionType() == QuestionType.MCQ || q.getQuestionType() == QuestionType.TRUE_FALSE)) {
+                attemptRepository.saveAnswer(session.getAttempt().getId(), q.getId(), null, null);
+                List<AttemptAnswer> reloaded = attemptRepository.getAttemptAnswers(session.getAttempt().getId());
+                for (AttemptAnswer ra : reloaded) {
+                    if (Objects.equals(ra.getQuestionId(), q.getId())) {
+                        attemptRepository.updateAnswerGrade(ra.getId(), false, 0.0, 0, null, null);
+                        break;
+                    }
+                }
             }
         }
 
         if (!hasShortAnswer) {
-            Result res = returnGrade(session.getAttempt().getId());
+            Result res = finalizeAndReturnGrade(session.getAttempt().getId());
             if (autoSubmitted) {
                 attemptRepository.finalizeAttempt(session.getAttempt().getId(), AttemptStatus.AUTO_SUBMITTED);
             }
@@ -235,6 +318,13 @@ public class ExamService {
     }
 
     public boolean gradeWithAI(int attemptId) {
+        Optional<User> callerOpt = Session.getCurrentUser();
+        if (callerOpt.isPresent()) {
+            User caller = callerOpt.get();
+            if (caller.getRole() == Role.STUDENT) {
+                throw new ValidationException("Access denied. Students cannot grade submissions.");
+            }
+        }
         Optional<Attempt> attemptOpt = attemptRepository.getAttempt(attemptId);
         if (attemptOpt.isEmpty()) return false;
 
@@ -293,6 +383,14 @@ public class ExamService {
     }
 
     public boolean gradeAnswerManually(int attemptId, int questionId, double pointsAwarded, String teacherFeedback) {
+        Optional<User> callerOpt = Session.getCurrentUser();
+        if (callerOpt.isPresent()) {
+            User caller = callerOpt.get();
+            if (caller.getRole() == Role.STUDENT) {
+                throw new ValidationException("Access denied. Students cannot grade submissions.");
+            }
+        }
+
         Optional<Attempt> attemptOpt = attemptRepository.getAttempt(attemptId);
         if (attemptOpt.isEmpty()) {
             throw new ValidationException("Attempt not found.");
@@ -379,6 +477,17 @@ public class ExamService {
     }
 
     public Result returnGrade(int attemptId) {
+        Optional<User> callerOpt = Session.getCurrentUser();
+        if (callerOpt.isPresent()) {
+            User caller = callerOpt.get();
+            if (caller.getRole() == Role.STUDENT) {
+                throw new ValidationException("Access denied. Students cannot return grades.");
+            }
+        }
+        return finalizeAndReturnGrade(attemptId);
+    }
+
+    private Result finalizeAndReturnGrade(int attemptId) {
         Optional<Attempt> attemptOpt = attemptRepository.getAttempt(attemptId);
         if (attemptOpt.isEmpty()) {
             throw new ValidationException("Attempt not found.");
@@ -479,6 +588,22 @@ public class ExamService {
         }
 
         int attemptId = session.getAttempt().getId();
+        Optional<Attempt> existingOpt = attemptRepository.getAttempt(attemptId);
+        if (existingOpt.isPresent()) {
+            Attempt existing = existingOpt.get();
+            if (existing.getStatus() == AttemptStatus.GRADED) {
+                throw new ValidationException("This speed quiz has already been submitted and graded.");
+            }
+        }
+
+        Optional<User> callerOpt = Session.getCurrentUser();
+        if (callerOpt.isPresent()) {
+            User caller = callerOpt.get();
+            if (caller.getRole() == Role.STUDENT && !Objects.equals(caller.getId(), session.getAttempt().getStudentId())) {
+                throw new ValidationException("Access denied. You do not own this attempt.");
+            }
+        }
+
         int studentId = session.getAttempt().getStudentId();
         int quizId = session.getQuiz().getId();
 
@@ -513,6 +638,19 @@ public class ExamService {
         attemptRepository.finalizeAttempt(attemptId, AttemptStatus.GRADED);
 
         double roundedScore = Math.round(session.getTotalScore() * 10.0) / 10.0;
+        long correctCount = session.getAnswerRecords().stream().filter(SpeedQuizAnswerRecord::isCorrect).count();
+        int totalQuestions = session.getTotalQuestionsCount() > 0 ? session.getTotalQuestionsCount() : session.getAnswerRecords().size();
+        double accuracy = totalQuestions > 0 ? ((double) correctCount / totalQuestions) * 100.0 : 0.0;
+        double roundedAccuracy = Math.round(accuracy * 10.0) / 10.0;
+
+        double maxPoints = session.getAllQuestions().stream().mapToDouble(Question::getPoints).sum();
+        if (maxPoints <= 0.0) {
+            maxPoints = Math.max(roundedScore, 10.0);
+        }
+
+        int passScore = (session.getQuiz() != null) ? session.getQuiz().getPassScore() : 50;
+        boolean passed = roundedAccuracy >= passScore;
+
         Result result = Result.builder()
                 .attemptId(attemptId)
                 .studentId(studentId)
@@ -520,9 +658,9 @@ public class ExamService {
                 .quizTitle(session.getQuiz().getTitle())
                 .assessmentType(AssessmentType.SPEED)
                 .totalPoints(roundedScore)
-                .maxPoints(roundedScore)
-                .percentage(100.0)
-                .passed(true)
+                .maxPoints(Math.round(maxPoints * 10.0) / 10.0)
+                .percentage(roundedAccuracy)
+                .passed(passed)
                 .pendingReview(false)
                 .build();
 

@@ -143,40 +143,19 @@ public class AttemptRepository {
     }
 
     public boolean saveAnswer(int attemptId, int questionId, Integer selectedOptionId, String textAnswer) {
-        String checkSql = "SELECT id FROM attempt_answers WHERE attempt_id = ? AND question_id = ?";
-        String updateSql = "UPDATE attempt_answers SET selected_option_id = ?, text_answer = ? WHERE id = ?";
-        String insertSql = "INSERT INTO attempt_answers (attempt_id, question_id, selected_option_id, text_answer) VALUES (?, ?, ?, ?)";
-
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            Integer existingId = null;
-            try (PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
-                checkStmt.setInt(1, attemptId);
-                checkStmt.setInt(2, questionId);
-                try (ResultSet rs = checkStmt.executeQuery()) {
-                    if (rs.next()) {
-                        existingId = rs.getInt("id");
-                    }
-                }
-            }
-
-            if (existingId != null) {
-                try (PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
-                    if (selectedOptionId != null) updateStmt.setInt(1, selectedOptionId);
-                    else updateStmt.setNull(1, Types.INTEGER);
-                    updateStmt.setString(2, textAnswer);
-                    updateStmt.setInt(3, existingId);
-                    return updateStmt.executeUpdate() > 0;
-                }
-            } else {
-                try (PreparedStatement insStmt = conn.prepareStatement(insertSql)) {
-                    insStmt.setInt(1, attemptId);
-                    insStmt.setInt(2, questionId);
-                    if (selectedOptionId != null) insStmt.setInt(3, selectedOptionId);
-                    else insStmt.setNull(3, Types.INTEGER);
-                    insStmt.setString(4, textAnswer);
-                    return insStmt.executeUpdate() > 0;
-                }
-            }
+        String upsertSql = "INSERT INTO attempt_answers (attempt_id, question_id, selected_option_id, text_answer) " +
+                           "VALUES (?, ?, ?, ?) " +
+                           "ON CONFLICT (attempt_id, question_id) DO UPDATE SET " +
+                           "selected_option_id = EXCLUDED.selected_option_id, " +
+                           "text_answer = EXCLUDED.text_answer";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(upsertSql)) {
+            stmt.setInt(1, attemptId);
+            stmt.setInt(2, questionId);
+            if (selectedOptionId != null) stmt.setInt(3, selectedOptionId);
+            else stmt.setNull(3, Types.INTEGER);
+            stmt.setString(4, textAnswer);
+            return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new DatabaseException("Error saving answer: " + e.getMessage(), e);
         }

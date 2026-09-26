@@ -76,10 +76,34 @@ public class UserFormScreen implements Screen {
         return getNumInputFields() + 1;
     }
 
+    public int getFocusedField() {
+        return focusedField;
+    }
+
+    public void setFocusedField(int focusedField) {
+        this.focusedField = focusedField;
+    }
+
+    public Role getSelectedRole() {
+        return selectedRole;
+    }
+
+    public String getSelectedGender() {
+        return selectedGender;
+    }
+
     @Override
     public ScreenResult update(Message msg) {
         if (msg instanceof PasteMessage paste) {
-            if (!isEditMode()) {
+            if (focusedField == 2) {
+                if (paste.content() != null) {
+                    for (char c : paste.content().toCharArray()) {
+                        if (Character.isDigit(c) && birthday.length() < 8) {
+                            birthday.append(c);
+                        }
+                    }
+                }
+            } else if (!isEditMode()) {
                 if (focusedField == 0) KeyUtil.pasteToBuffer(fullName, paste.content());
                 else if (focusedField == 3) KeyUtil.pasteToBuffer(email, paste.content());
                 else if (focusedField == 4) KeyUtil.pasteToBuffer(username, paste.content());
@@ -186,7 +210,7 @@ public class UserFormScreen implements Screen {
         if (focusedField == 1) {
             if (KeyUtil.isLeft(k)) {
                 cycleGender(false);
-            } else if (KeyUtil.isRight(k)) {
+            } else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) {
                 cycleGender(true);
             }
             return;
@@ -198,7 +222,7 @@ public class UserFormScreen implements Screen {
         if (focusedField == 6) {
             if (KeyUtil.isLeft(k)) {
                 cycleRole(false);
-            } else if (KeyUtil.isRight(k)) {
+            } else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) {
                 cycleRole(true);
             }
             return;
@@ -233,7 +257,7 @@ public class UserFormScreen implements Screen {
         } else if (focusedField == 1) {
             if (KeyUtil.isLeft(k)) {
                 cycleGender(false);
-            } else if (KeyUtil.isRight(k)) {
+            } else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) {
                 cycleGender(true);
             }
         } else if (focusedField == 2) {
@@ -241,7 +265,7 @@ public class UserFormScreen implements Screen {
         } else if (focusedField == 3) {
             if (KeyUtil.isLeft(k)) {
                 cycleRole(false);
-            } else if (KeyUtil.isRight(k)) {
+            } else if (KeyUtil.isRight(k) || KeyUtil.isSpace(k)) {
                 cycleRole(true);
             }
         } else if (focusedField == 4) {

@@ -48,6 +48,8 @@ public class SchemaInitializer {
                 stmt.execute("UPDATE quizzes SET assessment_type = 'QUIZ' WHERE assessment_type IS NULL;");
                 stmt.execute("ALTER TABLE questions ADD COLUMN IF NOT EXISTS quiz_id INT REFERENCES quizzes(id) ON DELETE CASCADE;");
                 stmt.execute("ALTER TABLE attempt_answers ADD COLUMN IF NOT EXISTS teacher_feedback TEXT;");
+                stmt.execute("DELETE FROM attempt_answers a USING attempt_answers b WHERE a.id < b.id AND a.attempt_id = b.attempt_id AND a.question_id = b.question_id;");
+                stmt.execute("DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'uq_attempt_question') THEN ALTER TABLE attempt_answers ADD CONSTRAINT uq_attempt_question UNIQUE (attempt_id, question_id); END IF; END $$;");
                 stmt.execute("UPDATE attempts SET status = 'TURNED_IN' WHERE status = 'SUBMITTED';");
                 stmt.execute("ALTER TABLE attempts DROP CONSTRAINT IF EXISTS attempts_status_check;");
                 stmt.execute("ALTER TABLE attempts ADD CONSTRAINT attempts_status_check CHECK (status IN ('IN_PROGRESS', 'TURNED_IN', 'GRADED', 'AUTO_SUBMITTED'));");

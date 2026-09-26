@@ -80,6 +80,10 @@ public class QuizFormScreen implements Screen {
             this.timeLimit.append(quizToEdit.getTimeLimitMins() != null ? quizToEdit.getTimeLimitMins() : 0);
             this.passScore.setLength(0);
             this.passScore.append(quizToEdit.getPassScore());
+            if (quizToEdit.getActiveDurationHours() != null) {
+                this.activeHours.setLength(0);
+                this.activeHours.append(quizToEdit.getActiveDurationHours());
+            }
             this.randomizeQuestions = quizToEdit.isRandomizeQuestions();
             this.randomizeAnswers = quizToEdit.isRandomizeAnswers();
             this.showAnswersAfter = quizToEdit.isShowAnswersAfter();
@@ -100,14 +104,14 @@ public class QuizFormScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
-                if (msg instanceof PasteMessage paste) {
+        if (msg instanceof PasteMessage paste) {
             switch (focusedField) {
-                case 0 -> KeyUtil.pasteToBuffer(title, paste.content());
-                case 1 -> KeyUtil.pasteToBuffer(description, paste.content());
-                case 2 -> KeyUtil.pasteToBuffer(timeLimit, paste.content(), 4);
-                case 3 -> KeyUtil.pasteToBuffer(activeHours, paste.content(), 4);
-                case 4 -> KeyUtil.pasteToBuffer(passScore, paste.content(), 3);
-                default -> { /* subject/type/buttons */ }
+                case 1 -> KeyUtil.pasteToBuffer(title, paste.content());
+                case 3 -> KeyUtil.pasteToBuffer(description, paste.content());
+                case 4 -> KeyUtil.pasteToBuffer(timeLimit, paste.content(), 4);
+                case 5 -> KeyUtil.pasteToBuffer(activeHours, paste.content(), 4);
+                case 6 -> KeyUtil.pasteToBuffer(passScore, paste.content(), 3);
+                default -> { /* subject/type/checkboxes/buttons */ }
             }
             return ScreenResult.stay(this);
         }

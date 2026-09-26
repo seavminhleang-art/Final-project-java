@@ -95,20 +95,9 @@ public class GlobalLeaderboardScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
-            int itemsStartLine = MouseUtil.findTableStartLine(view());
-            int pageSize = TuiHelper.PAGE_SIZE;
-            int totalPages = Math.max(1, (int) Math.ceil((double) leaderboard.size() / pageSize));
-            int currentPage = selectedIndex / pageSize;
-            int startRow = currentPage * pageSize;
-            int endRow = Math.min(leaderboard.size(), startRow + pageSize);
-            int displayedRows = endRow - startRow;
-
-            if (itemsStartLine != -1 && line >= itemsStartLine && line < itemsStartLine + displayedRows * 2) {
-                int clickedOffset = (line - itemsStartLine) / 2;
-                int targetIdx = startRow + clickedOffset;
-                if (targetIdx < leaderboard.size()) {
-                    selectedIndex = targetIdx;
-                }
+            int clickedIdx = ListNavigationHelper.getClickedItemIndex(line, MouseUtil.findTableStartLine(view()), leaderboard.size(), selectedIndex, TuiHelper.PAGE_SIZE);
+            if (clickedIdx != -1) {
+                selectedIndex = clickedIdx;
                 return ScreenResult.stay(this);
             }
 
@@ -120,7 +109,7 @@ public class GlobalLeaderboardScreen implements Screen {
 
             String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
             if (hintAction != null) {
-                if ("Esc".equals(hintAction)) {
+                if ("Esc".equalsIgnoreCase(hintAction)) {
                     if (returnScreen != null) {
                         return ScreenResult.navigate(returnScreen);
                     }

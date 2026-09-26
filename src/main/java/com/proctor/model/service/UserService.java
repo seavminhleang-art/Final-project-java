@@ -1,5 +1,6 @@
 package com.proctor.model.service;
 
+import com.proctor.model.entity.Session;
 import com.proctor.model.entity.User;
 import com.proctor.model.repository.UserRepository;
 import com.proctor.model.enums.Role;
@@ -50,7 +51,10 @@ public class UserService {
     }
 
     public User createUser(String email, String username, String rawPassword, String fullName, Role role, LocalDate dateOfBirth, String gender) {
-        return createUser(email, username, rawPassword, fullName, role, dateOfBirth, gender, null, null, null);
+        String degree = role == Role.TEACHER ? "Bachelor of Science" : null;
+        String edu = role == Role.TEACHER ? "University" : null;
+        String spec = role == Role.TEACHER ? "General Education" : null;
+        return createUser(email, username, rawPassword, fullName, role, dateOfBirth, gender, degree, edu, spec);
     }
 
     public void validateNewUser(String email, String username, String rawPassword, String fullName, Role role, LocalDate dateOfBirth, String gender, String academicDegree, String educationBackground, String specialization) {
@@ -67,15 +71,15 @@ public class UserService {
         if (fullName.trim().length() > 100) {
             throw new ValidationException("Full name cannot exceed 100 characters.");
         }
-        if (role == Role.TEACHER && (academicDegree != null || educationBackground != null || specialization != null)) {
+        if (role == Role.TEACHER) {
             if (academicDegree == null || academicDegree.trim().isBlank()) {
-                throw new ValidationException("Academic degree is required.");
+                throw new ValidationException("Academic degree is required for teachers.");
             }
             if (educationBackground == null || educationBackground.trim().isBlank()) {
-                throw new ValidationException("Education background (university) is required.");
+                throw new ValidationException("Education background (university) is required for teachers.");
             }
             if (specialization == null || specialization.trim().isBlank()) {
-                throw new ValidationException("Specialization is required.");
+                throw new ValidationException("Specialization is required for teachers.");
             }
         }
         if (academicDegree != null && academicDegree.trim().length() > 100) {
@@ -203,6 +207,19 @@ public class UserService {
         }
 
         User user = existing.get();
+
+        Optional<User> callerOpt = Session.getCurrentUser();
+        if (callerOpt.isPresent()) {
+            User caller = callerOpt.get();
+            if (caller.getRole() != Role.ADMIN) {
+                if (!caller.getId().equals(id)) {
+                    throw new ValidationException("You cannot modify another user's profile.");
+                }
+                role = user.getRole();
+                enabled = user.isEnabled();
+            }
+        }
+
         user.setFullName(fullName.trim());
         user.setDateOfBirth(dateOfBirth);
         user.setGender(gender.trim());
@@ -230,6 +247,13 @@ public class UserService {
             User user = existing.get();
             if (user.getRole() == Role.ADMIN || SeedService.ADMIN_USERNAME.equalsIgnoreCase(user.getUsername())) {
                 throw new ValidationException("The administrator account cannot be disabled.");
+            }
+        }
+        Optional<User> callerOpt = Session.getCurrentUser();
+        if (callerOpt.isPresent()) {
+            User caller = callerOpt.get();
+            if (caller.getRole() != Role.ADMIN && !caller.getId().equals(id)) {
+                throw new ValidationException("Only administrators can toggle user status.");
             }
         }
         return userRepository.toggleEnabled(id);

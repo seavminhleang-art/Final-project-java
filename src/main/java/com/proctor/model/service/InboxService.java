@@ -15,6 +15,7 @@ import com.proctor.model.repository.InboxRepository;
 import com.proctor.model.repository.QuizRepository;
 import com.proctor.model.repository.ResultRepository;
 
+import com.proctor.model.entity.Session;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
@@ -55,6 +56,11 @@ public class InboxService {
     }
 
     public List<InboxMessage> getInbox(int userId) {
+        Session.getCurrentUser().ifPresent(u -> {
+            if (u.getRole() == Role.STUDENT && u.getId() != null && u.getId() != userId) {
+                throw new ValidationException("Access denied: You can only view your own inbox.");
+            }
+        });
         return inboxRepository.findByRecipientId(userId);
     }
 
@@ -63,18 +69,50 @@ public class InboxService {
     }
 
     public Optional<InboxMessage> getMessage(int messageId) {
-        return inboxRepository.findById(messageId);
+        Optional<InboxMessage> msgOpt = inboxRepository.findById(messageId);
+        if (msgOpt.isPresent()) {
+            InboxMessage msg = msgOpt.get();
+            Session.getCurrentUser().ifPresent(u -> {
+                if (u.getRole() == Role.STUDENT && u.getId() != null && !u.getId().equals(msg.getRecipientId())) {
+                    throw new ValidationException("Access denied: You do not have permission to view this message.");
+                }
+            });
+        }
+        return msgOpt;
     }
 
     public boolean markAsRead(int messageId) {
+        Optional<InboxMessage> msgOpt = inboxRepository.findById(messageId);
+        if (msgOpt.isPresent()) {
+            InboxMessage msg = msgOpt.get();
+            Session.getCurrentUser().ifPresent(u -> {
+                if (u.getRole() == Role.STUDENT && u.getId() != null && !u.getId().equals(msg.getRecipientId())) {
+                    throw new ValidationException("Access denied: You do not have permission to modify this message.");
+                }
+            });
+        }
         return inboxRepository.markAsRead(messageId);
     }
 
     public boolean markAllAsRead(int userId) {
+        Session.getCurrentUser().ifPresent(u -> {
+            if (u.getRole() == Role.STUDENT && u.getId() != null && u.getId() != userId) {
+                throw new ValidationException("Access denied: You can only mark your own messages as read.");
+            }
+        });
         return inboxRepository.markAllAsRead(userId);
     }
 
     public boolean deleteMessage(int messageId) {
+        Optional<InboxMessage> msgOpt = inboxRepository.findById(messageId);
+        if (msgOpt.isPresent()) {
+            InboxMessage msg = msgOpt.get();
+            Session.getCurrentUser().ifPresent(u -> {
+                if (u.getRole() == Role.STUDENT && u.getId() != null && !u.getId().equals(msg.getRecipientId())) {
+                    throw new ValidationException("Access denied: You do not have permission to delete this message.");
+                }
+            });
+        }
         return inboxRepository.delete(messageId);
     }
 
@@ -91,7 +129,7 @@ public class InboxService {
                 .type(InboxMessageType.NOTIFICATION)
                 .title(safeTitle)
                 .body(body != null ? body : "")
-                .status(InboxStatus.READ)
+                .status(InboxStatus.PENDING)
                 .read(false)
                 .createdAt(new Timestamp(System.currentTimeMillis()))
                 .build();
@@ -163,7 +201,11 @@ public class InboxService {
         }
 
         if (examTimestamp != null) {
-            if (System.currentTimeMillis() - examTimestamp.getTime() > THREE_DAYS_MILLIS) {
+            long diff = System.currentTimeMillis() - examTimestamp.getTime();
+            if (diff < 0) {
+                throw new ValidationException("Exam timestamp cannot be in the future.");
+            }
+            if (diff > THREE_DAYS_MILLIS) {
                 throw new ValidationException("Exam retake requests must be submitted within 3 days (72 hours) of the exam.");
             }
         }
@@ -193,6 +235,13 @@ public class InboxService {
     }
 
     public boolean approveQuizRetake(int messageId) {
+        Optional<User> callerOpt = Session.getCurrentUser();
+        if (callerOpt.isPresent()) {
+            User caller = callerOpt.get();
+            if (caller.getRole() == Role.STUDENT) {
+                throw new ValidationException("Access denied. Students cannot approve retake requests.");
+            }
+        }
         Optional<InboxMessage> opt = inboxRepository.findById(messageId);
         if (opt.isEmpty()) return false;
         InboxMessage msg = opt.get();
@@ -229,6 +278,13 @@ public class InboxService {
     }
 
     public boolean approveExamRetake(int messageId) {
+        Optional<User> callerOpt = Session.getCurrentUser();
+        if (callerOpt.isPresent()) {
+            User caller = callerOpt.get();
+            if (caller.getRole() == Role.STUDENT) {
+                throw new ValidationException("Access denied. Students cannot approve retake requests.");
+            }
+        }
         Optional<InboxMessage> opt = inboxRepository.findById(messageId);
         if (opt.isEmpty()) return false;
         InboxMessage msg = opt.get();
@@ -265,6 +321,13 @@ public class InboxService {
     }
 
     public boolean rejectRequest(int messageId, String responseNote) {
+        Optional<User> callerOpt = Session.getCurrentUser();
+        if (callerOpt.isPresent()) {
+            User caller = callerOpt.get();
+            if (caller.getRole() == Role.STUDENT) {
+                throw new ValidationException("Access denied. Students cannot reject requests.");
+            }
+        }
         Optional<InboxMessage> opt = inboxRepository.findById(messageId);
         if (opt.isEmpty()) return false;
 

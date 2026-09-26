@@ -31,6 +31,7 @@ public class Main {
             SeedService seedService = new SeedService(userRepository);
             seedService.seedDefaultAdmin();
             seedService.seedDefaultSubjects();
+            seedService.seedAll();
 
             AuthService authService = new AuthService(userRepository);
 

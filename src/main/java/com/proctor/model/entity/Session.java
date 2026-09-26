@@ -3,18 +3,17 @@ package com.proctor.model.entity;
 import java.util.Optional;
 
 public class Session {
-    private static User currentUser;
+    private static volatile User currentUser;
 
-    public static void setLoggedInUser(User user) {
+    public static synchronized void setLoggedInUser(User user) {
         currentUser = user;
     }
 
-    public static Optional<User> getCurrentUser() {
+    public static synchronized Optional<User> getCurrentUser() {
         return Optional.ofNullable(currentUser);
     }
 
-
-    public static void clear() {
+    public static synchronized void clear() {
         currentUser = null;
     }
 }

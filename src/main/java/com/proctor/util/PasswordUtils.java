@@ -12,7 +12,11 @@ public class PasswordUtils {
         if (rawPassword == null || hashedPassword == null) {
             return false;
         }
-        return BCrypt.verifyer().verify(rawPassword.toCharArray(), hashedPassword.toCharArray()).verified;
+        try {
+            return BCrypt.verifyer().verify(rawPassword.toCharArray(), hashedPassword.toCharArray()).verified;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public static void validatePassword(String password) {

@@ -146,27 +146,32 @@ public class QuizQuestionEditorScreen implements Screen {
 
             String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
             if (hintAction != null) {
-                if ("Esc".equals(hintAction)) {
+                if ("Esc".equalsIgnoreCase(hintAction)) {
                     return ScreenResult.navigate(new QuizListScreen(quizService, questionService, subjectService, authService, quiz.getAssessmentType()));
-                } else if ("n".equals(hintAction)) {
+                } else if ("n".equalsIgnoreCase(hintAction)) {
                     return ScreenResult.navigate(new QuestionFormScreen(questionService, subjectService, authService, null, quiz));
-                } else if ("b".equals(hintAction)) {
+                } else if ("b".equalsIgnoreCase(hintAction)) {
                     return ScreenResult.navigate(new QuestionBankPickerScreen(quiz, quizService, questionService, subjectService, authService));
-                } else if ("g".equals(hintAction)) {
+                } else if ("g".equalsIgnoreCase(hintAction)) {
                     return ScreenResult.navigate(new AIQuestionGeneratorScreen(new AIService(), questionService, subjectService, authService, quiz));
-                } else if ("d".equals(hintAction)) {
+                } else if ("d".equalsIgnoreCase(hintAction)) {
                     if (!questions.isEmpty() && selectedIndex < questions.size()) {
                         confirmingDelete = true;
                         confirmDeleteFocused = true;
                         pendingDeleteQuestion = questions.get(selectedIndex);
                     }
                     return ScreenResult.stay(this);
-                } else if ("Space".equals(hintAction)) {
-                    quiz.setPublished(!quiz.isPublished());
-                    quizService.updateQuiz(quiz);
-                    bannerMessage = quiz.isPublished() ? TuiHelper.green("✔ Quiz published!") : TuiHelper.yellow("Quiz moved to Draft.");
+                } else if ("Space".equalsIgnoreCase(hintAction)) {
+                    try {
+                        quizService.togglePublishStatus(quiz.getId());
+                        quiz.setPublished(!quiz.isPublished());
+                        String status = quiz.isPublished() ? TuiHelper.green("PUBLISHED") : TuiHelper.dim("DRAFT");
+                        bannerMessage = "✔ Quiz status updated to " + status;
+                    } catch (ValidationException e) {
+                        bannerMessage = TuiHelper.red("✖ " + e.getMessage());
+                    }
                     return ScreenResult.stay(this);
-                } else if ("e".equals(hintAction) || "Enter".equals(hintAction)) {
+                } else if ("e".equalsIgnoreCase(hintAction) || "Enter".equalsIgnoreCase(hintAction)) {
                     if (!questions.isEmpty() && selectedIndex < questions.size()) {
                         return ScreenResult.navigate(new QuestionFormScreen(questionService, subjectService, authService, questions.get(selectedIndex), quiz));
                     }

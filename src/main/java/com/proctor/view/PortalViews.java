@@ -70,19 +70,24 @@ public class PortalViews {
                 else if (entry.getRank() == 3) rankStr = "#3";
                 else rankStr = String.format("%d", entry.getRank());
 
+                String sName = (entry.getStudentName() != null && !entry.getStudentName().isBlank())
+                        ? entry.getStudentName() : "N/A";
+                String uName = (entry.getUsername() != null && !entry.getUsername().isBlank())
+                        ? "@" + entry.getUsername() : "N/A";
+
                 String line;
                 if (mode == com.proctor.controller.GlobalLeaderboardScreen.Mode.SPEED) {
                     line = String.format("%-6s  %-54s  %-32s  %-10d  %-14s",
                             rankStr,
-                            truncate(entry.getStudentName(), 54),
-                            truncate("@" + entry.getUsername(), 32),
+                            truncate(sName, 54),
+                            truncate(uName, 32),
                             entry.getTotalQuizzes(),
                             String.format("%.1f pts", entry.getHighScore()));
                 } else {
                     line = String.format("%-6s  %-54s  %-32s  %-10d  %-12.1f  %-8s",
                             rankStr,
-                            truncate(entry.getStudentName(), 54),
-                            truncate("@" + entry.getUsername(), 32),
+                            truncate(sName, 54),
+                            truncate(uName, 32),
                             entry.getTotalQuizzes(),
                             entry.getTotalPoints(),
                             String.format("%.1f%%", entry.getAvgPercentage()));

@@ -93,8 +93,8 @@ public class SubjectRepository {
         String sql = "INSERT INTO subjects (code, name, description, is_enabled) VALUES (?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            stmt.setString(1, subject.getCode().toUpperCase().trim());
-            stmt.setString(2, subject.getName().trim());
+            stmt.setString(1, subject.getCode() != null ? subject.getCode().toUpperCase().trim() : "");
+            stmt.setString(2, subject.getName() != null ? subject.getName().trim() : "");
             stmt.setString(3, subject.getDescription());
             stmt.setBoolean(4, subject.isEnabled());
 
@@ -109,7 +109,7 @@ public class SubjectRepository {
             }
             return false;
         } catch (SQLException e) {
-            throw new DatabaseException("Failed to create subject: " + subject.getCode(), e);
+            throw new DatabaseException("Failed to create subject: " + (subject != null ? subject.getCode() : "null"), e);
         }
     }
 
@@ -117,8 +117,8 @@ public class SubjectRepository {
         String sql = "UPDATE subjects SET code = ?, name = ?, description = ?, is_enabled = ? WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, subject.getCode().toUpperCase().trim());
-            stmt.setString(2, subject.getName().trim());
+            stmt.setString(1, subject.getCode() != null ? subject.getCode().toUpperCase().trim() : "");
+            stmt.setString(2, subject.getName() != null ? subject.getName().trim() : "");
             stmt.setString(3, subject.getDescription());
             stmt.setBoolean(4, subject.isEnabled());
             stmt.setInt(5, subject.getId());

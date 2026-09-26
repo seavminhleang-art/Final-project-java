@@ -180,17 +180,33 @@ public class InboxRepository {
         String displaySender = senderUsername != null ? "@" + senderUsername : (senderName != null ? senderName : "System");
         String proposedHash = rs.getString("proposed_password_hash");
 
+        InboxMessageType type = InboxMessageType.NOTIFICATION;
+        String typeStr = rs.getString("type");
+        if (typeStr != null) {
+            try {
+                type = InboxMessageType.valueOf(typeStr.trim().toUpperCase());
+            } catch (Exception ignored) {}
+        }
+
+        InboxStatus status = InboxStatus.PENDING;
+        String statusStr = rs.getString("status");
+        if (statusStr != null) {
+            try {
+                status = InboxStatus.valueOf(statusStr.trim().toUpperCase());
+            } catch (Exception ignored) {}
+        }
+
         return InboxMessage.builder()
                 .id(rs.getInt("id"))
                 .senderId(rs.getObject("sender_id") != null ? rs.getInt("sender_id") : null)
                 .senderName(displaySender)
                 .recipientId(rs.getInt("recipient_id"))
-                .type(InboxMessageType.valueOf(rs.getString("type")))
+                .type(type)
                 .title(rs.getString("title"))
                 .body(rs.getString("body"))
                 .targetId(rs.getObject("target_id") != null ? rs.getInt("target_id") : null)
                 .proposedPasswordHash(proposedHash)
-                .status(InboxStatus.valueOf(rs.getString("status")))
+                .status(status)
                 .read(rs.getBoolean("is_read"))
                 .createdAt(rs.getTimestamp("created_at"))
                 .resolvedAt(rs.getTimestamp("resolved_at"))

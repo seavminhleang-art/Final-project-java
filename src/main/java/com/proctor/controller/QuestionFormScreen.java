@@ -163,18 +163,29 @@ public class QuestionFormScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
-                if (msg instanceof PasteMessage paste) {
-            switch (focusedField) {
+        if (msg instanceof PasteMessage paste) {
+            int idx = focusedField;
+            if (!isPinnedQuiz()) {
+                if (idx == 0) return ScreenResult.stay(this);
+                idx -= 1;
+            }
+            switch (idx) {
                 case 0 -> KeyUtil.pasteToBuffer(questionText, paste.content());
                 case 3 -> KeyUtil.pasteToBuffer(pointsBuffer, paste.content(), 6);
-                case 4 -> KeyUtil.pasteToBuffer(optionA, paste.content());
-                case 5 -> KeyUtil.pasteToBuffer(optionB, paste.content());
-                case 6 -> KeyUtil.pasteToBuffer(optionC, paste.content());
-                case 7 -> KeyUtil.pasteToBuffer(optionD, paste.content());
                 default -> {
-                    // explanation is at different indices depending on question type —
-                    // delegate to the existing explanation field detection
-                    if (focusedField > 0) KeyUtil.pasteToBuffer(explanation, paste.content());
+                    if (selectedType == QuestionType.MCQ) {
+                        switch (idx) {
+                            case 4 -> KeyUtil.pasteToBuffer(optionA, paste.content());
+                            case 5 -> KeyUtil.pasteToBuffer(optionB, paste.content());
+                            case 6 -> KeyUtil.pasteToBuffer(optionC, paste.content());
+                            case 7 -> KeyUtil.pasteToBuffer(optionD, paste.content());
+                            case 9 -> KeyUtil.pasteToBuffer(explanation, paste.content());
+                        }
+                    } else if (selectedType == QuestionType.TRUE_FALSE) {
+                        if (idx == 5) KeyUtil.pasteToBuffer(explanation, paste.content());
+                    } else {
+                        if (idx == 4) KeyUtil.pasteToBuffer(explanation, paste.content());
+                    }
                 }
             }
             return ScreenResult.stay(this);
@@ -205,7 +216,7 @@ public class QuestionFormScreen implements Screen {
                 }
             }
             String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
-            if (hintAction != null && "Esc".equals(hintAction)) {
+            if (hintAction != null && "Esc".equalsIgnoreCase(hintAction)) {
                 return returnToPreviousScreen();
             }
             return ScreenResult.stay(this);
@@ -398,8 +409,11 @@ public class QuestionFormScreen implements Screen {
                     throw new ValidationException("Points must be a valid number.");
                 }
             }
-            if (pts <= 0) {
-                throw new ValidationException("Points must be greater than 0.");
+            if (Double.isNaN(pts) || Double.isInfinite(pts) || pts <= 0) {
+                throw new ValidationException("Points must be a valid number greater than 0.");
+            }
+            if (pts > 999.99) {
+                throw new ValidationException("Points cannot exceed 999.99.");
             }
 
             User currentTeacher = Session.getCurrentUser().orElse(null);

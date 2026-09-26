@@ -15,9 +15,10 @@ public class ResultRepository {
                      "VALUES (?, ?, ?, ?, ?, ?, ?) " +
                      "ON CONFLICT (attempt_id) DO UPDATE SET " +
                      "total_points = EXCLUDED.total_points, max_points = EXCLUDED.max_points, " +
-                     "percentage = EXCLUDED.percentage, passed = EXCLUDED.passed, graded_at = NOW()";
+                     "percentage = EXCLUDED.percentage, passed = EXCLUDED.passed, graded_at = NOW() " +
+                     "RETURNING id";
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, result.getAttemptId());
             stmt.setInt(2, result.getStudentId());
             stmt.setInt(3, result.getQuizId());
@@ -26,14 +27,11 @@ public class ResultRepository {
             stmt.setDouble(6, result.getPercentage());
             stmt.setBoolean(7, result.isPassed());
 
-            int affected = stmt.executeUpdate();
-            if (affected > 0) {
-                try (ResultSet rs = stmt.getGeneratedKeys()) {
-                    if (rs.next()) {
-                        result.setId(rs.getInt(1));
-                    }
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    result.setId(rs.getInt(1));
+                    return true;
                 }
-                return true;
             }
             return false;
         } catch (SQLException e) {

@@ -138,7 +138,7 @@ public class UserRepository {
             stmt.setString(2, username);
             stmt.setString(3, user.getPasswordHash());
             stmt.setString(4, user.getFullName());
-            stmt.setString(5, user.getRole().name());
+            stmt.setString(5, user.getRole() != null ? user.getRole().name() : Role.STUDENT.name());
             stmt.setBoolean(6, user.isEnabled());
             if (user.getDateOfBirth() != null) {
                 stmt.setDate(7, java.sql.Date.valueOf(user.getDateOfBirth()));
@@ -166,23 +166,24 @@ public class UserRepository {
     }
 
     public boolean update(User user) {
-        String sql = "UPDATE users SET email = ?, full_name = ?, role = ?, is_enabled = ?, date_of_birth = ?, gender = ?, academic_degree = ?, education_background = ?, specialization = ?, updated_at = NOW() WHERE id = ?";
+        String sql = "UPDATE users SET email = ?, username = ?, full_name = ?, role = ?, is_enabled = ?, date_of_birth = ?, gender = ?, academic_degree = ?, education_background = ?, specialization = ?, updated_at = NOW() WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, user.getEmail());
-            stmt.setString(2, user.getFullName());
-            stmt.setString(3, user.getRole().name());
-            stmt.setBoolean(4, user.isEnabled());
+            stmt.setString(2, user.getUsername());
+            stmt.setString(3, user.getFullName());
+            stmt.setString(4, user.getRole() != null ? user.getRole().name() : Role.STUDENT.name());
+            stmt.setBoolean(5, user.isEnabled());
             if (user.getDateOfBirth() != null) {
-                stmt.setDate(5, java.sql.Date.valueOf(user.getDateOfBirth()));
+                stmt.setDate(6, java.sql.Date.valueOf(user.getDateOfBirth()));
             } else {
-                stmt.setNull(5, java.sql.Types.DATE);
+                stmt.setNull(6, java.sql.Types.DATE);
             }
-            stmt.setString(6, user.getGender());
-            stmt.setString(7, user.getAcademicDegree());
-            stmt.setString(8, user.getEducationBackground());
-            stmt.setString(9, user.getSpecialization());
-            stmt.setInt(10, user.getId());
+            stmt.setString(7, user.getGender());
+            stmt.setString(8, user.getAcademicDegree());
+            stmt.setString(9, user.getEducationBackground());
+            stmt.setString(10, user.getSpecialization());
+            stmt.setInt(11, user.getId());
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new DatabaseException("Failed to update user id: " + user.getId(), e);
@@ -213,7 +214,7 @@ public class UserRepository {
     }
 
     public boolean delete(int userId) {
-        String sql = "DELETE FROM users WHERE id = ?";
+        String sql = "UPDATE users SET is_enabled = FALSE, updated_at = NOW() WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, userId);
@@ -231,6 +232,14 @@ public class UserRepository {
         String educationBackground = rs.getString("education_background");
         String specialization = rs.getString("specialization");
 
+        Role role = Role.STUDENT;
+        String roleStr = rs.getString("role");
+        if (roleStr != null) {
+            try {
+                role = Role.valueOf(roleStr.trim().toUpperCase());
+            } catch (Exception ignored) {}
+        }
+
         return User.builder()
                 .id(rs.getInt("id"))
                 .email(email != null ? email : username)
@@ -239,7 +248,7 @@ public class UserRepository {
                 .fullName(rs.getString("full_name"))
                 .dateOfBirth(rs.getDate("date_of_birth") != null ? rs.getDate("date_of_birth").toLocalDate() : null)
                 .gender(gender)
-                .role(Role.valueOf(rs.getString("role")))
+                .role(role)
                 .enabled(rs.getBoolean("is_enabled"))
                 .academicDegree(academicDegree)
                 .educationBackground(educationBackground)

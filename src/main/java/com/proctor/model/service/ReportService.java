@@ -1,9 +1,12 @@
 package com.proctor.model.service;
 
 import com.proctor.config.Config;
+import com.proctor.exception.ValidationException;
 import com.proctor.model.entity.QuizPerformanceDTO;
+import com.proctor.model.entity.Session;
 import com.proctor.model.entity.SubjectReportDTO;
 import com.proctor.model.entity.SystemOverviewDTO;
+import com.proctor.model.enums.Role;
 import com.proctor.model.repository.ReportRepository;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.design.*;
@@ -16,6 +19,22 @@ public class ReportService {
     private final ReportRepository reportRepository;
     private final String outputDir;
 
+    private void checkInstructorAccess() {
+        Session.getCurrentUser().ifPresent(u -> {
+            if (u.getRole() == Role.STUDENT) {
+                throw new ValidationException("Access denied: Students cannot generate performance reports.");
+            }
+        });
+    }
+
+    private void checkAdminAccess() {
+        Session.getCurrentUser().ifPresent(u -> {
+            if (u.getRole() != Role.ADMIN) {
+                throw new ValidationException("Access denied: Only administrators can generate system overview reports.");
+            }
+        });
+    }
+
     public ReportService(ReportRepository reportRepository) {
         this.reportRepository = reportRepository;
         this.outputDir = Config.get("reports.output_dir", "./reports/output");
@@ -23,6 +42,7 @@ public class ReportService {
     }
 
     public String generateQuizPerformanceReport(Integer subjectId) {
+        checkInstructorAccess();
         List<QuizPerformanceDTO> data = reportRepository.getQuizPerformanceData(subjectId);
         String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String fileName = outputDir + "/quiz_performance_" + timestamp + ".pdf";
@@ -68,6 +88,7 @@ public class ReportService {
     }
 
     public String generateSystemOverviewReport() {
+        checkAdminAccess();
         SystemOverviewDTO data = reportRepository.getSystemOverviewData();
         String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String fileName = outputDir + "/system_overview_" + timestamp + ".pdf";
@@ -98,6 +119,7 @@ public class ReportService {
     }
 
     public String generateSubjectReport() {
+        checkInstructorAccess();
         List<SubjectReportDTO> data = reportRepository.getSubjectSummaryData();
         String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String fileName = outputDir + "/subject_summary_" + timestamp + ".pdf";

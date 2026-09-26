@@ -72,8 +72,10 @@ public class TeacherSubmissionViews {
                 User student = studentMap.get(a.getStudentId());
                 String studentName = (a.getStudentName() != null && !a.getStudentName().isBlank())
                         ? a.getStudentName()
-                        : (student != null ? student.getFullName() : "Student #" + a.getStudentId());
-                String dateStr = a.getSubmittedAt() != null ? dateFormat.format(a.getSubmittedAt()) : "-";
+                        : (student != null && student.getFullName() != null && !student.getFullName().isBlank()
+                                ? student.getFullName()
+                                : (a.getStudentId() > 0 ? "Student #" + a.getStudentId() : "N/A"));
+                String dateStr = a.getSubmittedAt() != null ? dateFormat.format(a.getSubmittedAt()) : "N/A";
 
                 int statusWidth = (specificQuiz == null) ? 18 : 24;
                 String statusStr;
@@ -93,7 +95,9 @@ public class TeacherSubmissionViews {
 
                 String line;
                 if (specificQuiz == null) {
-                    String quizTitle = a.getQuizTitle() != null ? a.getQuizTitle() : "Quiz #" + a.getQuizId();
+                    String quizTitle = (a.getQuizTitle() != null && !a.getQuizTitle().isBlank())
+                            ? a.getQuizTitle()
+                            : (a.getQuizId() != null && a.getQuizId() > 0 ? "Quiz #" + a.getQuizId() : "N/A");
                     String typeStr = (a.getAssessmentType() == AssessmentType.SPEED) ? "SPEED"
                             : (a.getAssessmentType() == AssessmentType.EXAM ? "EXAM" : "QUIZ");
                     line = String.format("%-5d  %-7s  %-36s  %-32s  %s  %-19s",
@@ -149,21 +153,21 @@ public class TeacherSubmissionViews {
                                            int inspectingAnswerIndex, String bannerMessage) {
         StringBuilder sb = new StringBuilder();
         List<Question> questions = (specificQuiz != null && specificQuiz.getQuestions() != null) ? specificQuiz.getQuestions() : List.of();
-        String studentLabel = (attempt.getStudentName() != null && !attempt.getStudentName().isBlank())
+        String studentLabel = (attempt != null && attempt.getStudentName() != null && !attempt.getStudentName().isBlank())
                 ? attempt.getStudentName()
-                : "Student #" + attempt.getStudentId();
+                : (attempt != null && attempt.getStudentId() > 0 ? "Student #" + attempt.getStudentId() : "N/A");
         boolean isSpeedQuiz = (specificQuiz != null && specificQuiz.getAssessmentType() == AssessmentType.SPEED)
                 || (attempt != null && attempt.getAssessmentType() == AssessmentType.SPEED);
         String typeLabel = isSpeedQuiz ? "Speed Quiz"
                 : ((specificQuiz != null && specificQuiz.getAssessmentType() == AssessmentType.EXAM)
                 || (attempt != null && attempt.getAssessmentType() == AssessmentType.EXAM) ? "Exam" : "Quiz");
         String subtitle = String.format("%s  •  Type: %s  •  Status: %s  •  Question %d of %d",
-                studentLabel, typeLabel, (attempt != null ? attempt.getStatus().name() : "UNKNOWN"),
+                studentLabel, typeLabel, (attempt != null && attempt.getStatus() != null ? attempt.getStatus().name() : "N/A"),
                 questions.isEmpty() ? 0 : inspectingAnswerIndex + 1, questions.size());
 
         sb.append(TuiHelper.header("SUBMISSIONS"));
         sb.append("\n");
-        sb.append(TuiHelper.boxTitle("Student Answer Sheet: Attempt #" + (attempt != null ? attempt.getId() : "-"), subtitle)).append("\n\n");
+        sb.append(TuiHelper.boxTitle("Student Answer Sheet: Attempt #" + (attempt != null && attempt.getId() != null ? attempt.getId() : "N/A"), subtitle)).append("\n\n");
 
         if (questions.isEmpty()) {
             sb.append("  ").append(TuiHelper.dim("No questions attached to this quiz assessment.")).append("\n");
@@ -209,7 +213,7 @@ public class TeacherSubmissionViews {
                     }
                 }
             } else {
-                String textAns = (ans != null && ans.getTextAnswer() != null) ? ans.getTextAnswer() : "(No answer provided)";
+                String textAns = (ans != null && ans.getTextAnswer() != null && !ans.getTextAnswer().isBlank()) ? ans.getTextAnswer() : "N/A";
                 sb.append("     ").append(TuiHelper.cyan("Student Answer:")).append("\n");
                 for (String line : wrapText(textAns, 116)) {
                     sb.append("       ").append(line).append("\n");
@@ -248,7 +252,7 @@ public class TeacherSubmissionViews {
                     }
                 }
             } else {
-                sb.append("\n     ").append(TuiHelper.dim("(Not attempted or reached)")).append("\n");
+                sb.append("\n     ").append(TuiHelper.dim("N/A (Not attempted)")).append("\n");
             }
         }
 
@@ -302,7 +306,7 @@ public class TeacherSubmissionViews {
 
         if (question.getQuestionType() == com.proctor.model.enums.QuestionType.SHORT_ANSWER) {
             String textAns = (answer != null && answer.getTextAnswer() != null && !answer.getTextAnswer().isBlank())
-                    ? answer.getTextAnswer() : "(No answer provided)";
+                    ? answer.getTextAnswer() : "N/A";
             sb.append("  ").append(TuiHelper.cyan("Student Answer:")).append("\n");
             for (String line : wrapText(textAns, 116)) {
                 sb.append("    ").append(line).append("\n");

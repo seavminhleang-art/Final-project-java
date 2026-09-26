@@ -1,15 +1,19 @@
 package com.proctor.model.service;
 
-import com.proctor.model.enums.Difficulty;
-import com.proctor.model.enums.QuestionType;
 import com.proctor.exception.ValidationException;
 import com.proctor.model.entity.Question;
 import com.proctor.model.entity.QuestionOption;
+import com.proctor.model.entity.Session;
+import com.proctor.model.entity.User;
+import com.proctor.model.enums.Difficulty;
+import com.proctor.model.enums.QuestionType;
+import com.proctor.model.enums.Role;
 import com.proctor.model.repository.QuestionRepository;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -25,11 +29,36 @@ public class QuestionService {
     }
 
 
+    private void checkInstructorAccess(Question q) {
+        Session.getCurrentUser().ifPresent(u -> {
+            if (u.getRole() == Role.STUDENT) {
+                if (q != null && q.getCreatedBy() != null && !q.getCreatedBy().equals(u.getId())) {
+                    return;
+                }
+                throw new ValidationException("Access denied: Students cannot manage questions.");
+            }
+        });
+    }
+
     public boolean deleteQuestion(int id) {
+        checkInstructorAccess(null);
+        Optional<Question> existingOpt = questionRepository.findById(id);
+        if (existingOpt.isEmpty()) {
+            throw new ValidationException("Question not found.");
+        }
+        Question existing = existingOpt.get();
+        Optional<User> callerOpt = Session.getCurrentUser();
+        if (callerOpt.isPresent()) {
+            User caller = callerOpt.get();
+            if (caller.getRole() != Role.ADMIN && existing.getCreatedBy() != null && !Objects.equals(existing.getCreatedBy(), caller.getId())) {
+                throw new ValidationException("You can only delete questions that you created.");
+            }
+        }
         return questionRepository.delete(id);
     }
 
     public Question createQuestion(Question q) {
+        checkInstructorAccess(q);
         validateQuestion(q);
         normalizeQuestion(q);
 
@@ -41,8 +70,20 @@ public class QuestionService {
     }
 
     public Question updateQuestion(Question q) {
+        checkInstructorAccess(q);
         if (q.getId() == null) {
             throw new ValidationException("Question ID is required for update.");
+        }
+        Optional<Question> existingOpt = questionRepository.findById(q.getId());
+        if (existingOpt.isPresent()) {
+            Question existing = existingOpt.get();
+            Optional<User> callerOpt = Session.getCurrentUser();
+            if (callerOpt.isPresent()) {
+                User caller = callerOpt.get();
+                if (caller.getRole() != Role.ADMIN && existing.getCreatedBy() != null && !Objects.equals(existing.getCreatedBy(), caller.getId())) {
+                    throw new ValidationException("You can only modify questions that you created.");
+                }
+            }
         }
         validateQuestion(q);
         normalizeQuestion(q);
@@ -61,6 +102,7 @@ public class QuestionService {
     }
 
     public int copyBankQuestionToQuiz(int bankQuestionId, int quizId) {
+        checkInstructorAccess(null);
         if (bankQuestionId <= 0 || quizId <= 0) {
             throw new ValidationException("Invalid question or quiz ID.");
         }
@@ -115,9 +157,9 @@ public class QuestionService {
                     throw new ValidationException("Duplicate options are not allowed: \"" + opt.getOptionText().trim() + "\".");
                 }
             }
-            boolean hasCorrect = q.getOptions().stream().anyMatch(opt -> opt.isCorrect() && opt.getOptionText() != null && !opt.getOptionText().isBlank());
-            if (!hasCorrect) {
-                throw new ValidationException("At least one MCQ option must be marked as correct.");
+            long correctCount = q.getOptions().stream().filter(opt -> opt.isCorrect() && opt.getOptionText() != null && !opt.getOptionText().isBlank()).count();
+            if (correctCount != 1) {
+                throw new ValidationException("MCQ questions must have exactly one correct option.");
             }
         }
     }

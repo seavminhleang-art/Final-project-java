@@ -47,10 +47,10 @@ public class QuestionBankViews {
 
             for (int i = startRow; i < endRow; i++) {
                 Question q = questions.get(i);
-                String subj = q.getSubjectCode() != null ? q.getSubjectCode() : "-";
-                String aiMark = q.isAiGenerated() ? TuiHelper.cyan("AI") : TuiHelper.dim("--");
+                String subj = (q.getSubjectCode() != null && !q.getSubjectCode().isBlank()) ? q.getSubjectCode() : "N/A";
+                String aiMark = q.isAiGenerated() ? (TuiHelper.cyan("AI") + "  ") : (TuiHelper.dim("N/A") + " ");
 
-                String line = String.format("%-4d  %-10s  %-12s  %-8s  %-5.1f  %-4s  %-75s",
+                String line = String.format("%-4d  %-10s  %-12s  %-8s  %-5.1f  %s  %-75s",
                         (i + 1),
                         truncate(subj, 10),
                         q.getQuestionType().name(),

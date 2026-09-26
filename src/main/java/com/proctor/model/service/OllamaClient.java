@@ -81,6 +81,9 @@ public class OllamaClient {
                 throw new AIException("Unexpected response from Ollama: " + response.body());
             }
         } catch (Exception e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
             if (e instanceof AIException ai) throw ai;
             Throwable rootCause = e;
             while (rootCause.getCause() != null && rootCause.getCause() != rootCause) {

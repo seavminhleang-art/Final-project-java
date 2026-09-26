@@ -25,6 +25,7 @@ import com.proctor.view.TeacherSubmissionViews;
 import com.williamcallahan.tui4j.compat.bubbletea.Command;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
 import com.williamcallahan.tui4j.compat.bubbletea.Message;
+import com.williamcallahan.tui4j.compat.bubbletea.PasteMessage;
 
 import java.text.SimpleDateFormat;
 import java.time.Duration;
@@ -166,7 +167,7 @@ public class TeacherSubmissionScreen implements Screen {
                 int col = MouseUtil.getColInLine(msg);
                 int btnLine = MouseUtil.findButtonRowLine(view());
                 String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
-                if ((btnLine != -1 && line >= btnLine && line <= btnLine + 2) || "Esc".equals(hintAction)) {
+                if ((btnLine != -1 && line >= btnLine && line <= btnLine + 2) || "Esc".equalsIgnoreCase(hintAction)) {
                     isGrading = false;
                     activeGradingId++;
                     if (activeCancellation != null) {
@@ -180,6 +181,22 @@ public class TeacherSubmissionScreen implements Screen {
 
         if (showManualGradingModal) {
             if (MouseUtil.isWheelUp(msg) || MouseUtil.isWheelDown(msg)) {
+                return ScreenResult.stay(this);
+            }
+            if (msg instanceof PasteMessage paste) {
+                if (manualGradingField == 0) {
+                    if (paste.content() != null) {
+                        for (char c : paste.content().toCharArray()) {
+                            if ((Character.isDigit(c) || (c == '.' && manualPointsBuffer.indexOf(".") == -1)) && manualPointsBuffer.length() < 6) {
+                                manualPointsBuffer.append(c);
+                                manualGradingError = "";
+                            }
+                        }
+                    }
+                } else if (manualGradingField == 1) {
+                    KeyUtil.pasteToBuffer(manualFeedbackBuffer, paste.content(), 500);
+                    manualGradingError = "";
+                }
                 return ScreenResult.stay(this);
             }
             if (msg instanceof KeyPressMessage k) {
@@ -227,7 +244,7 @@ public class TeacherSubmissionScreen implements Screen {
                     }
                     if (k.runes() != null) {
                         for (char c : k.runes()) {
-                            if ((Character.isDigit(c) || c == '.') && manualPointsBuffer.length() < 6) {
+                            if ((Character.isDigit(c) || (c == '.' && manualPointsBuffer.indexOf(".") == -1)) && manualPointsBuffer.length() < 6) {
                                 manualPointsBuffer.append(c);
                                 manualGradingError = "";
                             }
@@ -262,7 +279,7 @@ public class TeacherSubmissionScreen implements Screen {
                     }
                 }
                 String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
-                if ("Esc".equals(hintAction)) {
+                if ("Esc".equalsIgnoreCase(hintAction)) {
                     showManualGradingModal = false;
                     manualGradingError = "";
                     return ScreenResult.stay(this);
@@ -340,15 +357,15 @@ public class TeacherSubmissionScreen implements Screen {
                 }
                 String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
                 if (hintAction != null) {
-                    if ("Esc".equals(hintAction)) {
+                    if ("Esc".equalsIgnoreCase(hintAction)) {
                         inspectingAnswerSheet = false;
                         bannerMessage = "";
                         return ScreenResult.stay(this);
-                    } else if ("e".equals(hintAction)) {
+                    } else if ("e".equalsIgnoreCase(hintAction)) {
                         return openManualGradingModal();
-                    } else if ("g".equals(hintAction)) {
+                    } else if ("g".equalsIgnoreCase(hintAction)) {
                         return startAsyncGrading();
-                    } else if ("r".equals(hintAction)) {
+                    } else if ("r".equalsIgnoreCase(hintAction)) {
                         executeReturnGrade();
                         return ScreenResult.stay(this);
                     }
@@ -394,13 +411,13 @@ public class TeacherSubmissionScreen implements Screen {
 
             String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
             if (hintAction != null) {
-                if ("Esc".equals(hintAction)) {
+                if ("Esc".equalsIgnoreCase(hintAction)) {
                     return navigateBack();
-                } else if ("Enter".equals(hintAction) || "e".equals(hintAction)) {
+                } else if ("Enter".equalsIgnoreCase(hintAction) || "e".equalsIgnoreCase(hintAction)) {
                     return openSubmissionDetail();
-                } else if ("g".equals(hintAction)) {
+                } else if ("g".equalsIgnoreCase(hintAction)) {
                     return startAsyncGrading();
-                } else if ("r".equals(hintAction)) {
+                } else if ("r".equalsIgnoreCase(hintAction)) {
                     executeReturnGrade();
                     return ScreenResult.stay(this);
                 }
@@ -665,6 +682,8 @@ public class TeacherSubmissionScreen implements Screen {
             refreshList();
         } catch (ValidationException e) {
             manualGradingError = e.getMessage();
+        } catch (Exception e) {
+            manualGradingError = "Failed to save grade: " + e.getMessage();
         }
         return ScreenResult.stay(this);
     }

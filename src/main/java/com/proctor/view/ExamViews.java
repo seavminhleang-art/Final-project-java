@@ -60,8 +60,8 @@ public class ExamViews {
 
             for (int i = startRow; i < endRow; i++) {
                 Quiz q = quizzes.get(i);
-                String subj = (q.getSubjectId() != null) ? subjectNames.getOrDefault(q.getSubjectId(), "-") : "-";
-                String teacher = (q.getCreatorName() != null && !q.getCreatorName().isBlank()) ? q.getCreatorName() : "Teacher";
+                String subj = (q.getSubjectId() != null) ? subjectNames.getOrDefault(q.getSubjectId(), "N/A") : "N/A";
+                String teacher = (q.getCreatorName() != null && !q.getCreatorName().isBlank()) ? q.getCreatorName() : "N/A";
 
                 Attempt att = studentAttempts.get(q.getId());
                 String statusStr;
@@ -131,7 +131,7 @@ public class ExamViews {
 
         String subInfo = (overview.getSubjectName() != null && !overview.getSubjectName().isBlank())
                 ? overview.getSubjectName()
-                : overview.getSubjectCode();
+                : (overview.getSubjectCode() != null && !overview.getSubjectCode().isBlank() ? overview.getSubjectCode() : "N/A");
         sb.append(TuiHelper.boxTitle(q.getTitle(), subInfo)).append("\n\n");
 
         String timeStr;
@@ -164,11 +164,14 @@ public class ExamViews {
 
         String subjectDisplayName = (overview.getSubjectName() != null && !overview.getSubjectName().isBlank())
                 ? overview.getSubjectName()
-                : overview.getSubjectCode();
+                : (overview.getSubjectCode() != null && !overview.getSubjectCode().isBlank() ? overview.getSubjectCode() : "N/A");
+
+        String teacherName = (overview.getTeacherName() != null && !overview.getTeacherName().isBlank())
+                ? overview.getTeacherName() : "N/A";
 
         List<String[]> leftItems = List.of(
                 new String[]{"Subject", subjectDisplayName},
-                new String[]{"Teacher", overview.getTeacherName()},
+                new String[]{"Teacher", teacherName},
                 new String[]{"Questions", overview.getQuestionCount() + " (" + overview.getQuestionTypesSummary() + ")"},
                 new String[]{"Total Points", String.format("%.1f pts", overview.getTotalPoints())},
                 new String[]{"Pass Mark", passScoreStr},
@@ -197,7 +200,7 @@ public class ExamViews {
 
         String desc = (q != null && q.getDescription() != null && !q.getDescription().isBlank())
                 ? q.getDescription().trim()
-                : "No special instructions provided by the instructor.";
+                : "N/A";
 
         int boxW = 116;
         int boxInnerW = boxW - 4;
@@ -265,8 +268,9 @@ public class ExamViews {
 
     private static String padRight(String s, int width) {
         if (s == null) s = "";
-        if (s.length() >= width) return s.substring(0, width);
-        return s + " ".repeat(width - s.length());
+        int vis = TuiHelper.visibleLength(s);
+        if (vis >= width) return TuiHelper.truncate(s, width);
+        return s + " ".repeat(Math.max(0, width - vis));
     }
 
     public static String renderExamTaker(ExamSession session, int currentQuestionIndex, int focusedOptionIndex,
@@ -423,7 +427,7 @@ public class ExamViews {
                         }
                     }
                 } else {
-                    sb.append("     Your Answer: ").append(textAns != null ? textAns : "(No answer provided)").append("\n");
+                    sb.append("     Your Answer: ").append(textAns != null && !textAns.isBlank() ? textAns : "N/A").append("\n");
                     if (q.getExplanation() != null && !q.getExplanation().isBlank()) {
                         sb.append("     Explanation: ").append(TuiHelper.dim(q.getExplanation())).append("\n");
                     }
@@ -495,18 +499,18 @@ public class ExamViews {
                 String pctStr;
                 if (r.isPendingReview()) {
                     status = TuiHelper.yellow(String.format("%-10s", "PENDING"));
-                    scoreStr = "- / -";
-                    pctStr = "-";
+                    scoreStr = "N/A";
+                    pctStr = "N/A";
                 } else if (r.getAssessmentType() == AssessmentType.SPEED) {
                     status = TuiHelper.green(String.format("%-10s", "GRADED"));
                     scoreStr = String.format("%.1f pts", r.getTotalPoints());
-                    pctStr = "-";
+                    pctStr = "N/A";
                 } else {
                     status = r.isPassed() ? TuiHelper.green(String.format("%-10s", "PASSED")) : TuiHelper.red(String.format("%-10s", "FAILED"));
                     scoreStr = String.format("%.1f/%.1f", r.getTotalPoints(), r.getMaxPoints());
                     pctStr = String.format("%.1f%%", r.getPercentage());
                 }
-                String dateStr = r.getGradedAt() != null ? dateFormat.format(r.getGradedAt()) : "-";
+                String dateStr = r.getGradedAt() != null ? dateFormat.format(r.getGradedAt()) : "N/A";
                 String typeStr = (r.getAssessmentType() == AssessmentType.EXAM) ? "EXAM" : (r.getAssessmentType() == AssessmentType.SPEED ? "SPEED" : "QUIZ");
 
                 String line = String.format("%-4d  %-8s  %-50s  %-14s  %-8s  %s  %-18s",

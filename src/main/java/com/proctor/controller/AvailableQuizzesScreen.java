@@ -218,6 +218,9 @@ public class AvailableQuizzesScreen implements Screen {
             String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
             if (hintAction != null) {
                 if ("Esc".equals(hintAction)) {
+                    if (returnScreen != null) {
+                        return ScreenResult.navigate(returnScreen);
+                    }
                     return ScreenResult.navigate(new StudentDashboardScreen(authService, examService));
                 }
             }

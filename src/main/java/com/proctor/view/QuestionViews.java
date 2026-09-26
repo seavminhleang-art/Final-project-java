@@ -26,8 +26,10 @@ public class QuestionViews {
         sb.append(TuiHelper.boxTitle(title, subtitle)).append("\n\n");
 
         if (isPinnedQuiz) {
-            sb.append("  ").append(TuiHelper.cyan("[Pinned to Quiz: ")).append(TuiHelper.bold(pinnedQuizTitle)).append(TuiHelper.cyan("]"))
-              .append(" • Subject: ").append(subjectName.isEmpty() ? "General" : subjectName).append("\n\n");
+            String qTitle = (pinnedQuizTitle != null && !pinnedQuizTitle.isBlank()) ? pinnedQuizTitle : "N/A";
+            String subText = (subjectName != null && !subjectName.isBlank()) ? subjectName : "N/A";
+            sb.append("  ").append(TuiHelper.cyan("[Pinned to Quiz: ")).append(TuiHelper.bold(qTitle)).append(TuiHelper.cyan("]"))
+              .append(" • Subject: ").append(subText).append("\n\n");
         }
 
         int numInputs = totalFields - 2;
@@ -141,8 +143,10 @@ public class QuestionViews {
         sb.append(TuiHelper.boxTitle("AI Question Generator", subtitle)).append("\n\n");
 
         if (isPinnedQuiz) {
-            sb.append("  ").append(TuiHelper.cyan("[Pinned to Quiz: ")).append(TuiHelper.bold(pinnedQuizTitle)).append(TuiHelper.cyan("]"))
-              .append(" • Subject: ").append(subjectName.isEmpty() ? "General" : subjectName).append("\n\n");
+            String qTitle = (pinnedQuizTitle != null && !pinnedQuizTitle.isBlank()) ? pinnedQuizTitle : "N/A";
+            String subText = (subjectName != null && !subjectName.isBlank()) ? subjectName : "N/A";
+            sb.append("  ").append(TuiHelper.cyan("[Pinned to Quiz: ")).append(TuiHelper.bold(qTitle)).append(TuiHelper.cyan("]"))
+              .append(" • Subject: ").append(subText).append("\n\n");
         }
 
         List<String> fieldWidgets = new ArrayList<>();

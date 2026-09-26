@@ -44,8 +44,8 @@ public class Config {
     }
 
     public static int getInt(String key, int defaultValue) {
-        String val = props.getProperty(key);
-        if (val == null) return defaultValue;
+        String val = get(key, null);
+        if (val == null || val.isBlank()) return defaultValue;
         try {
             return Integer.parseInt(val.trim());
         } catch (NumberFormatException e) {

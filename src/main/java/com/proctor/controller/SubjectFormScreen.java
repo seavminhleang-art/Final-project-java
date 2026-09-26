@@ -109,6 +109,10 @@ public class SubjectFormScreen implements Screen {
                             showDeleteModal = false;
                             errorMessage = e.getMessage();
                             return ScreenResult.stay(this);
+                        } catch (Exception e) {
+                            showDeleteModal = false;
+                            errorMessage = "Failed to delete subject: " + e.getMessage();
+                            return ScreenResult.stay(this);
                         }
                     } else if (btn == 1) {
                         showDeleteModal = false;
@@ -160,6 +164,10 @@ public class SubjectFormScreen implements Screen {
                         } catch (ValidationException e) {
                             showDeleteModal = false;
                             errorMessage = e.getMessage();
+                            return ScreenResult.stay(this);
+                        } catch (Exception e) {
+                            showDeleteModal = false;
+                            errorMessage = "Failed to delete subject: " + e.getMessage();
                             return ScreenResult.stay(this);
                         }
                     } else {

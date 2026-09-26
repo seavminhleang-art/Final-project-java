@@ -66,6 +66,18 @@ public class ForgotPasswordScreen implements Screen {
         return forgotStep;
     }
 
+    public void setForgotStep(ForgotStep step) {
+        this.forgotStep = step;
+    }
+
+    public int getForgotFocusIndex() {
+        return forgotFocusIndex;
+    }
+
+    public void setForgotFocusIndex(int index) {
+        this.forgotFocusIndex = index;
+    }
+
     public String getForgotMessage() {
         return forgotMessage;
     }
@@ -144,9 +156,7 @@ public class ForgotPasswordScreen implements Screen {
             if (forgotStep == ForgotStep.IDENTIFIER || forgotStep == ForgotStep.VERIFY_OTP) {
                 forgotFocusIndex = (forgotFocusIndex == 0) ? 1 : 0;
             } else {
-                if (forgotFocusIndex == 0) forgotFocusIndex = 2;
-                else if (forgotFocusIndex == 1) forgotFocusIndex = 0;
-                else forgotFocusIndex = 1;
+                forgotFocusIndex = (forgotFocusIndex - 1 + 4) % 4;
             }
             return ScreenResult.stay(this);
         }
@@ -155,9 +165,7 @@ public class ForgotPasswordScreen implements Screen {
             if (forgotStep == ForgotStep.IDENTIFIER || forgotStep == ForgotStep.VERIFY_OTP) {
                 forgotFocusIndex = (forgotFocusIndex == 0) ? 1 : 0;
             } else {
-                if (forgotFocusIndex == 0) forgotFocusIndex = 1;
-                else if (forgotFocusIndex == 1) forgotFocusIndex = 2;
-                else forgotFocusIndex = 0;
+                forgotFocusIndex = (forgotFocusIndex + 1) % 4;
             }
             return ScreenResult.stay(this);
         }
@@ -288,11 +296,11 @@ public class ForgotPasswordScreen implements Screen {
                 }
 
                 if (KeyUtil.isDown(k)) {
-                    forgotFocusIndex = (forgotFocusIndex + 1) % 3;
+                    forgotFocusIndex = (forgotFocusIndex + 1) % 4;
                     return ScreenResult.stay(this);
                 }
                 if (KeyUtil.isUp(k)) {
-                    forgotFocusIndex = (forgotFocusIndex - 1 + 3) % 3;
+                    forgotFocusIndex = (forgotFocusIndex - 1 + 4) % 4;
                     return ScreenResult.stay(this);
                 }
                 if (forgotFocusIndex >= 2 && (KeyUtil.isLeft(k) || KeyUtil.isRight(k))) {

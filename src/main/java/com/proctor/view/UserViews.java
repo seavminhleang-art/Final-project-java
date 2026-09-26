@@ -43,21 +43,28 @@ public class UserViews {
             for (int i = startRow; i < endRow; i++) {
                 User u = users.get(i);
                 String status = u.isEnabled() ? TuiHelper.green("Enabled") : TuiHelper.red("Disabled");
-                String dobStr = (u.getDateOfBirth() != null) ? u.getDateOfBirth().format(DISPLAY_FMT) : "-";
-                String genderStr = (u.getGender() != null && !u.getGender().isBlank()) ? u.getGender() : "-";
-                String displayName = (u.getRole() == Role.TEACHER)
-                        ? u.getDisplayNameWithHonorific()
-                        : (u.getFullName() != null ? u.getFullName() : "-");
+                String dobStr = (u.getDateOfBirth() != null) ? u.getDateOfBirth().format(DISPLAY_FMT) : "N/A";
+                String genderStr = (u.getGender() != null && !u.getGender().isBlank()) ? u.getGender() : "N/A";
+                String displayName;
+                if (u.getFullName() == null || u.getFullName().isBlank()) {
+                    displayName = "N/A";
+                } else if (u.getRole() == Role.TEACHER) {
+                    displayName = u.getDisplayNameWithHonorific();
+                } else {
+                    displayName = u.getFullName();
+                }
+                String emailStr = (u.getEmail() != null && !u.getEmail().isBlank()) ? u.getEmail() : "N/A";
+                String userHandle = (u.getUsername() != null && !u.getUsername().isBlank()) ? "@" + u.getUsername() : "N/A";
 
                 String line = String.format("%-4d  %-6d  %-18s  %-28s  %-20s  %-8s  %-12s  %-10s  %-9s",
                         (i + 1),
                         u.getId(),
-                        truncate("@" + u.getUsername(), 18),
-                        truncate(u.getEmail() != null ? u.getEmail() : "-", 28),
+                        truncate(userHandle, 18),
+                        truncate(emailStr, 28),
                         truncate(displayName, 20),
                         truncate(genderStr, 8),
                         dobStr,
-                        u.getRole().name(),
+                        u.getRole() != null ? u.getRole().name() : "N/A",
                         status);
 
                 if (i == selectedIndex) {

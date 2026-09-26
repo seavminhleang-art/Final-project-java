@@ -12,6 +12,7 @@ import com.proctor.model.entity.Quiz;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -311,10 +312,11 @@ public class QuizRepository {
                     delStmt.executeUpdate();
                 }
                 if (questionIds != null && !questionIds.isEmpty()) {
+                    List<Integer> uniqueIds = new ArrayList<>(new LinkedHashSet<>(questionIds));
                     try (PreparedStatement insStmt = conn.prepareStatement(insSql)) {
-                        for (int i = 0; i < questionIds.size(); i++) {
+                        for (int i = 0; i < uniqueIds.size(); i++) {
                             insStmt.setInt(1, quizId);
-                            insStmt.setInt(2, questionIds.get(i));
+                            insStmt.setInt(2, uniqueIds.get(i));
                             insStmt.setInt(3, i + 1);
                             insStmt.addBatch();
                         }
@@ -346,6 +348,21 @@ public class QuizRepository {
             stmt.setInt(2, quizId);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
+                    QuestionType qType = QuestionType.MCQ;
+                    String qtStr = rs.getString("question_type");
+                    if (qtStr != null) {
+                        try {
+                            qType = QuestionType.valueOf(qtStr.trim().toUpperCase());
+                        } catch (Exception ignored) {}
+                    }
+                    Difficulty diff = Difficulty.MEDIUM;
+                    String diffStr = rs.getString("difficulty");
+                    if (diffStr != null) {
+                        try {
+                            diff = Difficulty.valueOf(diffStr.trim().toUpperCase());
+                        } catch (Exception ignored) {}
+                    }
+
                     Question q = Question.builder()
                             .id(rs.getInt("id"))
                             .quizId(rs.getObject("quiz_id") != null ? rs.getInt("quiz_id") : null)
@@ -353,8 +370,8 @@ public class QuizRepository {
                             .subjectCode(rs.getString("subject_code"))
                             .createdBy(rs.getObject("created_by") != null ? rs.getInt("created_by") : null)
                             .questionText(rs.getString("question_text"))
-                            .questionType(QuestionType.valueOf(rs.getString("question_type")))
-                            .difficulty(Difficulty.valueOf(rs.getString("difficulty")))
+                            .questionType(qType)
+                            .difficulty(diff)
                             .points(rs.getDouble("points"))
                             .explanation(rs.getString("explanation"))
                             .aiGenerated(rs.getBoolean("ai_generated"))
@@ -392,16 +409,26 @@ public class QuizRepository {
 
     private Quiz mapRow(ResultSet rs) throws SQLException {
         String aTypeStr = rs.getString("assessment_type");
-        AssessmentType aType = aTypeStr != null ? AssessmentType.valueOf(aTypeStr) : AssessmentType.QUIZ;
+        AssessmentType aType = AssessmentType.QUIZ;
+        if (aTypeStr != null) {
+            try {
+                aType = AssessmentType.valueOf(aTypeStr.trim().toUpperCase());
+            } catch (Exception ignored) {}
+        }
         String qTypeStr = rs.getString("quiz_question_type");
-        QuestionType qType = qTypeStr != null ? QuestionType.valueOf(qTypeStr) : null;
+        QuestionType qType = null;
+        if (qTypeStr != null) {
+            try {
+                qType = QuestionType.valueOf(qTypeStr.trim().toUpperCase());
+            } catch (Exception ignored) {}
+        }
         String creatorName = rs.getString("creator_name");
         String creatorGender = rs.getString("creator_gender");
         Role creatorRole = null;
         String roleStr = rs.getString("creator_role");
         if (roleStr != null) {
             try {
-                creatorRole = Role.valueOf(roleStr);
+                creatorRole = Role.valueOf(roleStr.trim().toUpperCase());
             } catch (IllegalArgumentException ignored) {}
         }
 
@@ -469,7 +496,7 @@ public class QuizRepository {
     public Map<String, Object> getQuizCommunityStats(int quizId) {
         Map<String, Object> stats = new HashMap<>();
         String sql = "SELECT " +
-                     "COUNT(r.id) AS total_takers, " +
+                     "COUNT(DISTINCT r.student_id) AS total_takers, " +
                      "COALESCE(SUM(CASE WHEN r.passed THEN 1 ELSE 0 END), 0) AS passed_count, " +
                      "COALESCE(SUM(CASE WHEN r.passed THEN 1 ELSE 0 END)::FLOAT / NULLIF(COUNT(r.id), 0) * 100, 0) AS pass_rate, " +
                      "COALESCE(AVG(r.percentage), 0) AS avg_score, " +

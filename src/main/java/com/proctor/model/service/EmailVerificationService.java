@@ -11,15 +11,35 @@ import com.proctor.util.PasswordUtils;
 import java.security.SecureRandom;
 import java.sql.Timestamp;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class EmailVerificationService {
 
     public static final long TOKEN_EXPIRY_MILLIS = 10L * 60 * 1000;
+    private static final int MAX_FAILED_ATTEMPTS = 5;
 
     private final EmailVerificationRepository verificationRepo;
     private final UserRepository userRepo;
     private final EmailService emailService;
     private final SecureRandom random = new SecureRandom();
+    private final ConcurrentHashMap<String, Integer> failedAttempts = new ConcurrentHashMap<>();
+
+    private void recordFailedAttempt(String email, String purpose) {
+        if (email == null || purpose == null) return;
+        String key = email.toLowerCase().trim() + ":" + purpose.toUpperCase().trim();
+        int attempts = failedAttempts.merge(key, 1, Integer::sum);
+        if (attempts >= MAX_FAILED_ATTEMPTS) {
+            failedAttempts.remove(key);
+            verificationRepo.invalidatePendingTokens(email, purpose);
+            throw new ValidationException("Too many failed attempts. This verification code has been invalidated. Please request a new code.");
+        }
+    }
+
+    private void clearFailedAttempts(String email, String purpose) {
+        if (email == null || purpose == null) return;
+        String key = email.toLowerCase().trim() + ":" + purpose.toUpperCase().trim();
+        failedAttempts.remove(key);
+    }
 
     public EmailVerificationService() {
         this(new EmailVerificationRepository(), new UserRepository(), new EmailService());
@@ -42,6 +62,7 @@ public class EmailVerificationService {
         }
 
         verificationRepo.invalidatePendingTokens(cleanEmail, "REGISTRATION");
+        clearFailedAttempts(cleanEmail, "REGISTRATION");
 
         String code = generateCode();
         Timestamp expiresAt = new Timestamp(System.currentTimeMillis() + TOKEN_EXPIRY_MILLIS);
@@ -64,9 +85,11 @@ public class EmailVerificationService {
 
         Optional<EmailVerificationToken> tokenOpt = verificationRepo.findLatestValidToken(cleanEmail, cleanCode, "REGISTRATION");
         if (tokenOpt.isEmpty()) {
+            recordFailedAttempt(cleanEmail, "REGISTRATION");
             throw new ValidationException("Invalid or expired verification code. Please check your email or click Resend.");
         }
 
+        clearFailedAttempts(cleanEmail, "REGISTRATION");
         verificationRepo.markTokenUsed(tokenOpt.get().getId());
         return true;
     }
@@ -91,6 +114,7 @@ public class EmailVerificationService {
 
         String userEmail = user.getEmail().trim().toLowerCase();
         verificationRepo.invalidatePendingTokens(userEmail, "PASSWORD_RESET");
+        clearFailedAttempts(userEmail, "PASSWORD_RESET");
 
         String code = generateCode();
         Timestamp expiresAt = new Timestamp(System.currentTimeMillis() + TOKEN_EXPIRY_MILLIS);
@@ -123,9 +147,11 @@ public class EmailVerificationService {
 
         Optional<EmailVerificationToken> tokenOpt = verificationRepo.findLatestValidToken(userEmail, cleanCode, "PASSWORD_RESET");
         if (tokenOpt.isEmpty()) {
+            recordFailedAttempt(userEmail, "PASSWORD_RESET");
             throw new ValidationException("Invalid or expired verification code. Please check your email or request a new code.");
         }
 
+        clearFailedAttempts(userEmail, "PASSWORD_RESET");
         return true;
     }
 
@@ -163,8 +189,11 @@ public class EmailVerificationService {
 
         Optional<EmailVerificationToken> tokenOpt = verificationRepo.findLatestValidToken(userEmail, cleanCode, "PASSWORD_RESET");
         if (tokenOpt.isEmpty()) {
+            recordFailedAttempt(userEmail, "PASSWORD_RESET");
             throw new ValidationException("Invalid or expired verification code. Please check your email or request a new code.");
         }
+
+        clearFailedAttempts(userEmail, "PASSWORD_RESET");
 
         String newHash = PasswordUtils.hash(newPassword);
         boolean updated = userRepo.updatePassword(user.getId(), newHash);

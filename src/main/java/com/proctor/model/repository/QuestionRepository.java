@@ -129,8 +129,7 @@ public class QuestionRepository {
 
                 int affected = stmt.executeUpdate();
                 if (affected > 0) {
-                    deleteOptions(conn, question.getId());
-                    saveOptions(conn, question.getId(), question.getOptions());
+                    syncOptions(conn, question.getId(), question.getOptions());
                 }
                 conn.commit();
                 return affected > 0;
@@ -333,6 +332,59 @@ public class QuestionRepository {
         }
     }
 
+    private void syncOptions(Connection conn, int questionId, List<QuestionOption> options) throws SQLException {
+        if (options == null) options = List.of();
+        List<QuestionOption> existing = loadOptions(conn, questionId);
+
+        String updateSql = "UPDATE question_options SET option_text = ?, is_correct = ?, option_order = ? WHERE id = ?";
+        String insertSql = "INSERT INTO question_options (question_id, option_text, is_correct, option_order) VALUES (?, ?, ?, ?)";
+        String deleteSql = "DELETE FROM question_options WHERE id = ?";
+
+        int updateCount = Math.min(existing.size(), options.size());
+
+        try (PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
+            for (int i = 0; i < updateCount; i++) {
+                QuestionOption newOpt = options.get(i);
+                QuestionOption oldOpt = existing.get(i);
+                int optId = (newOpt.getId() != null && newOpt.getId() > 0) ? newOpt.getId() : oldOpt.getId();
+                newOpt.setId(optId);
+                newOpt.setQuestionId(questionId);
+
+                updateStmt.setString(1, newOpt.getOptionText() != null ? newOpt.getOptionText().trim() : "");
+                updateStmt.setBoolean(2, newOpt.isCorrect());
+                updateStmt.setInt(3, i + 1);
+                updateStmt.setInt(4, optId);
+                updateStmt.executeUpdate();
+            }
+        }
+
+        if (options.size() > existing.size()) {
+            try (PreparedStatement insertStmt = conn.prepareStatement(insertSql, Statement.RETURN_GENERATED_KEYS)) {
+                for (int i = existing.size(); i < options.size(); i++) {
+                    QuestionOption newOpt = options.get(i);
+                    insertStmt.setInt(1, questionId);
+                    insertStmt.setString(2, newOpt.getOptionText() != null ? newOpt.getOptionText().trim() : "");
+                    insertStmt.setBoolean(3, newOpt.isCorrect());
+                    insertStmt.setInt(4, i + 1);
+                    insertStmt.executeUpdate();
+                    try (ResultSet rs = insertStmt.getGeneratedKeys()) {
+                        if (rs.next()) {
+                            newOpt.setId(rs.getInt(1));
+                            newOpt.setQuestionId(questionId);
+                        }
+                    }
+                }
+            }
+        } else if (existing.size() > options.size()) {
+            try (PreparedStatement deleteStmt = conn.prepareStatement(deleteSql)) {
+                for (int i = options.size(); i < existing.size(); i++) {
+                    deleteStmt.setInt(1, existing.get(i).getId());
+                    deleteStmt.executeUpdate();
+                }
+            }
+        }
+    }
+
     private void deleteOptions(Connection conn, int questionId) throws SQLException {
         String sql = "DELETE FROM question_options WHERE question_id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -342,6 +394,22 @@ public class QuestionRepository {
     }
 
     private Question mapRow(ResultSet rs) throws SQLException {
+        QuestionType qType = QuestionType.MCQ;
+        String qtStr = rs.getString("question_type");
+        if (qtStr != null) {
+            try {
+                qType = QuestionType.valueOf(qtStr.trim().toUpperCase());
+            } catch (Exception ignored) {}
+        }
+
+        Difficulty diff = Difficulty.MEDIUM;
+        String diffStr = rs.getString("difficulty");
+        if (diffStr != null) {
+            try {
+                diff = Difficulty.valueOf(diffStr.trim().toUpperCase());
+            } catch (Exception ignored) {}
+        }
+
         return Question.builder()
                 .id(rs.getInt("id"))
                 .quizId(rs.getObject("quiz_id") != null ? rs.getInt("quiz_id") : null)
@@ -349,8 +417,8 @@ public class QuestionRepository {
                 .subjectCode(rs.getString("subject_code"))
                 .createdBy(rs.getObject("created_by") != null ? rs.getInt("created_by") : null)
                 .questionText(rs.getString("question_text"))
-                .questionType(QuestionType.valueOf(rs.getString("question_type")))
-                .difficulty(Difficulty.valueOf(rs.getString("difficulty")))
+                .questionType(qType)
+                .difficulty(diff)
                 .points(rs.getDouble("points"))
                 .explanation(rs.getString("explanation"))
                 .aiGenerated(rs.getBoolean("ai_generated"))

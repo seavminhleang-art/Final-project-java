@@ -58,7 +58,7 @@ public class InboxViews {
                 String typeBadge = formatTypeBadge(msg.getType());
                 String sender = msg.getSenderName() != null ? truncate(msg.getSenderName(), 22) : "System";
                 String title = truncate(msg.getTitle(), 46);
-                String dateStr = msg.getCreatedAt() != null ? DATE_FMT.format(msg.getCreatedAt()) : "-";
+                String dateStr = msg.getCreatedAt() != null ? DATE_FMT.format(msg.getCreatedAt()) : "N/A";
 
                 String line = String.format("%-4d  %s  %-16s  %-22s  %-46s  %-16s",
                         (i + 1),
@@ -102,11 +102,11 @@ public class InboxViews {
         StringBuilder sb = new StringBuilder();
         sb.append(TuiHelper.header("INBOX"));
         sb.append("\n");
-        String typeName = (msg.getType() != null) ? msg.getType().name() : "UNKNOWN";
+        String typeName = (msg.getType() != null) ? msg.getType().name() : "N/A";
         sb.append(TuiHelper.boxTitle("Message Details", "Type: " + typeName)).append("\n\n");
 
         String sender = msg.getSenderName() != null ? truncate(msg.getSenderName(), 30) : "System";
-        String dateStr = msg.getCreatedAt() != null ? DATE_FMT.format(msg.getCreatedAt()) : "-";
+        String dateStr = msg.getCreatedAt() != null ? DATE_FMT.format(msg.getCreatedAt()) : "N/A";
 
         sb.append("  ").append(TuiHelper.bold("Subject:  ")).append(truncate(msg.getTitle(), 114)).append("\n\n");
         sb.append("  ").append(TuiHelper.bold("From:     ")).append(sender);

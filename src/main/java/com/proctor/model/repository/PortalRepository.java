@@ -87,16 +87,25 @@ public class PortalRepository {
 
     private List<LeaderboardEntry> queryStandardLeaderboard(AssessmentType assessmentType) {
         List<LeaderboardEntry> leaderboard = new ArrayList<>();
-        String sql = "SELECT r.student_id, u.full_name, u.username, " +
-                     "COUNT(r.id) AS total_quizzes, " +
-                     "COALESCE(SUM(r.total_points), 0) AS total_points, " +
-                     "COALESCE(AVG(r.percentage), 0) AS avg_percentage " +
-                     "FROM results r " +
-                     "INNER JOIN quizzes q ON r.quiz_id = q.id " +
-                     "INNER JOIN users u ON r.student_id = u.id " +
-                     "WHERE q.assessment_type = ? AND u.is_enabled = TRUE AND u.role = 'STUDENT' " +
-                     "GROUP BY r.student_id, u.full_name, u.username " +
-                     "ORDER BY total_points DESC, avg_percentage DESC, r.student_id ASC LIMIT 50";
+        String sql = "SELECT latest.student_id, u.full_name, u.username, " +
+                     "COUNT(latest.quiz_id) AS total_quizzes, " +
+                     "COALESCE(SUM(latest.max_points_scored), 0) AS total_points, " +
+                     "COALESCE(AVG(latest.max_percentage), 0) AS avg_percentage " +
+                     "FROM (" +
+                     "    SELECT COALESCE(r.student_id, a.student_id) AS student_id, " +
+                     "           COALESCE(r.quiz_id, a.quiz_id) AS quiz_id, " +
+                     "           MAX(r.total_points) AS max_points_scored, " +
+                     "           MAX(r.percentage) AS max_percentage " +
+                     "    FROM results r " +
+                     "    LEFT JOIN attempts a ON r.attempt_id = a.id " +
+                     "    INNER JOIN quizzes q ON COALESCE(r.quiz_id, a.quiz_id) = q.id " +
+                     "    WHERE q.assessment_type = ? " +
+                     "    GROUP BY COALESCE(r.student_id, a.student_id), COALESCE(r.quiz_id, a.quiz_id) " +
+                     ") latest " +
+                     "INNER JOIN users u ON latest.student_id = u.id " +
+                     "WHERE u.is_enabled = TRUE AND u.role = 'STUDENT' " +
+                     "GROUP BY latest.student_id, u.full_name, u.username " +
+                     "ORDER BY total_points DESC, avg_percentage DESC, latest.student_id ASC LIMIT 50";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, assessmentType != null ? assessmentType.name() : AssessmentType.QUIZ.name());
@@ -122,15 +131,16 @@ public class PortalRepository {
 
     public List<LeaderboardEntry> getSpeedQuizLeaderboard() {
         List<LeaderboardEntry> leaderboard = new ArrayList<>();
-        String sql = "SELECT r.student_id, u.full_name, u.username, " +
+        String sql = "SELECT COALESCE(r.student_id, a.student_id) AS student_id, u.full_name, u.username, " +
                      "COUNT(r.id) AS total_runs, " +
                      "COALESCE(MAX(r.total_points), 0) AS highest_score " +
                      "FROM results r " +
-                     "INNER JOIN quizzes q ON r.quiz_id = q.id " +
-                     "INNER JOIN users u ON r.student_id = u.id " +
+                     "LEFT JOIN attempts a ON r.attempt_id = a.id " +
+                     "INNER JOIN quizzes q ON COALESCE(r.quiz_id, a.quiz_id) = q.id " +
+                     "INNER JOIN users u ON COALESCE(r.student_id, a.student_id) = u.id " +
                      "WHERE q.assessment_type = ? AND u.is_enabled = TRUE AND u.role = 'STUDENT' " +
-                     "GROUP BY r.student_id, u.full_name, u.username " +
-                     "ORDER BY highest_score DESC, total_runs DESC, r.student_id ASC LIMIT 50";
+                     "GROUP BY COALESCE(r.student_id, a.student_id), u.full_name, u.username " +
+                     "ORDER BY highest_score DESC, total_runs DESC, student_id ASC LIMIT 50";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, AssessmentType.SPEED.name());

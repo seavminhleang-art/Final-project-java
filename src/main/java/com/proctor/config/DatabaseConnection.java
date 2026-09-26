@@ -7,7 +7,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 public class DatabaseConnection {
-    private static HikariDataSource dataSource;
+    private static volatile HikariDataSource dataSource;
 
     public static synchronized void init() {
         if (dataSource != null && !dataSource.isClosed()) {
@@ -18,9 +18,10 @@ public class DatabaseConnection {
         hikariConfig.setJdbcUrl(Config.get("db.url", "jdbc:postgresql://localhost:5432/proctor_db"));
         hikariConfig.setUsername(Config.get("db.username", "postgres"));
         hikariConfig.setPassword(Config.get("db.password", ""));
-        hikariConfig.setMaximumPoolSize(10);
-        hikariConfig.setMinimumIdle(2);
-        hikariConfig.setConnectionTimeout(10000);
+        hikariConfig.setMaximumPoolSize(Config.getInt("db.pool.max", 20));
+        hikariConfig.setMinimumIdle(Config.getInt("db.pool.min_idle", 3));
+        hikariConfig.setConnectionTimeout(Config.getInt("db.pool.timeout_ms", 15000));
+        hikariConfig.setLeakDetectionThreshold(Config.getInt("db.pool.leak_threshold_ms", 15000));
 
         dataSource = new HikariDataSource(hikariConfig);
     }
@@ -32,9 +33,10 @@ public class DatabaseConnection {
         return dataSource.getConnection();
     }
 
-    public static void close() {
+    public static synchronized void close() {
         if (dataSource != null && !dataSource.isClosed()) {
             dataSource.close();
+            dataSource = null;
         }
     }
 }

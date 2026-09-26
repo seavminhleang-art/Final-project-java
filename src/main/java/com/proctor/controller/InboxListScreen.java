@@ -142,9 +142,9 @@ public class InboxListScreen implements Screen {
 
             String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
             if (hintAction != null) {
-                if ("Esc".equals(hintAction)) {
+                if ("Esc".equalsIgnoreCase(hintAction)) {
                     return ScreenResult.navigate(returnDashboardScreen);
-                } else if ("m".equals(hintAction)) {
+                } else if ("m".equalsIgnoreCase(hintAction)) {
                     int userId = getCurrentUserId();
                     if (userId != -1) {
                         inboxService.markAllAsRead(userId);
@@ -152,7 +152,7 @@ public class InboxListScreen implements Screen {
                         refreshMessages();
                     }
                     return ScreenResult.stay(this);
-                } else if ("d".equals(hintAction) && !messages.isEmpty()) {
+                } else if ("d".equalsIgnoreCase(hintAction) && !messages.isEmpty()) {
                     showDeleteModal = true;
                     deleteConfirmFocused = false;
                     return ScreenResult.stay(this);
@@ -262,6 +262,12 @@ public class InboxListScreen implements Screen {
     }
 
     @Override
+    public com.williamcallahan.tui4j.compat.bubbletea.Command init() {
+        refreshMessages();
+        return null;
+    }
+
+    @Override
     public String view() {
         if (showDeleteModal) {
             return TuiHelper.confirmationModal(
@@ -272,9 +278,6 @@ public class InboxListScreen implements Screen {
                     "Cancel",
                     deleteConfirmFocused
             );
-        }
-        if (!searchMode) {
-            refreshMessages();
         }
         return InboxViews.renderInboxList(
                 messages,

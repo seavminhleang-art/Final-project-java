@@ -13,7 +13,7 @@ public class DashboardViews {
         String upperTitle = safeTitle.toUpperCase();
         String portalRole = upperTitle.contains("ADMIN") ? "Admin Portal"
                 : (upperTitle.contains("TEACHER") ? "Teacher Portal" : "Student Portal");
-        String safeName = (userFullName != null && !userFullName.isBlank()) ? userFullName : "User";
+        String safeName = (userFullName != null && !userFullName.isBlank()) ? userFullName : "N/A";
         String safeIdentifier = (userIdentifier != null && !userIdentifier.isBlank()) ? userIdentifier : "";
         String userInfo = safeIdentifier.isEmpty() ? "Logged in as: " + safeName : "Logged in as: " + safeName + " (" + safeIdentifier + ")";
         sb.append(TuiHelper.boxTitle(portalRole, userInfo)).append("\n\n");

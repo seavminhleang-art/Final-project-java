@@ -77,8 +77,8 @@ CREATE TABLE IF NOT EXISTS quiz_questions (
 
 CREATE TABLE IF NOT EXISTS attempts (
     id SERIAL PRIMARY KEY,
-    quiz_id INT REFERENCES quizzes(id),
-    student_id INT REFERENCES users(id),
+    quiz_id INT REFERENCES quizzes(id) ON DELETE CASCADE,
+    student_id INT REFERENCES users(id) ON DELETE CASCADE,
     started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     submitted_at TIMESTAMP,
     status VARCHAR(20) DEFAULT 'IN_PROGRESS' CHECK (status IN ('IN_PROGRESS', 'TURNED_IN', 'GRADED', 'AUTO_SUBMITTED'))
@@ -94,14 +94,15 @@ CREATE TABLE IF NOT EXISTS attempt_answers (
     ai_feedback TEXT,
     teacher_feedback TEXT,
     is_correct BOOLEAN,
-    points_awarded NUMERIC(5,2) DEFAULT 0
+    points_awarded NUMERIC(5,2) DEFAULT 0,
+    CONSTRAINT uq_attempt_question UNIQUE (attempt_id, question_id)
 );
 
 CREATE TABLE IF NOT EXISTS results (
     id SERIAL PRIMARY KEY,
     attempt_id INT UNIQUE REFERENCES attempts(id) ON DELETE CASCADE,
-    student_id INT REFERENCES users(id),
-    quiz_id INT REFERENCES quizzes(id),
+    student_id INT REFERENCES users(id) ON DELETE CASCADE,
+    quiz_id INT REFERENCES quizzes(id) ON DELETE CASCADE,
     total_points NUMERIC(7,2),
     max_points NUMERIC(7,2),
     percentage NUMERIC(5,2),
@@ -133,3 +134,11 @@ CREATE TABLE IF NOT EXISTS email_verification_tokens (
     used BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX IF NOT EXISTS idx_quizzes_subject_id ON quizzes(subject_id);
+CREATE INDEX IF NOT EXISTS idx_quizzes_created_by ON quizzes(created_by);
+CREATE INDEX IF NOT EXISTS idx_questions_quiz_id ON questions(quiz_id);
+CREATE INDEX IF NOT EXISTS idx_questions_subject_id ON questions(subject_id);
+CREATE INDEX IF NOT EXISTS idx_attempts_quiz_student ON attempts(quiz_id, student_id);
+CREATE INDEX IF NOT EXISTS idx_results_student ON results(student_id);
+CREATE INDEX IF NOT EXISTS idx_results_quiz ON results(quiz_id);

@@ -10,8 +10,10 @@ import com.proctor.model.repository.QuestionRepository;
 import com.proctor.model.entity.Quiz;
 import com.proctor.model.repository.QuizRepository;
 
+import com.proctor.model.entity.Session;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 public class QuizService {
@@ -28,10 +30,18 @@ public class QuizService {
     }
 
     public List<Quiz> getAssessments(AssessmentType type, Integer subjectId, Boolean published, String search) {
+        Optional<User> callerOpt = Session.getCurrentUser();
+        if (callerOpt.isPresent() && callerOpt.get().getRole() == Role.STUDENT) {
+            published = true;
+        }
         return quizRepository.findAll(type, subjectId, null, published, search, false);
     }
 
     public List<Quiz> getAssessments(AssessmentType type, Integer subjectId, Integer createdBy, Boolean published, String search) {
+        Optional<User> callerOpt = Session.getCurrentUser();
+        if (callerOpt.isPresent() && callerOpt.get().getRole() == Role.STUDENT) {
+            published = true;
+        }
         return quizRepository.findAll(type, subjectId, createdBy, published, search, false);
     }
 
@@ -61,7 +71,27 @@ public class QuizService {
             throw new ValidationException("Quiz ID is required for update.");
         }
         validateQuiz(quiz);
-        applyExpiration(quiz);
+
+        Optional<Quiz> existingOpt = quizRepository.findById(quiz.getId());
+        if (existingOpt.isPresent()) {
+            Quiz existing = existingOpt.get();
+            Optional<User> callerOpt = Session.getCurrentUser();
+            if (callerOpt.isPresent()) {
+                User caller = callerOpt.get();
+                if (caller.getRole() != Role.ADMIN && existing.getCreatedBy() != null && !Objects.equals(existing.getCreatedBy(), caller.getId())) {
+                    throw new ValidationException("You can only modify quizzes that you created.");
+                }
+            }
+
+            if (Objects.equals(existing.getActiveDurationHours(), quiz.getActiveDurationHours()) && existing.getExpiresAt() != null) {
+                quiz.setExpiresAt(existing.getExpiresAt());
+            } else {
+                applyExpiration(quiz);
+            }
+        } else {
+            applyExpiration(quiz);
+        }
+
         boolean updated = quizRepository.update(quiz);
         if (!updated) {
             throw new ValidationException("Failed to update quiz.");
@@ -75,6 +105,12 @@ public class QuizService {
             throw new ValidationException("Quiz not found.");
         }
         Quiz q = opt.get();
+        if (requestingUser == null) {
+            Optional<User> callerOpt = Session.getCurrentUser();
+            if (callerOpt.isPresent()) {
+                requestingUser = callerOpt.get();
+            }
+        }
         if (requestingUser != null && requestingUser.getRole() != Role.ADMIN) {
             if (q.getCreatedBy() != null && !q.getCreatedBy().equals(requestingUser.getId())) {
                 throw new ValidationException("You can only delete quizzes that you created.");
@@ -94,6 +130,14 @@ public class QuizService {
         }
 
         Quiz q = opt.get();
+        Optional<User> callerOpt = Session.getCurrentUser();
+        if (callerOpt.isPresent()) {
+            User caller = callerOpt.get();
+            if (caller.getRole() != Role.ADMIN && q.getCreatedBy() != null && !Objects.equals(q.getCreatedBy(), caller.getId())) {
+                throw new ValidationException("You can only publish quizzes that you created.");
+            }
+        }
+
         if (!q.isPublished()) {
             if (q.isExpired()) {
                 throw new ValidationException("Cannot publish an assessment that has already expired. Update the deadline or active hours first.");
@@ -113,8 +157,18 @@ public class QuizService {
 
     public boolean assignQuestions(int quizId, List<Integer> questionIds) {
         Optional<Quiz> quizOpt = quizRepository.findById(quizId);
-        if (quizOpt.isPresent() && questionRepository != null) {
-            Quiz quiz = quizOpt.get();
+        if (quizOpt.isEmpty()) {
+            throw new ValidationException("Quiz not found.");
+        }
+        Quiz quiz = quizOpt.get();
+        Optional<User> callerOpt = Session.getCurrentUser();
+        if (callerOpt.isPresent()) {
+            User caller = callerOpt.get();
+            if (caller.getRole() != Role.ADMIN && quiz.getCreatedBy() != null && !Objects.equals(quiz.getCreatedBy(), caller.getId())) {
+                throw new ValidationException("You can only assign questions to quizzes that you created.");
+            }
+        }
+        if (questionRepository != null) {
             if (quiz.getAssessmentType() == AssessmentType.QUIZ && quiz.getQuizQuestionType() != null && questionIds != null) {
                 for (int qId : questionIds) {
                     try {

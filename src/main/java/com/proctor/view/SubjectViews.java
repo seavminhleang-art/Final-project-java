@@ -47,11 +47,13 @@ public class SubjectViews {
                 Subject s = subjects.get(i);
                 String status = s.isEnabled() ? TuiHelper.green("Enabled") : TuiHelper.red("Disabled");
 
+                String codeStr = (s.getCode() == null || s.getCode().isBlank()) ? "N/A" : s.getCode();
+                String nameStr = (s.getName() == null || s.getName().isBlank()) ? "N/A" : s.getName();
                 String line = String.format("%-4d  %-6d  %-16s  %-88s  %-9s",
                         (i + 1),
                         s.getId(),
-                        truncate(s.getCode(), 16),
-                        truncate(s.getName(), 88),
+                        truncate(codeStr, 16),
+                        truncate(nameStr, 88),
                         status);
 
                 if (i == selectedIndex) {

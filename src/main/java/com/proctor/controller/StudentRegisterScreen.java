@@ -133,11 +133,21 @@ public class StudentRegisterScreen implements Screen {
                 if (msg instanceof PasteMessage paste) {
             switch (focusedField) {
                 case 0 -> KeyUtil.pasteToBuffer(fullName, paste.content());
+                case 2 -> {
+                    if (paste.content() != null) {
+                        for (char c : paste.content().toCharArray()) {
+                            if (Character.isDigit(c) && birthday.length() < 8) {
+                                birthday.append(c);
+                                errorMessage = "";
+                            }
+                        }
+                    }
+                }
                 case 3 -> KeyUtil.pasteToBuffer(email, paste.content());
                 case 4 -> KeyUtil.pasteToBuffer(username, paste.content());
                 case 5 -> KeyUtil.pasteToBuffer(password, paste.content(), 128);
                 case 6 -> KeyUtil.pasteToBuffer(confirmPassword, paste.content(), 128);
-                default -> { /* other fields (gender, birthday, buttons) — no paste */ }
+                default -> { /* other fields (gender, buttons) — no paste */ }
             }
             return ScreenResult.stay(this);
         }

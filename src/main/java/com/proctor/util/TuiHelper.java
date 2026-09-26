@@ -85,7 +85,7 @@ public class TuiHelper {
         if (title == null || title.isBlank()) {
             return "";
         }
-        String t = title.trim();
+        String t = stripAnsi(title);
         if (t.length() > 126) {
             t = t.substring(0, 123) + "...";
         }
@@ -99,12 +99,12 @@ public class TuiHelper {
         if (subtitle == null || subtitle.isBlank()) {
             return boxTitle(title);
         }
-        String t = title.trim();
-        String s = subtitle.trim();
+        String t = stripAnsi(title);
+        String s = stripAnsi(subtitle);
         int maxTotal = 126;
         int sepLen = 5;
-        int tLen = stripAnsi(t).length();
-        int sLen = stripAnsi(s).length();
+        int tLen = t.length();
+        int sLen = s.length();
         if (tLen > 60) {
             t = t.substring(0, 57) + "...";
             tLen = 60;
@@ -254,9 +254,22 @@ public class TuiHelper {
         String borderCol = focused ? NAVY_BLUE : DIM;
         String labelCol = focused ? bold(NAVY_BLUE + "  " + label) : dim("  " + label);
 
-        String valDisplay = focused ? navyBlue("< " + value + " >") + (helpText != null ? dim(" (" + helpText + ")") : "") : value;
-        String rawLenText = focused ? ("< " + value + " >" + (helpText != null ? " (" + helpText + ")" : "")) : (value != null ? value : "");
-        int padLen = Math.max(0, (width - 4) - rawLenText.length());
+        int maxInnerW = Math.max(0, width - 4);
+        String safeVal = value != null ? value : "";
+        if (visibleLength(safeVal) > maxInnerW) {
+            safeVal = truncate(safeVal, maxInnerW);
+        }
+        String formattedVal = focused ? "< " + safeVal + " >" : safeVal;
+        if (focused && helpText != null && !helpText.isBlank()) {
+            if (visibleLength(formattedVal) + helpText.length() + 3 <= maxInnerW) {
+                formattedVal += " (" + helpText + ")";
+            }
+        }
+        if (visibleLength(formattedVal) > maxInnerW) {
+            formattedVal = truncate(formattedVal, maxInnerW);
+        }
+        int padLen = Math.max(0, maxInnerW - visibleLength(formattedVal));
+        String valDisplay = focused ? navyBlue(formattedVal) : formattedVal;
 
         sb.append("  ").append(BUTTON_MARKER).append(labelCol).append(CLEAR_EOL).append("\n");
         sb.append("  ").append(BUTTON_MARKER).append(borderCol).append("┌").append("─".repeat(width - 2)).append("┐").append(RESET).append(CLEAR_EOL).append("\n");
@@ -535,10 +548,48 @@ public class TuiHelper {
         return 30;
     }
 
+    public static int charWidth(int cp) {
+        if (cp < 0x20 || (cp >= 0x7F && cp < 0xA0)) {
+            return 0;
+        }
+        if (cp == 0x200B || cp == 0x200C || cp == 0x200D || cp == 0xFEFF
+                || (cp >= 0x2028 && cp <= 0x202E) || (cp >= 0x2060 && cp <= 0x206F)
+                || cp == 0xFE0F) {
+            return 0;
+        }
+        int type = Character.getType(cp);
+        if (type == Character.NON_SPACING_MARK || type == Character.COMBINING_SPACING_MARK || type == Character.ENCLOSING_MARK) {
+            return 0;
+        }
+        if ((cp >= 0x1100 && cp <= 0x115F)
+                || (cp >= 0x2E80 && cp <= 0xA4CF)
+                || (cp >= 0xAC00 && cp <= 0xD7A3)
+                || (cp >= 0xF900 && cp <= 0xFAFF)
+                || (cp >= 0xFE10 && cp <= 0xFE19)
+                || (cp >= 0xFE30 && cp <= 0xFE6F)
+                || (cp >= 0xFF00 && cp <= 0xFF60)
+                || (cp >= 0xFFE0 && cp <= 0xFFE6)
+                || (cp >= 0x20000 && cp <= 0x2FFFD)
+                || (cp >= 0x30000 && cp <= 0x3FFFD)
+                || (cp >= 0x1F300 && cp <= 0x1FAFF)
+                || (cp == 0x2B50)) {
+            return 2;
+        }
+        return 1;
+    }
+
     public static int visibleLength(String str) {
         if (str == null || str.isEmpty()) return 0;
-        String stripped = str.replaceAll("\\[[;?0-9]*[a-zA-Z]", "");
-        return stripped.codePointCount(0, stripped.length());
+        String stripped = str.replace(CLEAR_EOL, "").replaceAll("\\u001B\\[[;?0-9]*[a-zA-Z]", "");
+        int width = 0;
+        int i = 0;
+        int len = stripped.length();
+        while (i < len) {
+            int cp = stripped.codePointAt(i);
+            width += charWidth(cp);
+            i += Character.charCount(cp);
+        }
+        return width;
     }
 
     public static String truncate(String text, int max) {

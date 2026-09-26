@@ -26,16 +26,19 @@ public final class ListNavigationHelper {
         if (listSize <= 0) {
             return 0;
         }
-        return (currentIndex + delta + listSize) % listSize;
+        return Math.floorMod(currentIndex + delta, listSize);
     }
 
     public static int prevPage(int currentIndex, int pageSize) {
+        if (pageSize <= 0) {
+            return 0;
+        }
         int currentPage = currentIndex / pageSize;
         return Math.max(0, (currentPage - 1) * pageSize);
     }
 
     public static int nextPage(int currentIndex, int listSize, int pageSize) {
-        if (listSize <= 0) {
+        if (listSize <= 0 || pageSize <= 0) {
             return 0;
         }
         int totalPages = Math.max(1, (int) Math.ceil((double) listSize / pageSize));
@@ -43,7 +46,7 @@ public final class ListNavigationHelper {
         if (currentPage < totalPages - 1) {
             return Math.min(listSize - 1, (currentPage + 1) * pageSize);
         }
-        return currentIndex;
+        return clampIndex(currentIndex, listSize);
     }
 
     public static int handleWheel(Message msg, int selectedIndex, int listSize) {
@@ -86,7 +89,7 @@ public final class ListNavigationHelper {
     }
 
     public static int getClickedItemIndex(int line, int itemsStartLine, int listSize, int currentIndex, int pageSize) {
-        if (itemsStartLine == -1 || listSize <= 0) {
+        if (itemsStartLine == -1 || listSize <= 0 || pageSize <= 0) {
             return -1;
         }
         int currentPage = currentIndex / pageSize;
@@ -104,7 +107,7 @@ public final class ListNavigationHelper {
     }
 
     public static int handlePaginationClick(int col, int currentIndex, int listSize, int pageSize) {
-        if (listSize <= 0) {
+        if (listSize <= 0 || pageSize <= 0) {
             return 0;
         }
         int totalPages = Math.max(1, (int) Math.ceil((double) listSize / pageSize));
@@ -116,7 +119,7 @@ public final class ListNavigationHelper {
         if (action > 0) {
             return Math.min(listSize - 1, (currentPage + 1) * pageSize);
         }
-        return currentIndex;
+        return clampIndex(currentIndex, listSize);
     }
 
     public static int handleConfirmationClick(Message msg, String renderedView, String confirmLabel, String cancelLabel) {

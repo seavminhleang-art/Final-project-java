@@ -121,7 +121,7 @@ public class StudentHistoryScreen implements Screen {
             String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
             if (hintAction != null) {
                 if ("Esc".equals(hintAction)) {
-                    return ScreenResult.navigate(new StudentDashboardScreen(authService, examService));
+                    return ScreenResult.navigate(new StudentDashboardScreen(authService, examService, portalService));
                 }
             }
 

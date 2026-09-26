@@ -33,19 +33,19 @@ public class User {
         if (username != null && !username.isBlank()) {
             return "@" + username;
         }
-        return email != null ? email : "";
+        return (email != null && !email.isBlank()) ? email : "N/A";
     }
 
     public String getDisplayNameWithHonorific() {
         if (role == Role.TEACHER) {
             return formatTeacherName(gender, fullName);
         }
-        return fullName != null ? fullName : "";
+        return (fullName != null && !fullName.isBlank()) ? fullName : "N/A";
     }
 
     public static String formatTeacherName(String gender, String fullName) {
         if (fullName == null || fullName.isBlank()) {
-            return "Teacher";
+            return "N/A";
         }
         String clean = fullName.trim();
         if (clean.startsWith("Mr. ") || clean.startsWith("Mrs. ") || clean.startsWith("Ms. ")

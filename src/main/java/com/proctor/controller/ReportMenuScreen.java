@@ -66,6 +66,17 @@ public class ReportMenuScreen implements Screen {
                 generateSelectedReport();
                 return ScreenResult.stay(this);
             }
+            String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
+            if ("Esc".equals(hintAction)) {
+                User u = Session.getCurrentUser().orElse(null);
+                if (u != null && u.getRole() == Role.ADMIN) {
+                    return ScreenResult.navigate(new AdminDashboardScreen(authService));
+                } else if (u != null && u.getRole() == Role.STUDENT) {
+                    return ScreenResult.navigate(new StudentDashboardScreen(authService));
+                } else {
+                    return ScreenResult.navigate(new TeacherDashboardScreen(authService));
+                }
+            }
             return ScreenResult.stay(this);
         }
 
@@ -76,6 +87,8 @@ public class ReportMenuScreen implements Screen {
                 User u = Session.getCurrentUser().orElse(null);
                 if (u != null && u.getRole() == Role.ADMIN) {
                     return ScreenResult.navigate(new AdminDashboardScreen(authService));
+                } else if (u != null && u.getRole() == Role.STUDENT) {
+                    return ScreenResult.navigate(new StudentDashboardScreen(authService));
                 } else {
                     return ScreenResult.navigate(new TeacherDashboardScreen(authService));
                 }

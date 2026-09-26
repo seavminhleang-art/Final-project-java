@@ -71,14 +71,14 @@ public class QuizViews {
             for (int i = startRow; i < endRow; i++) {
                 Quiz q = quizzes.get(i);
                 String status = q.isPublished() ? TuiHelper.green("Published") : TuiHelper.dim("Draft");
-                String subj = q.getSubjectCode() != null ? q.getSubjectCode() : "-";
+                String subj = (q.getSubjectCode() != null && !q.getSubjectCode().isBlank()) ? q.getSubjectCode() : "N/A";
                 String timeStr;
                 if (q.getAssessmentType() == AssessmentType.SPEED) {
                     timeStr = (q.getSpeedSecondsPerQuestion() != null ? q.getSpeedSecondsPerQuestion() : 15) + "s";
                 } else {
                     timeStr = q.getTimeLimitMins() != null && q.getTimeLimitMins() > 0 ? q.getTimeLimitMins() + "m" : "Untimed";
                 }
-                String teacher = (q.getCreatorName() != null && !q.getCreatorName().isBlank()) ? q.getCreatorName() : "Teacher";
+                String teacher = (q.getCreatorName() != null && !q.getCreatorName().isBlank()) ? q.getCreatorName() : "N/A";
                 String typeStr;
                 if (q.getAssessmentType() == AssessmentType.SPEED) {
                     typeStr = "[SPEED]";
@@ -260,8 +260,9 @@ public class QuizViews {
     public static String renderQuizQuestionEditor(Quiz quiz, String subjectText, List<Question> questions,
                                                  double totalPoints, int selectedIndex, String bannerMessage) {
         StringBuilder sb = new StringBuilder();
+        String safeSubj = (subjectText != null && !subjectText.isBlank()) ? subjectText : "N/A";
         String subtitle = String.format("Subject: %s  •  %d Questions (%.1f pts)  •  %s",
-                subjectText, questions.size(), totalPoints,
+                safeSubj, questions.size(), totalPoints,
                 quiz.isPublished() ? TuiHelper.green("PUBLISHED") : TuiHelper.dim("DRAFT"));
 
         String builderHeader = (quiz.getAssessmentType() == AssessmentType.EXAM ? "EXAMS" : (quiz.getAssessmentType() == AssessmentType.SPEED ? "SPEED QUIZZES" : "QUIZZES"));

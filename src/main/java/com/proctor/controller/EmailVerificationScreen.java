@@ -61,6 +61,10 @@ public class EmailVerificationScreen implements Screen {
         return isResending;
     }
 
+    public String getCode() {
+        return codeBuffer.toString();
+    }
+
     public int getSpinnerTick() {
         return spinnerTick;
     }
@@ -101,12 +105,8 @@ public class EmailVerificationScreen implements Screen {
                 errorMessage = TuiHelper.yellow("⚠ Resend cancelled.");
                 return ScreenResult.stay(this);
             }
-                    if (msg instanceof PasteMessage paste) {
-            KeyUtil.pasteToBuffer(codeBuffer, paste.content(), 8);
-            return ScreenResult.stay(this);
-        }
 
-        if (MouseUtil.isLeftClick(msg)) {
+            if (MouseUtil.isLeftClick(msg)) {
                 int line = MouseUtil.getLineIndex(msg);
                 int btnLine = MouseUtil.findButtonRowLine(view());
                 if (btnLine != -1 && line >= btnLine && line <= btnLine + 2) {
@@ -119,6 +119,11 @@ public class EmailVerificationScreen implements Screen {
                     return ScreenResult.stay(this);
                 }
             }
+            return ScreenResult.stay(this);
+        }
+
+        if (msg instanceof PasteMessage paste) {
+            KeyUtil.pasteToBuffer(codeBuffer, paste.content(), 8);
             return ScreenResult.stay(this);
         }
 
