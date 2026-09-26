@@ -347,11 +347,11 @@ public class TeacherSubmissionViews {
 
         String ptsLabel = String.format("Points Awarded (0.0 - %.1f)", question.getPoints());
         sb.append(TuiHelper.inputBox(ptsLabel, pointsBuffer, focusedField == 0, 106, false, "e.g. " + question.getPoints())).append("\n");
-        sb.append(TuiHelper.inputBox("Teacher Feedback / Notes (Optional)", feedbackBuffer, focusedField == 1, 106, false, "Enter feedback notes for student...")).append("\n\n");
+        sb.append(TuiHelper.inputBox("Teacher Feedback (Optional)", feedbackBuffer, focusedField == 1, 106, false, "Enter feedback notes for student...")).append("\n\n");
 
         sb.append(TuiHelper.buttonRow("Save Grade", focusedField == 2, "Cancel", focusedField == 3, 106)).append("\n\n");
 
-        sb.append(TuiHelper.dim("  [Tab/↑/↓] Switch Field  •  [Enter] Save / Next  •  [Esc] Cancel\n"));
+        sb.append(TuiHelper.dim("  [Tab/↑/↓] Switch Field  •  [Enter] Next  •  [Esc] Cancel\n"));
         return sb.toString();
     }
 

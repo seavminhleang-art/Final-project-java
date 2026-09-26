@@ -147,7 +147,7 @@ public class StudentRegisterScreen implements Screen {
                 case 4 -> KeyUtil.pasteToBuffer(username, paste.content());
                 case 5 -> KeyUtil.pasteToBuffer(password, paste.content(), 128);
                 case 6 -> KeyUtil.pasteToBuffer(confirmPassword, paste.content(), 128);
-                default -> { /* other fields (gender, buttons) — no paste */ }
+                default -> {  }
             }
             return ScreenResult.stay(this);
         }

@@ -111,7 +111,7 @@ public class QuizFormScreen implements Screen {
                 case 4 -> KeyUtil.pasteToBuffer(timeLimit, paste.content(), 4);
                 case 5 -> KeyUtil.pasteToBuffer(activeHours, paste.content(), 4);
                 case 6 -> KeyUtil.pasteToBuffer(passScore, paste.content(), 3);
-                default -> { /* subject/type/checkboxes/buttons */ }
+                default -> {  }
             }
             return ScreenResult.stay(this);
         }

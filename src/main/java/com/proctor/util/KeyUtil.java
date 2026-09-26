@@ -100,25 +100,11 @@ public class KeyUtil {
         }
         return -1;
     }
-    /**
-     * Pastes text into a buffer, stripping control characters (keeping spaces).
-     * No length limit.
-     *
-     * @param buffer the target StringBuilder
-     * @param text   the pasted text (may be null - treated as empty)
-     */
+
     public static void pasteToBuffer(StringBuilder buffer, String text) {
         pasteToBuffer(buffer, text, Integer.MAX_VALUE);
     }
 
-    /**
-     * Pastes text into a buffer, stripping control characters (keeping spaces),
-     * up to {@code maxLen} total characters.
-     *
-     * @param buffer the target StringBuilder
-     * @param text   the pasted text (may be null - treated as empty)
-     * @param maxLen maximum allowed buffer length after paste
-     */
     public static void pasteToBuffer(StringBuilder buffer, String text, int maxLen) {
         if (text == null || text.isEmpty()) return;
         for (int i = 0; i < text.length() && buffer.length() < maxLen; i++) {

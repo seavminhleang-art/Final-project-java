@@ -263,7 +263,7 @@ public class AIQuestionGeneratorScreen implements Screen {
             int idx = focusedField;
             if (!isPinnedQuiz()) {
                 if (idx == 0) {
-                    return ScreenResult.stay(this); // subject filter — no paste
+                    return ScreenResult.stay(this);
                 }
                 idx -= 1;
             }
@@ -271,7 +271,7 @@ public class AIQuestionGeneratorScreen implements Screen {
                 case 0 -> KeyUtil.pasteToBuffer(topicBuffer, paste.content());
                 case 1 -> KeyUtil.pasteToBuffer(customPromptBuffer, paste.content());
                 case 2 -> KeyUtil.pasteToBuffer(countBuffer, paste.content(), 3);
-                default -> { /* type/difficulty/mcqCount/buttons */ }
+                default -> {  }
             }
             return ScreenResult.stay(this);
         }

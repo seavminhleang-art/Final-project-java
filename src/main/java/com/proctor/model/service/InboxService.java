@@ -350,8 +350,8 @@ public class InboxService {
                     if (quizRepository != null && msg.getTargetId() != null) {
                         assessmentTitle = quizRepository.findById(msg.getTargetId())
                                 .map(Quiz::getTitle)
-                                .orElseGet(() -> msg.getTitle() != null 
-                                        ? msg.getTitle().replaceFirst("^(Quiz Retake Request|Exam Makeup Request):\\s*", "") 
+                                .orElseGet(() -> msg.getTitle() != null
+                                        ? msg.getTitle().replaceFirst("^(Quiz Retake Request|Exam Makeup Request):\\s*", "")
                                         : "Assessment");
                     } else if (msg.getTitle() != null) {
                         assessmentTitle = msg.getTitle().replaceFirst("^(Quiz Retake Request|Exam Makeup Request):\\s*", "");

@@ -293,10 +293,10 @@ public class AIQuizGeneratorScreen implements Screen {
                 KeyUtil.pasteToBuffer(tfCountBuffer, paste.content(), 3);
                 return;
             }
-            // Field 6: difficulty selector (no paste)
+
             int current = 7;
             if (isMcqApplicable()) {
-                current++; // mcqOptionCount selector (no paste)
+                current++;
             }
             if (focusedField == current++) {
                 KeyUtil.pasteToBuffer(timeLimitBuffer, paste.content(), 4);
@@ -309,8 +309,6 @@ public class AIQuizGeneratorScreen implements Screen {
             return;
         }
 
-        // Standard Quiz or Exam
-        // Field 4: type selector (no paste)
         int current = 5;
         if (assessmentType == AssessmentType.EXAM && isExamMixed) {
             if (focusedField == current++) {
@@ -332,11 +330,10 @@ public class AIQuizGeneratorScreen implements Screen {
             }
         }
 
-        // Difficulty selector (no paste)
         current++;
 
         if (isMcqApplicable()) {
-            current++; // mcqOptionCount selector (no paste)
+            current++;
         }
 
         if (focusedField == current++) {

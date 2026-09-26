@@ -156,7 +156,7 @@ public class TeacherRegisterScreen implements Screen {
                 case 7 -> KeyUtil.pasteToBuffer(username, paste.content());
                 case 8 -> KeyUtil.pasteToBuffer(password, paste.content(), 128);
                 case 9 -> KeyUtil.pasteToBuffer(confirmPassword, paste.content(), 128);
-                default -> { /* gender/buttons */ }
+                default -> {  }
             }
             return ScreenResult.stay(this);
         }

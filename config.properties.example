@@ -1,22 +1,17 @@
-# Database Configuration
 db.url=jdbc:postgresql://localhost:5432/proctor_db
-db.username=postgres
-db.password=postgres
+db.username=YOUR_DB_USERNAME
+db.password=YOUR_DB_PASSWORD
 
-# Default Admin Seed
 admin.username=admin
-admin.password=admin123
+admin.password=YOUR_ADMIN_PASSWORD
 admin.fullname=System Administrator
 
-# Ollama AI Configuration
 ollama.url=http://localhost:11434
 ollama.model=llama3.2:3b
 ollama.timeout_seconds=120
 
-# Reports
 reports.output_dir=./reports/output
 
-# Email Configuration (SMTP)
 mail.smtp.host=smtp.gmail.com
 mail.smtp.port=587
 mail.smtp.auth=true

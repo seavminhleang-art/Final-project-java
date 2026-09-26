@@ -28,7 +28,6 @@ public class QuestionService {
         return questionRepository.findByQuizId(quizId);
     }
 
-
     private void checkInstructorAccess(Question q) {
         Session.getCurrentUser().ifPresent(u -> {
             if (u.getRole() == Role.STUDENT) {

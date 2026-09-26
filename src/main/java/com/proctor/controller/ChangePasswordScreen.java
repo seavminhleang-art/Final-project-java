@@ -44,7 +44,7 @@ public class ChangePasswordScreen implements Screen {
                 case 0 -> KeyUtil.pasteToBuffer(currentPassword, paste.content(), 128);
                 case 1 -> KeyUtil.pasteToBuffer(newPassword, paste.content(), 128);
                 case 2 -> KeyUtil.pasteToBuffer(confirmPassword, paste.content(), 128);
-                default -> { /* buttons */ }
+                default -> {  }
             }
             return ScreenResult.stay(this);
         }

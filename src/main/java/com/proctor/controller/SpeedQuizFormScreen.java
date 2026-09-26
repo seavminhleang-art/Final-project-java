@@ -90,7 +90,7 @@ public class SpeedQuizFormScreen implements Screen {
                 case 2 -> KeyUtil.pasteToBuffer(description, paste.content());
                 case 3 -> KeyUtil.pasteToBuffer(secondsPerQuestion, paste.content(), 4);
                 case 4 -> KeyUtil.pasteToBuffer(activeHours, paste.content(), 4);
-                default -> { /* subject/checkboxes/buttons */ }
+                default -> {  }
             }
             return ScreenResult.stay(this);
         }

@@ -12,7 +12,6 @@ import java.util.*;
 
 public class SeedService {
 
-    // ── Admin config ──────────────────────────────────────────────────────────
     public static final String ADMIN_USERNAME = Config.get("admin.username", "admin");
     public static final String ADMIN_EMAIL    = Config.get("admin.email",    "admin@proctor.edu");
     public static final String ADMIN_PASSWORD = Config.get("admin.password", "admin123");
@@ -20,7 +19,6 @@ public class SeedService {
 
     private static final String DEMO_PW = "Tongan123";
 
-    // ── Repositories ──────────────────────────────────────────────────────────
     private final UserRepository     userRepository;
     private final SubjectRepository  subjectRepository;
     private final QuizRepository     quizRepository;
@@ -29,10 +27,8 @@ public class SeedService {
     private final ResultRepository   resultRepository;
     private final InboxRepository    inboxRepository;
 
-    /** Lazy cache of all quizzes keyed by lowercase title — populated once at seedAll(). */
     private Map<String, Quiz> quizCache;
 
-    // ── Constructors ──────────────────────────────────────────────────────────
     public SeedService(UserRepository userRepository) {
         this(userRepository, new SubjectRepository(), new QuizRepository(),
              new QuestionRepository(), new AttemptRepository(),
@@ -56,10 +52,6 @@ public class SeedService {
         this.resultRepository  = r;
         this.inboxRepository   = ib;
     }
-
-    // =========================================================================
-    // Original public methods (unchanged)
-    // =========================================================================
 
     public void seedDefaultSubjects() {
         if (subjectRepository == null) return;
@@ -114,10 +106,6 @@ public class SeedService {
         }
     }
 
-    // =========================================================================
-    // NEW: Demo data entry point (idempotent — safe to call on every startup)
-    // =========================================================================
-
     public void seedAll() {
         Map<String, User> users = new LinkedHashMap<>();
         users.putAll(seedDemoTeachers());
@@ -128,10 +116,6 @@ public class SeedService {
         seedDemoAttempts(users, quizzes);
         seedDemoInbox(users, quizzes);
     }
-
-    // =========================================================================
-    // Users
-    // =========================================================================
 
     private Map<String, User> seedDemoTeachers() {
         Map<String, User> map = new LinkedHashMap<>();
@@ -175,10 +159,6 @@ public class SeedService {
         });
     }
 
-    // =========================================================================
-    // Subject ID lookup
-    // =========================================================================
-
     private Map<String, Integer> loadSubjectIds() {
         Map<String, Integer> map = new HashMap<>();
         for (PredefinedSubject ps : PredefinedSubject.values()) {
@@ -187,10 +167,6 @@ public class SeedService {
         }
         return map;
     }
-
-    // =========================================================================
-    // Quiz cache helpers (avoids duplicate inserts on re-runs)
-    // =========================================================================
 
     private void initQuizCache() {
         if (quizCache != null) return;
@@ -222,10 +198,6 @@ public class SeedService {
     private boolean hasQuestions(int quizId) {
         return !questionRepository.findByQuizId(quizId).isEmpty();
     }
-
-    // =========================================================================
-    // Question builder helpers
-    // =========================================================================
 
     private void addMcq(int qid, Integer sid, int uid, Difficulty d, double pts,
             String text, String exp, String correct, String w1, String w2, String w3) {
@@ -290,31 +262,24 @@ public class SeedService {
         return QuestionOption.builder().optionText(text).correct(correct).build();
     }
 
-    // =========================================================================
-    // Assessments dispatcher
-    // =========================================================================
-
     private List<Quiz> seedDemoAssessments(Map<String, User> users, Map<String, Integer> sids) {
         User ng = users.get("dr.nguyen");
         User li = users.get("ms.linda");
         User ra = users.get("mr.rafael");
         List<Quiz> all = new ArrayList<>();
 
-        // QUIZ (15)
         all.add(seedQ01(ng, sids)); all.add(seedQ02(li, sids)); all.add(seedQ03(ng, sids));
         all.add(seedQ04(ng, sids)); all.add(seedQ05(ra, sids)); all.add(seedQ06(li, sids));
         all.add(seedQ07(ng, sids)); all.add(seedQ08(ra, sids)); all.add(seedQ09(li, sids));
         all.add(seedQ10(ng, sids)); all.add(seedQ11(ra, sids)); all.add(seedQ12(li, sids));
         all.add(seedQ13(li, sids)); all.add(seedQ14(ng, sids)); all.add(seedQ15(ng, sids));
 
-        // EXAM (15)
         all.add(seedE01(ng, sids)); all.add(seedE02(li, sids)); all.add(seedE03(ng, sids));
         all.add(seedE04(ra, sids)); all.add(seedE05(ng, sids)); all.add(seedE06(li, sids));
         all.add(seedE07(ra, sids)); all.add(seedE08(li, sids)); all.add(seedE09(ng, sids));
         all.add(seedE10(ra, sids)); all.add(seedE11(ng, sids)); all.add(seedE12(li, sids));
         all.add(seedE13(li, sids)); all.add(seedE14(ra, sids)); all.add(seedE15(ng, sids));
 
-        // SPEED (12)
         all.add(seedS01(ng, sids)); all.add(seedS02(ng, sids)); all.add(seedS03(ra, sids));
         all.add(seedS04(ng, sids)); all.add(seedS05(li, sids)); all.add(seedS06(ng, sids));
         all.add(seedS07(li, sids)); all.add(seedS08(ra, sids)); all.add(seedS09(li, sids));
@@ -322,10 +287,6 @@ public class SeedService {
 
         return all;
     }
-
-    // =========================================================================
-    // QUIZ type — 15 quizzes
-    // =========================================================================
 
     private Quiz seedQ01(User u, Map<String, Integer> s) {
         Quiz q = findOrCreateQuiz("JavaScript Fundamentals", "Core JavaScript",
@@ -551,10 +512,6 @@ public class SeedService {
         addSa( id, sid, uid, Difficulty.HARD,   2, "Explain what a LEFT JOIN returns when there are no matching rows in the right table.", "A LEFT JOIN returns all rows from the left table. For rows with no match in the right table, all columns from the right table are NULL.");
         return q;
     }
-
-    // =========================================================================
-    // EXAM type — 15 exams
-    // =========================================================================
 
     private Quiz seedE01(User u, Map<String, Integer> s) {
         Quiz q = findOrCreateQuiz("Midterm: Java OOP", "Object-Oriented Design",
@@ -811,10 +768,6 @@ public class SeedService {
         return q;
     }
 
-    // =========================================================================
-    // SPEED type — 12 quizzes (5 MCQ questions each)
-    // =========================================================================
-
     private Quiz seedS01(User u, Map<String, Integer> s) {
         Quiz q = findOrCreateQuiz("JS Speed Drill", "JavaScript Rapid Fire", "Fast-paced JavaScript quiz — 15 seconds per question.",
             AssessmentType.SPEED, s.get("JS"), u.getId(), null, 60, true, true, false, 15, QuestionType.MCQ);
@@ -971,16 +924,11 @@ public class SeedService {
         return q;
     }
 
-    // =========================================================================
-    // Bank Questions (20 standalone questions — quiz_id is NULL)
-    // =========================================================================
-
     private void seedDemoBankQuestions(Map<String, User> users, Map<String, Integer> sids) {
         User ng = users.get("dr.nguyen");
         User li = users.get("ms.linda");
         User ra = users.get("mr.rafael");
 
-        // Idempotency: if dr.nguyen already has bank questions, skip
         if (!questionRepository.findBankQuestions(ng.getId(), null, null, null, null).isEmpty()) return;
 
         Integer jsId   = sids.get("JS");
@@ -991,7 +939,6 @@ public class SeedService {
         Integer linuxId = sids.get("LINUX");
         Integer tsId   = sids.get("TS");
 
-        // JavaScript (4)
         addBankMcq(jsId, ng.getId(), Difficulty.EASY,   1, "Which method adds an element to the end of a JavaScript array?",
             "push() adds to the end; pop() removes from the end.", "push()", "pop()", "shift()", "splice()");
         addBankTf(jsId, ng.getId(), Difficulty.MEDIUM, 1, "JavaScript is a statically-typed language.",
@@ -1001,7 +948,6 @@ public class SeedService {
         addBankSa(jsId, li.getId(), Difficulty.HARD, 2, "Explain the difference between synchronous and asynchronous code execution in JavaScript.",
             "Synchronous code runs line-by-line, blocking the thread until each statement finishes. Asynchronous code (Promises, async/await, callbacks) allows non-blocking execution via the event loop, enabling I/O operations without freezing the page.");
 
-        // Python (4)
         addBankMcq(pyId, ng.getId(), Difficulty.EASY,   1, "Which Python keyword makes a function into a generator?",
             "yield pauses the function and yields a value; calling next() resumes it.", "yield", "return", "generate", "async");
         addBankMcq(pyId, ng.getId(), Difficulty.MEDIUM, 1, "What does `zip([1,2,3], ['a','b','c'])` produce?",
@@ -1011,7 +957,6 @@ public class SeedService {
         addBankSa(pyId, ng.getId(), Difficulty.HARD, 2, "What is a Python decorator and how does it work?",
             "A decorator is a function that wraps another function to extend its behavior without modifying it. Applied with @decorator_name above the function definition. Common uses: logging, caching, authorization.");
 
-        // SQL (3)
         addBankMcq(sqlId, ng.getId(), Difficulty.EASY,   1, "Which SQL aggregate function counts rows?",
             "COUNT() counts rows (or non-null values in a specified column).", "COUNT()", "SUM()", "AVG()", "MAX()");
         addBankMcq(sqlId, ng.getId(), Difficulty.MEDIUM, 1.5, "What is a SQL transaction?",
@@ -1020,7 +965,6 @@ public class SeedService {
         addBankTf(sqlId, ng.getId(), Difficulty.HARD, 2, "A UNIQUE constraint allows multiple NULL values in the same column.",
             true, "Most databases treat NULL as unknown; UNIQUE allows multiple NULLs since NULL != NULL.");
 
-        // Java (4)
         addBankMcq(javaId, ng.getId(), Difficulty.EASY,   1, "Which Java access modifier restricts access to the same class only?",
             "private limits access to the declaring class.", "private", "protected", "public", "default (package-private)");
         addBankMcq(javaId, ng.getId(), Difficulty.MEDIUM, 1, "What does the `static` keyword mean when applied to a Java field or method?",
@@ -1031,7 +975,6 @@ public class SeedService {
         addBankSa(javaId, ng.getId(), Difficulty.HARD, 2, "Explain the difference between checked and unchecked exceptions in Java.",
             "Checked exceptions must be declared with `throws` or caught in a try-catch block (e.g., IOException). Unchecked exceptions extend RuntimeException and do not require explicit handling (e.g., NullPointerException, ArrayIndexOutOfBoundsException).");
 
-        // C++ (3)
         addBankMcq(cppId, ra.getId(), Difficulty.EASY,   1, "What does `std::vector` provide in C++?",
             "std::vector is a dynamic-size, contiguous array in the STL.", "A dynamic resizable array", "A fixed-size array", "A doubly-linked list", "A hash map");
         addBankMcq(cppId, ra.getId(), Difficulty.MEDIUM, 1.5, "What is a virtual function in C++?",
@@ -1040,19 +983,13 @@ public class SeedService {
         addBankTf(cppId, ra.getId(), Difficulty.HARD, 2, "A pure virtual function must be overridden in all concrete derived classes.",
             true, "A class with a pure virtual function is abstract. Concrete subclasses must implement all pure virtual functions.");
 
-        // Linux (1)
         addBankMcq(linuxId, ra.getId(), Difficulty.MEDIUM, 1, "Which command shows currently running processes in Linux?",
             "ps shows a snapshot of running processes; top shows them in real time.", "ps", "ls", "jobs", "htop");
 
-        // TypeScript (1)
         addBankMcq(tsId, li.getId(), Difficulty.MEDIUM, 1, "What does the `readonly` modifier do in TypeScript?",
             "readonly prevents reassignment of a property after initialization.",
             "Prevents a property from being reassigned after initialization", "Makes a property private", "Makes a property optional", "Makes a property nullable");
     }
-
-    // =========================================================================
-    // Attempts & Results
-    // =========================================================================
 
     private void seedDemoAttempts(Map<String, User> users, List<Quiz> allQuizzes) {
         List<Quiz> quizType = new ArrayList<>();
@@ -1071,26 +1008,25 @@ public class SeedService {
         User george  = users.get("george");
         User hana    = users.get("hana");
 
-        // QUIZ attempts (4 students per quiz)
         for (int i = 0; i < quizType.size(); i++) {
             Quiz qz = quizType.get(i);
             List<Question> qs = questionRepository.findByQuizId(qz.getId());
             if (qs.isEmpty()) continue;
             int total = qs.size(), psc = qz.getPassScore();
             if (i < 5) {
-                // Quiz 1-5: alice(pass), bob(pass), charlie(fail), diana(fail)
+
                 seedGraded(qz.getId(), alice.getId(),   qs, total - 1, psc);
                 seedGraded(qz.getId(), bob.getId(),     qs, total - 1, psc);
                 seedGraded(qz.getId(), charlie.getId(), qs, 2,         psc);
                 seedGraded(qz.getId(), diana.getId(),   qs, 1,         psc);
             } else if (i < 10) {
-                // Quiz 6-10: alice(pass), bob(pass), ethan(fail), fatima(pass)
+
                 seedGraded(qz.getId(), alice.getId(),  qs, total,     psc);
                 seedGraded(qz.getId(), bob.getId(),    qs, total - 1, psc);
                 seedGraded(qz.getId(), ethan.getId(),  qs, 2,         psc);
                 seedGraded(qz.getId(), fatima.getId(), qs, total - 1, psc);
             } else {
-                // Quiz 11-15: bob(pass), charlie(fail), george(pass), hana(pass)
+
                 seedGraded(qz.getId(), bob.getId(),    qs, total - 1, psc);
                 seedGraded(qz.getId(), charlie.getId(),qs, 2,         psc);
                 seedGraded(qz.getId(), george.getId(), qs, total - 1, psc);
@@ -1098,25 +1034,24 @@ public class SeedService {
             }
         }
 
-        // EXAM attempts
         for (int i = 0; i < examType.size(); i++) {
             Quiz ex = examType.get(i);
             List<Question> qs = questionRepository.findByQuizId(ex.getId());
             if (qs.isEmpty()) continue;
             int total = qs.size(), psc = ex.getPassScore();
             if (i < 5) {
-                // Exam 1-5: ethan(pass,GRADED), fatima(pass,GRADED), george(fail,GRADED), hana(TURNED_IN)
+
                 seedGraded(ex.getId(), ethan.getId(),  qs, total - 1, psc);
                 seedGraded(ex.getId(), fatima.getId(), qs, total,     psc);
                 seedGraded(ex.getId(), george.getId(), qs, 2,         psc);
                 seedPending(ex.getId(), hana.getId(),  qs);
             } else if (i < 10) {
-                // Exam 6-10: alice(pass,GRADED), charlie(fail,GRADED), diana(TURNED_IN)
+
                 seedGraded(ex.getId(), alice.getId(),   qs, total - 1, psc);
                 seedGraded(ex.getId(), charlie.getId(), qs, 2,         psc);
                 seedPending(ex.getId(), diana.getId(),  qs);
             } else {
-                // Exam 11-15: bob(TURNED_IN), charlie(TURNED_IN)
+
                 seedPending(ex.getId(), bob.getId(),     qs);
                 seedPending(ex.getId(), charlie.getId(), qs);
             }
@@ -1129,7 +1064,6 @@ public class SeedService {
         Attempt attempt = attemptRepository.createAttempt(quizId, studentId);
         if (attempt == null) return;
 
-        // Save answers
         for (int i = 0; i < questions.size(); i++) {
             Question q = questions.get(i);
             boolean shouldBeCorrect = i < correctCount;
@@ -1154,7 +1088,6 @@ public class SeedService {
 
         attemptRepository.finalizeAttempt(attempt.getId(), AttemptStatus.TURNED_IN);
 
-        // Grade answers
         List<AttemptAnswer> answers = attemptRepository.getAttemptAnswers(attempt.getId());
         double total = 0, max = 0;
         for (AttemptAnswer aa : answers) {
@@ -1218,10 +1151,6 @@ public class SeedService {
         attemptRepository.finalizeAttempt(attempt.getId(), AttemptStatus.TURNED_IN);
     }
 
-    // =========================================================================
-    // Inbox Messages
-    // =========================================================================
-
     private void seedDemoInbox(Map<String, User> users, List<Quiz> quizzes) {
         User alice   = users.get("alice");
         User bob     = users.get("bob");
@@ -1236,13 +1165,11 @@ public class SeedService {
         User rafael  = users.get("mr.rafael");
         Timestamp now = new Timestamp(System.currentTimeMillis());
 
-        // Welcome notifications
         createNotification(null, alice.getId(),  "Welcome to Proctor!", "Welcome to the Proctor assessment platform. Your account is ready to use.", null, true, now);
         createNotification(null, bob.getId(),    "Welcome to Proctor!", "Welcome to the Proctor assessment platform. Your account is ready to use.", null, true, now);
         createNotification(null, charlie.getId(),"Welcome to Proctor!", "Welcome to Proctor. Start exploring available quizzes and exams in the portal.", null, true, now);
         createNotification(null, fatima.getId(), "Welcome to Proctor!", "Welcome to Proctor. Your account has been set up. Browse subjects and take quizzes!", null, true, now);
 
-        // Grade / publish notifications
         Quiz jsQuiz   = findQuizByPartialTitle(quizzes, "JavaScript Fundamentals");
         Quiz webExam  = findQuizByPartialTitle(quizzes, "Final: Web Development");
         Quiz javaExam = findQuizByPartialTitle(quizzes, "Midterm: Java OOP");
@@ -1260,7 +1187,6 @@ public class SeedService {
             createNotification(nguyen.getId(), ethan.getId(), "Your Java OOP midterm has been graded",
                 "Your Midterm: Java OOP exam has been reviewed and graded. View your result in the portal.", javaExam.getId(), false, now);
 
-        // Retake requests
         Quiz pythonQuiz = findQuizByPartialTitle(quizzes, "Python Essentials");
         Quiz htmlQuiz   = findQuizByPartialTitle(quizzes, "HTML & CSS Basics");
         Quiz linuxExam  = findQuizByPartialTitle(quizzes, "Linux System Administration");
@@ -1321,7 +1247,7 @@ public class SeedService {
     private void createRetake(int senderId, int recipientId, InboxMessageType type,
             int targetId, String title, String body, InboxStatus status, Timestamp ts) {
         if (status == InboxStatus.PENDING && inboxRepository.hasPendingRequest(senderId, type, targetId)) return;
-        // For non-pending, check by title+sender
+
         List<InboxMessage> existing = inboxRepository.findByRecipientId(recipientId);
         for (InboxMessage m : existing) {
             if (m.getTitle().equalsIgnoreCase(title) && Integer.valueOf(senderId).equals(m.getSenderId())) return;
