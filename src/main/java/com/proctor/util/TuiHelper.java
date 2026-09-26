@@ -654,7 +654,7 @@ public class TuiHelper {
         for (int i = 0; i < lines.size(); i++) {
             sb.append(BUTTON_MARKER).append(dim(lines.get(i))).append("\n");
             if (i < lines.size() - 1) {
-                sb.append("\n");
+                sb.append("\n\n");  // blank separator line between wrapped hint rows
             }
         }
         return sb.toString();
