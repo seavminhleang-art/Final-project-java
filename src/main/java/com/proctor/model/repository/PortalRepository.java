@@ -110,16 +110,31 @@ public class PortalRepository {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, assessmentType != null ? assessmentType.name() : AssessmentType.QUIZ.name());
             try (ResultSet rs = stmt.executeQuery()) {
-                int rank = 1;
+                Double prevPoints = null;
+                Double prevAvg = null;
+                int currentRank = 1;
+                int index = 0;
                 while (rs.next()) {
+                    double totalPoints = Math.round(rs.getDouble("total_points") * 10.0) / 10.0;
+                    double avgPercentage = Math.round(rs.getDouble("avg_percentage") * 10.0) / 10.0;
+                    int assignedRank;
+                    if (prevPoints != null && Double.compare(totalPoints, prevPoints) == 0 && Double.compare(avgPercentage, prevAvg) == 0) {
+                        assignedRank = currentRank;
+                    } else {
+                        assignedRank = index + 1;
+                        currentRank = assignedRank;
+                        prevPoints = totalPoints;
+                        prevAvg = avgPercentage;
+                    }
+                    index++;
                     leaderboard.add(LeaderboardEntry.builder()
-                            .rank(rank++)
+                            .rank(assignedRank)
                             .studentId(rs.getInt("student_id"))
                             .studentName(rs.getString("full_name"))
                             .username(rs.getString("username"))
                             .totalQuizzes(rs.getInt("total_quizzes"))
-                            .totalPoints(Math.round(rs.getDouble("total_points") * 10.0) / 10.0)
-                            .avgPercentage(Math.round(rs.getDouble("avg_percentage") * 10.0) / 10.0)
+                            .totalPoints(totalPoints)
+                            .avgPercentage(avgPercentage)
                             .build());
                 }
             }
@@ -145,20 +160,34 @@ public class PortalRepository {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, AssessmentType.SPEED.name());
             try (ResultSet rs = stmt.executeQuery()) {
-            int rank = 1;
-            while (rs.next()) {
-                double highScore = Math.round(rs.getDouble("highest_score") * 10.0) / 10.0;
-                leaderboard.add(LeaderboardEntry.builder()
-                        .rank(rank++)
-                        .studentId(rs.getInt("student_id"))
-                        .studentName(rs.getString("full_name"))
-                        .username(rs.getString("username"))
-                        .totalQuizzes(rs.getInt("total_runs"))
-                        .highScore(highScore)
-                        .totalPoints(highScore)
-                        .build());
+                Double prevHighScore = null;
+                Integer prevRuns = null;
+                int currentRank = 1;
+                int index = 0;
+                while (rs.next()) {
+                    double highScore = Math.round(rs.getDouble("highest_score") * 10.0) / 10.0;
+                    int totalRuns = rs.getInt("total_runs");
+                    int assignedRank;
+                    if (prevHighScore != null && Double.compare(highScore, prevHighScore) == 0 && prevRuns != null && totalRuns == prevRuns) {
+                        assignedRank = currentRank;
+                    } else {
+                        assignedRank = index + 1;
+                        currentRank = assignedRank;
+                        prevHighScore = highScore;
+                        prevRuns = totalRuns;
+                    }
+                    index++;
+                    leaderboard.add(LeaderboardEntry.builder()
+                            .rank(assignedRank)
+                            .studentId(rs.getInt("student_id"))
+                            .studentName(rs.getString("full_name"))
+                            .username(rs.getString("username"))
+                            .totalQuizzes(totalRuns)
+                            .highScore(highScore)
+                            .totalPoints(highScore)
+                            .build());
+                }
             }
-        }
     } catch (SQLException e) {
         throw new DatabaseException("Failed to query speed quiz leaderboard", e);
     }
