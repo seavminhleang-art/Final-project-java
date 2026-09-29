@@ -17,6 +17,7 @@ public class InboxViews {
         return renderInboxList(messages, selectedIndex, unreadCount, "ALL", "", false, bannerMessage);
     }
 
+    // Inbox table view with tabs, search, and pagination
     public static String renderInboxList(List<InboxMessage> messages, int selectedIndex, int unreadCount,
                                          String filterStatusDisplay, String searchBuffer, boolean searchMode,
                                          String bannerMessage) {
@@ -28,17 +29,20 @@ public class InboxViews {
             default -> 0;
         };
         String subtitle = String.format("Total: %d  •  Unread: %d", messages.size(), unreadCount);
+        // Header and message filter tabs
         sb.append(TuiHelper.header("INBOX"));
         sb.append("\n");
         sb.append(TuiHelper.boxTitle("Inbox", subtitle)).append("\n\n");
         sb.append(TuiHelper.tabBar(new String[]{"All", "Unread", "Actionable"}, activeTab)).append("\n\n");
 
+        // Search query bar
         if (searchMode) {
             sb.append("  Search: [ ").append(TuiHelper.cyan(truncate(searchBuffer, 50) + "_")).append(" ] (Press Enter to finish)\n\n");
         } else if (searchBuffer != null && !searchBuffer.isEmpty()) {
             sb.append("  Search: [ ").append(truncate(searchBuffer, 50)).append(" ] (Press '/' to edit)\n\n");
         }
 
+        // Table header and message rows
         sb.append(String.format("    %-4s  %-14s  %-16s  %-22s  %-46s  %-16s\n",
                 "#", "STATUS", "TYPE", "FROM", "SUBJECT", "RECEIVED"));
         sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
@@ -81,6 +85,7 @@ public class InboxViews {
 
         sb.append("\n  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
+        // Pagination and footer key hints
         if (!messages.isEmpty()) {
             int pageSize = TuiHelper.PAGE_SIZE;
             int totalPages = Math.max(1, (int) Math.ceil((double) messages.size() / pageSize));
@@ -97,6 +102,7 @@ public class InboxViews {
         return sb.toString();
     }
 
+    // Detailed message view with action controls
     public static String renderInboxDetail(InboxMessage msg,
                                            int focusedActionBtn, String errorMessage, String bannerMessage) {
         StringBuilder sb = new StringBuilder();
@@ -105,6 +111,7 @@ public class InboxViews {
         String typeName = (msg.getType() != null) ? msg.getType().name() : "N/A";
         sb.append(TuiHelper.boxTitle("Message Details", "Type: " + typeName)).append("\n\n");
 
+        // Message metadata header
         String sender = msg.getSenderName() != null ? truncate(msg.getSenderName(), 30) : "System";
         String dateStr = msg.getCreatedAt() != null ? DATE_FMT.format(msg.getCreatedAt()) : "N/A";
 
@@ -114,6 +121,7 @@ public class InboxViews {
         sb.append("   ").append(TuiHelper.bold("Status:   ")).append(formatStatusBadge(msg.getStatus(), false)).append("\n\n");
         sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
+        // Message body with automatic text wrapping
         if (msg.getBody() != null) {
             String cleanBody = msg.getBody()
                     .replace("Student's Justification:", "Student's Reason:")
@@ -132,6 +140,7 @@ public class InboxViews {
         }
         sb.append("\n  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
+        // Action buttons for approve or reject
         if (msg.isActionable()) {
             sb.append(TuiHelper.buttonRow("Approve Request", focusedActionBtn == 0, "Reject Request", focusedActionBtn == 1));
             sb.append("\n\n");
@@ -153,6 +162,7 @@ public class InboxViews {
         return sb.toString();
     }
 
+    // Status badge and label formatters
     private static String formatStatusBadge(InboxStatus status, boolean unread) {
         if (status == null) {
             return unread ? TuiHelper.cyan(String.format("%-14s", "[NEW]")) : TuiHelper.dim(String.format("%-14s", "[READ]"));
@@ -178,6 +188,8 @@ public class InboxViews {
             case NOTIFICATION -> "[NOTICE]";
         };
     }
+
+    // Text wrapping and truncation helpers
 
     private static List<String> wrapText(String text, int maxLen) {
         List<String> result = new java.util.ArrayList<>();

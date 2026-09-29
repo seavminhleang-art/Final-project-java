@@ -116,6 +116,7 @@ public class InboxService {
         return inboxRepository.delete(messageId);
     }
 
+    // Send system or user notification message to recipient
     public InboxMessage sendNotification(int recipientId, String title, String body) {
         if (title == null || title.trim().isBlank()) {
             throw new ValidationException("Notification title cannot be blank.");
@@ -137,6 +138,7 @@ public class InboxService {
         return msg;
     }
 
+    // Submit student quiz retake request with duplicate check and pass score guard
     public InboxMessage sendQuizRetakeRequest(int studentId, int teacherId, int quizId, String quizTitle) {
         if (inboxRepository.hasPendingRequest(studentId, InboxMessageType.QUIZ_RETAKE, quizId)) {
             throw new ValidationException("You already have a pending retake request for this quiz.");

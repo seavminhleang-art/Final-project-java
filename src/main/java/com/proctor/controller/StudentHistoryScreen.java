@@ -33,6 +33,7 @@ public class StudentHistoryScreen implements Screen {
     private int statusFilterIndex = 0;
     private static final String[] STATUS_FILTERS = {"ALL", "PASSED", "FAILED", "PENDING"};
 
+    // Initialize student history screen and retrieve historical attempts
     public StudentHistoryScreen(PortalService portalService, ExamService examService, AuthService authService) {
         this.portalService = portalService;
         this.examService = examService;
@@ -40,6 +41,7 @@ public class StudentHistoryScreen implements Screen {
         refreshList();
     }
 
+    // Fetch past exam results and scorecard records for active student
     private void refreshList() {
         User student = Session.getCurrentUser().orElse(null);
         int studentId = (student != null && student.getId() != null) ? student.getId() : 0;
@@ -47,6 +49,7 @@ public class StudentHistoryScreen implements Screen {
         applyFilters();
     }
 
+    // Filter history records by result status tab and search term
     private void applyFilters() {
         String filter = STATUS_FILTERS[statusFilterIndex];
         String search = searchBuffer.toString().trim().toLowerCase();
@@ -79,11 +82,13 @@ public class StudentHistoryScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        // Mouse wheel scroll navigation across past attempt records
         if (MouseUtil.isWheelUp(msg) || MouseUtil.isWheelDown(msg)) {
             selectedIndex = ListNavigationHelper.handleWheel(msg, selectedIndex, historyList.size());
             return ScreenResult.stay(this);
         }
 
+        // Mouse click handler for status tabs, table rows, and pagination
         if (MouseUtil.isLeftClick(msg)) {
             int line = MouseUtil.getLineIndex(msg);
             int col = MouseUtil.getColInLine(msg);
@@ -128,6 +133,7 @@ public class StudentHistoryScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Keystroke routing for search activation, status cycling, and scorecard review
         if (msg instanceof KeyPressMessage k) {
             if (searchMode) {
                 searchMode = ListNavigationHelper.handleSearchKey(k, searchBuffer, this::applyFilters);
@@ -165,6 +171,7 @@ public class StudentHistoryScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Render student assessment history table with filter tabs and search bar
     @Override
     public String view() {
         return ExamViews.renderStudentHistory(historyList, selectedIndex, dateFormat,

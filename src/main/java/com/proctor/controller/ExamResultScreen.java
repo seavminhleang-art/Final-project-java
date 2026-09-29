@@ -51,6 +51,7 @@ public class ExamResultScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        // Mouse click navigation for hint bar actions and dismiss
         if (MouseUtil.isLeftClick(msg)) {
             int line = MouseUtil.getLineIndex(msg);
             int col = MouseUtil.getColInLine(msg);
@@ -73,6 +74,7 @@ public class ExamResultScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Keyboard shortcuts for retake request or exit
         if (msg instanceof KeyPressMessage k) {
             if ("r".equalsIgnoreCase(k.key())) {
                 return handleRetakeRequest();
@@ -88,10 +90,12 @@ public class ExamResultScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Check eligibility for teacher retake request
     private boolean canRequestRetake() {
         return session != null && session.getAttempt() != null && session.getAttempt().getStatus() == AttemptStatus.AUTO_SUBMITTED && result != null && !result.isPassed() && result.getAssessmentType() == AssessmentType.QUIZ;
     }
 
+    // Process quiz retake request notification to teacher
     private ScreenResult handleRetakeRequest() {
         if (result != null && result.isPassed()) {
             bannerMessage = TuiHelper.yellow("● Retakes cannot be requested for assessments that have been passed.");
@@ -119,6 +123,7 @@ public class ExamResultScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Render assessment results summary view
     @Override
     public String view() {
         boolean canRetake = canRequestRetake();

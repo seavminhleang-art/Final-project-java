@@ -216,6 +216,7 @@ public class QuizRepository {
         }
     }
 
+    // Transactionally cascade delete child answers, results, attempts, and questions before deleting quiz
     public boolean delete(int quizId) {
         String delAnswersSql = "DELETE FROM attempt_answers WHERE attempt_id IN (SELECT id FROM attempts WHERE quiz_id = ?)";
         String delResultsSql = "DELETE FROM results WHERE quiz_id = ? OR attempt_id IN (SELECT id FROM attempts WHERE quiz_id = ?)";
@@ -226,6 +227,7 @@ public class QuizRepository {
         String delQuizSql = "DELETE FROM quizzes WHERE id = ?";
 
         try (Connection conn = DatabaseConnection.getConnection()) {
+            // Begin atomic transaction
             conn.setAutoCommit(false);
             try (PreparedStatement s1 = conn.prepareStatement(delAnswersSql);
                  PreparedStatement s2 = conn.prepareStatement(delResultsSql);

@@ -154,6 +154,7 @@ public class QuestionFormScreen implements Screen {
         return getNumInputFields() + 1;
     }
 
+    // Return to originating screen (quiz question editor or question bank)
     private ScreenResult returnToPreviousScreen() {
         if (quizContext != null) {
             return ScreenResult.navigate(new QuizQuestionEditorScreen(quizContext, new QuizService(new QuizRepository()), questionService, subjectService, authService));
@@ -163,6 +164,7 @@ public class QuestionFormScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        // Clipboard paste handling across question input fields
         if (msg instanceof PasteMessage paste) {
             int idx = focusedField;
             if (!isPinnedQuiz()) {
@@ -191,6 +193,7 @@ public class QuestionFormScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Mouse wheel scroll between form fields
         if (MouseUtil.isWheelUp(msg)) {
             if (!isPinnedQuiz()) subjectFilter.confirmSearch();
             focusedField = (focusedField - 1 + getFieldCount()) % getFieldCount();
@@ -203,6 +206,7 @@ public class QuestionFormScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Mouse click navigation for save and cancel buttons
         if (MouseUtil.isLeftClick(msg)) {
             int line = MouseUtil.getLineIndex(msg);
             int col = MouseUtil.getColInLine(msg);
@@ -222,6 +226,7 @@ public class QuestionFormScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Keyboard shortcuts and field navigation
         if (msg instanceof KeyPressMessage k) {
             if (!isPinnedQuiz() && focusedField == 0) {
                 if (KeyUtil.isEsc(k)) {
@@ -248,6 +253,7 @@ public class QuestionFormScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
+            // Enter key navigation or submit
             if (KeyUtil.isEnter(k)) {
                 if (focusedField == getSaveButtonIndex()) {
                     return handleSave();
@@ -272,6 +278,7 @@ public class QuestionFormScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Route keystrokes to active input, dropdown, or toggle field
     private void handleFieldInput(KeyPressMessage k) {
         int idx = focusedField;
         if (!isPinnedQuiz()) {
@@ -315,6 +322,7 @@ public class QuestionFormScreen implements Screen {
         }
     }
 
+    // Question type specific input handling (options, toggles, explanation)
     private void handleTypeSpecificInput(int relativeIndex, KeyPressMessage k) {
         if (selectedType == QuestionType.MCQ) {
             switch (relativeIndex) {
@@ -342,6 +350,7 @@ public class QuestionFormScreen implements Screen {
         }
     }
 
+    // Text input append and backspace helper
     private void handleTextInput(StringBuilder buffer, KeyPressMessage k) {
         if (KeyUtil.handleBackspace(buffer, k)) {
             errorMessage = "";
@@ -350,6 +359,7 @@ public class QuestionFormScreen implements Screen {
         }
     }
 
+    // Cycle question type options
     private void cycleType(boolean forward) {
         if (isSpeedQuiz()) {
             if (selectedType == QuestionType.MCQ) selectedType = QuestionType.TRUE_FALSE;
@@ -369,6 +379,7 @@ public class QuestionFormScreen implements Screen {
         if (focusedField >= getFieldCount()) focusedField = getFieldCount() - 1;
     }
 
+    // Cycle question difficulty tiers
     private void cycleDifficulty(boolean forward) {
         if (forward) {
             if (selectedDifficulty == Difficulty.EASY) selectedDifficulty = Difficulty.MEDIUM;
@@ -381,6 +392,7 @@ public class QuestionFormScreen implements Screen {
         }
     }
 
+    // Validate question inputs, options, and persist question record
     private ScreenResult handleSave() {
         try {
             if (isSpeedQuiz() && selectedType == QuestionType.SHORT_ANSWER) {
@@ -481,6 +493,7 @@ public class QuestionFormScreen implements Screen {
         }
     }
 
+    // Render question form view
     @Override
     public String view() {
         String subjectDisplay = !isPinnedQuiz()

@@ -53,6 +53,7 @@ public class SpeedQuizResultScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        // Mouse click navigation for retry or dismiss
         if (MouseUtil.isLeftClick(msg)) {
             int line = MouseUtil.getLineIndex(msg);
             int col = MouseUtil.getColInLine(msg);
@@ -69,6 +70,7 @@ public class SpeedQuizResultScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Keyboard shortcuts for retry or return
         if (msg instanceof KeyPressMessage k) {
             if ("r".equalsIgnoreCase(k.key())) {
                 return retrySpeedQuiz();
@@ -84,6 +86,7 @@ public class SpeedQuizResultScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Re-initialize and start a new speed quiz attempt
     private ScreenResult retrySpeedQuiz() {
         if (examService != null && result != null && result.getQuizId() != null) {
             User student = Session.getCurrentUser().orElse(null);
@@ -99,6 +102,7 @@ public class SpeedQuizResultScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Render speed quiz score breakdown and streak statistics
     @Override
     public String view() {
         StringBuilder sb = new StringBuilder(SpeedQuizViews.renderSpeedQuizResult(result, session, quiz, attemptAnswers, returnScreen != null));

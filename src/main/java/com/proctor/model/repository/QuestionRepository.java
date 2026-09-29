@@ -14,6 +14,7 @@ import java.util.Optional;
 
 public class QuestionRepository {
 
+    // Query questions and options belonging to a quiz
     public List<Question> findByQuizId(int quizId) {
         List<Question> list = new ArrayList<>();
         String sql = "SELECT q.id, q.quiz_id, q.subject_id, s.code AS subject_code, q.created_by, q.question_text, " +
@@ -38,6 +39,7 @@ public class QuestionRepository {
         return list;
     }
 
+    // Find single question by primary key with options
     public Optional<Question> findById(int id) {
         String sql = "SELECT q.id, q.quiz_id, q.subject_id, s.code AS subject_code, q.created_by, q.question_text, " +
                      "q.question_type, q.difficulty, q.points, q.explanation, q.ai_generated, q.is_enabled, q.created_at " +
@@ -58,6 +60,7 @@ public class QuestionRepository {
         return Optional.empty();
     }
 
+    // Insert new question and its options within a transaction
     public boolean create(Question question) {
         String sql = "INSERT INTO questions (quiz_id, subject_id, created_by, question_text, question_type, difficulty, points, explanation, ai_generated, is_enabled) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -106,6 +109,7 @@ public class QuestionRepository {
         }
     }
 
+    // Update question fields and sync options within a transaction
     public boolean update(Question question) {
         String sql = "UPDATE questions SET quiz_id = ?, subject_id = ?, question_text = ?, question_type = ?, " +
                      "difficulty = ?, points = ?, explanation = ?, is_enabled = ? WHERE id = ?";
@@ -144,6 +148,7 @@ public class QuestionRepository {
         }
     }
 
+    // Cascade unlinking of attempt answers and deletion of question
     public boolean delete(int questionId) {
         String unlinkOptionsSql = "UPDATE attempt_answers SET selected_option_id = NULL WHERE selected_option_id IN (SELECT id FROM question_options WHERE question_id = ?)";
         String unlinkQuestionSql = "UPDATE attempt_answers SET question_id = NULL WHERE question_id = ?";
@@ -178,6 +183,7 @@ public class QuestionRepository {
         }
     }
 
+    // Query bank questions with multi-criteria dynamic filtering
     public List<Question> findBankQuestions(Integer createdBy, Integer subjectId, QuestionType type, Difficulty difficulty, String search) {
         List<Question> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
@@ -229,6 +235,7 @@ public class QuestionRepository {
         return list;
     }
 
+    // Copy bank question to quiz and assign display order
     public int copyToQuiz(int bankQuestionId, int quizId) {
         Question source = findById(bankQuestionId).orElseThrow(() ->
                 new com.proctor.exception.ValidationException("Bank question not found: " + bankQuestionId));
@@ -289,6 +296,7 @@ public class QuestionRepository {
         }
     }
 
+    // Load question options ordered by sequence
     private List<QuestionOption> loadOptions(Connection conn, int questionId) throws SQLException {
         List<QuestionOption> options = new ArrayList<>();
         String sql = "SELECT id, question_id, option_text, is_correct, option_order FROM question_options " +
@@ -310,6 +318,7 @@ public class QuestionRepository {
         return options;
     }
 
+    // Insert child question options
     private void saveOptions(Connection conn, int questionId, List<QuestionOption> options) throws SQLException {
         if (options == null || options.isEmpty()) return;
 
@@ -332,6 +341,7 @@ public class QuestionRepository {
         }
     }
 
+    // Synchronize existing and updated options (update, insert, or delete)
     private void syncOptions(Connection conn, int questionId, List<QuestionOption> options) throws SQLException {
         if (options == null) options = List.of();
         List<QuestionOption> existing = loadOptions(conn, questionId);
@@ -393,6 +403,7 @@ public class QuestionRepository {
         }
     }
 
+    // Map database result set row to Question entity
     private Question mapRow(ResultSet rs) throws SQLException {
         QuestionType qType = QuestionType.MCQ;
         String qtStr = rs.getString("question_type");

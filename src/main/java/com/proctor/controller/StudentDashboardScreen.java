@@ -60,6 +60,7 @@ public class StudentDashboardScreen implements Screen {
         this.userService = userService;
     }
 
+    // Fetch unread notification count for current user
     private int getUnreadCount() {
         try {
             return Session.getCurrentUser()
@@ -71,6 +72,7 @@ public class StudentDashboardScreen implements Screen {
         }
     }
 
+    // Dynamic dashboard menu options with live unread badge count
     private String[] getMenuItems() {
         int unread = getUnreadCount();
         String inboxLabel = unread > 0 ? "6. Inbox (" + unread + " unread)" : "6. Inbox";
@@ -91,6 +93,7 @@ public class StudentDashboardScreen implements Screen {
     public ScreenResult update(Message msg) {
         String[] menuItems = getMenuItems();
 
+        // Mouse wheel scroll navigation
         if (MouseUtil.isWheelUp(msg)) {
             selectedIndex = (selectedIndex - 1 + menuItems.length) % menuItems.length;
             return ScreenResult.stay(this);
@@ -101,6 +104,7 @@ public class StudentDashboardScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Mouse click handling for menu options and quit confirmation modal
         if (MouseUtil.isLeftClick(msg)) {
             if (showQuitModal) {
                 int line = MouseUtil.getLineIndex(msg);
@@ -130,6 +134,8 @@ public class StudentDashboardScreen implements Screen {
             }
             return ScreenResult.stay(this);
         }
+
+        // Keyboard navigation and modal shortcuts
         if (msg instanceof KeyPressMessage k) {
             if (showQuitModal) {
                 if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {
@@ -151,12 +157,14 @@ public class StudentDashboardScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
+            // Direct numeric hotkey selection
             int digit = KeyUtil.getDigit(k);
             if (digit >= 1 && digit <= menuItems.length) {
                 selectedIndex = digit - 1;
                 return handleSelection();
             }
 
+            // Arrow keys and enter navigation
             if (KeyUtil.isUp(k)) {
                 selectedIndex = (selectedIndex - 1 + menuItems.length) % menuItems.length;
             } else if (KeyUtil.isDown(k)) {
@@ -172,6 +180,7 @@ public class StudentDashboardScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Action dispatch for selected menu option
     private ScreenResult handleSelection() {
         switch (selectedIndex) {
             case 0 -> {
@@ -208,6 +217,7 @@ public class StudentDashboardScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Render dashboard or quit confirmation modal
     @Override
     public String view() {
         if (showQuitModal) {

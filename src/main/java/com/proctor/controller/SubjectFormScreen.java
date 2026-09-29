@@ -31,6 +31,7 @@ public class SubjectFormScreen implements Screen {
     private boolean showDeleteModal = false;
     private boolean deleteConfirmFocused = false;
 
+    // Initialize subject form for creating or editing an academic subject
     public SubjectFormScreen(SubjectService subjectService, UserService userService, AuthService authService, Subject subjectToEdit) {
         this.subjectService = subjectService;
         this.userService = userService;
@@ -77,13 +78,15 @@ public class SubjectFormScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
-                if (msg instanceof PasteMessage paste && focusedField >= 0 && focusedField <= 2) {
+        // Handle clipboard paste into text fields
+        if (msg instanceof PasteMessage paste && focusedField >= 0 && focusedField <= 2) {
             StringBuilder buf = (focusedField == 0) ? code : (focusedField == 1 ? name : description);
             KeyUtil.pasteToBuffer(buf, paste.content());
             errorMessage = "";
             return ScreenResult.stay(this);
         }
 
+        // Mouse wheel scroll to cycle focus through form fields
         if (MouseUtil.isWheelUp(msg)) {
             focusedField = (focusedField - 1 + getFieldCount()) % getFieldCount();
             return ScreenResult.stay(this);
@@ -94,6 +97,7 @@ public class SubjectFormScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Mouse click handler for delete confirmation and form action buttons
         if (MouseUtil.isLeftClick(msg)) {
             if (showDeleteModal) {
                 int line = MouseUtil.getLineIndex(msg);
@@ -150,6 +154,7 @@ public class SubjectFormScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Keystroke navigation, delete modal confirmation, text editing, and status toggle
         if (msg instanceof KeyPressMessage k) {
             if (showDeleteModal) {
                 if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {
@@ -243,6 +248,7 @@ public class SubjectFormScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Handle character input and backspace deletion for text fields
     private void handleTextInput(KeyPressMessage k) {
         StringBuilder focusedBuffer = (focusedField == 0) ? code : (focusedField == 1 ? name : description);
         if (KeyUtil.handleBackspace(focusedBuffer, k)) {
@@ -252,6 +258,7 @@ public class SubjectFormScreen implements Screen {
         }
     }
 
+    // Validate form fields and persist new or modified subject
     private ScreenResult handleSave() {
         try {
             if (isEditMode()) {
@@ -269,6 +276,7 @@ public class SubjectFormScreen implements Screen {
         }
     }
 
+    // Render delete confirmation modal or subject configuration form view
     @Override
     public String view() {
         if (showDeleteModal && subjectToEdit != null) {

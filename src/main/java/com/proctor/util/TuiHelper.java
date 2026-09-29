@@ -37,11 +37,13 @@ public class TuiHelper {
     private static Integer cachedTermWidth = null;
     private static Integer cachedTermHeight = null;
 
+    // Store dynamic terminal viewport dimensions from window size events
     public static void setTerminalDimensions(int width, int height) {
         if (width > 30) cachedTermWidth = width;
         if (height > 10) cachedTermHeight = height;
     }
 
+    // ANSI text color and weight styling helpers
     public static String bold(String text) {
         return BOLD + text + RESET;
     }
@@ -69,11 +71,13 @@ public class TuiHelper {
     public static String dim(String text) {
         return DIM + text + RESET;
     }
+
     public static final String BOX_TITLE_MARKER = "\u001B[8888m";
     public static final String CENTER_MARKER = "\u001B[8889m";
     public static final String BUTTON_MARKER = "\u001B[8890m";
     public static final String INPUT_MARKER = "\u001B[8891m";
 
+    // Center-align text within current box boundaries
     public static String centerText(String text) {
         if (text == null || text.isBlank()) {
             return "";

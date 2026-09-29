@@ -104,6 +104,7 @@ public class QuizFormScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        // Clipboard paste handling for text and numeric inputs
         if (msg instanceof PasteMessage paste) {
             switch (focusedField) {
                 case 1 -> KeyUtil.pasteToBuffer(title, paste.content());
@@ -116,6 +117,7 @@ public class QuizFormScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Mouse wheel scroll between form fields
         if (MouseUtil.isWheelUp(msg)) {
             subjectFilter.confirmSearch();
             focusedField = (focusedField - 1 + getFieldCount()) % getFieldCount();
@@ -128,6 +130,7 @@ public class QuizFormScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Mouse click navigation for action buttons
         if (MouseUtil.isLeftClick(msg)) {
             int line = MouseUtil.getLineIndex(msg);
             int col = MouseUtil.getColInLine(msg);
@@ -143,6 +146,7 @@ public class QuizFormScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Keyboard shortcuts and field navigation
         if (msg instanceof KeyPressMessage k) {
             if (focusedField == 0) {
                 if (KeyUtil.isEsc(k)) {
@@ -169,6 +173,7 @@ public class QuizFormScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
+            // Enter key navigation or submit
             if (KeyUtil.isEnter(k)) {
                 if (focusedField == 10) {
                     return handleSave();
@@ -193,6 +198,7 @@ public class QuizFormScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Route keystrokes to active input, dropdown, or toggle field
     private void handleFieldInput(KeyPressMessage k) {
         switch (focusedField) {
             case 0 -> {
@@ -235,6 +241,7 @@ public class QuizFormScreen implements Screen {
         }
     }
 
+    // Cycle question type options for quiz mode
     private void cycleQuizQuestionType(boolean forward) {
         QuestionType[] types = {QuestionType.MCQ, QuestionType.TRUE_FALSE, QuestionType.SHORT_ANSWER};
         int cur = 0;
@@ -245,6 +252,7 @@ public class QuizFormScreen implements Screen {
         quizQuestionType = types[next];
     }
 
+    // Text input append and backspace helper
     private void handleTextInput(StringBuilder buffer, KeyPressMessage k) {
         if (KeyUtil.handleBackspace(buffer, k)) {
             errorMessage = "";
@@ -253,6 +261,7 @@ public class QuizFormScreen implements Screen {
         }
     }
 
+    // Validate form fields and persist new or updated quiz
     private ScreenResult handleSave() {
         try {
             if (selectedSubjectIndex == 0) {
@@ -347,6 +356,7 @@ public class QuizFormScreen implements Screen {
         }
     }
 
+    // Render assessment creation or edit form view
     @Override
     public String view() {
         String subjectDisplay = subjectFilter.getFormDisplay("(No Subject)");

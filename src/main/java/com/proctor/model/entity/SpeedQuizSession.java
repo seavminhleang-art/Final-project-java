@@ -72,6 +72,7 @@ public class SpeedQuizSession {
         return allQuestions.size();
     }
 
+    // Find next unused question matching current tier with fallback logic
     public Question pickNextQuestion() {
         if (isCompleted()) {
             return null;
@@ -82,6 +83,7 @@ public class SpeedQuizSession {
             return chosen;
         }
 
+        // Fallback tier progression if current tier is exhausted
         if (currentTier == Difficulty.HARD) {
             chosen = findUnusedInTier(Difficulty.MEDIUM);
             if (chosen == null) {
@@ -128,9 +130,11 @@ public class SpeedQuizSession {
         return null;
     }
 
+    // Process answer, calculate base/speed/streak scores, and adjust difficulty tier
     public SpeedQuizAnswerRecord recordAnswer(Question q, Integer selectedOptionId, boolean isTimeout) {
         if (q == null) return null;
 
+        // Check correctness against option definition
         boolean isCorrect = false;
         if (!isTimeout && selectedOptionId != null && q.getOptions() != null) {
             for (QuestionOption opt : q.getOptions()) {
@@ -141,6 +145,7 @@ public class SpeedQuizSession {
             }
         }
 
+        // Apply tier point multiplier
         double multiplier = switch (q.getDifficulty() != null ? q.getDifficulty() : Difficulty.MEDIUM) {
             case EASY -> 1.0;
             case MEDIUM -> 1.5;

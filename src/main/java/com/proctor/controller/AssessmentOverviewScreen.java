@@ -37,6 +37,7 @@ public class AssessmentOverviewScreen implements Screen {
     private boolean isMissedExam = false;
     private Timestamp examReferenceTime = null;
 
+    // Initialize assessment overview screen and fetch metadata
     public AssessmentOverviewScreen(Quiz quiz, ExamService examService, AuthService authService, InboxService inboxService, Screen returnScreen) {
         this.quiz = quiz;
         this.examService = examService;
@@ -46,6 +47,7 @@ public class AssessmentOverviewScreen implements Screen {
         refreshOverview();
     }
 
+    // Load assessment overview metrics and attempt eligibility for student
     private void refreshOverview() {
         User student = Session.getCurrentUser().orElse(null);
         int studentId = (student != null && student.getId() != null) ? student.getId() : 0;
@@ -66,6 +68,7 @@ public class AssessmentOverviewScreen implements Screen {
                         .build());
     }
 
+    // Determine available action buttons based on attempt status and quiz type
     private List<String> getButtonLabels() {
         List<String> labels = new ArrayList<>();
         AssessmentType aType = quiz.getAssessmentType() != null ? quiz.getAssessmentType() : AssessmentType.QUIZ;
@@ -103,6 +106,7 @@ public class AssessmentOverviewScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        // Mouse wheel navigation across action buttons
         if (MouseUtil.isWheelUp(msg)) {
             List<String> buttons = getButtonLabels();
             if (!buttons.isEmpty()) {
@@ -119,6 +123,7 @@ public class AssessmentOverviewScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Mouse click handler for action buttons and dialog controls
         if (MouseUtil.isLeftClick(msg)) {
             if (requestingExamReason) {
                 int line = MouseUtil.getLineIndex(msg);
@@ -156,6 +161,7 @@ public class AssessmentOverviewScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Keystroke routing for button navigation and action execution
         if (msg instanceof KeyPressMessage k) {
             if (requestingExamReason) {
                 return handleReasonDialogInput(k);
@@ -191,6 +197,7 @@ public class AssessmentOverviewScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Route selected button action to start, view scorecard, or retake
     private ScreenResult handleAction(String action) {
         if ("Back to List".equalsIgnoreCase(action)) {
             return ScreenResult.navigate(returnScreen);
@@ -251,6 +258,7 @@ public class AssessmentOverviewScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Verify retake eligibility and prompt for exam makeup justification
     private ScreenResult initiateRetake(AssessmentType aType, int studentId) {
         if (aType == AssessmentType.QUIZ) {
             if (overview.getStudentAttempt() == null || overview.getStudentAttempt().getStatus() != AttemptStatus.AUTO_SUBMITTED) {
@@ -309,6 +317,7 @@ public class AssessmentOverviewScreen implements Screen {
         }
     }
 
+    // Handle keystroke navigation and text input in reason dialog
     private ScreenResult handleReasonDialogInput(KeyPressMessage k) {
         if (KeyUtil.isEsc(k)) {
             requestingExamReason = false;
@@ -362,6 +371,7 @@ public class AssessmentOverviewScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Render makeup reason modal or full assessment overview scorecard
     @Override
     public String view() {
         if (requestingExamReason) {
@@ -375,6 +385,7 @@ public class AssessmentOverviewScreen implements Screen {
         return ExamViews.renderAssessmentOverview(overview, focusedButton, buttons, bannerMessage);
     }
 
+    // Validate reason and dispatch makeup request message to teacher
     private ScreenResult submitExamReason() {
         if (examReasonBuffer.toString().trim().isBlank()) {
             bannerMessage = TuiHelper.red("✖ A reason is required.");

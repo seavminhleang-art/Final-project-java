@@ -12,6 +12,7 @@ import java.util.Optional;
 
 public class UserRepository {
 
+    // Find user by case-insensitive email address
     public Optional<User> findByEmail(String email) {
         if (email == null || email.isBlank()) return Optional.empty();
         String sql = "SELECT id, email, username, password_hash, full_name, role, is_enabled, date_of_birth, gender, academic_degree, education_background, specialization, created_at, updated_at " +
@@ -30,6 +31,7 @@ public class UserRepository {
         return Optional.empty();
     }
 
+    // Find user by case-insensitive username
     public Optional<User> findByUsername(String username) {
         if (username == null || username.isBlank()) return Optional.empty();
         String sql = "SELECT id, email, username, password_hash, full_name, role, is_enabled, date_of_birth, gender, academic_degree, education_background, specialization, created_at, updated_at " +
@@ -48,6 +50,7 @@ public class UserRepository {
         return Optional.empty();
     }
 
+    // Find user matching either email or username identifier
     public Optional<User> findByEmailOrUsername(String identifier) {
         if (identifier == null || identifier.isBlank()) return Optional.empty();
         String clean = identifier.trim();
@@ -68,6 +71,7 @@ public class UserRepository {
         return Optional.empty();
     }
 
+    // Query user by primary key identifier
     public Optional<User> findById(int id) {
         String sql = "SELECT id, email, username, password_hash, full_name, role, is_enabled, date_of_birth, gender, academic_degree, education_background, specialization, created_at, updated_at " +
                      "FROM users WHERE id = ?";
@@ -85,6 +89,7 @@ public class UserRepository {
         return Optional.empty();
     }
 
+    // Search and filter users by keyword and role
     public List<User> findAll(String search, Role role) {
         List<User> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(

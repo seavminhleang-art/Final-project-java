@@ -142,6 +142,7 @@ public class AttemptRepository {
         return list;
     }
 
+    // Insert or update student answer using PostgreSQL ON CONFLICT clause
     public boolean saveAnswer(int attemptId, int questionId, Integer selectedOptionId, String textAnswer) {
         String upsertSql = "INSERT INTO attempt_answers (attempt_id, question_id, selected_option_id, text_answer) " +
                            "VALUES (?, ?, ?, ?) " +
@@ -161,6 +162,7 @@ public class AttemptRepository {
         }
     }
 
+    // Load answers recorded for a specific attempt
     public List<AttemptAnswer> getAttemptAnswers(int attemptId) {
         List<AttemptAnswer> list = new ArrayList<>();
         String sql = "SELECT id, attempt_id, question_id, selected_option_id, text_answer, ai_score, ai_feedback, teacher_feedback, is_correct, points_awarded " +
@@ -190,6 +192,7 @@ public class AttemptRepository {
         return list;
     }
 
+    // Update awarded points, correctness flag, and evaluation feedback
     public boolean updateAnswerGrade(int answerId, boolean correct, double points, Integer aiScore, String aiFeedback, String teacherFeedback) {
         String sql = "UPDATE attempt_answers SET is_correct = ?, points_awarded = ?, ai_score = ?, ai_feedback = ?, teacher_feedback = ? WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -207,6 +210,7 @@ public class AttemptRepository {
         }
     }
 
+    // Record submission timestamp and update attempt status
     public boolean finalizeAttempt(int attemptId, AttemptStatus status) {
         String sql = "UPDATE attempts SET submitted_at = COALESCE(submitted_at, NOW()), status = ? WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -219,6 +223,7 @@ public class AttemptRepository {
         }
     }
 
+    // Transactionally delete student attempt answers, results, and attempts for retake
     public boolean deleteAttemptsForStudent(int quizId, int studentId) {
         String deleteAnswers = "DELETE FROM attempt_answers WHERE attempt_id IN (SELECT id FROM attempts WHERE quiz_id = ? AND student_id = ?)";
         String deleteResults = "DELETE FROM results WHERE attempt_id IN (SELECT id FROM attempts WHERE quiz_id = ? AND student_id = ?)";

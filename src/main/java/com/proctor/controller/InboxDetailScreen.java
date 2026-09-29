@@ -33,6 +33,7 @@ public class InboxDetailScreen implements Screen {
     private String errorMessage = "";
     private String bannerMessage = "";
 
+    // Initialize message detail screen and mark message as read
     public InboxDetailScreen(InboxMessage message, InboxService inboxService, UserService userService,
                              AuthService authService, Screen returnScreen) {
         this.message = message;
@@ -49,6 +50,7 @@ public class InboxDetailScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        // Mouse wheel scroll to toggle focus between actionable buttons
         if (MouseUtil.isWheelUp(msg) || MouseUtil.isWheelDown(msg)) {
             if (message.isActionable()) {
                 focusedActionIndex = (focusedActionIndex == 0) ? 1 : 0;
@@ -56,6 +58,7 @@ public class InboxDetailScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Mouse click handler for delete confirmation, action approval/rejection, and navigation
         if (MouseUtil.isLeftClick(msg)) {
             if (showDeleteModal) {
                 int line = MouseUtil.getLineIndex(msg);
@@ -109,6 +112,7 @@ public class InboxDetailScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Keystroke shortcuts for delete modal, return, and action processing
         if (msg instanceof KeyPressMessage k) {
             if (showDeleteModal) {
                 if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {
@@ -151,6 +155,7 @@ public class InboxDetailScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Handle directional arrows and keyboard shortcuts for approve or reject actions
     private ScreenResult handleStandardActionInput(KeyPressMessage k) {
         if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {
             focusedActionIndex = (focusedActionIndex == 0) ? 1 : 0;
@@ -174,6 +179,7 @@ public class InboxDetailScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Approve retake request or standard actionable message and notify sender
     private ScreenResult executeStandardApprove() {
         try {
             if (message.getType() == InboxMessageType.QUIZ_RETAKE) {
@@ -203,6 +209,7 @@ public class InboxDetailScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Reject request and record rejection notification with actor role
     private ScreenResult executeReject() {
         try {
             User u = Session.getCurrentUser().orElse(null);
@@ -219,6 +226,7 @@ public class InboxDetailScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Render delete confirmation modal or message detail view
     @Override
     public String view() {
         if (showDeleteModal) {

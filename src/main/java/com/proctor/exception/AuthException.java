@@ -2,6 +2,7 @@ package com.proctor.exception;
 
 import java.io.Serial;
 
+// Runtime exception representing authentication and session errors
 public class AuthException extends RuntimeException {
     @Serial
     private static final long serialVersionUID = 1L;

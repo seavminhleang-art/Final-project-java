@@ -53,6 +53,7 @@ public class ExamTakerScreen implements Screen {
         loadCurrentQuestionState();
     }
 
+    // Restore saved answers and option focus for current question
     private void loadCurrentQuestionState() {
         if (session.getQuestions().isEmpty()) return;
         Question q = session.getQuestions().get(currentQuestionIndex);
@@ -84,6 +85,7 @@ public class ExamTakerScreen implements Screen {
         return () -> tick(gen);
     }
 
+    // Persist active answer to session state and database attempt record
     private void saveCurrentAnswer() {
         if (session.getQuestions().isEmpty()) return;
         Question q = session.getQuestions().get(currentQuestionIndex);
@@ -107,6 +109,7 @@ public class ExamTakerScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Countdown timer ticks and auto-submit on expiration
         if (msg instanceof TickMessage t) {
             if (t.generation() != -1 && t.generation() != this.tickGeneration) {
                 return ScreenResult.stay(this);
@@ -125,6 +128,7 @@ public class ExamTakerScreen implements Screen {
             }
         }
 
+        // Mouse wheel scroll between questions
         if (MouseUtil.isWheelUp(msg)) {
             if (!confirmSubmitMode && currentQuestionIndex > 0) {
                 saveCurrentAnswer();
@@ -143,6 +147,7 @@ public class ExamTakerScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Mouse click navigation for submission modal, options, and hint bar
         if (MouseUtil.isLeftClick(msg)) {
             if (confirmSubmitMode) {
                 int line = MouseUtil.getLineIndex(msg);
@@ -191,7 +196,9 @@ public class ExamTakerScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Keyboard navigation and answer input
         if (msg instanceof KeyPressMessage k) {
+            // Submission confirmation modal navigation
             if (confirmSubmitMode) {
                 if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {
                     confirmSubmitFocused = !confirmSubmitFocused;
@@ -224,6 +231,7 @@ public class ExamTakerScreen implements Screen {
             }
 
             Question q = session.getQuestions().get(currentQuestionIndex);
+            // Option selection, navigation, and submission for objective questions
             if (q.getQuestionType() != QuestionType.SHORT_ANSWER) {
                 if (KeyUtil.isLeft(k)) {
                     saveCurrentAnswer();
@@ -273,6 +281,7 @@ public class ExamTakerScreen implements Screen {
                         return ScreenResult.stay(this);
                     }
                 }
+            // Text input, backspace, and navigation for short-answer questions
             } else {
                 if (KeyUtil.handleBackspace(shortAnswerBuffer, k)) {
                     saveCurrentAnswer();
@@ -310,6 +319,7 @@ public class ExamTakerScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Render examination view or submission modal
     @Override
     public String view() {
         return ExamViews.renderExamTaker(session, currentQuestionIndex, focusedOptionIndex, shortAnswerBuffer.toString(), confirmSubmitMode, confirmSubmitFocused);

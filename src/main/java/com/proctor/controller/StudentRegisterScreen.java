@@ -72,6 +72,7 @@ public class StudentRegisterScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        // Animation tick updates for OTP sending spinner
         if (msg instanceof RegisterSendTickMessage t) {
             if (isSending && t.generationId() == sendGenerationId) {
                 spinnerTick++;
@@ -80,6 +81,7 @@ public class StudentRegisterScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Handle async email verification code send result
         if (msg instanceof RegisterSendResultMessage res) {
             if (!isSending || res.generationId() != sendGenerationId) {
                 return ScreenResult.stay(this);
@@ -105,6 +107,7 @@ public class StudentRegisterScreen implements Screen {
             }
         }
 
+        // Cancel sending on Escape key or click
         if (isSending) {
             if (msg instanceof KeyPressMessage k && KeyUtil.isEsc(k)) {
                 if (activeCancellation != null) {
@@ -130,7 +133,9 @@ public class StudentRegisterScreen implements Screen {
             }
             return ScreenResult.stay(this);
         }
-                if (msg instanceof PasteMessage paste) {
+
+        // Clipboard paste handling across form input fields
+        if (msg instanceof PasteMessage paste) {
             switch (focusedField) {
                 case 0 -> KeyUtil.pasteToBuffer(fullName, paste.content());
                 case 2 -> {
@@ -152,6 +157,7 @@ public class StudentRegisterScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Mouse wheel scroll between form fields
         if (MouseUtil.isWheelUp(msg)) {
             focusedField = (focusedField - 1 + getFieldCount()) % getFieldCount();
             return ScreenResult.stay(this);
@@ -162,6 +168,7 @@ public class StudentRegisterScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Mouse click navigation for input fields and action buttons
         if (MouseUtil.isLeftClick(msg)) {
             int line = MouseUtil.getLineIndex(msg);
             int col = MouseUtil.getColInLine(msg);
@@ -192,7 +199,9 @@ public class StudentRegisterScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Keyboard input handling and shortcuts
         if (msg instanceof KeyPressMessage k) {
+            // Toggle password mask visibility
             if (focusedField == 5 && KeyUtil.isPasswordToggle(k)) {
                 showPassword = !showPassword;
                 return ScreenResult.stay(this);
@@ -216,6 +225,7 @@ public class StudentRegisterScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
+            // Enter key navigation or submission
             if (KeyUtil.isEnter(k)) {
                 if (focusedField >= 0 && focusedField <= 5) {
                     focusedField++;
@@ -234,6 +244,7 @@ public class StudentRegisterScreen implements Screen {
                 }
             }
 
+            // Gender selector cycling
             if (focusedField == 1) {
                 if (KeyUtil.isRight(k)) {
                     cycleGender(true);
@@ -244,6 +255,7 @@ public class StudentRegisterScreen implements Screen {
                 }
             }
 
+            // Birthday 8-digit numeric input
             if (focusedField == 2) {
                 if (KeyUtil.isBackspace(k)) {
                     if (!birthday.isEmpty()) birthday.deleteCharAt(birthday.length() - 1);
@@ -260,6 +272,7 @@ public class StudentRegisterScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
+            // Text buffer input and backspace handling
             if (focusedField == 0 || (focusedField >= 3 && focusedField <= 6)) {
                 StringBuilder active = switch (focusedField) {
                     case 0 -> fullName;
@@ -289,6 +302,7 @@ public class StudentRegisterScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Gender option cycling helper
     private void cycleGender(boolean forward) {
         if ("Male".equals(selectedGender)) {
             selectedGender = forward ? "Female" : "Other";
@@ -309,6 +323,7 @@ public class StudentRegisterScreen implements Screen {
         return '\0';
     }
 
+    // Validate fields and dispatch verification email
     private ScreenResult attemptRegister() {
         try {
             if (fullName.toString().trim().isBlank()) {
@@ -371,6 +386,7 @@ public class StudentRegisterScreen implements Screen {
         }
     }
 
+    // Parse and validate 8-digit birthday format (DDMMYYYY)
     private LocalDate parseBirthday() {
         String digits = birthday.toString();
         if (digits.length() != 8) {
@@ -397,6 +413,7 @@ public class StudentRegisterScreen implements Screen {
         return parsed;
     }
 
+    // Render registration form or OTP sending progress view
     @Override
     public String view() {
         if (isSending) {

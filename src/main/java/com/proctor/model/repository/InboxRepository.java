@@ -13,6 +13,7 @@ import java.util.Optional;
 
 public class InboxRepository {
 
+    // Insert new inbox message or request notification
     public boolean create(InboxMessage message) {
         String sql = "INSERT INTO inbox_messages (sender_id, recipient_id, type, title, body, target_id, proposed_password_hash, status, is_read, created_at) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -52,6 +53,7 @@ public class InboxRepository {
         }
     }
 
+    // Find message by ID with sender display details
     public Optional<InboxMessage> findById(int id) {
         String sql = "SELECT m.id, m.sender_id, u.full_name AS sender_name, u.username AS sender_username, " +
                      "m.recipient_id, m.type, m.title, m.body, m.target_id, m.proposed_password_hash, m.status, m.is_read, m.created_at, m.resolved_at " +
@@ -72,6 +74,7 @@ public class InboxRepository {
         return Optional.empty();
     }
 
+    // Query all messages for recipient ordered newest first
     public List<InboxMessage> findByRecipientId(int recipientId) {
         List<InboxMessage> list = new ArrayList<>();
         String sql = "SELECT m.id, m.sender_id, u.full_name AS sender_name, u.username AS sender_username, " +
@@ -94,6 +97,7 @@ public class InboxRepository {
         return list;
     }
 
+    // Count unread messages for badge display
     public int countUnreadByRecipientId(int recipientId) {
         String sql = "SELECT COUNT(*) FROM inbox_messages WHERE recipient_id = ? AND is_read = FALSE";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -110,6 +114,7 @@ public class InboxRepository {
         return 0;
     }
 
+    // Mark individual message as read
     public boolean markAsRead(int id) {
         String sql = "UPDATE inbox_messages SET is_read = TRUE WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -121,6 +126,7 @@ public class InboxRepository {
         }
     }
 
+    // Mark all recipient messages as read
     public boolean markAllAsRead(int recipientId) {
         String sql = "UPDATE inbox_messages SET is_read = TRUE WHERE recipient_id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -132,6 +138,7 @@ public class InboxRepository {
         }
     }
 
+    // Update message approval status and resolution timestamp
     public boolean updateStatus(int id, InboxStatus status, Timestamp resolvedAt) {
         String sql = "UPDATE inbox_messages SET status = ?, resolved_at = ?, is_read = TRUE WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -145,6 +152,7 @@ public class InboxRepository {
         }
     }
 
+    // Delete inbox message by primary key
     public boolean delete(int id) {
         String sql = "DELETE FROM inbox_messages WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -156,6 +164,7 @@ public class InboxRepository {
         }
     }
 
+    // Check for duplicate pending requests
     public boolean hasPendingRequest(int senderId, InboxMessageType type, int targetId) {
         String sql = "SELECT COUNT(*) FROM inbox_messages WHERE sender_id = ? AND type = ? AND target_id = ? AND status = 'PENDING'";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -174,6 +183,7 @@ public class InboxRepository {
         return false;
     }
 
+    // Map database result set row to InboxMessage entity
     private InboxMessage mapRow(ResultSet rs) throws SQLException {
         String senderName = rs.getString("sender_name");
         String senderUsername = rs.getString("sender_username");

@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 public class SchemaInitializer {
     private static volatile boolean initialized = false;
 
+    // Execute base DDL schema and apply incremental column migrations
     public static synchronized void initialize() {
         if (initialized) return;
         try (InputStream in = SchemaInitializer.class.getClassLoader().getResourceAsStream("schema.sql")) {
@@ -19,13 +20,17 @@ public class SchemaInitializer {
                 return;
             }
 
+            // Read base schema DDL script
             String sql = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))
                     .lines()
                     .collect(Collectors.joining("\n"));
 
             try (Connection conn = DatabaseConnection.getConnection();
                  Statement stmt = conn.createStatement()) {
+                // Execute base tables and constraints
                 stmt.execute(sql);
+
+                // Run incremental column and table compatibility migrations
                 stmt.execute("DO $$ BEGIN " +
                         "IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'is_active') THEN " +
                         "ALTER TABLE users RENAME COLUMN is_active TO is_enabled; END IF; END $$;");

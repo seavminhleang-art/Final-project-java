@@ -51,6 +51,7 @@ public class EmailVerificationService {
         this.emailService = emailService;
     }
 
+    // Generate 6-digit token and send registration verification email
     public String sendRegistrationCode(String email, String fullName) {
         if (email == null || email.isBlank()) {
             throw new ValidationException("Email is required.");
@@ -76,6 +77,7 @@ public class EmailVerificationService {
         return sendRegistrationCode(email, null);
     }
 
+    // Verify submitted registration code and consume token on success
     public boolean verifyRegistrationCode(String email, String code) {
         if (email == null || code == null) {
             throw new ValidationException("Email and verification code are required.");
@@ -94,6 +96,7 @@ public class EmailVerificationService {
         return true;
     }
 
+    // Lookup user and dispatch password reset verification code
     public String sendPasswordResetCode(String emailOrUsername) {
         if (emailOrUsername == null || emailOrUsername.isBlank()) {
             throw new ValidationException("Please enter your email or username.");

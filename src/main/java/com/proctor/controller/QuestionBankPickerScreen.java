@@ -88,6 +88,7 @@ public class QuestionBankPickerScreen implements Screen {
 
     @Override
     public ScreenResult update(com.williamcallahan.tui4j.compat.bubbletea.Message msg) {
+        // Mouse wheel scroll navigation through bank questions
         if (MouseUtil.isWheelUp(msg)) {
             if (!bankQuestions.isEmpty() && selectedIndex > 0) {
                 selectedIndex--;
@@ -102,6 +103,7 @@ public class QuestionBankPickerScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Mouse click navigation for row toggle, pagination, and hint actions
         if (MouseUtil.isLeftClick(msg)) {
             int line = MouseUtil.getLineIndex(msg);
             int col = MouseUtil.getColInLine(msg);
@@ -114,6 +116,7 @@ public class QuestionBankPickerScreen implements Screen {
             int endRow = Math.min(bankQuestions.size(), startRow + pageSize);
             int displayedRows = endRow - startRow;
 
+            // Click table row to toggle selection
             if (itemsStartLine != -1 && line >= itemsStartLine && line < itemsStartLine + displayedRows * 2) {
                 int clickedOffset = (line - itemsStartLine) / 2;
                 int targetIdx = startRow + clickedOffset;
@@ -131,12 +134,14 @@ public class QuestionBankPickerScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
+            // Click pagination arrows
             int pagLine = MouseUtil.findPaginationLine(view());
             if (pagLine != -1 && line == pagLine && !bankQuestions.isEmpty()) {
                 selectedIndex = ListNavigationHelper.handlePaginationClick(col, selectedIndex, bankQuestions.size(), TuiHelper.PAGE_SIZE);
                 return ScreenResult.stay(this);
             }
 
+            // Click hint bar action shortcuts
             String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
             if (hintAction != null) {
                 if ("Esc".equals(hintAction)) {
@@ -162,13 +167,14 @@ public class QuestionBankPickerScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Keyboard shortcuts for navigation, selection toggle, and import
         if (msg instanceof com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage k) {
-
             if (KeyUtil.isEsc(k)) {
                 return ScreenResult.navigate(new QuizQuestionEditorScreen(
                         quiz, new QuizService(new QuizRepository()), questionService, subjectService, authService));
             }
 
+            // Arrow key row and page navigation
             if (KeyUtil.isUp(k)) {
                 if (!bankQuestions.isEmpty()) selectedIndex = (selectedIndex - 1 + bankQuestions.size()) % bankQuestions.size();
             } else if (KeyUtil.isDown(k)) {
@@ -177,6 +183,7 @@ public class QuestionBankPickerScreen implements Screen {
                 selectedIndex = ListNavigationHelper.prevPage(selectedIndex, TuiHelper.PAGE_SIZE);
             } else if (KeyUtil.isRight(k)) {
                 selectedIndex = ListNavigationHelper.nextPage(selectedIndex, bankQuestions.size(), TuiHelper.PAGE_SIZE);
+            // Toggle selection with spacebar
             } else if (KeyUtil.isSpace(k) && !bankQuestions.isEmpty()) {
                 int qid = bankQuestions.get(selectedIndex).getId();
                 if (alreadyAddedIds.contains(qid)) {
@@ -188,6 +195,7 @@ public class QuestionBankPickerScreen implements Screen {
                 } else {
                     selectedIds.add(qid);
                 }
+            // Confirm import on Enter
             } else if (KeyUtil.isEnter(k)) {
                 return confirmImport();
             }
@@ -195,6 +203,7 @@ public class QuestionBankPickerScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Copy selected bank questions into current quiz
     private ScreenResult confirmImport() {
         if (selectedIds.isEmpty()) {
             bannerMessage = TuiHelper.yellow("⚠ No questions selected. Use Space to toggle.");
@@ -220,6 +229,7 @@ public class QuestionBankPickerScreen implements Screen {
         return ScreenResult.navigate(editor);
     }
 
+    // Render bank question picker table with multi-select checkboxes
     @Override
     public String view() {
         return QuestionBankViews.renderBankPicker(quiz, bankQuestions, selectedIds, alreadyAddedIds, selectedIndex, filterSummary, bannerMessage);

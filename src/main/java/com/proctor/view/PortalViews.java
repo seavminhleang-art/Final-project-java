@@ -11,9 +11,11 @@ public class PortalViews {
         return renderGlobalLeaderboard(leaderboard, selectedIndex, com.proctor.controller.GlobalLeaderboardScreen.Mode.QUIZ);
     }
 
+    // Leaderboard table view with mode tabs and rankings
     public static String renderGlobalLeaderboard(List<LeaderboardEntry> leaderboard, int selectedIndex,
-                                                com.proctor.controller.GlobalLeaderboardScreen.Mode mode) {
+                                                 com.proctor.controller.GlobalLeaderboardScreen.Mode mode) {
         StringBuilder sb = new StringBuilder();
+        // Header and category tabs
         sb.append(TuiHelper.header("LEADERBOARD"));
         sb.append("\n");
 
@@ -37,6 +39,7 @@ public class PortalViews {
         sb.append(TuiHelper.boxTitle(title, String.format("Top Performers (%d ranked)", leaderboard.size()))).append("\n\n");
         sb.append(TuiHelper.tabBar(new String[]{"Quizzes", "Exams", "Speed Quizzes"}, activeTab)).append("\n\n");
 
+        // Table header based on quiz or speed mode
         if (mode == com.proctor.controller.GlobalLeaderboardScreen.Mode.SPEED) {
             sb.append(String.format("  %-6s  %-54s  %-32s  %-10s  %-14s\n",
                     "RANK", "STUDENT NAME", "USERNAME", countColHeader, "HIGH SCORE"));
@@ -46,6 +49,7 @@ public class PortalViews {
         }
         sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
+        // Empty state message
         if (leaderboard.isEmpty()) {
             String emptyMsg;
             if (mode == com.proctor.controller.GlobalLeaderboardScreen.Mode.SPEED) {
@@ -57,6 +61,7 @@ public class PortalViews {
             }
             sb.append("  ").append(TuiHelper.dim(emptyMsg)).append("\n");
         } else {
+            // Ranked student table rows
             int pageSize = TuiHelper.PAGE_SIZE;
             int startRow = (selectedIndex / pageSize) * pageSize;
             int endRow = Math.min(leaderboard.size(), startRow + pageSize);
@@ -106,6 +111,7 @@ public class PortalViews {
 
         sb.append("\n  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
+        // Pagination and footer controls
         if (!leaderboard.isEmpty()) {
             int pageSize = TuiHelper.PAGE_SIZE;
             int totalPages = Math.max(1, (int) Math.ceil((double) leaderboard.size() / pageSize));

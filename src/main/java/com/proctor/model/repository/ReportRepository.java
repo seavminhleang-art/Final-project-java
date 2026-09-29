@@ -15,6 +15,7 @@ import java.util.List;
 
 public class ReportRepository {
 
+    // Aggregate quiz performance metrics and passing rates
     public List<QuizPerformanceDTO> getQuizPerformanceData(Integer subjectId) {
         List<QuizPerformanceDTO> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
@@ -58,6 +59,7 @@ public class ReportRepository {
         return list;
     }
 
+    // Compile system-wide platform statistics and user counts
     public SystemOverviewDTO getSystemOverviewData() {
         String sql = "SELECT " +
                      "(SELECT COUNT(*) FROM users) AS total_users, " +
@@ -88,6 +90,7 @@ public class ReportRepository {
         }
     }
 
+    // Aggregate subject participation and performance summary
     public List<SubjectReportDTO> getSubjectSummaryData() {
         List<SubjectReportDTO> list = new ArrayList<>();
         String sql = "SELECT s.id, s.code, s.name, " +

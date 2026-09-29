@@ -15,6 +15,7 @@ import java.util.Map;
 
 public class SpeedQuizViews {
 
+    // Speed quiz creation and edit settings form
     public static String renderSpeedQuizForm(
             boolean isEdit,
             String subjectDisplay,
@@ -35,6 +36,7 @@ public class SpeedQuizViews {
         String titleHeader = isEdit ? "Edit Speed Quiz" : "Create New Speed Quiz";
         sb.append(TuiHelper.boxTitle(titleHeader, "Adaptive difficulty challenge with per-question timers")).append("\n\n");
 
+        // Scrolling window of speed quiz settings
         int numInputFields = 7;
         int maxVisible = 6;
         int startField = 0;
@@ -72,6 +74,7 @@ public class SpeedQuizViews {
             sb.append(TuiHelper.dim(String.format("  ▼ %d more fields below (Press ↓ to scroll)", numInputFields - endField))).append("\n");
         }
 
+        // Form buttons and error display
         sb.append("\n");
         sb.append(TuiHelper.buttonRow("Save", focusedField == 7, "Cancel", focusedField == 8)).append("\n\n");
 
@@ -94,6 +97,7 @@ public class SpeedQuizViews {
         return renderSpeedQuizTaker(session, focusedOptionIndex, confirmForfeitMode, confirmForfeitFocused, toastRecord, 0);
     }
 
+    // Active speed quiz gameplay screen with timer and options
     public static String renderSpeedQuizTaker(SpeedQuizSession session, int focusedOptionIndex,
                                              boolean confirmForfeitMode, boolean confirmForfeitFocused,
                                              SpeedQuizAnswerRecord toastRecord, int revealSecondsRemaining) {
@@ -109,6 +113,7 @@ public class SpeedQuizViews {
         }
 
         StringBuilder sb = new StringBuilder();
+        // Header, question counter, score, and streak
         sb.append(TuiHelper.header("SPEED QUIZ"));
         sb.append("\n");
 
@@ -127,6 +132,7 @@ public class SpeedQuizViews {
                 curQNum, totalQ, session.getTotalScore(), session.getCurrentStreak());
         sb.append(TuiHelper.boxTitle(session.getQuiz().getTitle(), subInfo)).append("\n\n");
 
+        // Difficulty tier badge and countdown progress bar
         Difficulty diff = (toastRecord != null && toastRecord.getTierShown() != null)
                 ? toastRecord.getTierShown()
                 : (q.getDifficulty() != null ? q.getDifficulty() : Difficulty.MEDIUM);
@@ -167,6 +173,7 @@ public class SpeedQuizViews {
         sb.append("  ").append(TuiHelper.bold(String.format("Q%d. %s", curQNum, q.getQuestionText()))).append(" ")
                 .append(TuiHelper.dim(String.format("(%.1f base pts)", q.getPoints()))).append("\n\n");
 
+        // Option buttons and selection states
         if (q.getOptions() != null) {
             Integer pickedId = (toastRecord != null) ? toastRecord.getSelectedOptionId() : null;
             for (int i = 0; i < q.getOptions().size(); i++) {
@@ -219,6 +226,7 @@ public class SpeedQuizViews {
         return sb.toString();
     }
 
+    // Instant round reveal modal showing score breakdown and tier changes
     public static String renderSpeedQuizReveal(SpeedQuizSession session, SpeedQuizAnswerRecord record,
                                               int revealSecondsRemaining) {
         StringBuilder sb = new StringBuilder();
@@ -236,6 +244,7 @@ public class SpeedQuizViews {
 
         Question q = record.getQuestion();
 
+        // Points earned with speed and streak bonuses
         if (record.isCorrect()) {
             sb.append("  ").append(TuiHelper.green(TuiHelper.bold("✔ CORRECT!"))).append("\n\n");
 
@@ -257,6 +266,7 @@ public class SpeedQuizViews {
                         TuiHelper.yellow(TuiHelper.bold("🔥 " + session.getCurrentStreak() + " STREAK BONUS")),
                         record.getStreakBonus()));
             }
+        // Incorrect or timed out answer handling
         } else {
             if (record.getSecondsRemaining() <= 0 && record.getSelectedOptionId() == null) {
                 sb.append("  ").append(TuiHelper.red(TuiHelper.bold("⏱ TIME'S UP!"))).append("\n\n");
@@ -278,6 +288,7 @@ public class SpeedQuizViews {
 
         sb.append("\n");
 
+        // Adaptive ladder promotion or demotion status
         Difficulty oldTier = record.getTierShown();
         Difficulty newTier = session.getCurrentTier();
         if (record.isCorrect()) {
@@ -310,6 +321,7 @@ public class SpeedQuizViews {
         return renderSpeedQuizResult(result, session, q, null, hasReturnScreen);
     }
 
+    // Comprehensive speed quiz completion scorecard
     public static String renderSpeedQuizResult(Result result, SpeedQuizSession session, Quiz quiz, List<AttemptAnswer> answers, boolean hasReturnScreen) {
         StringBuilder sb = new StringBuilder();
         sb.append(TuiHelper.header("SPEED QUIZ RESULTS"));

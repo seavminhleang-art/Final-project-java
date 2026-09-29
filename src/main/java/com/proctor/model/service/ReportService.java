@@ -19,6 +19,7 @@ public class ReportService {
     private final ReportRepository reportRepository;
     private final String outputDir;
 
+    // Guard against student access to performance analytics
     private void checkInstructorAccess() {
         Session.getCurrentUser().ifPresent(u -> {
             if (u.getRole() == Role.STUDENT) {
@@ -27,6 +28,7 @@ public class ReportService {
         });
     }
 
+    // Guard restricting system overview reports to administrators
     private void checkAdminAccess() {
         Session.getCurrentUser().ifPresent(u -> {
             if (u.getRole() != Role.ADMIN) {
@@ -41,6 +43,7 @@ public class ReportService {
         new File(outputDir).mkdirs();
     }
 
+    // Compile and export PDF report of quiz attempts, average scores, and pass rates
     public String generateQuizPerformanceReport(Integer subjectId) {
         checkInstructorAccess();
         List<QuizPerformanceDTO> data = reportRepository.getQuizPerformanceData(subjectId);

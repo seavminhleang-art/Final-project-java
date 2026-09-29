@@ -27,12 +27,14 @@ public class UserListScreen implements Screen {
     private boolean searchMode = false;
     private String bannerMessage = "";
 
+    // Initialize user administration screen and load user records
     public UserListScreen(UserService userService, AuthService authService) {
         this.userService = userService;
         this.authService = authService;
         refreshList();
     }
 
+    // Query users from database with current search term and role filter
     private void refreshList() {
         this.users = userService.getUsers(searchBuffer.toString(), filterRole);
         selectedIndex = ListNavigationHelper.clampIndex(selectedIndex, users.size());
@@ -40,11 +42,13 @@ public class UserListScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        // Mouse wheel scrolling through user records
         if (MouseUtil.isWheelUp(msg) || MouseUtil.isWheelDown(msg)) {
             selectedIndex = ListNavigationHelper.handleWheel(msg, selectedIndex, users.size());
             return ScreenResult.stay(this);
         }
 
+        // Mouse click handler for tabs, rows, pagination, and action hints
         if (MouseUtil.isLeftClick(msg)) {
             int line = MouseUtil.getLineIndex(msg);
             int col = MouseUtil.getColInLine(msg);
@@ -95,6 +99,7 @@ public class UserListScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Keystroke shortcuts for search, navigation, user editing, and status toggle
         if (msg instanceof KeyPressMessage k) {
             if (searchMode) {
                 searchMode = ListNavigationHelper.handleSearchKey(k, searchBuffer, this::refreshList);
@@ -138,6 +143,7 @@ public class UserListScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Cycle through role filters: All, Student, Teacher, and Admin
     private void cycleFilterRole() {
         if (filterRole == null) filterRole = Role.STUDENT;
         else if (filterRole == Role.STUDENT) filterRole = Role.TEACHER;
@@ -147,6 +153,7 @@ public class UserListScreen implements Screen {
         refreshList();
     }
 
+    // Render user administration list table and filter bar
     @Override
     public String view() {
         return UserViews.renderUserList(users, selectedIndex, filterRole, searchBuffer.toString(), searchMode, bannerMessage);

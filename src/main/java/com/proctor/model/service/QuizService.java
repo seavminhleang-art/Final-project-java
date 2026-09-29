@@ -29,6 +29,7 @@ public class QuizService {
         this.questionRepository = questionRepository;
     }
 
+    // Query assessments with optional subject, published status, and text search filters
     public List<Quiz> getAssessments(AssessmentType type, Integer subjectId, Boolean published, String search) {
         Optional<User> callerOpt = Session.getCurrentUser();
         if (callerOpt.isPresent() && callerOpt.get().getRole() == Role.STUDENT) {
@@ -37,6 +38,7 @@ public class QuizService {
         return quizRepository.findAll(type, subjectId, null, published, search, false);
     }
 
+    // Query assessments filtered by creator with student published-only enforcement
     public List<Quiz> getAssessments(AssessmentType type, Integer subjectId, Integer createdBy, Boolean published, String search) {
         Optional<User> callerOpt = Session.getCurrentUser();
         if (callerOpt.isPresent() && callerOpt.get().getRole() == Role.STUDENT) {
@@ -45,6 +47,7 @@ public class QuizService {
         return quizRepository.findAll(type, subjectId, createdBy, published, search, false);
     }
 
+    // Retrieve assessments visible to specified user including own drafts
     public List<Quiz> getAssessmentsVisibleTo(AssessmentType type, Integer subjectId, Integer visibleToUserId, String search) {
         if (visibleToUserId == null) {
             return quizRepository.findAll(type, subjectId, null, true, search, false);
@@ -52,10 +55,12 @@ public class QuizService {
         return quizRepository.findAll(type, subjectId, null, null, search, false, visibleToUserId);
     }
 
+    // Retrieve quiz entity by unique identifier
     public Optional<Quiz> getQuizById(int id) {
         return quizRepository.findById(id);
     }
 
+    // Validate parameters, set expiration timestamp, and create quiz
     public Quiz createQuiz(Quiz quiz) {
         validateQuiz(quiz);
         applyExpiration(quiz);
@@ -66,6 +71,7 @@ public class QuizService {
         return quiz;
     }
 
+    // Update existing quiz with creator ownership check
     public Quiz updateQuiz(Quiz quiz) {
         if (quiz.getId() == null) {
             throw new ValidationException("Quiz ID is required for update.");
@@ -99,6 +105,7 @@ public class QuizService {
         return quiz;
     }
 
+    // Delete quiz with creator ownership check
     public boolean deleteQuiz(int quizId, User requestingUser) {
         Optional<Quiz> opt = quizRepository.findById(quizId);
         if (opt.isEmpty()) {
@@ -123,6 +130,7 @@ public class QuizService {
         return true;
     }
 
+    // Toggle assessment published status with expiration and question count checks
     public boolean togglePublishStatus(int quizId) {
         Optional<Quiz> opt = quizRepository.findById(quizId);
         if (opt.isEmpty()) {
@@ -151,10 +159,12 @@ public class QuizService {
         return quizRepository.togglePublished(quizId);
     }
 
+    // Get question identifiers currently assigned to quiz
     public List<Integer> getAssignedQuestionIds(int quizId) {
         return quizRepository.getAssignedQuestionIds(quizId);
     }
 
+    // Assign questions to quiz with assessment type compatibility checks
     public boolean assignQuestions(int quizId, List<Integer> questionIds) {
         Optional<Quiz> quizOpt = quizRepository.findById(quizId);
         if (quizOpt.isEmpty()) {
@@ -200,6 +210,7 @@ public class QuizService {
         return quizRepository.assignQuestions(quizId, questionIds);
     }
 
+    // Calculate expiration timestamp from configured active duration hours
     private void applyExpiration(Quiz quiz) {
         if (quiz.getActiveDurationHours() != null && quiz.getActiveDurationHours() > 0) {
             long millis = System.currentTimeMillis() + ((long) quiz.getActiveDurationHours() * 3600 * 1000);
@@ -209,6 +220,7 @@ public class QuizService {
         }
     }
 
+    // Validate quiz title, assessment type, time limits, and passing score bounds
     private void validateQuiz(Quiz quiz) {
         if (quiz.getTitle() == null || quiz.getTitle().isBlank()) {
             throw new ValidationException("Title is required.");

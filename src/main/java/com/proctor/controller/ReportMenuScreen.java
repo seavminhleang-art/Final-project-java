@@ -29,11 +29,13 @@ public class ReportMenuScreen implements Screen {
             "2. Subject Summary Report (Course Statistics PDF)"
     };
 
+    // Initialize report generation screen
     public ReportMenuScreen(ReportService reportService, AuthService authService) {
         this.reportService = reportService;
         this.authService = authService;
     }
 
+    // Retrieve available PDF reports based on current user role
     private String[] getReports() {
         User u = Session.getCurrentUser().orElse(null);
         if (u != null && u.getRole() == Role.ADMIN) {
@@ -44,6 +46,7 @@ public class ReportMenuScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        // Mouse wheel navigation through report options
         if (MouseUtil.isWheelUp(msg)) {
             String[] reports = getReports();
             selectedIndex = (selectedIndex - 1 + reports.length) % reports.length;
@@ -56,6 +59,7 @@ public class ReportMenuScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Mouse click handler for selecting report option or returning to dashboard
         if (MouseUtil.isLeftClick(msg)) {
             String[] reports = getReports();
             int line = MouseUtil.getLineIndex(msg);
@@ -80,6 +84,7 @@ public class ReportMenuScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Keystroke shortcuts for numeric selection, navigation, and PDF generation
         if (msg instanceof KeyPressMessage k) {
             String[] reports = getReports();
 
@@ -112,6 +117,7 @@ public class ReportMenuScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Invoke report service to generate selected PDF document
     private void generateSelectedReport() {
         User u = Session.getCurrentUser().orElse(null);
         boolean isAdmin = u != null && u.getRole() == Role.ADMIN;
@@ -137,6 +143,7 @@ public class ReportMenuScreen implements Screen {
         }
     }
 
+    // Render report menu interface and generation status banner
     @Override
     public String view() {
         return ReportViews.renderReportMenu(getReports(), selectedIndex, bannerMessage);

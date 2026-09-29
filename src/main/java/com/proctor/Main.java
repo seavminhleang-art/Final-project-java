@@ -17,24 +17,29 @@ import java.util.logging.Logger;
 public class Main {
     public static void main(String[] args) {
 
+        // Suppress noisy library logs during terminal startup
         System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "warn");
         Logger.getLogger("org.jline").setLevel(Level.OFF);
         PrintStream originalErr = System.err;
         System.setErr(new PrintStream(OutputStream.nullOutputStream()));
 
         try {
+            // Database pool initialization and automatic schema migrations
             DatabaseConnection.init();
             Runtime.getRuntime().addShutdownHook(new Thread(DatabaseConnection::close));
             SchemaInitializer.initialize();
 
+            // Seed default administrator and predefined curriculum subjects
             UserRepository userRepository = new UserRepository();
             SeedService seedService = new SeedService(userRepository);
             seedService.seedDefaultAdmin();
             seedService.seedDefaultSubjects();
 
+            // Authentication service and initial landing screen
             AuthService authService = new AuthService(userRepository);
-
             StartupScreen startupScreen = new StartupScreen(authService);
+
+            // Launch interactive terminal user interface program
             new Program(new AppModel(startupScreen))
                     .withAltScreen()
                     .withMouseAllMotion()

@@ -9,6 +9,7 @@ import java.util.Optional;
 
 public class EmailVerificationRepository {
 
+    // Persist new verification OTP token with expiry
     public EmailVerificationToken saveToken(String email, String code, String purpose, Timestamp expiresAt) {
         String sql = "INSERT INTO email_verification_tokens (email, code, purpose, expires_at) " +
                      "VALUES (?, ?, ?, ?) RETURNING id, created_at, used";
@@ -37,6 +38,7 @@ public class EmailVerificationRepository {
         return null;
     }
 
+    // Retrieve latest unexpired and unused token
     public Optional<EmailVerificationToken> findLatestValidToken(String email, String code, String purpose) {
         if (email == null || code == null || purpose == null) return Optional.empty();
         String sql = "SELECT id, email, code, purpose, expires_at, used, created_at " +
@@ -59,6 +61,7 @@ public class EmailVerificationRepository {
         return Optional.empty();
     }
 
+    // Mark token as used after successful verification
     public boolean markTokenUsed(int id) {
         String sql = "UPDATE email_verification_tokens SET used = TRUE WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -70,6 +73,7 @@ public class EmailVerificationRepository {
         }
     }
 
+    // Invalidate previous pending tokens for user
     public void invalidatePendingTokens(String email, String purpose) {
         if (email == null || purpose == null) return;
         String sql = "UPDATE email_verification_tokens SET used = TRUE " +
@@ -84,6 +88,7 @@ public class EmailVerificationRepository {
         }
     }
 
+    // Map database result set row to EmailVerificationToken entity
     private EmailVerificationToken mapRow(ResultSet rs) throws SQLException {
         return EmailVerificationToken.builder()
                 .id(rs.getInt("id"))

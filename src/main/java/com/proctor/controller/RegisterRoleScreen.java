@@ -19,6 +19,7 @@ public class RegisterRoleScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        // Mouse wheel scroll between role options
         if (MouseUtil.isWheelUp(msg)) {
             focusedButton = (focusedButton - 1 + 3) % 3;
             return ScreenResult.stay(this);
@@ -29,6 +30,7 @@ public class RegisterRoleScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Mouse click navigation for role buttons
         if (MouseUtil.isLeftClick(msg)) {
             int line = MouseUtil.getLineIndex(msg);
             int col = MouseUtil.getColInLine(msg);
@@ -47,6 +49,8 @@ public class RegisterRoleScreen implements Screen {
             }
             return ScreenResult.stay(this);
         }
+
+        // Keyboard arrow and enter navigation
         if (msg instanceof KeyPressMessage k) {
             if (KeyUtil.isEsc(k)) {
                 return ScreenResult.navigate(new StartupScreen(authService));
@@ -72,6 +76,7 @@ public class RegisterRoleScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
+            // Confirm selected registration role
             if (KeyUtil.isEnter(k)) {
                 UserService userService = new UserService(new UserRepository());
                 if (focusedButton == 0) {
@@ -86,6 +91,7 @@ public class RegisterRoleScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Render registration role selection view
     @Override
     public String view() {
         return AuthViews.renderRegisterRole(focusedButton);

@@ -46,6 +46,7 @@ public class QuizQuestionEditorScreen implements Screen {
         }
     }
 
+    // Reload quiz questions from database
     private void refreshList() {
         this.questions = questionService.getQuestionsByQuizId(quiz.getId());
         if (questions.isEmpty()) {
@@ -74,6 +75,7 @@ public class QuizQuestionEditorScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Mouse wheel scroll through question list
         if (MouseUtil.isWheelUp(msg)) {
             if (!questions.isEmpty() && selectedIndex > 0) {
                 selectedIndex--;
@@ -88,6 +90,7 @@ public class QuizQuestionEditorScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Mouse click navigation for deletion modal, questions, pagination, and hint bar
         if (MouseUtil.isLeftClick(msg)) {
             if (confirmingDelete) {
                 int line = MouseUtil.getLineIndex(msg);
@@ -125,6 +128,7 @@ public class QuizQuestionEditorScreen implements Screen {
             int endRow = Math.min(questions.size(), startRow + pageSize);
             int displayedRows = endRow - startRow;
 
+            // Click table row to edit question
             if (itemsStartLine != -1 && line >= itemsStartLine && line < itemsStartLine + displayedRows * 2) {
                 int clickedOffset = (line - itemsStartLine) / 2;
                 int targetIdx = startRow + clickedOffset;
@@ -138,12 +142,14 @@ public class QuizQuestionEditorScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
+            // Click pagination arrows
             int pagLine = MouseUtil.findPaginationLine(view());
             if (pagLine != -1 && line == pagLine && !questions.isEmpty()) {
                 selectedIndex = ListNavigationHelper.handlePaginationClick(col, selectedIndex, questions.size(), TuiHelper.PAGE_SIZE);
                 return ScreenResult.stay(this);
             }
 
+            // Click hint bar action shortcuts
             String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
             if (hintAction != null) {
                 if ("Esc".equalsIgnoreCase(hintAction)) {
@@ -181,7 +187,9 @@ public class QuizQuestionEditorScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Keyboard shortcuts and list navigation
         if (msg instanceof KeyPressMessage k) {
+            // Delete question confirmation modal keyboard navigation
             if (confirmingDelete) {
                 if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {
                     confirmDeleteFocused = !confirmDeleteFocused;
@@ -210,6 +218,7 @@ public class QuizQuestionEditorScreen implements Screen {
                 return ScreenResult.navigate(new QuizListScreen(quizService, questionService, subjectService, authService, quiz.getAssessmentType()));
             }
 
+            // Arrow key row and page navigation
             if (KeyUtil.isUp(k)) {
                 if (!questions.isEmpty()) {
                     selectedIndex = (selectedIndex - 1 + questions.size()) % questions.size();
@@ -252,6 +261,7 @@ public class QuizQuestionEditorScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Render question editor table or deletion modal
     @Override
     public String view() {
         if (quiz == null) {

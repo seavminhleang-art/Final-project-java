@@ -10,11 +10,13 @@ public class AuthViews {
 
     public static String renderStartup(int focusedButton) {
         StringBuilder sb = new StringBuilder();
+        // Header banner and platform subtitle
         sb.append(TuiHelper.header("PROCTOR"));
         sb.append("\n");
 
         sb.append(TuiHelper.boxTitle("Digital Assessment Platform")).append("\n\n");
 
+        // Main navigation menu buttons
         int btnWidth = 26;
         String[] bLogin = TuiHelper.boxButtonLines("Log In", focusedButton == 0, TuiHelper.NAVY_BLUE, btnWidth);
         String[] bRegister = TuiHelper.boxButtonLines("Register", focusedButton == 1, TuiHelper.NAVY_BLUE, btnWidth);
@@ -32,6 +34,7 @@ public class AuthViews {
         sb.append(TuiHelper.CENTER_MARKER).append(bExit[1]).append("\n");
         sb.append(TuiHelper.CENTER_MARKER).append(bExit[2]).append("\n\n");
 
+        // Keyboard navigation hint bar
         sb.append(TuiHelper.dim("  [↑/↓] Navigate  •  [Enter] Confirm  •  [Esc] Quit\n"));
         return sb.toString();
     }
@@ -42,17 +45,20 @@ public class AuthViews {
 
     public static String renderLogin(String identifier, String password, int focusedField, String errorMessage, String infoBanner, boolean showPassword) {
         StringBuilder sb = new StringBuilder();
+        // Header banner and box title
         sb.append(TuiHelper.header("LOG IN"));
         sb.append("\n");
 
         sb.append(TuiHelper.boxTitle("Sign In to Your Account")).append("\n\n");
 
+        // Credentials input form fields
         sb.append(TuiHelper.inputBox("Email or Username", identifier, focusedField == 0, 102, false, "e.g. user@proctor.edu or username"));
         sb.append("\n");
 
         sb.append(TuiHelper.inputBox("Password", password, focusedField == 1, 102, true, "enter password", showPassword));
         sb.append("\n\n");
 
+        // Action button row
         sb.append(TuiHelper.buttonRow(
                 "Log In", focusedField == 2, TuiHelper.NAVY_BLUE,
                 "Forgot Password", focusedField == 3, TuiHelper.NAVY_BLUE,

@@ -34,6 +34,7 @@ public class UserFormScreen implements Screen {
     private boolean showPassword = false;
     private String errorMessage = "";
 
+    // Initialize user form for creating a new user or editing an existing profile
     public UserFormScreen(UserService userService, AuthService authService, User userToEdit) {
         this.userService = userService;
         this.authService = authService;
@@ -94,6 +95,7 @@ public class UserFormScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        // Handle clipboard paste into birthday or text fields
         if (msg instanceof PasteMessage paste) {
             if (focusedField == 2) {
                 if (paste.content() != null) {
@@ -115,6 +117,7 @@ public class UserFormScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Mouse wheel scroll to cycle focus through input fields
         if (MouseUtil.isWheelUp(msg)) {
             focusedField = (focusedField - 1 + getFieldCount()) % getFieldCount();
             return ScreenResult.stay(this);
@@ -125,6 +128,7 @@ public class UserFormScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Mouse click handler for form action buttons
         if (MouseUtil.isLeftClick(msg)) {
             int line = MouseUtil.getLineIndex(msg);
             int col = MouseUtil.getColInLine(msg);
@@ -140,6 +144,7 @@ public class UserFormScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Keystroke navigation, field editing, and role/status toggles
         if (msg instanceof KeyPressMessage k) {
             if (KeyUtil.isEsc(k)) {
                 return ScreenResult.navigate(new UserListScreen(userService, authService));
@@ -183,6 +188,7 @@ public class UserFormScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Handle numeric input and backspace for birthday DDMMYYYY buffer
     private void handleBirthdayInput(KeyPressMessage k) {
         if (KeyUtil.isBackspace(k)) {
             if (!birthday.isEmpty()) birthday.deleteCharAt(birthday.length() - 1);
@@ -196,6 +202,7 @@ public class UserFormScreen implements Screen {
         }
     }
 
+    // Cycle gender selection among Male, Female, and Other
     private void cycleGender(boolean forward) {
         if ("Male".equalsIgnoreCase(selectedGender)) {
             selectedGender = forward ? "Female" : "Other";
@@ -206,6 +213,7 @@ public class UserFormScreen implements Screen {
         }
     }
 
+    // Process field editing and cycling in user creation mode
     private void handleCreateModeInput(KeyPressMessage k) {
         if (focusedField == 1) {
             if (KeyUtil.isLeft(k)) {
@@ -247,6 +255,7 @@ public class UserFormScreen implements Screen {
         }
     }
 
+    // Process field editing and cycling in user edit mode
     private void handleEditModeInput(KeyPressMessage k) {
         if (focusedField == 0) {
             if (KeyUtil.handleBackspace(fullName, k)) {
@@ -275,6 +284,7 @@ public class UserFormScreen implements Screen {
         }
     }
 
+    // Extract single character from keystroke event
     private char extractChar(KeyPressMessage k) {
         if (k.type() == KeyType.KeyRunes && k.runes() != null && k.runes().length > 0) {
             return k.runes()[0];
@@ -285,6 +295,7 @@ public class UserFormScreen implements Screen {
         return '\0';
     }
 
+    // Cycle user role among Student, Teacher, and Administrator
     private void cycleRole(boolean forward) {
         if (forward) {
             if (selectedRole == Role.STUDENT) selectedRole = Role.TEACHER;
@@ -297,6 +308,7 @@ public class UserFormScreen implements Screen {
         }
     }
 
+    // Parse birthday string into LocalDate and validate age requirements
     private LocalDate parseBirthday() {
         String digits = birthday.toString();
         if (digits.length() != 8) {
@@ -325,6 +337,7 @@ public class UserFormScreen implements Screen {
         return parsed;
     }
 
+    // Validate form inputs and persist user creation or profile update
     private ScreenResult handleSave() {
         try {
             LocalDate dob = parseBirthday();
@@ -344,6 +357,7 @@ public class UserFormScreen implements Screen {
         }
     }
 
+    // Render user creation or editing form view
     @Override
     public String view() {
         return UserViews.renderUserForm(

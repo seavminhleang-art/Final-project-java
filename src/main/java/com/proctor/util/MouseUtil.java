@@ -9,6 +9,7 @@ import java.util.List;
 
 public class MouseUtil {
 
+    // Mouse event and scroll direction detection
     public static boolean isLeftClick(Message msg) {
         if (msg instanceof MouseMessage m) {
             return m.getAction() == MouseAction.MouseActionPress && m.getButton() == MouseButton.MouseButtonLeft;
@@ -30,6 +31,7 @@ public class MouseUtil {
         return false;
     }
 
+    // Terminal row and column coordinate mapping
     public static int getColumn(Message msg) {
         if (msg instanceof MouseMessage m) {
             return m.column();
@@ -55,6 +57,7 @@ public class MouseUtil {
         return TuiHelper.getHitMap().getColInLine(col, row);
     }
 
+    // Calculate clicked button index from column coordinate
     public static int getClickedButtonIndex(int colInLine, List<String> labels, int width) {
         if (labels == null || labels.isEmpty() || colInLine < 0) {
             return -1;
@@ -92,6 +95,7 @@ public class MouseUtil {
         return x >= left && x < left + width && y >= top && y < top + height;
     }
 
+    // View line scanners for buttons, tabs, tables, and pagination
     public static int findButtonRowLine(String view) {
         if (view == null) return -1;
         String[] lines = view.split("\n", -1);
@@ -160,6 +164,7 @@ public class MouseUtil {
         return 0;
     }
 
+    // Find clicked menu item index by line number
     public static int findMenuItemIndex(String view, int lineIndex) {
         if (view == null || lineIndex < 0) return -1;
         String[] lines = view.split("\n", -1);
@@ -176,6 +181,7 @@ public class MouseUtil {
         return -1;
     }
 
+    // Find clicked quiz option index by line number
     public static int findOptionIndex(String view, int lineIndex) {
         if (view == null || lineIndex < 0) return -1;
         String[] lines = view.split("\n", -1);
@@ -192,6 +198,7 @@ public class MouseUtil {
         return -1;
     }
 
+    // Detect clicked hint badge action from footer bar
     public static String getClickedHintAction(String view, int lineIndex, int colInLine) {
         if (view == null || lineIndex < 0 || colInLine < 0) return null;
         String[] lines = view.split("\n", -1);

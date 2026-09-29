@@ -12,6 +12,7 @@ import java.util.List;
 
 public class QuestionViews {
 
+    // Question form editor with dynamic scrolling fields
     public static String renderQuestionForm(boolean isEditMode, boolean isPinnedQuiz, String pinnedQuizTitle,
                                             String subjectName, String questionText, QuestionType selectedType,
                                             Difficulty selectedDifficulty, String points,
@@ -21,6 +22,7 @@ public class QuestionViews {
         StringBuilder sb = new StringBuilder();
         String title = isEditMode ? "Edit Question" : "Create New Question";
         String subtitle = isPinnedQuiz ? "Pinned to: " + pinnedQuizTitle : "Question Bank";
+        // Form header and quiz pinning context
         sb.append(TuiHelper.header("QUESTIONS"));
         sb.append("\n");
         sb.append(TuiHelper.boxTitle(title, subtitle)).append("\n\n");
@@ -32,6 +34,7 @@ public class QuestionViews {
               .append(" • Subject: ").append(subText).append("\n\n");
         }
 
+        // Render visible window of question form fields
         int numInputs = totalFields - 2;
         int windowSize = 4;
         int startField = Math.max(0, Math.min(Math.min(focusedField, numInputs - 1) - 1, numInputs - windowSize));
@@ -51,6 +54,7 @@ public class QuestionViews {
             sb.append(TuiHelper.dim(String.format("  ▼ %d more fields below (Press ↓ to scroll)", numInputs - endField))).append("\n");
         }
 
+        // Form action buttons and validation error banner
         sb.append("\n");
         sb.append(TuiHelper.buttonRow("Submit", focusedField == saveBtnIndex, "Cancel", focusedField == cancelBtnIndex)).append("\n\n");
 
@@ -62,6 +66,7 @@ public class QuestionViews {
         return sb.toString();
     }
 
+    // Individual question form field renderer
     private static void renderQuestionFormField(StringBuilder sb, int fieldIndex, boolean isPinnedQuiz,
                                                 String subjectName, String questionText, QuestionType selectedType,
                                                 Difficulty selectedDifficulty, String points,
@@ -112,6 +117,7 @@ public class QuestionViews {
         return renderAIQuestionLoading(topic, spinnerTick, 0);
     }
 
+    // AI question generation loading spinner modal
     public static String renderAIQuestionLoading(String topic, int spinnerTick, int elapsedSeconds) {
         String[] spinners = {"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"};
         String icon = spinners[Math.abs(spinnerTick) % spinners.length];
@@ -131,6 +137,7 @@ public class QuestionViews {
         );
     }
 
+    // AI question generation prompt and parameter form
     public static String renderAIQuestionForm(boolean isPinnedQuiz, String pinnedQuizTitle, String subjectName,
                                              String topicBuffer, String customPrompt, String countBuffer, QuestionType selectedType,
                                              Difficulty selectedDifficulty, int mcqOptionCount,
@@ -194,6 +201,7 @@ public class QuestionViews {
         return sb.toString();
     }
 
+    // Review screen for AI-generated question drafts
     public static String renderAIQuestionReview(List<AIQuestionDraft> generatedDrafts, int selectedDraftIndex, String targetStr, String bannerMessage) {
         StringBuilder sb = new StringBuilder();
         sb.append(TuiHelper.header("AI QUESTION GENERATOR"));

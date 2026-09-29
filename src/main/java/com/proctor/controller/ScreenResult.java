@@ -2,6 +2,7 @@ package com.proctor.controller;
 
 import com.williamcallahan.tui4j.compat.bubbletea.Command;
 
+// Immutable container representing screen transition, async command, or application exit
 public record ScreenResult(Screen nextScreen, Command command, boolean shouldQuit) {
     public static ScreenResult stay(Screen screen) {
         return new ScreenResult(screen, null, false);

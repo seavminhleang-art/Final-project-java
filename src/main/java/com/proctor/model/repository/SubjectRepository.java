@@ -11,6 +11,7 @@ import java.util.Optional;
 
 public class SubjectRepository {
 
+    // Query subjects with optional search filter
     public List<Subject> findAll(String search) {
         List<Subject> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder("SELECT id, code, name, description, is_enabled, created_at FROM subjects WHERE 1=1");
@@ -41,6 +42,7 @@ public class SubjectRepository {
         return list;
     }
 
+    // Look up subject by primary key
     public Optional<Subject> findById(int id) {
         String sql = "SELECT id, code, name, description, is_enabled, created_at FROM subjects WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -57,6 +59,7 @@ public class SubjectRepository {
         return Optional.empty();
     }
 
+    // Look up subject by uppercase code
     public Optional<Subject> findByCode(String code) {
         String sql = "SELECT id, code, name, description, is_enabled, created_at FROM subjects WHERE LOWER(code) = LOWER(?)";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -73,6 +76,7 @@ public class SubjectRepository {
         return Optional.empty();
     }
 
+    // Look up subject by name
     public Optional<Subject> findByName(String name) {
         String sql = "SELECT id, code, name, description, is_enabled, created_at FROM subjects WHERE LOWER(name) = LOWER(?)";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -89,6 +93,7 @@ public class SubjectRepository {
         return Optional.empty();
     }
 
+    // Insert new subject record
     public boolean create(Subject subject) {
         String sql = "INSERT INTO subjects (code, name, description, is_enabled) VALUES (?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -113,6 +118,7 @@ public class SubjectRepository {
         }
     }
 
+    // Update subject details
     public boolean update(Subject subject) {
         String sql = "UPDATE subjects SET code = ?, name = ?, description = ?, is_enabled = ? WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -128,6 +134,7 @@ public class SubjectRepository {
         }
     }
 
+    // Toggle subject active status
     public boolean toggleEnabled(int subjectId) {
         String sql = "UPDATE subjects SET is_enabled = NOT is_enabled WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -139,6 +146,7 @@ public class SubjectRepository {
         }
     }
 
+    // Unlink quizzes and questions before deleting subject
     public boolean delete(int subjectId) {
         String unlinkQuizzes = "UPDATE quizzes SET subject_id = NULL WHERE subject_id = ?";
         String unlinkQuestions = "UPDATE questions SET subject_id = NULL WHERE subject_id = ?";
@@ -169,6 +177,7 @@ public class SubjectRepository {
         }
     }
 
+    // Map database result set row to Subject entity
     private Subject mapRow(ResultSet rs) throws SQLException {
         return Subject.builder()
                 .id(rs.getInt("id"))

@@ -84,6 +84,7 @@ public class ForgotPasswordScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        // Animation tick updates for OTP sending spinner
         if (msg instanceof OtpSendTickMessage t) {
             if (isSending && t.generationId() == sendGenerationId) {
                 spinnerTick++;
@@ -92,6 +93,7 @@ public class ForgotPasswordScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Handle async verification code send result
         if (msg instanceof OtpSendResultMessage res) {
             if (!isSending || res.generationId() != sendGenerationId) {
                 return ScreenResult.stay(this);
@@ -115,6 +117,7 @@ public class ForgotPasswordScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Cancel sending on Escape key or click
         if (isSending) {
             if (msg instanceof KeyPressMessage k && KeyUtil.isEsc(k)) {
                 if (activeCancellation != null) {
@@ -140,7 +143,9 @@ public class ForgotPasswordScreen implements Screen {
             }
             return ScreenResult.stay(this);
         }
-                if (msg instanceof PasteMessage paste) {
+
+        // Clipboard paste handling across recovery wizard steps
+        if (msg instanceof PasteMessage paste) {
             if (forgotStep == ForgotStep.IDENTIFIER) {
                 if (forgotFocusIndex == 0) KeyUtil.pasteToBuffer(forgotIdentifier, paste.content());
             } else if (forgotStep == ForgotStep.VERIFY_OTP) {
@@ -152,6 +157,7 @@ public class ForgotPasswordScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Mouse wheel scroll between fields and action buttons
         if (MouseUtil.isWheelUp(msg)) {
             if (forgotStep == ForgotStep.IDENTIFIER || forgotStep == ForgotStep.VERIFY_OTP) {
                 forgotFocusIndex = (forgotFocusIndex == 0) ? 1 : 0;
@@ -170,6 +176,7 @@ public class ForgotPasswordScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Mouse click navigation for input fields and action buttons across steps
         if (MouseUtil.isLeftClick(msg)) {
             int line = MouseUtil.getLineIndex(msg);
             int col = MouseUtil.getColInLine(msg);
@@ -221,6 +228,7 @@ public class ForgotPasswordScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Keyboard shortcuts and navigation per recovery step
         if (msg instanceof KeyPressMessage k) {
             if (KeyUtil.isEsc(k)) {
                 return ScreenResult.navigate(new LoginScreen(authService, verificationService));
@@ -345,6 +353,7 @@ public class ForgotPasswordScreen implements Screen {
         return '\0';
     }
 
+    // Send password recovery verification code
     private ScreenResult submitIdentifier() {
         String target = forgotIdentifier.toString().trim();
         if (target.isBlank()) {
@@ -385,6 +394,7 @@ public class ForgotPasswordScreen implements Screen {
         return ScreenResult.stay(this, Command.batch(sendCmd, tickCmd));
     }
 
+    // Verify password recovery code
     private ScreenResult submitOtp() {
         String code = forgotCode.toString().trim();
         if (code.isBlank()) {
@@ -406,6 +416,7 @@ public class ForgotPasswordScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Resend recovery verification code
     private ScreenResult resendOtp() {
         String target = forgotIdentifier.toString().trim();
         if (target.isBlank()) {
@@ -441,6 +452,7 @@ public class ForgotPasswordScreen implements Screen {
         return ScreenResult.stay(this, Command.batch(sendCmd, tickCmd));
     }
 
+    // Reset user password with verified code
     private ScreenResult submitNewPassword() {
         String code = forgotCode.toString().trim();
         String newPass = forgotNewPassword.toString();
@@ -456,6 +468,7 @@ public class ForgotPasswordScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Render multi-step password recovery UI or sending progress view
     @Override
     public String view() {
         if (isSending) {

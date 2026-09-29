@@ -40,8 +40,10 @@ public class OllamaClient {
         this.objectMapper = new ObjectMapper();
     }
 
+    // Send structured JSON generation request to local Ollama API endpoint
     public String generateJson(String prompt) {
         try {
+            // Build generation payload with model parameters
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("model", model);
             requestBody.put("prompt", prompt);
@@ -61,6 +63,7 @@ public class OllamaClient {
 
             String jsonPayload = objectMapper.writeValueAsString(requestBody);
 
+            // Execute HTTP POST to Ollama generate endpoint
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(baseUrl + "/api/generate"))
                     .timeout(Duration.ofSeconds(timeoutSeconds))
@@ -70,6 +73,7 @@ public class OllamaClient {
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
+            // Validate HTTP response status
             if (response.statusCode() != 200) {
                 throw new AIException("Ollama returned status code " + response.statusCode() + ": " + response.body());
             }

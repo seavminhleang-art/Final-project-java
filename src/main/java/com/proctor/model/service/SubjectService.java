@@ -28,6 +28,7 @@ public class SubjectService {
         this.subjectRepository = subjectRepository;
     }
 
+    // Fetch subjects matching search query and sort predefined subjects first
     public List<Subject> getSubjects(String search) {
         List<Subject> list = subjectRepository.findAll(search);
         list.sort((a, b) -> {
@@ -43,10 +44,12 @@ public class SubjectService {
         return list;
     }
 
+    // Retrieve subject by unique database identifier
     public Optional<Subject> getSubjectById(int id) {
         return subjectRepository.findById(id);
     }
 
+    // Guard method to prevent students from modifying subject definitions
     private void checkAdminAccess() {
         Session.getCurrentUser().ifPresent(u -> {
             if (u.getRole() == Role.STUDENT) {
@@ -55,6 +58,7 @@ public class SubjectService {
         });
     }
 
+    // Create and persist new subject with code uniqueness validation
     public Subject createSubject(String code, String name, String description) {
         checkAdminAccess();
         if (code == null || code.isBlank() || name == null || name.isBlank()) {
@@ -89,6 +93,7 @@ public class SubjectService {
         return subject;
     }
 
+    // Update existing subject details and active status
     public Subject updateSubject(int id, String code, String name, String description, boolean enabled) {
         checkAdminAccess();
         if (code == null || code.isBlank()) {
@@ -132,12 +137,14 @@ public class SubjectService {
         return subject;
     }
 
+    // Overloaded update preserving current subject code
     public Subject updateSubject(int id, String name, String description, boolean enabled) {
         checkAdminAccess();
         Subject s = subjectRepository.findById(id).orElseThrow(() -> new ValidationException("Subject not found."));
         return updateSubject(id, s.getCode(), name, description, enabled);
     }
 
+    // Delete subject and unlink associated assessments
     public boolean deleteSubject(int id) {
         checkAdminAccess();
         Optional<Subject> existing = subjectRepository.findById(id);
@@ -151,6 +158,7 @@ public class SubjectService {
         return true;
     }
 
+    // Toggle active availability status of subject
     public boolean toggleSubjectStatus(int id) {
         checkAdminAccess();
         return subjectRepository.toggleEnabled(id);

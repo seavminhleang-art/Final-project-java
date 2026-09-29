@@ -12,10 +12,12 @@ public class SubjectViews {
         return renderSubjectList(subjects, selectedIndex, "ALL", searchBuffer, searchMode, bannerMessage);
     }
 
+    // Subject management list view with status filter tabs and search
     public static String renderSubjectList(List<Subject> subjects, int selectedIndex,
                                           String statusFilterDisplay,
                                           String searchBuffer, boolean searchMode, String bannerMessage) {
         StringBuilder sb = new StringBuilder();
+        // Header and status filter tabs
         sb.append(TuiHelper.header("SUBJECTS"));
         sb.append("\n");
         String statusLabel = (statusFilterDisplay == null || statusFilterDisplay.isBlank()) ? "ALL" : statusFilterDisplay;
@@ -33,6 +35,7 @@ public class SubjectViews {
         } else if (!searchBuffer.isEmpty()) {
             sb.append("  Search: [ ").append(TuiHelper.truncate(searchBuffer, 50)).append(" ] (Press '/' to edit)\n\n");
         }
+        // Table column headers and subject records
         sb.append(String.format("  %-4s  %-6s  %-16s  %-88s  %-9s\n", "#", "ID", "CODE", "SUBJECT NAME", "STATUS"));
         sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
@@ -69,6 +72,7 @@ public class SubjectViews {
 
         sb.append("\n  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
+        // Pagination and action key hints
         if (!subjects.isEmpty()) {
             int pageSize = TuiHelper.PAGE_SIZE;
             int totalPages = Math.max(1, (int) Math.ceil((double) subjects.size() / pageSize));
@@ -95,11 +99,13 @@ public class SubjectViews {
         return sb.toString();
     }
 
+    // Create and edit form for subjects
     public static String renderSubjectForm(boolean isEditMode, String subjectCode, String name, String description,
                                            boolean enabledStatus, int focusedField, int saveBtnIndex,
                                            int deleteBtnIndex, int cancelBtnIndex,
                                            String errorMessage) {
         StringBuilder sb = new StringBuilder();
+        // Form header and field configuration
         String formTitle = isEditMode ? "Edit Subject: " + subjectCode : "Create New Subject";
         sb.append(TuiHelper.header("SUBJECTS"));
         sb.append("\n");

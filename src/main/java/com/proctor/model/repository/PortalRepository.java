@@ -85,8 +85,10 @@ public class PortalRepository {
         return getQuizLeaderboard();
     }
 
+    // Query rankings aggregating best attempt per quiz with competition tie-rank handling
     private List<LeaderboardEntry> queryStandardLeaderboard(AssessmentType assessmentType) {
         List<LeaderboardEntry> leaderboard = new ArrayList<>();
+        // Select best attempt per student per quiz to prevent retake point farming
         String sql = "SELECT latest.student_id, u.full_name, u.username, " +
                      "COUNT(latest.quiz_id) AS total_quizzes, " +
                      "COALESCE(SUM(latest.max_points_scored), 0) AS total_points, " +
@@ -114,6 +116,7 @@ public class PortalRepository {
                 Double prevAvg = null;
                 int currentRank = 1;
                 int index = 0;
+                // Assign ranks using competition rules where ties share equal rank
                 while (rs.next()) {
                     double totalPoints = Math.round(rs.getDouble("total_points") * 10.0) / 10.0;
                     double avgPercentage = Math.round(rs.getDouble("avg_percentage") * 10.0) / 10.0;

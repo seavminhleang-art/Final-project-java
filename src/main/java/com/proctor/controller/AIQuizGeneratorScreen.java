@@ -73,6 +73,7 @@ public class AIQuizGeneratorScreen implements Screen {
         }
     }
 
+    // Initialize AI quiz generation screen with defaults and subject list
     public AIQuizGeneratorScreen(AIService aiService, QuizService quizService, QuestionService questionService, SubjectService subjectService, AuthService authService) {
         this(aiService, quizService, questionService, subjectService, authService, AssessmentType.QUIZ);
     }
@@ -103,6 +104,7 @@ public class AIQuizGeneratorScreen implements Screen {
         this.subjectFilter.setSelectedOriginalIndex(this.selectedSubjectIndex);
     }
 
+    // Determine if multiple-choice configuration fields are relevant
     private boolean isMcqApplicable() {
         if (assessmentType == AssessmentType.SPEED) {
             return !"0".equals(mcqCountBuffer.toString().trim());
@@ -113,6 +115,7 @@ public class AIQuizGeneratorScreen implements Screen {
         return selectedType == QuestionType.MCQ;
     }
 
+    // Compute total active input fields based on assessment mode
     private int getNumInputFields() {
         if (assessmentType == AssessmentType.SPEED) {
             return isMcqApplicable() ? 12 : 11;
@@ -137,6 +140,7 @@ public class AIQuizGeneratorScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        // Handle spinner animation ticks during background AI generation
         if (msg instanceof QuizGenTickMessage t) {
             if (isGenerating && t.generationId() == this.activeGenerationId) {
                 spinnerTick++;
@@ -145,6 +149,7 @@ public class AIQuizGeneratorScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Handle AI generation completion and route to question editor
         if (msg instanceof AIQuizGeneratedMessage m) {
             if (!isGenerating || (m.generationId() != 0 && m.generationId() != this.activeGenerationId)) {
                 return ScreenResult.stay(this);
@@ -160,6 +165,7 @@ public class AIQuizGeneratorScreen implements Screen {
             return ScreenResult.navigate(new QuizQuestionEditorScreen(m.createdQuiz(), quizService, questionService, subjectService, authService));
         }
 
+        // Handle cancellation of active AI generation job
         if (isGenerating) {
             if (msg instanceof KeyPressMessage k && KeyUtil.isEsc(k)) {
                 isGenerating = false;
@@ -183,6 +189,7 @@ public class AIQuizGeneratorScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Mouse scroll navigation across configuration fields
         if (MouseUtil.isWheelUp(msg)) {
             subjectFilter.confirmSearch();
             focusedField = (focusedField - 1 + getFieldCount()) % getFieldCount();
@@ -195,6 +202,7 @@ public class AIQuizGeneratorScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Mouse click handler for action buttons and navigation
         if (MouseUtil.isLeftClick(msg)) {
             int line = MouseUtil.getLineIndex(msg);
             int col = MouseUtil.getColInLine(msg);
@@ -215,12 +223,14 @@ public class AIQuizGeneratorScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Clipboard paste handling for text and numeric inputs
         if (msg instanceof PasteMessage paste && !isGenerating) {
             handlePaste(paste);
             return ScreenResult.stay(this);
         }
 
-                if (msg instanceof KeyPressMessage k) {
+        // Keyboard navigation, subject search, and generation submission
+        if (msg instanceof KeyPressMessage k) {
             if (focusedField == 0) {
                 if (KeyUtil.isEsc(k)) {
                     if (subjectFilter.getQuery().length() > 0) {
@@ -270,6 +280,7 @@ public class AIQuizGeneratorScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Route pasted text to the currently focused input buffer
     private void handlePaste(PasteMessage paste) {
         if (focusedField == 1) {
             KeyUtil.pasteToBuffer(titleBuffer, paste.content());
@@ -349,6 +360,7 @@ public class AIQuizGeneratorScreen implements Screen {
         }
     }
 
+    // Handle keystroke inputs for standard quiz and exam forms
     private void handleFormInput(KeyPressMessage k) {
         if (assessmentType == AssessmentType.SPEED) {
             handleSpeedFormInput(k);
@@ -498,6 +510,7 @@ public class AIQuizGeneratorScreen implements Screen {
         }
     }
 
+    // Handle keystroke inputs for speed quiz form fields
     private void handleSpeedFormInput(KeyPressMessage k) {
         if (focusedField == 0) {
             if (KeyUtil.isRight(k)) {
@@ -585,12 +598,14 @@ public class AIQuizGeneratorScreen implements Screen {
         }
     }
 
+    // Handle text character appending and backspace deletion
     private void handleTextInput(StringBuilder buffer, KeyPressMessage k) {
         if (!KeyUtil.handleBackspace(buffer, k)) {
             KeyUtil.appendInput(buffer, k);
         }
     }
 
+    // Validate generator settings and dispatch async AI creation task
     private ScreenResult startAsyncQuizGeneration() {
         if (selectedSubjectIndex == 0) {
             bannerMessage = TuiHelper.red("✖ Subject is required.");
@@ -869,6 +884,7 @@ public class AIQuizGeneratorScreen implements Screen {
         return ScreenResult.stay(this, Command.batch(genCmd, tickCmd));
     }
 
+    // Render AI generation progress spinner or configuration form view
     @Override
     public String view() {
         if (isGenerating) {

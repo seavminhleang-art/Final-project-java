@@ -54,6 +54,7 @@ public class EmailService {
         this.fromAddress = fromAddress;
     }
 
+    // Send email via configured Jakarta Mail SMTP session
     public void sendEmail(String toAddress, String subject, String bodyText) {
         if (toAddress == null || toAddress.isBlank()) {
             throw new ValidationException("Recipient email address cannot be empty.");
@@ -108,10 +109,12 @@ public class EmailService {
         }
     }
 
+    // Dispatch email asynchronously on background thread pool
     public CompletableFuture<Void> sendEmailAsync(String toAddress, String subject, String bodyText) {
         return CompletableFuture.runAsync(() -> sendEmail(toAddress, subject, bodyText), EXECUTOR);
     }
 
+    // Deliver 6-digit registration verification code email
     public void sendRegistrationCode(String toEmail, String fullName, String code) {
         String displayName = (fullName != null && !fullName.isBlank()) ? fullName.trim() : "Future User";
         String subject = "Proctor - Confirm Your Email Registration";
@@ -129,6 +132,7 @@ public class EmailService {
         sendEmail(toEmail, subject, body);
     }
 
+    // Deliver 6-digit password reset verification code email
     public void sendPasswordResetCode(String toEmail, String fullName, String code) {
         String displayName = (fullName != null && !fullName.isBlank()) ? fullName.trim() : "User";
         String subject = "Proctor - Password Reset Verification Code";
@@ -146,6 +150,7 @@ public class EmailService {
         sendEmail(toEmail, subject, body);
     }
 
+    // Notify student of instructor retake request decision
     public CompletableFuture<Void> sendRetakeDecision(String toEmail, String studentName, String assessmentTitle, boolean approved, String note) {
         String displayName = (studentName != null && !studentName.isBlank()) ? studentName.trim() : "Student";
         String statusText = approved ? "APPROVED" : "REJECTED";

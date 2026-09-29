@@ -2,6 +2,7 @@ package com.proctor.exception;
 
 import java.io.Serial;
 
+// Runtime exception representing database query and persistence errors
 public class DatabaseException extends RuntimeException {
     @Serial
     private static final long serialVersionUID = 1L;

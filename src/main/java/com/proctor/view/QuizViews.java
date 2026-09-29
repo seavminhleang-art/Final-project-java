@@ -23,6 +23,7 @@ public class QuizViews {
         return renderQuizList(assessmentType, quizzes, selectedIndex, isMyQuizzesScope, subjectFilterDisplay, searchBuffer, searchMode, bannerMessage, false);
     }
 
+    // Quiz and exam table list view with tabs, search, and pagination
     public static String renderQuizList(AssessmentType assessmentType, List<Quiz> quizzes, int selectedIndex,
                                         boolean isMyQuizzesScope, String subjectFilterDisplay,
                                         String searchBuffer, boolean searchMode, String bannerMessage, boolean isAdmin) {
@@ -35,6 +36,7 @@ public class QuizViews {
             subjLabel = "[ " + subjLabel + " ]";
         }
 
+        // Header, title card, tabs, and search bar
         sb.append(TuiHelper.header(itemType));
         sb.append("\n");
         sb.append(TuiHelper.boxTitle(itemTitle, String.format("Subject: %s  •  Total: %d", subjLabel, quizzes.size()))).append("\n\n");
@@ -50,6 +52,7 @@ public class QuizViews {
             sb.append("  Search: [ ").append(TuiHelper.truncate(searchBuffer, 50)).append(" ] (Press '/' to edit)\n\n");
         }
 
+        // Table header and quiz rows
         String timeColHeader = (assessmentType == AssessmentType.SPEED) ? "SEC/Q" : "TIME";
         if (isAdmin) {
             sb.append(String.format("  %-4s  %-6s  %-12s  %-36s  %-18s  %-8s  %-8s  %-4s  %-6s  %-10s\n",
@@ -131,6 +134,7 @@ public class QuizViews {
 
         sb.append("\n  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
+        // Pagination and action hints bar
         if (!quizzes.isEmpty()) {
             int pageSize = TuiHelper.PAGE_SIZE;
             int totalPages = Math.max(1, (int) Math.ceil((double) quizzes.size() / pageSize));
@@ -183,6 +187,7 @@ public class QuizViews {
         return sb.toString();
     }
 
+    // Create and edit form for quizzes and exams
     public static String renderQuizForm(AssessmentType assessmentType, QuestionType quizQuestionType,
                                         boolean isEditMode, String subjectName, String title, String description,
                                         String timeLimit, String activeHours, String passScore,
@@ -193,11 +198,13 @@ public class QuizViews {
         String headerTitle = isEditMode ? "EDIT " + itemType : "CREATE NEW " + itemType;
         int numInputFields = 10;
         int activeFieldDisplay = Math.min(numInputFields, focusedField + 1);
+        // Form title and field position counter
         sb.append(TuiHelper.header(headerTitle));
         sb.append("\n");
         String formSub = isEditMode ? "Edit " + itemType + " Settings" : "Create New " + itemType;
         sb.append(TuiHelper.boxTitle(formSub, String.format("Field %d of %d", activeFieldDisplay, numInputFields))).append("\n\n");
 
+        // Scrolling window of quiz configuration fields
         int windowSize = 4;
         int startField = Math.max(0, Math.min(Math.min(focusedField, 9) - 1, numInputFields - windowSize));
         int endField = Math.min(numInputFields, startField + windowSize);
@@ -246,6 +253,7 @@ public class QuizViews {
             sb.append(TuiHelper.dim(String.format("  ▼ %d more fields below (Press ↓ to scroll)", numInputFields - endField))).append("\n");
         }
 
+        // Form action buttons and error messages
         sb.append("\n");
         sb.append(TuiHelper.buttonRow("Submit", focusedField == 10, "Cancel", focusedField == 11)).append("\n\n");
 
@@ -257,8 +265,9 @@ public class QuizViews {
         return sb.toString();
     }
 
+    // Question list editor for a specific quiz
     public static String renderQuizQuestionEditor(Quiz quiz, String subjectText, List<Question> questions,
-                                                 double totalPoints, int selectedIndex, String bannerMessage) {
+                                                  double totalPoints, int selectedIndex, String bannerMessage) {
         StringBuilder sb = new StringBuilder();
         String safeSubj = (subjectText != null && !subjectText.isBlank()) ? subjectText : "N/A";
         String subtitle = String.format("Subject: %s  •  %d Questions (%.1f pts)  •  %s",
@@ -334,6 +343,7 @@ public class QuizViews {
         return renderAIQuizLoading(assessmentType, title, tick, 0);
     }
 
+    // AI quiz generation loading modal
     public static String renderAIQuizLoading(AssessmentType assessmentType, String title, int tick, int elapsedSeconds) {
         String itemType = (assessmentType == AssessmentType.EXAM) ? "EXAM" : (assessmentType == AssessmentType.SPEED ? "SPEED QUIZ" : "QUIZ");
         String itemLabel = (assessmentType == AssessmentType.EXAM) ? "Exam" : (assessmentType == AssessmentType.SPEED ? "Speed Quiz" : "Quiz");
@@ -355,6 +365,7 @@ public class QuizViews {
         );
     }
 
+    // AI quiz and exam generator configuration form
     public static String renderAIQuizForm(AssessmentType assessmentType, String subjectName, String titleBuffer,
                                          String descriptionBuffer, String customPrompt, String countBuffer,
                                          String mcqCountBuffer, String tfCountBuffer, String saCountBuffer,

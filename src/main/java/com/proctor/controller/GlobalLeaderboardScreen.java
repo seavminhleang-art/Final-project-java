@@ -31,6 +31,7 @@ public class GlobalLeaderboardScreen implements Screen {
     private List<LeaderboardEntry> leaderboard;
     private int selectedIndex = 0;
 
+    // Initialize global leaderboard screen and load initial rankings
     public GlobalLeaderboardScreen(PortalService portalService, ExamService examService, AuthService authService) {
         this(portalService, examService, authService, null);
     }
@@ -43,6 +44,7 @@ public class GlobalLeaderboardScreen implements Screen {
         refreshLeaderboard();
     }
 
+    // Fetch current rankings from database according to selected mode
     private void refreshLeaderboard() {
         switch (mode) {
             case QUIZ -> this.leaderboard = portalService.getQuizLeaderboard();
@@ -58,6 +60,7 @@ public class GlobalLeaderboardScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        // Mouse wheel scroll navigation across leaderboard entries
         if (MouseUtil.isWheelUp(msg)) {
             if (!leaderboard.isEmpty() && selectedIndex > 0) {
                 selectedIndex--;
@@ -72,6 +75,7 @@ public class GlobalLeaderboardScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Mouse click handler for mode tabs, table rows, and pagination
         if (MouseUtil.isLeftClick(msg)) {
             int line = MouseUtil.getLineIndex(msg);
             int col = MouseUtil.getColInLine(msg);
@@ -120,6 +124,7 @@ public class GlobalLeaderboardScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Keystroke routing for tab switching, refresh, and row navigation
         if (msg instanceof KeyPressMessage k) {
             if (KeyUtil.isEsc(k)) {
                 if (returnScreen != null) {
@@ -159,6 +164,7 @@ public class GlobalLeaderboardScreen implements Screen {
         return mode;
     }
 
+    // Render global leaderboard rankings view with active category tab
     @Override
     public String view() {
         return PortalViews.renderGlobalLeaderboard(leaderboard, selectedIndex, mode);

@@ -9,6 +9,7 @@ public final class ListNavigationHelper {
     private ListNavigationHelper() {
     }
 
+    // Index boundary clamping and cyclic adjustment
     public static int clampIndex(int index, int size) {
         if (size <= 0) {
             return 0;
@@ -29,6 +30,7 @@ public final class ListNavigationHelper {
         return Math.floorMod(currentIndex + delta, listSize);
     }
 
+    // Pagination navigation math
     public static int prevPage(int currentIndex, int pageSize) {
         if (pageSize <= 0) {
             return 0;
@@ -49,6 +51,7 @@ public final class ListNavigationHelper {
         return clampIndex(currentIndex, listSize);
     }
 
+    // Mouse wheel scrolling handler
     public static int handleWheel(Message msg, int selectedIndex, int listSize) {
         if (MouseUtil.isWheelUp(msg)) {
             return Math.max(0, selectedIndex - 1);
@@ -59,6 +62,7 @@ public final class ListNavigationHelper {
         return selectedIndex;
     }
 
+    // Real-time search buffer key event processing
     public static boolean handleSearchKey(KeyPressMessage k, StringBuilder buffer, Runnable onChange) {
         if (KeyUtil.isEnter(k) || KeyUtil.isEsc(k)) {
             onChange.run();
@@ -88,6 +92,7 @@ public final class ListNavigationHelper {
         return true;
     }
 
+    // Mouse click hit-testing for table rows and pagination controls
     public static int getClickedItemIndex(int line, int itemsStartLine, int listSize, int currentIndex, int pageSize) {
         if (itemsStartLine == -1 || listSize <= 0 || pageSize <= 0) {
             return -1;
@@ -122,6 +127,7 @@ public final class ListNavigationHelper {
         return clampIndex(currentIndex, listSize);
     }
 
+    // Confirmation dialog button click resolution
     public static int handleConfirmationClick(Message msg, String renderedView, String confirmLabel, String cancelLabel) {
         int line = MouseUtil.getLineIndex(msg);
         int col = MouseUtil.getColInLine(msg);

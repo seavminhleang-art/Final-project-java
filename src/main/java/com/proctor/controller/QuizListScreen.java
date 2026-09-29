@@ -80,6 +80,7 @@ public class QuizListScreen implements Screen {
         refreshList();
     }
 
+    // Query assessment records filtered by type, scope, subject, and search query
     private void refreshList() {
         User user = Session.getCurrentUser().orElse(null);
         boolean isAdmin = user != null && user.getRole() == Role.ADMIN;
@@ -101,11 +102,13 @@ public class QuizListScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        // Mouse wheel scroll navigation through quiz list
         if (MouseUtil.isWheelUp(msg) || MouseUtil.isWheelDown(msg)) {
             selectedIndex = ListNavigationHelper.handleWheel(msg, selectedIndex, quizzes.size());
             return ScreenResult.stay(this);
         }
 
+        // Mouse click navigation for tabs, table items, pagination, and hint bar
         if (MouseUtil.isLeftClick(msg)) {
             if (confirmingDelete) {
                 int action = ListNavigationHelper.handleConfirmationClick(msg, view(), "Delete", "Cancel");
@@ -124,6 +127,7 @@ public class QuizListScreen implements Screen {
             int line = MouseUtil.getLineIndex(msg);
             int col = MouseUtil.getColInLine(msg);
 
+            // Tab bar scope selection click
             int tabLine = MouseUtil.findTabBarLine(view());
             if (tabLine != -1 && line == tabLine) {
                 String baseItemTitle = (assessmentType == AssessmentType.EXAM) ? "Exams" : (assessmentType == AssessmentType.SPEED ? "Speed Quizzes" : "Quizzes");
@@ -144,6 +148,7 @@ public class QuizListScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
+            // Click table row to select or edit quiz questions
             int clickedIdx = ListNavigationHelper.getClickedItemIndex(line, MouseUtil.findTableStartLine(view()), quizzes.size(), selectedIndex, TuiHelper.PAGE_SIZE);
             if (clickedIdx != -1) {
                 if (selectedIndex == clickedIdx) {
@@ -153,12 +158,14 @@ public class QuizListScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
+            // Click pagination arrows
             int pagLine = MouseUtil.findPaginationLine(view());
             if (pagLine != -1 && line == pagLine && !quizzes.isEmpty()) {
                 selectedIndex = ListNavigationHelper.handlePaginationClick(col, selectedIndex, quizzes.size(), TuiHelper.PAGE_SIZE);
                 return ScreenResult.stay(this);
             }
 
+            // Click hint bar action shortcuts
             String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
             if (hintAction != null) {
                 if ("Esc".equals(hintAction)) {
@@ -232,7 +239,9 @@ public class QuizListScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Keyboard hotkeys and list navigation
         if (msg instanceof KeyPressMessage k) {
+            // Inline subject picker keyboard events
             if (subjectFilter.isActive()) {
                 boolean handled = subjectFilter.handleKey(k);
                 if (handled) {
@@ -243,6 +252,7 @@ public class QuizListScreen implements Screen {
                 }
             }
 
+            // Delete confirmation modal navigation
             if (confirmingDelete) {
                 if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {
                     confirmDeleteFocused = !confirmDeleteFocused;
@@ -265,11 +275,13 @@ public class QuizListScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
+            // Search filter query entry
             if (searchMode) {
                 searchMode = ListNavigationHelper.handleSearchKey(k, searchBuffer, this::refreshList);
                 return ScreenResult.stay(this);
             }
 
+            // Screen navigation, row selection, and action triggers
             if (KeyUtil.isEsc(k)) {
                 User user = Session.getCurrentUser().orElse(null);
                 boolean isAdmin = user != null && user.getRole() == Role.ADMIN;
@@ -349,6 +361,7 @@ public class QuizListScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Permission check verifying quiz ownership or admin role
     private boolean canModify(Quiz q) {
         User user = Session.getCurrentUser().orElse(null);
         if (user == null) return false;
@@ -356,6 +369,7 @@ public class QuizListScreen implements Screen {
         return q.getCreatedBy() != null && q.getCreatedBy().equals(user.getId());
     }
 
+    // Toggle between personal assessments and global assessments
     private void toggleScope() {
         User user = Session.getCurrentUser().orElse(null);
         if (user != null && user.getRole() == Role.ADMIN) {
@@ -371,6 +385,7 @@ public class QuizListScreen implements Screen {
         refreshList();
     }
 
+    // Prompt confirmation modal before quiz deletion
     private void initiateDelete() {
         Quiz q = quizzes.get(selectedIndex);
         if (!canModify(q)) {
@@ -382,6 +397,7 @@ public class QuizListScreen implements Screen {
         pendingDeleteQuiz = q;
     }
 
+    // Perform permanent cascading deletion of selected quiz
     private void executeDelete() {
         if (pendingDeleteQuiz == null) return;
         try {
@@ -394,6 +410,7 @@ public class QuizListScreen implements Screen {
         }
     }
 
+    // Toggle publication status of selected quiz
     private void togglePublishSelectedQuiz() {
         Quiz q = quizzes.get(selectedIndex);
         try {
@@ -407,6 +424,7 @@ public class QuizListScreen implements Screen {
         }
     }
 
+    // Render assessment list table or deletion confirmation modal
     @Override
     public String view() {
         if (confirmingDelete && pendingDeleteQuiz != null) {

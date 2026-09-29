@@ -79,6 +79,7 @@ public class SpeedQuizTakerScreen implements Screen {
             return finishAndSubmit();
         }
 
+        // Per-second timer tick handling for countdowns and toast displays
         if (msg instanceof TickMessage t) {
             if (t.generation() != -1 && t.generation() != this.tickGeneration) {
                 return ScreenResult.stay(this);
@@ -126,6 +127,7 @@ public class SpeedQuizTakerScreen implements Screen {
             }
         }
 
+        // Mouse wheel scroll between options
         if (MouseUtil.isWheelUp(msg)) {
             if (state == State.ANSWERING) {
                 Question q = session.getCurrentQuestion();
@@ -148,6 +150,7 @@ public class SpeedQuizTakerScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Mouse click handling for forfeit modal, answers, and skip
         if (MouseUtil.isLeftClick(msg)) {
             if (confirmForfeitMode) {
                 int line = MouseUtil.getLineIndex(msg);
@@ -208,7 +211,9 @@ public class SpeedQuizTakerScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Keyboard navigation and option selection
         if (msg instanceof KeyPressMessage k) {
+            // Forfeit confirmation dialog keyboard navigation
             if (confirmForfeitMode) {
                 if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {
                     confirmForfeitFocused = !confirmForfeitFocused;
@@ -235,6 +240,7 @@ public class SpeedQuizTakerScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
+            // Option selection, numeric keys, and True/False shortcuts
             if (state == State.ANSWERING) {
                 if (KeyUtil.isEsc(k)) {
                     confirmForfeitMode = true;
@@ -292,6 +298,7 @@ public class SpeedQuizTakerScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Lock in selected option and start answer reveal phase
     private ScreenResult lockInOption(Question q, Integer optionId) {
         lastAnswerRecord = session.recordAnswer(q, optionId, false);
         if (session.getAttempt() != null) {
@@ -305,6 +312,7 @@ public class SpeedQuizTakerScreen implements Screen {
         return ScreenResult.stay(this, () -> tick(nextGen));
     }
 
+    // Finalize session score and submit speed quiz
     private ScreenResult finishAndSubmit() {
         if (isSubmitted) {
             return ScreenResult.stay(this);
@@ -315,6 +323,7 @@ public class SpeedQuizTakerScreen implements Screen {
         return ScreenResult.navigate(new SpeedQuizResultScreen(res, session, examService, authService, returnScreen));
     }
 
+    // Render speed quiz taker or answer reveal toast view
     @Override
     public String view() {
         SpeedQuizAnswerRecord toast = (state == State.REVEAL) ? lastAnswerRecord : null;

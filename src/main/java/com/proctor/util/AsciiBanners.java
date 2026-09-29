@@ -1,5 +1,6 @@
 package com.proctor.util;
 
+// Pre-rendered ASCII art text banners for terminal UI headers
 public final class AsciiBanners {
 
     private AsciiBanners() {}

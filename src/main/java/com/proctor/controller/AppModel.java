@@ -9,6 +9,7 @@ import com.williamcallahan.tui4j.input.MouseTargetProvider;
 
 import java.util.List;
 
+// Main Tui4j Elm-architecture state container and screen router
 public class AppModel implements Model, MouseTargetProvider {
     private Screen currentScreen;
     private String runtimeError = null;
@@ -17,11 +18,13 @@ public class AppModel implements Model, MouseTargetProvider {
         this.currentScreen = initialScreen;
     }
 
+    // Global mouse hitbox target provider
     @Override
     public List<MouseTarget> mouseTargets() {
         return TuiHelper.getHitMap().getMouseTargets();
     }
 
+    // Initialize active screen and dispatch initial commands
     @Override
     public Command init() {
         try {
@@ -32,6 +35,7 @@ public class AppModel implements Model, MouseTargetProvider {
         }
     }
 
+    // Global event dispatcher (terminal resize, hotkeys, screen delegation)
     @Override
     public UpdateResult<? extends Model> update(Message msg) {
         if (msg instanceof WindowSizeMessage w) {
@@ -69,6 +73,7 @@ public class AppModel implements Model, MouseTargetProvider {
         return new UpdateResult<>(this, null);
     }
 
+    // Render active screen centered within terminal viewport
     @Override
     public String view() {
         if (currentScreen == null) {

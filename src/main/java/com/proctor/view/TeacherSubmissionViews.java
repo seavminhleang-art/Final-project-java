@@ -22,6 +22,7 @@ public class TeacherSubmissionViews {
         return renderSubmissionList(specificQuiz, submissions, studentMap, selectedIndex, dateFormat, "ALL", "", false, bannerMessage);
     }
 
+    // Submission list view for instructor grading
     public static String renderSubmissionList(Quiz specificQuiz, List<Attempt> submissions,
                                              Map<Integer, User> studentMap, int selectedIndex,
                                              SimpleDateFormat dateFormat, String statusFilterDisplay,
@@ -34,6 +35,7 @@ public class TeacherSubmissionViews {
                 ? quizTypePrefix + specificQuiz.getTitle()
                 : "Student Submissions & Grading";
 
+        // Header and status filter tabs
         sb.append(TuiHelper.header("SUBMISSIONS"));
         sb.append("\n");
         String statusLabel = (statusFilterDisplay == null || statusFilterDisplay.isBlank()) ? "ALL" : statusFilterDisplay;
@@ -51,6 +53,7 @@ public class TeacherSubmissionViews {
             sb.append("  Search: [ ").append(TuiHelper.truncate(searchBuffer, 50)).append(" ] (Press '/' to edit)\n\n");
         }
 
+        // Submission table column headers and records
         if (specificQuiz == null) {
             sb.append(String.format("  %-5s  %-7s  %-36s  %-32s  %-18s  %-19s\n",
                     "#", "TYPE", "ASSESSMENT", "STUDENT", "STATUS", "SUBMITTED AT"));
@@ -128,6 +131,7 @@ public class TeacherSubmissionViews {
 
         sb.append("\n  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
+        // Pagination and grading action hints
         if (!submissions.isEmpty()) {
             int pageSize = TuiHelper.PAGE_SIZE;
             int totalPages = Math.max(1, (int) Math.ceil((double) submissions.size() / pageSize));
@@ -148,6 +152,7 @@ public class TeacherSubmissionViews {
         return sb.toString();
     }
 
+    // Detailed student answer sheet inspector
     public static String renderAnswerSheet(Quiz specificQuiz, Attempt attempt,
                                            Map<Integer, AttemptAnswer> answerMap,
                                            int inspectingAnswerIndex, String bannerMessage) {
@@ -165,6 +170,7 @@ public class TeacherSubmissionViews {
                 studentLabel, typeLabel, (attempt != null && attempt.getStatus() != null ? attempt.getStatus().name() : "N/A"),
                 questions.isEmpty() ? 0 : inspectingAnswerIndex + 1, questions.size());
 
+        // Header and attempt overview card
         sb.append(TuiHelper.header("SUBMISSIONS"));
         sb.append("\n");
         sb.append(TuiHelper.boxTitle("Student Answer Sheet: Attempt #" + (attempt != null && attempt.getId() != null ? attempt.getId() : "N/A"), subtitle)).append("\n\n");
@@ -172,6 +178,7 @@ public class TeacherSubmissionViews {
         if (questions.isEmpty()) {
             sb.append("  ").append(TuiHelper.dim("No questions attached to this quiz assessment.")).append("\n");
         } else {
+            // Question prompt and student answer comparison
             int currentPage = Math.max(0, Math.min(inspectingAnswerIndex, questions.size() - 1));
             Question q = questions.get(currentPage);
             AttemptAnswer ans = answerMap.get(q.getId());
@@ -281,6 +288,7 @@ public class TeacherSubmissionViews {
         return sb.toString();
     }
 
+    // Manual score override modal dialog
     public static String renderManualGradingModal(
             Question question,
             AttemptAnswer answer,
@@ -359,6 +367,7 @@ public class TeacherSubmissionViews {
         return renderAIGradingLoading(studentName, quizTitle, spinnerTick, 0);
     }
 
+    // AI auto-grading progress modal
     public static String renderAIGradingLoading(String studentName, String quizTitle, int spinnerTick, int elapsedSeconds) {
         String[] spinners = {"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"};
         String icon = spinners[Math.abs(spinnerTick) % spinners.length];

@@ -60,6 +60,7 @@ public class QuestionBankScreen implements Screen {
         refreshData();
     }
 
+    // Query question bank with active filters and search term
     private void refreshData() {
         User user = Session.getCurrentUser().orElse(null);
         Integer currentUserId = (user != null) ? user.getId() : null;
@@ -72,11 +73,13 @@ public class QuestionBankScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        // Mouse wheel scroll navigation through question bank
         if (MouseUtil.isWheelUp(msg) || MouseUtil.isWheelDown(msg)) {
             selectedIndex = ListNavigationHelper.handleWheel(msg, selectedIndex, questions.size());
             return ScreenResult.stay(this);
         }
 
+        // Mouse click navigation for deletion modal, question rows, pagination, and hint bar
         if (MouseUtil.isLeftClick(msg)) {
             if (confirmingDelete) {
                 int action = ListNavigationHelper.handleConfirmationClick(msg, view(), "Delete", "Cancel");
@@ -95,6 +98,7 @@ public class QuestionBankScreen implements Screen {
             int line = MouseUtil.getLineIndex(msg);
             int col = MouseUtil.getColInLine(msg);
 
+            // Click table row to edit question
             int clickedIdx = ListNavigationHelper.getClickedItemIndex(line, MouseUtil.findTableStartLine(view()), questions.size(), selectedIndex, TuiHelper.PAGE_SIZE);
             if (clickedIdx != -1) {
                 if (selectedIndex == clickedIdx) {
@@ -104,12 +108,14 @@ public class QuestionBankScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
+            // Click pagination arrows
             int pagLine = MouseUtil.findPaginationLine(view());
             if (pagLine != -1 && line == pagLine && !questions.isEmpty()) {
                 selectedIndex = ListNavigationHelper.handlePaginationClick(col, selectedIndex, questions.size(), TuiHelper.PAGE_SIZE);
                 return ScreenResult.stay(this);
             }
 
+            // Click hint bar action shortcuts
             String hintAction = MouseUtil.getClickedHintAction(view(), line, col);
             if (hintAction != null) {
                 if ("Esc".equals(hintAction)) {
@@ -131,7 +137,9 @@ public class QuestionBankScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Keyboard hotkeys and list navigation
         if (msg instanceof KeyPressMessage k) {
+            // Inline subject picker keyboard events
             if (subjectFilter.isActive()) {
                 boolean handled = subjectFilter.handleKey(k);
                 if (handled) {
@@ -142,6 +150,7 @@ public class QuestionBankScreen implements Screen {
                 }
             }
 
+            // Delete confirmation modal keyboard navigation
             if (confirmingDelete) {
                 if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {
                     confirmDeleteFocused = !confirmDeleteFocused;
@@ -167,6 +176,7 @@ public class QuestionBankScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
+            // Search query text entry and backspace
             if (searchMode) {
                 searchMode = ListNavigationHelper.handleSearchKey(k, searchBuffer, this::refreshData);
                 return ScreenResult.stay(this);
@@ -174,6 +184,7 @@ public class QuestionBankScreen implements Screen {
 
             bannerMessage = "";
 
+            // Navigation, creation, AI generator, filter cycling, and deletion shortcuts
             if (KeyUtil.isEsc(k)) {
                 return ScreenResult.navigate(new TeacherDashboardScreen(authService, questionService, subjectService));
             }
@@ -191,11 +202,13 @@ public class QuestionBankScreen implements Screen {
                 return ScreenResult.navigate(new AIQuestionGeneratorScreen(new AIService(), questionService, subjectService, authService, null));
             } else if (KeyUtil.isEnter(k) && !questions.isEmpty()) {
                 return ScreenResult.navigate(new QuestionFormScreen(questionService, subjectService, authService, questions.get(selectedIndex), null));
-            } else if ("d".equalsIgnoreCase(k.key()) && !questions.isEmpty()) {
-                pendingDeleteQuestion = questions.get(selectedIndex);
-                confirmingDelete = true;
-                confirmDeleteFocused = false;
-                return ScreenResult.stay(this);
+            } else if ("d".equalsIgnoreCase(k.key())) {
+                if (!questions.isEmpty()) {
+                    pendingDeleteQuestion = questions.get(selectedIndex);
+                    confirmingDelete = true;
+                    confirmDeleteFocused = false;
+                    return ScreenResult.stay(this);
+                }
             } else if (KeyUtil.isTab(k)) {
                 if (typeFilter == null) typeFilter = QuestionType.MCQ;
                 else if (typeFilter == QuestionType.MCQ) typeFilter = QuestionType.TRUE_FALSE;
@@ -222,6 +235,7 @@ public class QuestionBankScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Render question bank table or delete confirmation modal
     @Override
     public String view() {
         if (confirmingDelete && pendingDeleteQuestion != null) {

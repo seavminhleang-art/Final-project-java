@@ -9,6 +9,7 @@ import java.util.List;
 
 public final class InlineSubjectFilter<T> {
 
+    // Generic item wrapper storing code, label, and underlying value
     public static class Item<T> {
         private final T value;
         private final String code;
@@ -33,10 +34,12 @@ public final class InlineSubjectFilter<T> {
     private Item<T> originalItem = null;
     private boolean active = false;
 
+    // Initialize inline subject filter with item collection
     public InlineSubjectFilter(List<Item<T>> items) {
         setItems(items);
     }
 
+    // Update underlying items and recompute search matches
     public final void setItems(List<Item<T>> items) {
         this.allItems.clear();
         if (items != null) {
@@ -60,6 +63,7 @@ public final class InlineSubjectFilter<T> {
         }
     }
 
+    // Begin interactive inline search session
     public void startSearch(int currentOriginalIndex) {
         this.active = true;
         this.query.setLength(0);
@@ -73,6 +77,7 @@ public final class InlineSubjectFilter<T> {
         recomputeMatches();
     }
 
+    // Cancel active search and restore previous selection
     public void cancelSearch() {
         this.active = false;
         this.query.setLength(0);
@@ -82,6 +87,7 @@ public final class InlineSubjectFilter<T> {
         recomputeMatches();
     }
 
+    // Confirm current search selection and exit search mode
     public void confirmSearch() {
         this.active = false;
         this.query.setLength(0);
@@ -113,6 +119,7 @@ public final class InlineSubjectFilter<T> {
         }
     }
 
+    // Handle keystroke navigation, input typing, and search confirmation
     public boolean handleKey(KeyPressMessage k) {
         if (KeyUtil.isEnter(k)) {
             confirmSearch();
@@ -160,18 +167,21 @@ public final class InlineSubjectFilter<T> {
         return false;
     }
 
+    // Cycle selection to next matched subject item
     public void cycleNext() {
         if (matches.isEmpty()) return;
         matchIndex = (matchIndex + 1) % matches.size();
         selectedItem = matches.get(matchIndex);
     }
 
+    // Cycle selection to previous matched subject item
     public void cyclePrev() {
         if (matches.isEmpty()) return;
         matchIndex = (matchIndex - 1 + matches.size()) % matches.size();
         selectedItem = matches.get(matchIndex);
     }
 
+    // Filter items matching query and adjust active selection index
     private void recomputeMatches() {
         matches.clear();
         String q = query.toString().trim().toLowerCase();
@@ -204,6 +214,7 @@ public final class InlineSubjectFilter<T> {
         }
     }
 
+    // Format inline filter header display string with search query status
     public String getHeaderDisplay() {
         if (!active) {
             return selectedItem != null ? selectedItem.getCode() : "ALL";
@@ -215,6 +226,7 @@ public final class InlineSubjectFilter<T> {
         return "[ " + query + "_ ] → " + code + " (" + (matchIndex + 1) + "/" + matches.size() + ")";
     }
 
+    // Format form field display string with search prompt and match count
     public String getFormDisplay(String fallbackDefault) {
         if (!active || query.length() == 0) {
             if (selectedItem != null && !selectedItem.getLabel().isBlank()) {

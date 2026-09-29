@@ -19,6 +19,7 @@ public class PortalService {
         this.portalRepository = portalRepository;
     }
 
+    // Retrieve assessment history with student ownership enforcement
     public List<Result> getStudentHistory(int studentId) {
         Optional<User> callerOpt = Session.getCurrentUser();
         if (callerOpt.isPresent()) {
@@ -30,18 +31,22 @@ public class PortalService {
         return portalRepository.getStudentHistory(studentId);
     }
 
+    // Query standard quiz competitive leaderboard
     public List<LeaderboardEntry> getQuizLeaderboard() {
         return portalRepository.getQuizLeaderboard();
     }
 
+    // Query comprehensive exam competitive leaderboard
     public List<LeaderboardEntry> getExamLeaderboard() {
         return portalRepository.getExamLeaderboard();
     }
 
+    // Retrieve default global student rankings
     public List<LeaderboardEntry> getGlobalLeaderboard() {
         return portalRepository.getGlobalLeaderboard();
     }
 
+    // Retrieve top speed quiz high scores and runs
     public List<LeaderboardEntry> getSpeedQuizLeaderboard() {
         return portalRepository.getSpeedQuizLeaderboard();
     }

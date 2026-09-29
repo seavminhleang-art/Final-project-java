@@ -65,6 +65,7 @@ public class AIQuestionGeneratorScreen implements Screen {
         }
     }
 
+    // Initialize AI question generator screen with context and subject items
     public AIQuestionGeneratorScreen(AIService aiService, QuestionService questionService, SubjectService subjectService, AuthService authService) {
         this(aiService, questionService, subjectService, authService, null);
     }
@@ -100,6 +101,7 @@ public class AIQuestionGeneratorScreen implements Screen {
         this.subjectFilter.setSelectedOriginalIndex(this.selectedSubjectIndex);
     }
 
+    // Check whether target quiz restricts questions to a single type
     private boolean isLockedQuizType() {
         return quizContext != null && quizContext.getAssessmentType() == com.proctor.model.enums.AssessmentType.QUIZ
                 && quizContext.getQuizQuestionType() != null;
@@ -130,6 +132,7 @@ public class AIQuestionGeneratorScreen implements Screen {
         return getNumInputFields() + 1;
     }
 
+    // Return to question editor or question bank screen
     private ScreenResult returnToPreviousScreen() {
         if (quizContext != null) {
             return ScreenResult.navigate(new QuizQuestionEditorScreen(quizContext, new QuizService(new QuizRepository()), questionService, subjectService, authService));
@@ -139,6 +142,7 @@ public class AIQuestionGeneratorScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        // Handle spinner animation ticks during background AI question generation
         if (msg instanceof LoadingTickMessage t) {
             if (isGenerating && t.generationId() == this.activeGenerationId) {
                 spinnerTick++;
@@ -147,6 +151,7 @@ public class AIQuestionGeneratorScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Handle completion callback and switch to draft review mode
         if (msg instanceof AIQuestionsGeneratedMessage m) {
             if (m.generationId() != 0 && (!isGenerating || m.generationId() != this.activeGenerationId)) {
                 return ScreenResult.stay(this);
@@ -167,6 +172,7 @@ public class AIQuestionGeneratorScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Handle cancellation of active AI generation job
         if (isGenerating) {
             if (msg instanceof KeyPressMessage k && KeyUtil.isEsc(k)) {
                 isGenerating = false;
@@ -190,6 +196,7 @@ public class AIQuestionGeneratorScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Handle wheel scrolling and mouse clicks in draft review mode
         if (reviewingDrafts) {
             if (MouseUtil.isWheelUp(msg)) {
                 if (!generatedDrafts.isEmpty()) {
@@ -229,6 +236,7 @@ public class AIQuestionGeneratorScreen implements Screen {
                 return ScreenResult.stay(this);
             }
         } else {
+            // Handle wheel scrolling and button clicks in question form mode
             if (MouseUtil.isWheelUp(msg)) {
                 if (!isPinnedQuiz()) subjectFilter.confirmSearch();
                 focusedField = (focusedField - 1 + getFieldCount()) % getFieldCount();
@@ -259,6 +267,7 @@ public class AIQuestionGeneratorScreen implements Screen {
             }
         }
 
+        // Clipboard paste handling for topic, prompt, and count fields
         if (msg instanceof PasteMessage paste && !isGenerating && !reviewingDrafts) {
             int idx = focusedField;
             if (!isPinnedQuiz()) {
@@ -276,7 +285,8 @@ public class AIQuestionGeneratorScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
-                if (msg instanceof KeyPressMessage k) {
+        // Keyboard navigation and submission across review and form modes
+        if (msg instanceof KeyPressMessage k) {
             if (reviewingDrafts) {
                 if (KeyUtil.isEsc(k)) {
                     reviewingDrafts = false;
@@ -354,6 +364,7 @@ public class AIQuestionGeneratorScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Handle keystroke inputs across configuration fields
     private void handleFormInput(KeyPressMessage k) {
         int idx = focusedField;
         if (!isPinnedQuiz()) {
@@ -432,12 +443,14 @@ public class AIQuestionGeneratorScreen implements Screen {
         }
     }
 
+    // Handle character appending and deletion for text buffers
     private void handleTextInput(StringBuilder buffer, KeyPressMessage k) {
         if (!KeyUtil.handleBackspace(buffer, k)) {
             KeyUtil.appendInput(buffer, k);
         }
     }
 
+    // Validate input parameters and trigger background AI generation
     private ScreenResult startAsyncGeneration() {
         if (topicBuffer.toString().trim().isBlank()) {
             bannerMessage = TuiHelper.red("✖ Topic cannot be blank.");
@@ -519,6 +532,7 @@ public class AIQuestionGeneratorScreen implements Screen {
         return ScreenResult.stay(this, Command.batch(genCmd, tickCmd));
     }
 
+    // Persist all generated question drafts to database
     private void saveAllDrafts() {
         User teacher = Session.getCurrentUser().orElse(null);
         Integer teacherId = teacher != null ? teacher.getId() : null;
@@ -551,6 +565,7 @@ public class AIQuestionGeneratorScreen implements Screen {
         }
     }
 
+    // Render generation spinner, draft review list, or configuration form
     @Override
     public String view() {
         if (isGenerating) {

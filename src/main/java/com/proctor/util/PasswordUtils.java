@@ -4,10 +4,12 @@ import at.favre.lib.crypto.bcrypt.BCrypt;
 import com.proctor.exception.ValidationException;
 
 public class PasswordUtils {
+    // Compute salted BCrypt hash with 10 cost rounds
     public static String hash(String rawPassword) {
         return BCrypt.withDefaults().hashToString(10, rawPassword.toCharArray());
     }
 
+    // Verify plaintext password against stored BCrypt hash
     public static boolean verify(String rawPassword, String hashedPassword) {
         if (rawPassword == null || hashedPassword == null) {
             return false;
@@ -19,6 +21,7 @@ public class PasswordUtils {
         }
     }
 
+    // Validate password length, whitespace, casing, and numeric requirements
     public static void validatePassword(String password) {
         if (password == null || password.isBlank()) {
             throw new ValidationException("Password is required.");

@@ -121,6 +121,7 @@ public class ExamService {
             throw new ValidationException("Quiz not found or is not published.");
         }
 
+        // Validate quiz publication status and expiration deadline
         Quiz quiz = quizOpt.get();
         if (quiz.isExpired()) {
             throw new ValidationException("This assessment has expired.");
@@ -130,6 +131,7 @@ public class ExamService {
             throw new ValidationException("This " + itemType + " has no questions available.");
         }
 
+        // Resume existing in-progress attempt or create a new attempt
         Optional<Attempt> existingOpt = attemptRepository.findLatestAttempt(quizId, studentId);
         Attempt attempt;
 
@@ -147,11 +149,13 @@ public class ExamService {
             }
         }
 
+        // Shuffle questions if randomization is enabled
         List<Question> questions = new ArrayList<>(quiz.getQuestions());
         if (quiz.isRandomizeQuestions()) {
             Collections.shuffle(questions);
         }
 
+        // Shuffle multiple choice options if randomization is enabled
         if (quiz.isRandomizeAnswers()) {
             for (Question q : questions) {
                 if (q.getQuestionType() == QuestionType.MCQ && q.getOptions() != null) {
@@ -162,6 +166,7 @@ public class ExamService {
             }
         }
 
+        // Restore previously saved answers for resumed session
         Map<Integer, Integer> selectedOpts = new HashMap<>();
         Map<Integer, String> textAns = new HashMap<>();
         List<AttemptAnswer> saved = attemptRepository.getAttemptAnswers(attempt.getId());
@@ -170,6 +175,7 @@ public class ExamService {
             if (a.getTextAnswer() != null) textAns.put(a.getQuestionId(), a.getTextAnswer());
         }
 
+        // Calculate remaining timer duration and auto-submit if time expired
         boolean isTimed = quiz.getTimeLimitMins() != null && quiz.getTimeLimitMins() > 0;
         int remainingSecs = isTimed ? quiz.getTimeLimitMins() * 60 : 0;
         if (isTimed && attempt.getStartedAt() != null) {
@@ -202,6 +208,7 @@ public class ExamService {
                 .build();
     }
 
+    // Persist student's selected option or written text answer
     public void recordAnswer(int attemptId, int questionId, Integer selectedOptionId, String textAnswer) {
         Optional<Attempt> attOpt = attemptRepository.getAttempt(attemptId);
         if (attOpt.isEmpty()) {
@@ -221,6 +228,7 @@ public class ExamService {
         attemptRepository.saveAnswer(attemptId, questionId, selectedOptionId, textAnswer);
     }
 
+    // Finalize exam attempt, auto-grade objective questions, and record result
     public Result submitExam(ExamSession session, boolean autoSubmitted) {
         Optional<Attempt> existingOpt = attemptRepository.getAttempt(session.getAttempt().getId());
         if (existingOpt.isPresent()) {

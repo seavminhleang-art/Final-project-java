@@ -37,6 +37,7 @@ public class AIService {
         if (topic == null || topic.isBlank() || count <= 0) {
             return new ArrayList<>();
         }
+        // Request question batches from Ollama with retry attempts on failure
         List<AIQuestionDraft> accumulated = new ArrayList<>();
         int attempts = 0;
         int maxAttempts = 3;
@@ -68,6 +69,7 @@ public class AIService {
         return generateMixedQuestions(topic, totalCount, difficulty, mcqOptionCount, null);
     }
 
+    // Partition mixed assessment count into MCQ, True/False, and Short Answer sub-batches
     public List<AIQuestionDraft> generateMixedQuestions(String topic, int totalCount, Difficulty difficulty, int mcqOptionCount, String customInstructions) {
         if (totalCount <= 0) {
             return new ArrayList<>();
@@ -99,6 +101,7 @@ public class AIService {
         return generateMixedQuestions(topic, mcqCount, tfCount, saCount, difficulty, mcqOptionCount, null);
     }
 
+    // Generate individual question types sequentially and aggregate results
     public List<AIQuestionDraft> generateMixedQuestions(String topic, int mcqCount, int tfCount, int saCount, Difficulty difficulty, int mcqOptionCount, String customInstructions) {
         List<AIQuestionDraft> allDrafts = new ArrayList<>();
         if (mcqCount > 0) {
@@ -113,6 +116,7 @@ public class AIService {
         return allDrafts;
     }
 
+    // Evaluate short answer submission with AI against expected model answer
     public AIGradeResult gradeShortAnswer(String questionText, String modelContext, String studentAnswer) {
         if (studentAnswer == null || studentAnswer.isBlank()) {
             return AIGradeResult.builder()
@@ -125,6 +129,7 @@ public class AIService {
         return parseGradingResult(rawJson);
     }
 
+    // Construct detailed prompt instructing Ollama to return structured JSON questions
     private String buildGenerationPrompt(String topic, int count, QuestionType type, Difficulty difficulty, int mcqOptionCount, String customInstructions) {
         int opts = Math.max(2, Math.min(4, mcqOptionCount));
 

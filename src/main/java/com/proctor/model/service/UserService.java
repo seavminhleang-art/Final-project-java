@@ -57,7 +57,9 @@ public class UserService {
         return createUser(email, username, rawPassword, fullName, role, dateOfBirth, gender, degree, edu, spec);
     }
 
+    // Validate required fields, formats, role credentials, and unique constraints
     public void validateNewUser(String email, String username, String rawPassword, String fullName, Role role, LocalDate dateOfBirth, String gender, String academicDegree, String educationBackground, String specialization) {
+        // Required presence checks
         if (email == null || email.isBlank() || username == null || username.isBlank() ||
                 rawPassword == null || rawPassword.isBlank() || fullName == null || fullName.isBlank()) {
             throw new ValidationException("All fields are required.");
@@ -71,6 +73,8 @@ public class UserService {
         if (fullName.trim().length() > 100) {
             throw new ValidationException("Full name cannot exceed 100 characters.");
         }
+
+        // Teacher academic credentials check
         if (role == Role.TEACHER) {
             if (academicDegree == null || academicDegree.trim().isBlank()) {
                 throw new ValidationException("Academic degree is required for teachers.");
@@ -91,48 +95,50 @@ public class UserService {
         if (specialization != null && specialization.trim().length() > 100) {
             throw new ValidationException("Specialization cannot exceed 100 characters.");
         }
+
+        // Date of birth and age requirement check
         if (dateOfBirth != null) {
             validateDateOfBirth(dateOfBirth, role != null ? role : Role.STUDENT);
         }
 
+        // Password complexity and length check
         PasswordUtils.validatePassword(rawPassword);
 
         String cleanEmail = email.trim().toLowerCase();
         String cleanUsername = username.trim().toLowerCase();
 
+        // Email format validation
         if (cleanEmail.length() > 100) {
             throw new ValidationException("Email cannot exceed 100 characters.");
         }
-
         if (!EMAIL_PATTERN.matcher(cleanEmail).matches()) {
             throw new ValidationException("Invalid email format (e.g. user@proctor.edu).");
         }
 
+        // Username pattern validation
         if (cleanUsername.length() < 3) {
             throw new ValidationException("Username must be at least 3 characters long.");
         }
-
         if (cleanUsername.length() > 50) {
             throw new ValidationException("Username cannot exceed 50 characters.");
         }
-
         if (cleanUsername.contains(" ")) {
             throw new ValidationException("Username cannot contain spaces.");
         }
-
         if (!USERNAME_PATTERN.matcher(cleanUsername).matches()) {
             throw new ValidationException("Username can only contain letters, numbers, dots, underscores, and hyphens.");
         }
 
+        // Uniqueness validation in database
         if (userRepository.findByEmail(cleanEmail).isPresent()) {
             throw new ValidationException("An account with email '" + cleanEmail + "' already exists.");
         }
-
         if (userRepository.findByUsername(cleanUsername).isPresent()) {
             throw new ValidationException("Username '" + cleanUsername + "' is already taken.");
         }
     }
 
+    // Create and persist new user after validation
     public User createUser(String email, String username, String rawPassword, String fullName, Role role, LocalDate dateOfBirth, String gender, String academicDegree, String educationBackground, String specialization) {
         validateNewUser(email, username, rawPassword, fullName, role, dateOfBirth, gender, academicDegree, educationBackground, specialization);
 
@@ -241,10 +247,12 @@ public class UserService {
         return user;
     }
 
+    // Enable or disable a user account with admin protection
     public boolean toggleUserStatus(int id) {
         Optional<User> existing = userRepository.findById(id);
         if (existing.isPresent()) {
             User user = existing.get();
+            // Prevent disabling administrator accounts
             if (user.getRole() == Role.ADMIN || SeedService.ADMIN_USERNAME.equalsIgnoreCase(user.getUsername())) {
                 throw new ValidationException("The administrator account cannot be disabled.");
             }
@@ -259,6 +267,7 @@ public class UserService {
         return userRepository.toggleEnabled(id);
     }
 
+    // Change account password with current password verification
     public boolean changePassword(int id, String currentPassword, String newPassword) {
         if (currentPassword == null || currentPassword.isBlank()) {
             throw new ValidationException("Current password cannot be blank.");
@@ -289,6 +298,7 @@ public class UserService {
         return true;
     }
 
+    // Enforce role-based minimum and maximum age constraints
     private void validateDateOfBirth(LocalDate dateOfBirth, Role role) {
         if (dateOfBirth == null) return;
         if (!dateOfBirth.isBefore(LocalDate.now())) {

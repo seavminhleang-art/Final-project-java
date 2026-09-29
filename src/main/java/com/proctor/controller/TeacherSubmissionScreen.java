@@ -75,6 +75,7 @@ public class TeacherSubmissionScreen implements Screen {
         }
     }
 
+    // Initialize teacher submission review screen and load student attempts
     public TeacherSubmissionScreen(Quiz specificQuiz, ExamService examService, QuizService quizService, QuestionService questionService, SubjectService subjectService, AuthService authService) {
         this.specificQuiz = specificQuiz;
         this.examService = examService;
@@ -85,6 +86,7 @@ public class TeacherSubmissionScreen implements Screen {
         refreshList();
     }
 
+    // Reload submissions from database for the active quiz or teacher scope
     private void refreshList() {
         if (specificQuiz != null) {
             this.allSubmissions = examService.getSubmissionsForQuiz(specificQuiz.getId());
@@ -96,6 +98,7 @@ public class TeacherSubmissionScreen implements Screen {
         applyFilters();
     }
 
+    // Apply status tab filter and keyword search across submissions
     private void applyFilters() {
         String filter = STATUS_FILTERS[statusFilterIndex];
         String search = searchBuffer.toString().trim().toLowerCase();
@@ -129,6 +132,7 @@ public class TeacherSubmissionScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        // Handle spinner animation ticks during background AI grading
         if (msg instanceof GradingTickMessage t) {
             if (isGrading && t.gradingId() == this.activeGradingId) {
                 spinnerTick++;
@@ -137,6 +141,7 @@ public class TeacherSubmissionScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Handle AI grading completion callback and refresh submission status
         if (msg instanceof AIGradingCompletedMessage m) {
             if (!isGrading || (m.gradingId() != 0 && m.gradingId() != this.activeGradingId)) {
                 return ScreenResult.stay(this);
@@ -154,6 +159,7 @@ public class TeacherSubmissionScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Handle cancellation of active AI grading job
         if (isGrading) {
             if (msg instanceof KeyPressMessage k && KeyUtil.isEsc(k)) {
                 isGrading = false;
@@ -179,6 +185,7 @@ public class TeacherSubmissionScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Handle input and navigation inside the manual grading modal
         if (showManualGradingModal) {
             if (MouseUtil.isWheelUp(msg) || MouseUtil.isWheelDown(msg)) {
                 return ScreenResult.stay(this);
@@ -302,6 +309,7 @@ public class TeacherSubmissionScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Handle navigation and action triggers inside the student answer sheet view
         if (inspectingAnswerSheet) {
             int qCount = 0;
             if (selectedIndex >= 0 && selectedIndex < submissions.size()) {
@@ -374,11 +382,13 @@ public class TeacherSubmissionScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Mouse wheel scroll navigation across submission table
         if (MouseUtil.isWheelUp(msg) || MouseUtil.isWheelDown(msg)) {
             selectedIndex = ListNavigationHelper.handleWheel(msg, selectedIndex, submissions.size());
             return ScreenResult.stay(this);
         }
 
+        // Mouse click handler for tabs, table rows, and action hints
         if (MouseUtil.isLeftClick(msg)) {
             int line = MouseUtil.getLineIndex(msg);
             int col = MouseUtil.getColInLine(msg);
@@ -426,6 +436,7 @@ public class TeacherSubmissionScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Keyboard navigation, search activation, and grading shortcuts
         if (msg instanceof KeyPressMessage k) {
             if (searchMode) {
                 searchMode = ListNavigationHelper.handleSearchKey(k, searchBuffer, this::applyFilters);
@@ -465,6 +476,7 @@ public class TeacherSubmissionScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Open detailed answer inspection sheet for selected submission
     private ScreenResult openSubmissionDetail() {
         if (!submissions.isEmpty() && selectedIndex < submissions.size()) {
             inspectingAnswerSheet = true;
@@ -474,6 +486,7 @@ public class TeacherSubmissionScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Return to parent quiz list or user dashboard
     private ScreenResult navigateBack() {
         if (specificQuiz != null) {
             return ScreenResult.navigate(new QuizListScreen(quizService, questionService, subjectService, authService, specificQuiz.getAssessmentType()));
@@ -485,6 +498,7 @@ public class TeacherSubmissionScreen implements Screen {
         return ScreenResult.navigate(new TeacherDashboardScreen(authService, questionService, subjectService, quizService));
     }
 
+    // Dispatch background AI grading command with progress spinner
     private ScreenResult startAsyncGrading() {
         if (submissions.isEmpty() || selectedIndex < 0 || selectedIndex >= submissions.size()) {
             return ScreenResult.stay(this);
@@ -538,6 +552,7 @@ public class TeacherSubmissionScreen implements Screen {
         return ScreenResult.stay(this, Command.batch(gradeCmd, tickCmd));
     }
 
+    // Finalize attempt review and return graded results to student
     private void executeReturnGrade() {
         if (submissions.isEmpty() || selectedIndex >= submissions.size()) {
             return;
@@ -594,6 +609,7 @@ public class TeacherSubmissionScreen implements Screen {
         }
     }
 
+    // Open modal dialog for manual point adjustments and teacher feedback
     private ScreenResult openManualGradingModal() {
         if (submissions.isEmpty() || selectedIndex < 0 || selectedIndex >= submissions.size()) {
             return ScreenResult.stay(this);
@@ -646,6 +662,7 @@ public class TeacherSubmissionScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Validate and persist teacher's manual score and feedback
     private ScreenResult executeSaveManualGrade() {
         if (submissions.isEmpty() || selectedIndex < 0 || selectedIndex >= submissions.size()) {
             showManualGradingModal = false;
@@ -688,6 +705,7 @@ public class TeacherSubmissionScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Resolve full quiz details with questions for the given attempt
     private Quiz getEffectiveQuiz(Attempt attempt) {
         Quiz currentQuiz = specificQuiz;
         if (currentQuiz == null && attempt != null) {
@@ -698,6 +716,7 @@ public class TeacherSubmissionScreen implements Screen {
         return currentQuiz;
     }
 
+    // Render AI grading spinner, manual grading modal, answer sheet, or submission table
     @Override
     public String view() {
         if (isGrading) {

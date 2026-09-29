@@ -34,6 +34,7 @@ public class SubjectListScreen implements Screen {
     private boolean confirmDeleteFocused = false;
     private Subject pendingDeleteSubject = null;
 
+    // Initialize subject list screen and load registered academic subjects
     public SubjectListScreen(SubjectService subjectService, UserService userService, AuthService authService) {
         this.subjectService = subjectService;
         this.userService = userService;
@@ -41,11 +42,13 @@ public class SubjectListScreen implements Screen {
         refreshList();
     }
 
+    // Query subjects from database matching current search criteria
     private void refreshList() {
         this.allSubjects = subjectService.getSubjects(searchBuffer.toString());
         applyFilters();
     }
 
+    // Filter subject list according to active status tab filter
     private void applyFilters() {
         String filter = STATUS_FILTERS[statusFilterIndex];
         this.subjects = allSubjects.stream().filter(s -> {
@@ -63,11 +66,13 @@ public class SubjectListScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        // Mouse wheel scroll navigation across subject table
         if (MouseUtil.isWheelUp(msg) || MouseUtil.isWheelDown(msg)) {
             selectedIndex = ListNavigationHelper.handleWheel(msg, selectedIndex, subjects.size());
             return ScreenResult.stay(this);
         }
 
+        // Mouse click handler for confirmation dialog, tabs, rows, and buttons
         if (MouseUtil.isLeftClick(msg)) {
             if (confirmingDelete) {
                 int action = ListNavigationHelper.handleConfirmationClick(msg, view(), "Delete", "Cancel");
@@ -122,6 +127,7 @@ public class SubjectListScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Keyboard shortcuts for search, creation, editing, deletion, and status toggle
         if (msg instanceof KeyPressMessage k) {
             if (confirmingDelete) {
                 if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {
@@ -188,12 +194,14 @@ public class SubjectListScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Open confirmation dialog before deleting selected subject
     private void initiateDelete() {
         pendingDeleteSubject = subjects.get(selectedIndex);
         confirmingDelete = true;
         confirmDeleteFocused = false;
     }
 
+    // Delete pending subject and refresh active table view
     private void executeDelete() {
         if (pendingDeleteSubject == null) return;
         try {
@@ -207,6 +215,7 @@ public class SubjectListScreen implements Screen {
         }
     }
 
+    // Render deletion confirmation modal or subject list table view
     @Override
     public String view() {
         if (confirmingDelete && pendingDeleteSubject != null) {

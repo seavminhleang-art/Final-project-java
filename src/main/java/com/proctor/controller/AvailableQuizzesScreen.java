@@ -54,6 +54,7 @@ public class AvailableQuizzesScreen implements Screen {
     private boolean isMissedExam = false;
     private Timestamp examReferenceTime = null;
 
+    // Initialize student available assessments screen and load published items
     public AvailableQuizzesScreen(ExamService examService, AuthService authService) {
         this(examService, authService, AssessmentType.QUIZ);
     }
@@ -75,6 +76,7 @@ public class AvailableQuizzesScreen implements Screen {
         refreshList();
     }
 
+    // Load available quizzes or exams for current student and extract subjects
     private void refreshList() {
         User student = Session.getCurrentUser().orElse(null);
         int studentId = (student != null && student.getId() != null) ? student.getId() : 0;
@@ -112,6 +114,7 @@ public class AvailableQuizzesScreen implements Screen {
         refreshAttempts();
     }
 
+    // Cache student attempt statuses across all available quizzes
     private void refreshAttempts() {
         attempts.clear();
         User student = Session.getCurrentUser().orElse(null);
@@ -121,6 +124,7 @@ public class AvailableQuizzesScreen implements Screen {
         }
     }
 
+    // Filter assessments by subject code and search term
     private void applyFilters() {
         String filterCode = (subjectFilterIndex > 0 && subjectFilterIndex <= subjectCodes.size())
                 ? subjectCodes.get(subjectFilterIndex - 1) : null;
@@ -150,6 +154,7 @@ public class AvailableQuizzesScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        // Mouse wheel scroll navigation across assessment list
         if (MouseUtil.isWheelUp(msg)) {
             if (!quizzes.isEmpty() && selectedIndex > 0) {
                 selectedIndex--;
@@ -164,6 +169,7 @@ public class AvailableQuizzesScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Mouse click handler for table rows, buttons, dialogs, and navigation
         if (MouseUtil.isLeftClick(msg)) {
             if (requestingExamReason) {
                 int line = MouseUtil.getLineIndex(msg);
@@ -228,6 +234,7 @@ public class AvailableQuizzesScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Keystroke routing for filter selection, makeup request dialog, search, and navigation
         if (msg instanceof KeyPressMessage k) {
             if (subjectFilter != null && subjectFilter.isActive()) {
                 boolean handled = subjectFilter.handleKey(k);
@@ -312,6 +319,7 @@ public class AvailableQuizzesScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Initiate retake or makeup request workflow for eligible assessments
     private ScreenResult handleRetakeRequest() {
         if (quizzes.isEmpty()) return ScreenResult.stay(this);
         Quiz q = quizzes.get(selectedIndex);
@@ -384,6 +392,7 @@ public class AvailableQuizzesScreen implements Screen {
         }
     }
 
+    // Handle keystroke navigation and input in exam makeup reason modal
     private ScreenResult handleReasonDialogInput(KeyPressMessage k) {
         if (KeyUtil.isEsc(k)) {
             requestingExamReason = false;
@@ -426,6 +435,7 @@ public class AvailableQuizzesScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Validate reason text and send makeup request message to teacher inbox
     private ScreenResult submitExamReason() {
         if (examReasonBuffer.toString().trim().isBlank()) {
             bannerMessage = TuiHelper.red("✖ A reason is required.");
@@ -465,6 +475,7 @@ public class AvailableQuizzesScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Start exam session or navigate to existing attempt result
     private ScreenResult handleQuizAction() {
         if (quizzes.isEmpty()) return ScreenResult.stay(this);
 
@@ -520,6 +531,7 @@ public class AvailableQuizzesScreen implements Screen {
         }
     }
 
+    // Render exam makeup dialog or available assessment catalog view
     @Override
     public String view() {
         if (requestingExamReason && !quizzes.isEmpty()) {

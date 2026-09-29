@@ -4,8 +4,10 @@ import com.proctor.util.TuiHelper;
 
 public class ReportViews {
 
+    // PDF reports selection menu view
     public static String renderReportMenu(String[] reports, int selectedIndex, String bannerMessage) {
         StringBuilder sb = new StringBuilder();
+        // Header and report category options
         sb.append(TuiHelper.DIALOG_MARKER);
         sb.append(TuiHelper.header("REPORTS"));
         sb.append("\n");
@@ -19,6 +21,7 @@ public class ReportViews {
             }
         }
 
+        // Action hints and shortcuts footer
         sb.append("\n");
         if (!bannerMessage.isBlank()) {
             sb.append("  ").append(bannerMessage).append("\n\n");

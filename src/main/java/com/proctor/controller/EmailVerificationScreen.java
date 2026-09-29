@@ -76,6 +76,7 @@ public class EmailVerificationScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        // Animation tick updates for OTP resend spinner
         if (msg instanceof ResendTickMessage t) {
             if (isResending && t.generationId() == resendGenerationId) {
                 spinnerTick++;
@@ -84,6 +85,7 @@ public class EmailVerificationScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Handle async verification code resend result
         if (msg instanceof ResendCompletedMessage res) {
             isResending = false;
             if (res.success()) {
@@ -95,6 +97,7 @@ public class EmailVerificationScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Cancel resend on Escape key or click
         if (isResending) {
             if (msg instanceof KeyPressMessage k && KeyUtil.isEsc(k)) {
                 if (activeCancellation != null) {
@@ -122,16 +125,19 @@ public class EmailVerificationScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Clipboard paste handling for OTP verification code
         if (msg instanceof PasteMessage paste) {
             KeyUtil.pasteToBuffer(codeBuffer, paste.content(), 8);
             return ScreenResult.stay(this);
         }
 
+        // Mouse wheel scroll between code input and action buttons
         if (MouseUtil.isWheelUp(msg) || MouseUtil.isWheelDown(msg)) {
             focusedSection = (focusedSection == 0) ? 1 : 0;
             return ScreenResult.stay(this);
         }
 
+        // Mouse click navigation for code input and action buttons
         if (MouseUtil.isLeftClick(msg)) {
             if (isResending) {
                 return ScreenResult.stay(this);
@@ -162,6 +168,7 @@ public class EmailVerificationScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Keyboard shortcuts and navigation between sections
         if (msg instanceof KeyPressMessage k) {
             if (isResending) {
                 return ScreenResult.stay(this);
@@ -192,6 +199,7 @@ public class EmailVerificationScreen implements Screen {
                 }
             }
 
+            // Confirm submission or trigger selected button
             if (KeyUtil.isEnter(k)) {
                 if (focusedSection == 0) {
                     return submitVerification();
@@ -206,6 +214,7 @@ public class EmailVerificationScreen implements Screen {
                 }
             }
 
+            // Text input for verification code digits
             if (focusedSection == 0) {
                 if (KeyUtil.handleBackspace(codeBuffer, k)) {
                     errorMessage = "";
@@ -225,6 +234,7 @@ public class EmailVerificationScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Validate code and invoke verification callback
     private ScreenResult submitVerification() {
         String code = codeBuffer.toString().trim();
         if (code.isBlank()) {
@@ -245,6 +255,7 @@ public class EmailVerificationScreen implements Screen {
         }
     }
 
+    // Resend registration verification code
     private ScreenResult triggerResend() {
         isResending = true;
         resendStartTime = System.currentTimeMillis();
@@ -284,6 +295,7 @@ public class EmailVerificationScreen implements Screen {
         return '\0';
     }
 
+    // Render verification code form or resend progress view
     @Override
     public String view() {
         if (isResending) {

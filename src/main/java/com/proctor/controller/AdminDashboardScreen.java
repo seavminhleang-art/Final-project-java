@@ -88,6 +88,7 @@ public class AdminDashboardScreen implements Screen {
         }
     }
 
+    // Dynamic dashboard menu options with live unread badge count
     private String[] getMenuItems() {
         int unread = getUnreadCount();
         String inboxLabel = unread > 0 ? "7. Inbox (" + unread + " unread)" : "7. Inbox";
@@ -108,6 +109,7 @@ public class AdminDashboardScreen implements Screen {
     public ScreenResult update(Message msg) {
         String[] menuItems = getMenuItems();
 
+        // Mouse wheel and menu option click handlers
         if (MouseUtil.isWheelUp(msg)) {
             selectedIndex = (selectedIndex - 1 + menuItems.length) % menuItems.length;
             return ScreenResult.stay(this);
@@ -148,6 +150,7 @@ public class AdminDashboardScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Keyboard hotkeys and arrow navigation
         if (msg instanceof KeyPressMessage k) {
             if (showQuitModal) {
                 if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {
@@ -190,6 +193,7 @@ public class AdminDashboardScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Menu option routing and logout / exit dispatcher
     private ScreenResult handleSelection() {
         switch (selectedIndex) {
             case 0 -> {
@@ -226,6 +230,7 @@ public class AdminDashboardScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Render administrator dashboard or quit confirmation dialog
     @Override
     public String view() {
         if (showQuitModal) {

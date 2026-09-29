@@ -11,6 +11,7 @@ public class UserViews {
 
     private static final DateTimeFormatter DISPLAY_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
+    // User account list view with role filter tabs and search
     public static String renderUserList(List<User> users, int selectedIndex, Role filterRole,
                                        String searchBuffer, boolean searchMode, String bannerMessage) {
         StringBuilder sb = new StringBuilder();
@@ -19,6 +20,7 @@ public class UserViews {
         else if (filterRole == Role.TEACHER) activeTab = 2;
         else if (filterRole == Role.ADMIN) activeTab = 3;
 
+        // Header and role filter tabs
         sb.append(TuiHelper.header("USERS"));
         sb.append("\n");
         sb.append(TuiHelper.boxTitle("User Management", String.format("Total Users: %d", users.size()))).append("\n\n");
@@ -29,6 +31,7 @@ public class UserViews {
         } else if (!searchBuffer.isEmpty()) {
             sb.append("  Search: [ ").append(TuiHelper.truncate(searchBuffer, 50)).append(" ] (Press '/' to edit)\n\n");
         }
+        // User table column headers and rows
         sb.append(String.format("  %-4s  %-6s  %-18s  %-28s  %-20s  %-8s  %-12s  %-10s  %-9s\n",
                 "#", "ID", "USERNAME", "EMAIL", "FULL NAME", "GENDER", "BIRTHDAY", "ROLE", "STATUS"));
         sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
@@ -80,6 +83,7 @@ public class UserViews {
 
         sb.append("\n  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
+        // Pagination and action key hints
         if (!users.isEmpty()) {
             int pageSize = TuiHelper.PAGE_SIZE;
             int totalPages = Math.max(1, (int) Math.ceil((double) users.size() / pageSize));
@@ -113,6 +117,7 @@ public class UserViews {
                 selectedRole, enabledStatus, focusedField, saveBtnIndex, cancelBtnIndex, errorMessage, false);
     }
 
+    // User account creation and editing form
     public static String renderUserForm(boolean isEditMode, User userToEdit, String email, String username,
                                         String password, String fullName, String birthday, String gender,
                                         Role selectedRole, boolean enabledStatus, int focusedField,

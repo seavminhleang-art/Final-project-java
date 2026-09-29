@@ -9,6 +9,7 @@ import java.sql.SQLException;
 public class DatabaseConnection {
     private static volatile HikariDataSource dataSource;
 
+    // Configure and start HikariCP connection pool
     public static synchronized void init() {
         if (dataSource != null && !dataSource.isClosed()) {
             return;
@@ -26,6 +27,7 @@ public class DatabaseConnection {
         dataSource = new HikariDataSource(hikariConfig);
     }
 
+    // Borrow an active connection from the pool
     public static Connection getConnection() throws SQLException {
         if (dataSource == null || dataSource.isClosed()) {
             init();
@@ -33,6 +35,7 @@ public class DatabaseConnection {
         return dataSource.getConnection();
     }
 
+    // Shut down the connection pool and release resources
     public static synchronized void close() {
         if (dataSource != null && !dataSource.isClosed()) {
             dataSource.close();

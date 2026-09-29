@@ -41,6 +41,7 @@ public class SpeedQuizFormScreen implements Screen {
     private String errorMessage = "";
     private final InlineSubjectFilter<Subject> subjectFilter;
 
+    // Initialize speed quiz form with pre-populated values or defaults
     public SpeedQuizFormScreen(QuizService quizService, QuestionService questionService, SubjectService subjectService, AuthService authService, Quiz quizToEdit) {
         this.quizService = quizService;
         this.questionService = questionService;
@@ -84,6 +85,7 @@ public class SpeedQuizFormScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        // Clipboard paste handling for text and numeric inputs
         if (msg instanceof PasteMessage paste) {
             switch (focusedField) {
                 case 1 -> KeyUtil.pasteToBuffer(title, paste.content());
@@ -95,6 +97,7 @@ public class SpeedQuizFormScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Mouse scroll navigation across input fields
         if (MouseUtil.isWheelUp(msg)) {
             subjectFilter.confirmSearch();
             focusedField = (focusedField - 1 + getFieldCount()) % getFieldCount();
@@ -107,6 +110,7 @@ public class SpeedQuizFormScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Mouse click handler for action buttons
         if (MouseUtil.isLeftClick(msg)) {
             int line = MouseUtil.getLineIndex(msg);
             int col = MouseUtil.getColInLine(msg);
@@ -122,6 +126,7 @@ public class SpeedQuizFormScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Keyboard navigation and field activation
         if (msg instanceof KeyPressMessage k) {
             if (focusedField == 0) {
                 if (KeyUtil.isEsc(k)) {
@@ -172,6 +177,7 @@ public class SpeedQuizFormScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Route keystrokes to the currently active field
     private void handleFieldInput(KeyPressMessage k) {
         switch (focusedField) {
             case 0 -> {
@@ -204,6 +210,7 @@ public class SpeedQuizFormScreen implements Screen {
         }
     }
 
+    // Handle character insertion and deletion for text fields
     private void handleTextInput(StringBuilder buffer, KeyPressMessage k) {
         if (KeyUtil.handleBackspace(buffer, k)) {
             errorMessage = "";
@@ -212,6 +219,7 @@ public class SpeedQuizFormScreen implements Screen {
         }
     }
 
+    // Handle digit input and deletion for numeric fields
     private void handleNumericInput(StringBuilder buffer, KeyPressMessage k) {
         if (KeyUtil.isBackspace(k)) {
             if (!buffer.isEmpty()) buffer.deleteCharAt(buffer.length() - 1);
@@ -221,6 +229,7 @@ public class SpeedQuizFormScreen implements Screen {
         }
     }
 
+    // Validate form inputs and persist new or updated speed quiz
     private ScreenResult handleSave() {
         try {
             if (selectedSubjectIndex == 0) {
@@ -303,6 +312,7 @@ public class SpeedQuizFormScreen implements Screen {
         }
     }
 
+    // Render speed quiz configuration form view
     @Override
     public String view() {
         String subjectDisplay = subjectFilter.getFormDisplay("(No Subject)");

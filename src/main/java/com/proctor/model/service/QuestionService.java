@@ -24,10 +24,12 @@ public class QuestionService {
         this.questionRepository = questionRepository;
     }
 
+    // Fetch all questions assigned to a specific quiz
     public List<Question> getQuestionsByQuizId(int quizId) {
         return questionRepository.findByQuizId(quizId);
     }
 
+    // Guard method ensuring only instructors or administrators manage questions
     private void checkInstructorAccess(Question q) {
         Session.getCurrentUser().ifPresent(u -> {
             if (u.getRole() == Role.STUDENT) {
@@ -39,6 +41,7 @@ public class QuestionService {
         });
     }
 
+    // Delete question with creator ownership verification
     public boolean deleteQuestion(int id) {
         checkInstructorAccess(null);
         Optional<Question> existingOpt = questionRepository.findById(id);
@@ -56,6 +59,7 @@ public class QuestionService {
         return questionRepository.delete(id);
     }
 
+    // Validate, normalize options, and persist new question
     public Question createQuestion(Question q) {
         checkInstructorAccess(q);
         validateQuestion(q);
@@ -68,6 +72,7 @@ public class QuestionService {
         return q;
     }
 
+    // Update existing question with creator ownership check
     public Question updateQuestion(Question q) {
         checkInstructorAccess(q);
         if (q.getId() == null) {
@@ -94,12 +99,14 @@ public class QuestionService {
         return q;
     }
 
+    // Search question bank by creator, subject, type, and difficulty filters
     public List<Question> getBankQuestions(Integer createdBy, Integer subjectId,
                                            QuestionType type, Difficulty difficulty,
                                            String search) {
         return questionRepository.findBankQuestions(createdBy, subjectId, type, difficulty, search);
     }
 
+    // Copy reusable question bank item into a specific quiz
     public int copyBankQuestionToQuiz(int bankQuestionId, int quizId) {
         checkInstructorAccess(null);
         if (bankQuestionId <= 0 || quizId <= 0) {
@@ -116,6 +123,7 @@ public class QuestionService {
         return questionRepository.copyToQuiz(bankQuestionId, quizId);
     }
 
+    // Enforce question text constraints, points bounds, and option correctness rules
     private void validateQuestion(Question q) {
         if (q.getQuestionText() == null || q.getQuestionText().isBlank()) {
             throw new ValidationException("Question text is required.");
@@ -163,6 +171,7 @@ public class QuestionService {
         }
     }
 
+    // Normalize question options structure according to question type
     private void normalizeQuestion(Question q) {
         if (q.getQuestionType() == QuestionType.SHORT_ANSWER) {
             q.setOptions(new ArrayList<>());

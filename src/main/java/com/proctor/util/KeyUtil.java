@@ -4,6 +4,7 @@ import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
 import com.williamcallahan.tui4j.compat.bubbletea.input.key.KeyType;
 
 public class KeyUtil {
+    // Key identity testers for TUI navigation and actions
     public static boolean isEnter(KeyPressMessage k) {
         return "enter".equalsIgnoreCase(k.key()) || k.type() == KeyType.keyCR || k.type() == KeyType.keyLF;
     }
@@ -45,6 +46,7 @@ public class KeyUtil {
         return "delete".equalsIgnoreCase(k.key()) || k.type() == KeyType.KeyDelete;
     }
 
+    // Text input buffer manipulation and backspace handler
     public static boolean handleBackspace(StringBuilder buffer, KeyPressMessage k) {
         if (isBackspace(k) && !buffer.isEmpty()) {
             buffer.deleteCharAt(buffer.length() - 1);
@@ -84,6 +86,7 @@ public class KeyUtil {
         return false;
     }
 
+    // Extract numeric digit from key press
     public static int getDigit(KeyPressMessage k) {
         if (k == null) return -1;
         if (k.type() == KeyType.KeyRunes && k.runes() != null && k.runes().length > 0) {
@@ -101,6 +104,7 @@ public class KeyUtil {
         return -1;
     }
 
+    // Clipboard and paste text sanitization
     public static void pasteToBuffer(StringBuilder buffer, String text) {
         pasteToBuffer(buffer, text, Integer.MAX_VALUE);
     }

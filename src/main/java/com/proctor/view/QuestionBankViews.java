@@ -11,6 +11,7 @@ import java.util.Set;
 
 public class QuestionBankViews {
 
+    // Main question bank table view with filters and search
     public static String renderBankList(List<Question> questions, int selectedIndex,
                                         String subjectFilterDisplay, QuestionType typeFilter,
                                         Difficulty diffFilter, String searchBuffer,
@@ -22,6 +23,7 @@ public class QuestionBankViews {
         if (!subjLabel.startsWith("[")) {
             subjLabel = "[" + subjLabel + "]";
         }
+        // Header, filter stats, and search bar
         sb.append(TuiHelper.header("QUESTION BANK"));
         sb.append("\n");
         sb.append(TuiHelper.boxTitle("My Question Bank",
@@ -34,6 +36,7 @@ public class QuestionBankViews {
             sb.append("  Search: [ ").append(TuiHelper.truncate(searchBuffer, 50)).append(" ] (Press '/' to edit)\n\n");
         }
 
+        // Question table column definitions and rows
         sb.append(String.format("  %-4s  %-10s  %-12s  %-8s  %-5s  %-4s  %-75s\n",
                 "#", "SUBJ", "TYPE", "DIFF", "PTS", "AI?", "QUESTION TEXT"));
         sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
@@ -72,6 +75,7 @@ public class QuestionBankViews {
 
         sb.append("\n  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
+        // Pagination bar and keyboard action hints
         if (!questions.isEmpty()) {
             int pageSize = TuiHelper.PAGE_SIZE;
             int totalPages = Math.max(1, (int) Math.ceil((double) questions.size() / pageSize));
@@ -111,6 +115,7 @@ public class QuestionBankViews {
         return renderBankPicker(quiz, bankQuestions, selectedIds, java.util.Collections.emptySet(), selectedIndex, filterSummary, bannerMessage);
     }
 
+    // Modal picker for importing bank questions into a quiz
     public static String renderBankPicker(Quiz quiz, List<Question> bankQuestions,
                                           Set<Integer> selectedIds, Set<Integer> alreadyAddedIds, int selectedIndex,
                                           String filterSummary, String bannerMessage) {
@@ -122,6 +127,7 @@ public class QuestionBankViews {
             }
         }
 
+        // Header and selection tally banner
         String builderHeader = (quiz.getAssessmentType() == com.proctor.model.enums.AssessmentType.EXAM ? "EXAMS"
                 : (quiz.getAssessmentType() == com.proctor.model.enums.AssessmentType.SPEED ? "SPEED QUIZZES" : "QUIZZES"));
         String subtitle = String.format("Selected: %d Question(s) (%.1f pts)  •  Bank: %d available",
@@ -134,6 +140,7 @@ public class QuestionBankViews {
             sb.append("  ").append(TuiHelper.dim(filterSummary)).append("\n\n");
         }
 
+        // Checkbox list of bank questions with selection state
         sb.append(String.format("    %-14s  %-4s  %-12s  %-8s  %-5s  %-75s\n",
                 "SELECT", "#", "TYPE", "DIFF", "PTS", "QUESTION TEXT"));
         sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
@@ -179,6 +186,7 @@ public class QuestionBankViews {
 
         sb.append("\n  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
+        // Import picker pagination and action controls
         if (!bankQuestions.isEmpty()) {
             int pageSize = TuiHelper.PAGE_SIZE;
             int totalPages = Math.max(1, (int) Math.ceil((double) bankQuestions.size() / pageSize));

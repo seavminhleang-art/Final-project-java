@@ -12,6 +12,7 @@ public class Config {
         loadProperties();
     }
 
+    // Load configuration key-values from external file or classpath resource
     private static void loadProperties() {
         try {
             File externalFile = new File("config.properties");
@@ -31,18 +32,21 @@ public class Config {
         }
     }
 
+    // Retrieve string property with fallback default
     public static String get(String key, String defaultValue) {
         String sys = System.getProperty(key);
         if (sys != null && !sys.isBlank()) return sys;
         return props.getProperty(key, defaultValue);
     }
 
+    // Retrieve string property without default
     public static String get(String key) {
         String sys = System.getProperty(key);
         if (sys != null && !sys.isBlank()) return sys;
         return props.getProperty(key);
     }
 
+    // Retrieve integer property with fallback default
     public static int getInt(String key, int defaultValue) {
         String val = get(key, null);
         if (val == null || val.isBlank()) return defaultValue;

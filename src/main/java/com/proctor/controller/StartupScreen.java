@@ -8,6 +8,7 @@ import com.proctor.view.AuthViews;
 import com.williamcallahan.tui4j.compat.bubbletea.KeyPressMessage;
 import com.williamcallahan.tui4j.compat.bubbletea.Message;
 
+// Welcome launchpad screen offering login, registration, and exit
 public class StartupScreen implements Screen {
     private final AuthService authService;
     private int focusedButton = 0;
@@ -20,6 +21,7 @@ public class StartupScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        // Mouse wheel and click button hit-testing
         if (MouseUtil.isWheelUp(msg)) {
             focusedButton = (focusedButton - 1 + 3) % 3;
             return ScreenResult.stay(this);
@@ -68,6 +70,7 @@ public class StartupScreen implements Screen {
             }
             return ScreenResult.stay(this);
         }
+        // Keyboard arrow navigation, modal confirmation, and selection dispatch
         if (msg instanceof KeyPressMessage k) {
             if (showQuitModal) {
                 if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {
@@ -130,6 +133,7 @@ public class StartupScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Render startup banner or quit confirmation modal
     @Override
     public String view() {
         if (showQuitModal) {

@@ -28,9 +28,12 @@ public class ExamViews {
                                                String subjectFilterDisplay, String searchBuffer, boolean searchMode,
                                                String bannerMessage) {
         StringBuilder sb = new StringBuilder();
+        // Header banner and active assessment type title
         String typeLabel = (assessmentType == AssessmentType.EXAM) ? "EXAMS" : (assessmentType == AssessmentType.SPEED ? "SPEED QUIZZES" : "QUIZZES");
         sb.append(TuiHelper.header(typeLabel));
         sb.append("\n");
+
+        // Subject filter indicator and total count box title
         String subjLabel = (subjectFilterDisplay == null || subjectFilterDisplay.isBlank()) ? "[ ALL ]" : subjectFilterDisplay;
         if (!subjLabel.startsWith("[")) {
             subjLabel = "[ " + subjLabel + " ]";
@@ -39,16 +42,19 @@ public class ExamViews {
         sb.append(TuiHelper.boxTitle(boxTitle,
                 String.format("Subject: %s  •  Total: %d", subjLabel, quizzes.size()))).append("\n\n");
 
+        // Real-time search query input bar
         if (searchMode) {
             sb.append("  Search: [ ").append(TuiHelper.cyan(TuiHelper.truncate(searchBuffer, 50) + "_")).append(" ] (Press Enter to finish)\n\n");
         } else if (!searchBuffer.isEmpty()) {
             sb.append("  Search: [ ").append(TuiHelper.truncate(searchBuffer, 50)).append(" ] (Press '/' to edit)\n\n");
         }
 
+        // Assessment table column headers
         sb.append(String.format("  %-4s  %-14s  %-64s  %-20s  %-16s%n",
                 "#", "SUBJ", "TITLE", "TEACHER", "STATUS")).append("\n");
         sb.append("  " + "─".repeat(TuiHelper.TABLE_WIDTH) + "\n\n");
 
+        // Assessment rows table body
         if (quizzes.isEmpty()) {
             sb.append("  ").append(TuiHelper.dim("No " + typeLabel.toLowerCase() + " currently available.")).append("\n");
         } else {

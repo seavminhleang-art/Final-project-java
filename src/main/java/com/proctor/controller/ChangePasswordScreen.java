@@ -39,7 +39,8 @@ public class ChangePasswordScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
-                if (msg instanceof PasteMessage paste) {
+        // Clipboard paste handling for password fields
+        if (msg instanceof PasteMessage paste) {
             switch (focusedField) {
                 case 0 -> KeyUtil.pasteToBuffer(currentPassword, paste.content(), 128);
                 case 1 -> KeyUtil.pasteToBuffer(newPassword, paste.content(), 128);
@@ -49,6 +50,7 @@ public class ChangePasswordScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Mouse wheel scroll between fields and buttons
         if (MouseUtil.isWheelUp(msg)) {
             focusedField = (focusedField - 1 + 5) % 5;
             return ScreenResult.stay(this);
@@ -59,6 +61,7 @@ public class ChangePasswordScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Mouse click navigation for password inputs and action buttons
         if (MouseUtil.isLeftClick(msg)) {
             int line = MouseUtil.getLineIndex(msg);
             int col = MouseUtil.getColInLine(msg);
@@ -86,7 +89,9 @@ public class ChangePasswordScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Keyboard shortcuts, password mask toggle, and navigation
         if (msg instanceof KeyPressMessage k) {
+            // Toggle visibility of active password field
             if (focusedField >= 0 && focusedField <= 2 && KeyUtil.isPasswordToggle(k)) {
                 if (focusedField == 0) showCurrentPassword = !showCurrentPassword;
                 else if (focusedField == 1) showNewPassword = !showNewPassword;
@@ -113,6 +118,7 @@ public class ChangePasswordScreen implements Screen {
                 return ScreenResult.stay(this);
             }
 
+            // Field transition or submission on Enter
             if (KeyUtil.isEnter(k)) {
                 if (focusedField == 0) {
                     focusedField = 1;
@@ -127,6 +133,7 @@ public class ChangePasswordScreen implements Screen {
                 }
             }
 
+            // Password text entry and backspace
             if (focusedField >= 0 && focusedField <= 2) {
                 StringBuilder active = switch (focusedField) {
                     case 0 -> currentPassword;
@@ -157,6 +164,7 @@ public class ChangePasswordScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Validate passwords and update user credentials
     private ScreenResult handleSave() {
         User user = Session.getCurrentUser().orElse(null);
         if (user == null) {
@@ -202,6 +210,7 @@ public class ChangePasswordScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Navigate back to origin screen or role dashboard
     private ScreenResult navigateBack() {
         if (returnScreen != null) {
             return ScreenResult.navigate(returnScreen);
@@ -216,6 +225,7 @@ public class ChangePasswordScreen implements Screen {
         }
     }
 
+    // Render password change form view
     @Override
     public String view() {
         StringBuilder sb = new StringBuilder();

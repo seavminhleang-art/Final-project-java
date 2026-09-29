@@ -10,6 +10,7 @@ import java.util.Optional;
 
 public class ResultRepository {
 
+    // Upsert final assessment result record
     public boolean saveResult(Result result) {
         String sql = "INSERT INTO results (attempt_id, student_id, quiz_id, total_points, max_points, percentage, passed) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?) " +
@@ -39,6 +40,7 @@ public class ResultRepository {
         }
     }
 
+    // Query attempt result with student and quiz metadata
     public Optional<Result> findByAttemptId(int attemptId) {
         String sql = "SELECT r.id, r.attempt_id, r.student_id, u.full_name AS student_name, " +
                      "r.quiz_id, q.title AS quiz_title, q.assessment_type, r.total_points, r.max_points, r.percentage, r.passed, r.graded_at " +
@@ -60,6 +62,7 @@ public class ResultRepository {
         return Optional.empty();
     }
 
+    // Map database result set row to Result entity
     private Result mapRow(ResultSet rs) throws SQLException {
         String typeStr = rs.getString("assessment_type");
         AssessmentType type = AssessmentType.QUIZ;

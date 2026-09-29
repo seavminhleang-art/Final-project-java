@@ -40,6 +40,7 @@ public class InboxListScreen implements Screen {
 
     private static final String[] FILTERS = {"ALL", "UNREAD", "ACTIONABLE"};
 
+    // Initialize user inbox screen and load initial messages
     public InboxListScreen(InboxService inboxService, UserService userService, AuthService authService, Screen returnDashboardScreen) {
         this.inboxService = inboxService;
         this.userService = userService;
@@ -48,10 +49,12 @@ public class InboxListScreen implements Screen {
         refreshMessages();
     }
 
+    // Retrieve ID of currently authenticated user session
     private int getCurrentUserId() {
         return Session.getCurrentUser().map(User::getId).orElse(-1);
     }
 
+    // Fetch user messages and unread count from inbox service
     private void refreshMessages() {
         int userId = getCurrentUserId();
         if (userId != -1) {
@@ -61,6 +64,7 @@ public class InboxListScreen implements Screen {
         applyFilters();
     }
 
+    // Filter inbox messages based on active category and search keyword
     private void applyFilters() {
         String filter = FILTERS[filterIndex];
         String search = searchBuffer.toString().trim().toLowerCase();
@@ -88,11 +92,13 @@ public class InboxListScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        // Mouse wheel scroll navigation through inbox messages
         if (MouseUtil.isWheelUp(msg) || MouseUtil.isWheelDown(msg)) {
             selectedIndex = ListNavigationHelper.handleWheel(msg, selectedIndex, messages.size());
             return ScreenResult.stay(this);
         }
 
+        // Mouse click handler for delete confirmation, filter tabs, rows, and hints
         if (MouseUtil.isLeftClick(msg)) {
             if (showDeleteModal) {
                 int action = ListNavigationHelper.handleConfirmationClick(msg, view(), "Delete", "Cancel");
@@ -162,6 +168,7 @@ public class InboxListScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Keystroke shortcuts for delete modal, search mode, message opening, and mark-all-read
         if (msg instanceof KeyPressMessage k) {
             if (showDeleteModal) {
                 if (KeyUtil.isLeft(k) || KeyUtil.isRight(k)) {
@@ -261,12 +268,14 @@ public class InboxListScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Refresh inbox messages on screen initialization
     @Override
     public com.williamcallahan.tui4j.compat.bubbletea.Command init() {
         refreshMessages();
         return null;
     }
 
+    // Render delete confirmation modal or inbox message list interface
     @Override
     public String view() {
         if (showDeleteModal) {

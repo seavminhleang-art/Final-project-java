@@ -30,6 +30,7 @@ public class SeedService {
         this.subjectRepository = subjectRepository;
     }
 
+    // Seed or update the 15 predefined curriculum subjects
     public void seedDefaultSubjects() {
         if (subjectRepository == null) return;
         for (PredefinedSubject ps : PredefinedSubject.values()) {
@@ -62,6 +63,7 @@ public class SeedService {
         }
     }
 
+    // Seed default system administrator account if not present
     public void seedDefaultAdmin() {
         Optional<User> existing = userRepository.findByUsername(ADMIN_USERNAME);
         if (existing.isEmpty()) {

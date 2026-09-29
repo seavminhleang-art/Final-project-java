@@ -64,6 +64,7 @@ public class LoginScreen implements Screen {
 
     @Override
     public ScreenResult update(Message msg) {
+        // Delegate to embedded forgot password sub-screen
         if (forgotScreen != null) {
             ScreenResult res = forgotScreen.update(msg);
             if (res.nextScreen() != forgotScreen) {
@@ -76,7 +77,7 @@ public class LoginScreen implements Screen {
             return ScreenResult.stay(this, res.command());
         }
 
-                if (msg instanceof PasteMessage paste && (focusedField == 0 || focusedField == 1)) {
+        if (msg instanceof PasteMessage paste && (focusedField == 0 || focusedField == 1)) {
             StringBuilder active = (focusedField == 0) ? identifier : password;
             int maxLen = (focusedField == 0) ? 254 : 128;
             KeyUtil.pasteToBuffer(active, paste.content(), maxLen);
@@ -84,6 +85,7 @@ public class LoginScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Mouse wheel and click hit-testing for form fields and action buttons
         if (MouseUtil.isWheelUp(msg)) {
             focusedField = (focusedField - 1 + getFieldCount()) % getFieldCount();
             return ScreenResult.stay(this);
@@ -123,6 +125,7 @@ public class LoginScreen implements Screen {
             return ScreenResult.stay(this);
         }
 
+        // Keyboard input, backspace, and navigation handler
         if (msg instanceof KeyPressMessage k) {
             if (focusedField == 1 && KeyUtil.isPasswordToggle(k)) {
                 showPassword = !showPassword;
@@ -196,6 +199,7 @@ public class LoginScreen implements Screen {
         return ScreenResult.stay(this);
     }
 
+    // Authenticate credentials and navigate to role dashboard
     private ScreenResult attemptLogin() {
         try {
             User user = authService.login(identifier.toString(), password.toString());
@@ -218,6 +222,7 @@ public class LoginScreen implements Screen {
         }
     }
 
+    // Render login interface or active sub-screen
     @Override
     public String view() {
         if (forgotScreen != null) {
