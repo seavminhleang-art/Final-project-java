@@ -359,7 +359,7 @@ public class AvailableQuizzesScreen implements Screen {
             if (attOpt.isPresent()) {
                 Attempt att = attOpt.get();
                 Optional<Result> resOpt = examService.getResultByAttempt(att.getId());
-                if (resOpt.isPresent() && !resOpt.get().isPassed()) {
+                if (att.getStatus() == AttemptStatus.AUTO_SUBMITTED || (resOpt.isPresent() && !resOpt.get().isPassed())) {
                     failed = true;
                     refTime = att.getSubmittedAt() != null ? att.getSubmittedAt() : att.getStartedAt();
                 }

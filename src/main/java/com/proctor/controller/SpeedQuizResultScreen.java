@@ -45,6 +45,10 @@ public class SpeedQuizResultScreen implements Screen {
             this.quiz = null;
             this.attemptAnswers = new ArrayList<>();
         }
+
+        if (this.result != null && (this.result.getStudentName() == null || this.result.getStudentName().isBlank())) {
+            Session.getCurrentUser().ifPresent(u -> this.result.setStudentName(u.getFullName()));
+        }
     }
 
     public SpeedQuizResultScreen(Result result, Screen returnScreen, ExamService examService, AuthService authService) {

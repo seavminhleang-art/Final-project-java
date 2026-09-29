@@ -21,6 +21,7 @@ import com.proctor.model.enums.AssessmentType;
 import com.proctor.model.enums.Role;
 import com.proctor.model.entity.Session;
 import com.proctor.model.entity.User;
+import com.proctor.model.repository.UserRepository;
 import com.proctor.model.entity.SpeedQuizSession;
 import com.proctor.model.entity.SpeedQuizAnswerRecord;
 
@@ -29,16 +30,30 @@ public class ExamService {
     private final AttemptRepository attemptRepository;
     private final ResultRepository resultRepository;
     private final AIService aiService;
+    private final UserRepository userRepository;
 
     public ExamService(QuizRepository quizRepository, AttemptRepository attemptRepository, ResultRepository resultRepository) {
-        this(quizRepository, attemptRepository, resultRepository, new AIService());
+        this(quizRepository, attemptRepository, resultRepository, new AIService(), new UserRepository());
     }
 
     public ExamService(QuizRepository quizRepository, AttemptRepository attemptRepository, ResultRepository resultRepository, AIService aiService) {
+        this(quizRepository, attemptRepository, resultRepository, aiService, new UserRepository());
+    }
+
+    public ExamService(QuizRepository quizRepository, AttemptRepository attemptRepository, ResultRepository resultRepository, AIService aiService, UserRepository userRepository) {
         this.quizRepository = quizRepository;
         this.attemptRepository = attemptRepository;
         this.resultRepository = resultRepository;
         this.aiService = aiService;
+        this.userRepository = userRepository != null ? userRepository : new UserRepository();
+    }
+
+    private String resolveStudentName(int studentId) {
+        Optional<User> cur = Session.getCurrentUser();
+        if (cur.isPresent() && cur.get().getId() != null && cur.get().getId() == studentId) {
+            return cur.get().getFullName();
+        }
+        return userRepository.findById(studentId).map(User::getFullName).orElse(null);
     }
 
     public List<Quiz> getAvailableQuizzes(int studentId) {
@@ -242,6 +257,7 @@ public class ExamService {
                 return Result.builder()
                         .attemptId(session.getAttempt().getId())
                         .studentId(session.getAttempt().getStudentId())
+                        .studentName(resolveStudentName(session.getAttempt().getStudentId()))
                         .quizId(session.getQuiz().getId())
                         .quizTitle(session.getQuiz().getTitle())
                         .assessmentType(session.getQuiz().getAssessmentType())
@@ -313,6 +329,7 @@ public class ExamService {
         return Result.builder()
                 .attemptId(session.getAttempt().getId())
                 .studentId(session.getAttempt().getStudentId())
+                .studentName(resolveStudentName(session.getAttempt().getStudentId()))
                 .quizId(session.getQuiz().getId())
                 .quizTitle(session.getQuiz().getTitle())
                 .assessmentType(session.getQuiz().getAssessmentType())
@@ -342,7 +359,7 @@ public class ExamService {
         }
         if (attempt.getStatus() == AttemptStatus.IN_PROGRESS) {
             throw new ValidationException("Cannot grade an assessment that is still in progress by the student.");
-        }
+        }   
 
         Optional<Quiz> quizOpt = quizRepository.findById(attempt.getQuizId());
         if (quizOpt.isEmpty()) return false;
@@ -539,6 +556,7 @@ public class ExamService {
         Result result = Result.builder()
                 .attemptId(attempt.getId())
                 .studentId(attempt.getStudentId())
+                .studentName(resolveStudentName(attempt.getStudentId()))
                 .quizId(quiz.getId())
                 .quizTitle(quiz.getTitle())
                 .assessmentType(quiz.getAssessmentType())
@@ -662,6 +680,7 @@ public class ExamService {
         Result result = Result.builder()
                 .attemptId(attemptId)
                 .studentId(studentId)
+                .studentName(resolveStudentName(studentId))
                 .quizId(quizId)
                 .quizTitle(session.getQuiz().getTitle())
                 .assessmentType(AssessmentType.SPEED)

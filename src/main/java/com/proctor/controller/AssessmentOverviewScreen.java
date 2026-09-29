@@ -284,7 +284,7 @@ public class AssessmentOverviewScreen implements Screen {
             if (overview.getStudentAttempt() != null) {
                 Attempt att = overview.getStudentAttempt();
                 Optional<Result> resOpt = examService.getResultByAttempt(att.getId());
-                if (resOpt.isPresent() && !resOpt.get().isPassed()) {
+                if (att.getStatus() == AttemptStatus.AUTO_SUBMITTED || (resOpt.isPresent() && !resOpt.get().isPassed())) {
                     failed = true;
                     refTime = att.getSubmittedAt() != null ? att.getSubmittedAt() : att.getStartedAt();
                 }
